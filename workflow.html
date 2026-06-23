@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amruth Dairy Platform Workflow</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            color: #333;
+            background-color: #fafafa;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        h1, h2, h3 {
+            color: #1a202c;
+            margin-top: 1.5em;
+        }
+        h1 {
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h2 {
+            color: #2b6cb0;
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 8px;
+        }
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .alert-note {
+            background-color: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            color: #2c5282;
+        }
+        .alert-important {
+            background-color: #fffaf0;
+            border-left: 4px solid #dd6b20;
+            color: #9c4221;
+        }
+        .alert-warning {
+            background-color: #fff5f5;
+            border-left: 4px solid #e53e3e;
+            color: #9b2c2c;
+        }
+        .alert strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .diagram-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: center;
+        }
+        ul, ol {
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 12px;
+        }
+        code {
+            background: #edf2f7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #4a5568;
+        }
+    </style>
+    <!-- Include Mermaid.js for the flowchart -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Amruth Dairy Platform Workflow</h1>
+        
+        <p>This document provides a complete, easy-to-understand workflow of the Amruth Dairy application. It is designed to help anyone quickly grasp how the platform operates from both the <strong>Customer (Subscriber)</strong> and <strong>Admin</strong> perspectives.</p>
+
+        <h2>1. Authentication & Onboarding Flow</h2>
+        <p>Both Admins and Customers use the exact same login screen. The system automatically routes users to the correct dashboard based on their role and subscription status.</p>
+
+        <div class="alert alert-note">
+            <strong>📝 NOTE</strong>
+            The platform uses <strong>Passwordless OTP Login</strong>. Users only need their 10-digit mobile number and a 6-digit OTP sent via SMS to access the platform.
+        </div>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+            flowchart TD
+                A[User visits /login] --> B{Enters Mobile & OTP}
+                B --> C[System Checks Database]
+                C -->|New User| D[Creates 'Customer' Profile]
+                C -->|Existing User| E{Checks Role}
+                D --> F[Routes to /onboarding]
+                E -->|Role: Admin| G[Routes to /admin Dashboard]
+                E -->|Role: Customer, No Subscription| F
+                E -->|Role: Customer, Active Subscription| H[Routes to /dashboard]
+            </div>
+        </div>
+
+        <h2>2. Customer (Subscriber) Workflow</h2>
+        <p>The customer journey is designed to be self-serve, allowing them to manage their daily milk deliveries without needing to call the dairy owner.</p>
+
+        <h3>A. Initial Onboarding</h3>
+        <ol>
+            <li><strong>Choose Quantity:</strong> The customer selects their daily milk requirement (0.5L, 1.0L, 1.5L, or 2.0L).</li>
+            <li><strong>Capacity Check:</strong> The system checks if the dairy has enough daily capacity (Max 100L/day by default).
+                <ul>
+                    <li><em>If capacity is full</em>, the customer is added to a <strong>Waitlist</strong>.</li>
+                    <li><em>If capacity is available</em>, they proceed to set up their address and delivery details.</li>
+                </ul>
+            </li>
+            <li><strong>Payment:</strong> The customer pays for their first month to activate the subscription.</li>
+        </ol>
+
+        <h3>B. Daily Management (Customer Dashboard)</h3>
+        <p>Once subscribed, the customer gets access to their dashboard where they can manage their deliveries:</p>
+        <ul>
+            <li><strong>View Deliveries:</strong> See upcoming milk deliveries and quantities.</li>
+            <li><strong>Skip a Day:</strong> If they don't need milk tomorrow, they can request a "Skip".
+                <div class="alert alert-important">
+                    <strong>⚠️ IMPORTANT</strong>
+                    Skip requests must be made <strong>before 9:00 PM IST</strong> the night before. Skipping grants them a credit for that day's milk, which is applied to their next month's bill.
+                </div>
+            </li>
+            <li><strong>Vacation Mode:</strong> If they are traveling, they can pause deliveries for a date range (e.g., June 20 to June 27). Deliveries automatically resume after the end date, and they receive bulk credit for the paused days.</li>
+            <li><strong>Order Extra Milk:</strong> If they have guests, they can order extra milk (e.g., +1.0L) for a specific upcoming date. The extra charge is added to their next bill.</li>
+            <li><strong>Change Quantity:</strong> They can upgrade or downgrade their daily quantity (e.g., from 1L to 1.5L).
+                <div class="alert alert-warning">
+                    <strong>🚨 WARNING</strong>
+                    Quantity changes only take effect starting the <strong>1st of the next month</strong>.
+                </div>
+            </li>
+        </ul>
+
+        <h3>C. Monthly Billing</h3>
+        <p>At the start of every month, a new bill is generated. The system automatically calculates:</p>
+        <p><code>Base Monthly Cost - (Skip Credits + Vacation Credits) + Extra Orders = Net Due</code></p>
+        <p>Customers can view their itemized bills and pay directly through the platform via Razorpay (UPI, Cards, etc.).</p>
+
+        <h2>3. Admin (Owner) Workflow</h2>
+        <p>The admin dashboard (<code>/admin</code>) is the control center for the dairy owner. It automates delivery logistics and financial tracking.</p>
+
+        <h3>A. Daily Operations</h3>
+        <ul>
+            <li><strong>Daily Delivery Sheet:</strong> The most critical feature. The system auto-generates a daily route list for the milkman. It automatically accounts for:
+                <ul>
+                    <li>Who skipped today.</li>
+                    <li>Who is on vacation.</li>
+                    <li>Who ordered extra milk.</li>
+                </ul>
+                <em>The admin sees exactly how many total liters are needed today and who gets what.</em>
+            </li>
+            <li><strong>Capacity Management:</strong> The admin can adjust the total daily capacity (e.g., increase from 100L to 120L if they get more cows).</li>
+            <li><strong>Waitlist:</strong> If capacity opens up, the admin can notify waitlisted customers to complete their onboarding.</li>
+        </ul>
+
+        <h3>B. Customer & Financial Management</h3>
+        <ul>
+            <li><strong>Customer Directory:</strong> View all registered users, their addresses, and subscription statuses. Admins can manually edit these details if needed.</li>
+            <li><strong>Billing & Payments:</strong> Track who has paid and who has pending dues. If a customer pays in <strong>Cash</strong>, the admin can manually log the payment into the system to clear their digital balance.</li>
+            <li><strong>One-Time Products:</strong> The admin can list extra products like Ghee, Honey, or Butter. Customers can buy these directly, and the admin fulfills the orders.</li>
+        </ul>
+
+        <h2>4. Summary of System Automations</h2>
+        <p>To highlight why this platform makes managing a dairy easy, here are the core automations running in the background:</p>
+        <ol>
+            <li><strong>Auto-Role Assignment:</strong> New signups are always customers. Only the database owner can upgrade a user to Admin.</li>
+            <li><strong>9 PM Cut-off Enforcement:</strong> The system strictly rejects "Skip" or "Extra" requests after 9 PM, ensuring the morning milk packaging process isn't disrupted.</li>
+            <li><strong>Rollover Credits:</strong> The system never touches paid bills. If a customer skips a day they already paid for, the system saves that money as "Carry-forward Credit" and automatically deducts it from the <em>next</em> month's bill.</li>
+            <li><strong>Auto-Resume:</strong> Vacation pauses automatically expire, putting the customer back on the daily delivery sheet without manual intervention.</li>
+        </ol>
+    </div>
+</body>
+</html>
