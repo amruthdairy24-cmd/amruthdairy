@@ -46,6 +46,7 @@ interface DashboardData {
   active_vacation: { pause_start: string; pause_end: string; total_credit: number } | null;
   next_month_change: { quantity: number; amount: number } | null;
   recent_deliveries: Array<{ delivery_date: string; total_litres: number; delivery_status: string }>;
+  upcoming_adjustments?: Array<{ id: string, adjustment_type: string, amount: number, description: string, target_month: string, refund_status?: string }>;
 }
 
 export default function CustomerDashboard() {
@@ -283,36 +284,37 @@ export default function CustomerDashboard() {
               <span className="font-bold text-[#0f172a]">₹{subscription.monthly_amount.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center text-[13px] text-[#64748b] font-semibold pb-3 border-b border-[#e8edf5]">
-              <span className="flex items-center gap-1.5">
-                <span>Skips Credit:</span>
-                <span className="bg-[#f8fafc] text-[#64748b] border border-[#e8edf5] text-[10px] px-1.5 py-0.5 rounded font-extrabold">{current_month?.days_skipped || 0} days</span>
-              </span>
-              <span className="font-bold text-[#16a34a]">-₹{(current_month?.skip_credit || 0).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center text-[13px] text-[#64748b] font-semibold pb-3 border-b border-[#e8edf5]">
-              <span className="flex items-center gap-1.5">
-                <span>Vacation Credit:</span>
-                <span className="bg-[#f8fafc] text-[#64748b] border border-[#e8edf5] text-[10px] px-1.5 py-0.5 rounded font-extrabold">{current_month?.days_paused || 0} days</span>
-              </span>
-              <span className="font-bold text-[#16a34a]">-₹{(current_month?.pause_credit || 0).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center text-[13px] text-[#64748b] font-semibold pb-3 border-b border-[#e8edf5]">
-              <span className="flex items-center gap-1.5">
-                <span>Extra Milk Charges:</span>
-                <span className="bg-[#f8fafc] text-[#64748b] border border-[#e8edf5] text-[10px] px-1.5 py-0.5 rounded font-extrabold">+{current_month?.extra_litres_ordered || 0}L</span>
-              </span>
-              <span className="font-bold text-[#ef4444]">+₹{(current_month?.extra_charges || 0).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center text-[13px] text-[#64748b] font-semibold pb-3 border-b border-[#e8edf5]">
               <span>Carry In balance (Previous month):</span>
               <span className={cn("font-bold", (current_month?.carry_in_balance || 0) >= 0 ? "text-[#16a34a]" : "text-[#ef4444]")}>
                 {((current_month?.carry_in_balance || 0) >= 0 ? '-' : '+')}₹{Math.abs(current_month?.carry_in_balance || 0).toFixed(2)}
               </span>
             </div>
-            <div className="flex justify-between items-center pt-2 text-[14px] font-black text-[#0f172a]">
-              <span>Net Due for payment:</span>
+            <div className="flex justify-between items-center pt-2 pb-3 text-[14px] font-black text-[#0f172a]">
+              <span>Net Due for this month:</span>
               <span className="text-[#2563eb] font-mono text-[18px]">₹{(current_month?.net_due || 0).toFixed(2)}</span>
             </div>
+            
+            {data.upcoming_adjustments && data.upcoming_adjustments.length > 0 && (
+              <div className="pt-3 border-t border-[#e8edf5] space-y-3">
+                <p className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest">Unapplied Credits & Charges</p>
+                <p className="text-[10px] font-semibold text-[#64748b]">These will automatically adjust your next month's bill.</p>
+                {data.upcoming_adjustments.map((adj, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-[13px] font-semibold text-[#64748b]">
+                    <span className="flex flex-col">
+                      <span className="text-[#0f172a] font-bold">
+                        {adj.adjustment_type.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                        {adj.refund_status === 'requested' && <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Refund Pending</span>}
+                        {adj.refund_status === 'processed' && <span className="ml-2 text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Refunded</span>}
+                      </span>
+                      <span className="text-[11px] font-normal">{adj.description || 'Adjustment'}</span>
+                    </span>
+                    <span className={cn("font-bold", adj.adjustment_type.includes('credit') || adj.amount < 0 ? "text-[#16a34a]" : "text-[#ef4444]")}>
+                      {adj.adjustment_type.includes('credit') || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

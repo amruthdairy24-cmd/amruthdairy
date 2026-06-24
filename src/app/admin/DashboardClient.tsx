@@ -88,24 +88,20 @@ export default function DashboardClient({
 
       const body: any = { key: 'milk_tier_prices' };
       
-      if (priceApplyMode === 'immediate') {
-        body.value = { prices: numPrices }
-      } else {
-        // Apply next month
-        const today = new Date();
-        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-        const effectiveDateStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
-        
-        // Fetch current to keep it
-        const res = await fetch('/api/admin/settings?key=milk_tier_prices');
-        const currentData = await res.json();
-        const currentPrices = currentData?.value?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
+      // Apply next month
+      const today = new Date();
+      const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      const effectiveDateStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
+      
+      // Fetch current to keep it
+      const res = await fetch('/api/admin/settings?key=milk_tier_prices');
+      const currentData = await res.json();
+      const currentPrices = currentData?.value?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
 
-        body.value = {
-          prices: currentPrices,
-          next_prices: numPrices,
-          effective_date: effectiveDateStr
-        }
+      body.value = {
+        prices: currentPrices,
+        next_prices: numPrices,
+        effective_date: effectiveDateStr
       }
 
       const response = await fetch('/api/admin/settings', {
@@ -928,42 +924,6 @@ export default function DashboardClient({
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '12px', textTransform: 'uppercase' }}>
                 Application Method
               </label>
-              
-              <div className="space-y-3">
-                <label className="flex items-start gap-3 p-4 rounded-xl border border-[#e2e8f0] cursor-pointer hover:bg-[#f8fafc] transition-colors">
-                  <input 
-                    type="radio" 
-                    name="applyMode" 
-                    value="next_month"
-                    checked={priceApplyMode === 'next_month'}
-                    onChange={() => setPriceApplyMode('next_month')}
-                    className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                  />
-                  <div>
-                    <div className="font-bold text-[#0f172a] text-sm">Apply on Next Renewal (Recommended)</div>
-                    <div className="text-xs text-[#64748b] mt-1 leading-snug">
-                      New signups get the new price immediately. Existing customers finish their current month at their old price, avoiding billing confusion mid-month.
-                    </div>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 p-4 rounded-xl border border-[#e2e8f0] cursor-pointer hover:bg-[#f8fafc] transition-colors">
-                  <input 
-                    type="radio" 
-                    name="applyMode" 
-                    value="immediate"
-                    checked={priceApplyMode === 'immediate'}
-                    onChange={() => setPriceApplyMode('immediate')}
-                    className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                  />
-                  <div>
-                    <div className="font-bold text-[#0f172a] text-sm">Apply Immediately</div>
-                    <div className="text-xs text-[#64748b] mt-1 leading-snug">
-                      Instantly changes the price for everyone. Note: This will cause current month bills to be pro-rated, which may confuse existing customers.
-                    </div>
-                  </div>
-                </label>
-              </div>
             </div>
 
             {priceMessage && (

@@ -79,18 +79,14 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
 
       const body: any = { key: 'milk_tier_prices' };
       
-      if (priceApplyMode === 'immediate') {
-        body.value = { prices: numPrices }
-      } else {
-        const today = new Date();
-        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-        const effectiveDateStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
-        
-        body.value = {
-          prices: milkPrices,
-          next_prices: numPrices,
-          effective_date: effectiveDateStr
-        }
+      const today = new Date();
+      const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      const effectiveDateStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
+      
+      body.value = {
+        prices: milkPrices,
+        next_prices: numPrices,
+        effective_date: effectiveDateStr
       }
 
       const response = await fetch('/api/admin/settings', {
@@ -362,21 +358,7 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
                 </div>
               </div>
 
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>
-                  When should this apply?
-                </label>
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '16px', border: priceApplyMode === 'next_month' ? '2px solid #2563eb' : '2px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', background: priceApplyMode === 'next_month' ? '#eff6ff' : '#fff' }}>
-                    <input type="radio" name="applyModeMilk" checked={priceApplyMode === 'next_month'} onChange={() => setPriceApplyMode('next_month')} style={{ accentColor: '#2563eb', width: '18px', height: '18px' }} />
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Next Month<br/><span style={{ fontSize: '12px', color: '#64748b', fontWeight: 400 }}>Recommended</span></span>
-                  </label>
-                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '16px', border: priceApplyMode === 'immediate' ? '2px solid #2563eb' : '2px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', background: priceApplyMode === 'immediate' ? '#eff6ff' : '#fff' }}>
-                    <input type="radio" name="applyModeMilk" checked={priceApplyMode === 'immediate'} onChange={() => setPriceApplyMode('immediate')} style={{ accentColor: '#2563eb', width: '18px', height: '18px' }} />
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Immediately<br/><span style={{ fontSize: '12px', color: '#64748b', fontWeight: 400 }}>Applies today</span></span>
-                  </label>
-                </div>
-              </div>
+
 
               {priceMessage && (
                 <div style={{
