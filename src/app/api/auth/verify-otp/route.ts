@@ -1,81 +1,172 @@
+// api/auth/verify-otp/route.ts
+// Verifies email OTP from in-memory store, THEN creates auth user + profile in DB,
+// signs user in, and returns role + redirect info.
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
+import * as crypto from 'crypto';
+import { pendingOtpStore } from '@/lib/otp-store';
 
-// Admin client — bypasses RLS, used only server-side
 const adminClient = createAdminClient();
 
 export async function POST(request: Request) {
   try {
-    const { phone, token } = await request.json();
+    const { email, token, password } = await request.json() as {
+      email?: string;
+      token?: string;
+      password?: string;
+    };
 
-    // ── Validate input ──────────────────────────────────
-    if (!phone || !token) {
+    // ── Validate input ───────────────────────────────────────────────────────
+    if (!email || !token || !password) {
       return NextResponse.json(
-        { success: false, message: 'Phone and token are required' },
+        { success: false, message: 'Email, verification code, and password are required.' },
         { status: 400 }
       );
     }
 
-    // ── Normalize phone to +91XXXXXXXXXX ───────────────
-    const cleanPhone = phone.replace(/\D/g, '');
-    let finalPhone = cleanPhone;
-    if (cleanPhone.length === 10) {
-      finalPhone = '+91' + cleanPhone;
-    } else if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) {
-      finalPhone = '+' + cleanPhone;
-    } else if (cleanPhone.length === 13 && cleanPhone.startsWith('+91')) {
-      finalPhone = cleanPhone;
-    }
+    const emailLower = email.toLowerCase().trim();
 
-    // ── DEV BYPASS (123456 OTP in development) ─────────
-    if (process.env.NODE_ENV === 'development' && token === '123456') {
-      console.log(`[DEV] OTP bypass for ${finalPhone}`);
-      return await handleDevBypass(finalPhone);
-    }
+    // ── Look up pending OTP from in-memory store ──────────────────────────────
+    const pending = pendingOtpStore.get(emailLower);
 
-    // ── PRODUCTION: Verify real OTP ────────────────────
-    const supabase = await createClient();
-
-    const { data: authData, error: authError } = await supabase.auth.verifyOtp({
-      phone: finalPhone,
-      token,
-      type: 'sms',
-    });
-
-    if (authError || !authData.user) {
-      console.error('[verify-otp] OTP error:', authError?.message);
+    if (!pending) {
       return NextResponse.json(
-        { success: false, message: authError?.message || 'Invalid OTP. Please try again.' },
+        { success: false, message: 'No active verification code found. Please request a new one.' },
         { status: 400 }
       );
     }
 
-    const userId = authData.user.id;
-
-    // ── Get or create profile ──────────────────────────
-    const { profile, isNewUser } = await getOrCreateProfile(userId, finalPhone);
-
-    if (!profile) {
+    // ── Check expiry ─────────────────────────────────────────────────────────
+    if (pending.expiresAt < new Date()) {
+      pendingOtpStore.delete(emailLower);
       return NextResponse.json(
-        { success: false, message: 'Failed to load user profile. Please try again.' },
+        { success: false, message: 'Verification code has expired. Please request a new one.' },
+        { status: 400 }
+      );
+    }
+
+    // ── Verify OTP hash ──────────────────────────────────────────────────────
+    const expectedHash = hashOtp(token);
+    if (expectedHash !== pending.otpHash) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid code. Please check and try again.' },
+        { status: 400 }
+      );
+    }
+
+    // ── OTP is valid — clear it immediately to prevent reuse ─────────────────
+    pendingOtpStore.delete(emailLower);
+
+    // ── NOW create the Supabase Auth user ─────────────────────────────────────
+    // Check if an unverified auth user already exists (e.g., from a previous attempt)
+    const { data: listData } = await adminClient.auth.admin.listUsers();
+    let authUserId: string;
+
+    const existingAuthUser = listData?.users?.find(
+      (u) => u.email?.toLowerCase() === emailLower
+    );
+
+    if (existingAuthUser) {
+      // Update password and confirm email
+      await adminClient.auth.admin.updateUserById(existingAuthUser.id, {
+        password: pending.password,
+        email_confirm: true,
+      });
+      authUserId = existingAuthUser.id;
+    } else {
+      // Create brand new confirmed user
+      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+        email: emailLower,
+        password: pending.password,
+        email_confirm: true, // Email is already verified via our OTP
+      });
+
+      if (createError || !newUser?.user) {
+        console.error('[verify-otp] Create user error:', createError?.message);
+        return NextResponse.json(
+          { success: false, message: 'Failed to create account. Please try again.' },
+          { status: 500 }
+        );
+      }
+      authUserId = newUser.user.id;
+    }
+
+    // ── Create/update profile in DB ───────────────────────────────────────────
+    const { error: profileError } = await adminClient.from('profiles').upsert(
+      {
+        id: authUserId,
+        email: emailLower,
+        username: pending.username,
+        full_name: pending.username,
+        role: 'customer',
+        is_active: true,
+        email_verified: true,
+      },
+      { onConflict: 'id' }
+    );
+
+    if (profileError) {
+      console.error('[verify-otp] Profile upsert error:', profileError.message);
+      // Clean up the auth user if profile creation fails
+      await adminClient.auth.admin.deleteUser(authUserId);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Account setup failed. This may be a database configuration issue.',
+          _debug: process.env.NODE_ENV === 'development' ? profileError.message : undefined,
+        },
         { status: 500 }
       );
     }
 
-    // ── Check active subscription ──────────────────────
-    const hasActiveSubscription = await checkActiveSubscription(userId, profile.role);
+    // ── Sign the user in ──────────────────────────────────────────────────────
+    const supabase = await createClient();
+    const { data: sessionData, error: sessionError } = await supabase.auth.signInWithPassword({
+      email: emailLower,
+      password: pending.password,
+    });
 
-    // ── Build response ─────────────────────────────────
+    if (sessionError || !sessionData?.session) {
+      console.error('[verify-otp] Sign in error:', sessionError?.message);
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Account created but could not log in automatically. Please sign in manually.',
+        },
+        { status: 500 }
+      );
+    }
+
+    // ── Get profile info ──────────────────────────────────────────────────────
+    const { data: profile } = await adminClient
+      .from('profiles')
+      .select('*')
+      .eq('id', authUserId)
+      .single();
+
+    if (!profile) {
+      return NextResponse.json(
+        { success: false, message: 'Profile not found. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
+    // ── Check subscription ────────────────────────────────────────────────────
+    const hasActiveSubscription = await checkActiveSubscription(authUserId, profile.role);
+
+    console.log(`[verify-otp] Success — email: ${emailLower}, role: ${profile.role}`);
+
     return NextResponse.json({
       success: true,
       role: profile.role,
-      is_new_user: isNewUser,
+      is_new_user: true,
       has_active_subscription: hasActiveSubscription,
       profile: {
         id: profile.id,
         full_name: profile.full_name,
-        phone: profile.phone,
+        email: profile.email,
+        username: profile.username,
         role: profile.role,
       },
     });
@@ -90,56 +181,23 @@ export async function POST(request: Request) {
   }
 }
 
-// ─────────────────────────────────────────────────────
-// HELPER: Get existing profile or create new one
-// Returns { profile, isNewUser }
-// ─────────────────────────────────────────────────────
-async function getOrCreateProfile(userId: string, phone: string) {
-  // Try to get existing profile
-  const { data: existingProfile, error: fetchError } = await adminClient
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle();
-
-  // Profile exists → return it
-  if (existingProfile) {
-    return { profile: existingProfile, isNewUser: false };
-  }
-
-  // Profile doesn't exist → this is a new user, create profile
-  if (fetchError && fetchError.code !== 'PGRST116') {
-    // PGRST116 = "no rows returned" — that's fine, means new user
-    // Any other error is a real problem
-    console.error('[verify-otp] Profile fetch error:', fetchError.message);
-  }
-
-  // Create new profile
-  const { data: newProfile, error: insertError } = await adminClient
-    .from('profiles')
-    .insert({
-      id: userId,
-      phone: phone,
-      full_name: 'New Customer',   // Will be updated in onboarding
-      role: 'customer',
-      is_active: true,
-    })
-    .select()
-    .single();
-
-  if (insertError) {
-    console.error('[verify-otp] Profile create error:', insertError.message);
-    return { profile: null, isNewUser: true };
-  }
-
-  return { profile: newProfile, isNewUser: true };
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPER: Hash OTP with HMAC-SHA256
+// ─────────────────────────────────────────────────────────────────────────────
+function hashOtp(otp: string): string {
+  const salt = process.env.SUPABASE_SERVICE_ROLE_KEY!.slice(0, 16);
+  return crypto
+    .createHmac('sha256', salt)
+    .update(otp)
+    .digest('hex');
 }
 
-// ─────────────────────────────────────────────────────
-// HELPER: Check if user has any active subscription
-// Admins always return false (they go to /admin directly)
-// ─────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPER: Check active subscription
+// ─────────────────────────────────────────────────────────────────────────────
 async function checkActiveSubscription(userId: string, role: string): Promise<boolean> {
+  if (role === 'admin') return false;
+
   const { data: subscription } = await adminClient
     .from('subscriptions')
     .select('id, status')
@@ -148,94 +206,4 @@ async function checkActiveSubscription(userId: string, role: string): Promise<bo
     .maybeSingle();
 
   return !!subscription;
-}
-
-// ─────────────────────────────────────────────────────
-// DEV BYPASS: Accept 123456 in development mode
-// Creates/finds user and returns same shape as production
-// ─────────────────────────────────────────────────────
-async function handleDevBypass(finalPhone: string) {
-  try {
-    // Find or create auth user
-    const { data: listData } = await adminClient.auth.admin.listUsers();
-    const targetLast10 = finalPhone.replace(/\D/g, '').slice(-10);
-
-    let devUser = listData?.users?.find((u) => {
-      if (!u.phone) return false;
-      return u.phone.replace(/\D/g, '').slice(-10) === targetLast10;
-    });
-
-    if (!devUser) {
-      const { data: created, error: createErr } = await adminClient.auth.admin.createUser({
-        phone: finalPhone,
-        phone_confirm: true,
-      });
-      if (createErr || !created.user) {
-        console.error('[DEV] Create user failed:', createErr?.message);
-        return NextResponse.json(
-          { success: false, message: 'Dev user creation failed' },
-          { status: 500 }
-        );
-      }
-      devUser = created.user;
-    }
-
-    // Set password so we can sign in with signInWithPassword
-    // (signInWithOtp not available server-side without actual SMS)
-    await adminClient.auth.admin.updateUserById(devUser.id, {
-      password: 'devpassword_amruth_2026',
-      phone_confirm: true,
-    });
-
-    // Sign in using the SSR client (this sets the session cookie)
-    const supabase = await createClient();
-    const { error: signInErr } = await supabase.auth.signInWithPassword({
-      phone: devUser.phone || finalPhone,
-      password: 'devpassword_amruth_2026',
-    });
-
-    if (signInErr) {
-      console.error('[DEV] Sign in failed:', signInErr.message);
-      return NextResponse.json(
-        { success: false, message: 'Dev sign-in failed: ' + signInErr.message },
-        { status: 500 }
-      );
-    }
-
-    // Get or create profile
-    const { profile, isNewUser } = await getOrCreateProfile(devUser.id, finalPhone);
-
-    if (!profile) {
-      return NextResponse.json(
-        { success: false, message: 'Profile creation failed' },
-        { status: 500 }
-      );
-    }
-
-    // Check subscription
-    const hasActiveSubscription = await checkActiveSubscription(devUser.id, profile.role);
-
-    console.log(`[DEV] Login success — role: ${profile.role}, hasSubscription: ${hasActiveSubscription}, isNew: ${isNewUser}`);
-
-    return NextResponse.json({
-      success: true,
-      role: profile.role,
-      is_new_user: isNewUser,
-      has_active_subscription: hasActiveSubscription,
-      profile: {
-        id: profile.id,
-        full_name: profile.full_name,
-        phone: profile.phone,
-        role: profile.role,
-      },
-    });
-
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[DEV] Bypass exception:', message);
-    return NextResponse.json(
-      { success: false, message: 'Dev bypass error: ' + message },
-      { status: 500 }
-    );
-  }
 }

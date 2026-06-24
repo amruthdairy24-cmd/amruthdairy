@@ -892,8 +892,8 @@ body {
   letter-spacing: 1px;
 }
 
-/* Phone input */
-.phone-input-wrap {
+/* Phone input & Text input */
+.phone-input-wrap, .input-wrap {
   display: flex;
   align-items: center;
   height: 50px;
@@ -904,13 +904,13 @@ body {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.phone-input-wrap:focus-within {
+.phone-input-wrap:focus-within, .input-wrap:focus-within {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
   background: #ffffff;
 }
 
-.phone-input-wrap.phone-input-error {
+.phone-input-wrap.phone-input-error, .input-wrap.input-error {
   border-color: #ef4444;
   box-shadow: 0 0 0 3px rgba(239,68,68,0.08);
 }
@@ -930,7 +930,7 @@ body {
   white-space: nowrap;
 }
 
-.phone-input {
+.phone-input, .text-input {
   flex: 1;
   height: 100%;
   padding: 0 14px;
@@ -943,7 +943,7 @@ body {
   letter-spacing: 0.5px;
 }
 
-.phone-input::placeholder {
+.phone-input::placeholder, .text-input::placeholder {
   color: #9ca3af;
   font-weight: 400;
 }
@@ -4250,3 +4250,30 @@ body {
   .sub-cal-header { flex-direction: column; }
   .sub-cal-stats { margin-top: 4px; }
 }
+
+.input-icon-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 100%;
+  color: #6b7280;
+  border-right: 1px solid #f3f4f6;
+  background: #f9fafb;
+}
+
+.input-icon-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 100%;
+  color: #9ca3af;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.input-icon-right:hover {
+  color: #4b5563;
+}
