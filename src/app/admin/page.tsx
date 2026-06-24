@@ -1,5 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import DashboardClient from './DashboardClient'
+import { createAdminClient } from '@/utils/supabase/admin'
+import { fetchRawMilkPricing } from '@/lib/billing'
 
 // Force dynamic rendering to always query latest database records
 export const dynamic = 'force-dynamic'
@@ -11,6 +13,8 @@ export default async function AdminDashboardPage() {
   const d = new Date()
   const todayStr = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
 
+  const adminClient = createAdminClient()
+
   // Parallel fetches for summary counts
   const [
     { count: totalCustomersCount },
@@ -20,7 +24,8 @@ export default async function AdminDashboardPage() {
     { data: activeSubsData },
     { data: paymentsData },
     { data: deliveriesToday },
-    { data: skippedToday }
+    { data: skippedToday },
+    rawMilkPricing
   ] = await Promise.all([
     supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer'),
     supabase.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
@@ -29,7 +34,8 @@ export default async function AdminDashboardPage() {
     supabase.from('subscriptions').select('quantity_litres, monthly_amount').eq('status', 'active'),
     supabase.from('payments').select('amount').eq('status', 'success'),
     supabase.from('daily_delivery_sheet').select('id, total_litres').eq('delivery_date', todayStr),
-    supabase.from('daily_delivery_sheet').select('id', { count: 'exact' }).eq('delivery_date', todayStr).eq('delivery_status', 'skipped')
+    supabase.from('daily_delivery_sheet').select('id', { count: 'exact' }).eq('delivery_date', todayStr).eq('delivery_status', 'skipped'),
+    fetchRawMilkPricing(adminClient)
   ])
 
   // 1. Total delivering litres today
@@ -152,6 +158,7 @@ export default async function AdminDashboardPage() {
       deliveriesList={deliveriesList}
       recentActivities={recentActivities}
       subOverview={subOverview}
+      rawMilkPricing={rawMilkPricing}
     />
   )
 }
