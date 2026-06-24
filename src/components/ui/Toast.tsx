@@ -65,10 +65,10 @@ const icons: Record<ToastType, React.ReactNode> = {
 }
 
 const typeStyles: Record<ToastType, string> = {
-  success: 'border-green-100',
-  error: 'border-red-100',
-  warning: 'border-amber-100',
-  info: 'border-blue-100',
+  success: 'border-green-100 dark:border-green-500/20',
+  error: 'border-red-100 dark:border-red-500/20',
+  warning: 'border-amber-100 dark:border-amber-500/20',
+  info: 'border-blue-100 dark:border-blue-500/20',
 }
 
 function ToastItem({ toast, onClose }: { toast: ToastItem; onClose: () => void }) {
@@ -76,22 +76,22 @@ function ToastItem({ toast, onClose }: { toast: ToastItem; onClose: () => void }
     <ToastPrimitive.Root
       onOpenChange={(open) => { if (!open) onClose() }}
       className={cn(
-        'bg-white rounded-2xl p-4 shadow-float',
+        'bg-white dark:bg-warm-white rounded-brand-md p-4 shadow-card',
         'border',
         typeStyles[toast.type],
         'flex items-start gap-3',
-        'data-[state=open]:animate-slide-up',
+        'data-[state=open]:animate-slide-right',
         'data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)]',
         'transition-all'
       )}
     >
       {icons[toast.type]}
       <div className="flex-1 min-w-0">
-        <ToastPrimitive.Title className="text-small font-bold text-teal-900">
+        <ToastPrimitive.Title className="text-sm font-bold text-teal-900 dark:text-white">
           {toast.title}
         </ToastPrimitive.Title>
         {toast.description && (
-          <ToastPrimitive.Description className="text-tiny text-teal-900/60 mt-0.5">
+          <ToastPrimitive.Description className="text-xs text-teal-900/60 dark:text-teal-400/65 mt-0.5">
             {toast.description}
           </ToastPrimitive.Description>
         )}
@@ -99,10 +99,10 @@ function ToastItem({ toast, onClose }: { toast: ToastItem; onClose: () => void }
       <ToastPrimitive.Close asChild>
         <button
           onClick={onClose}
-          className="flex-shrink-0 p-1 rounded-lg hover:bg-milk-100 transition-colors"
+          className="flex-shrink-0 p-1 rounded-lg hover:bg-milk-100 dark:hover:bg-cream-200 transition-colors"
           aria-label="Dismiss"
         >
-          <X size={14} className="text-teal-900/40" />
+          <X size={14} className="text-teal-900/40 dark:text-teal-400/40" />
         </button>
       </ToastPrimitive.Close>
     </ToastPrimitive.Root>

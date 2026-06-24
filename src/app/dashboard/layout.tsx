@@ -10,10 +10,12 @@ import {
   Menu, X, ChevronDown
 } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
+import { cn } from '@/lib/utils'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const sidebarGroups = [
   {
-    title: 'Overview',
+    title: 'MAIN',
     items: [
       { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { href: '/dashboard/history', icon: CalendarDays, label: 'Delivery History' },
@@ -21,7 +23,7 @@ const sidebarGroups = [
     ]
   },
   {
-    title: 'Actions',
+    title: 'SERVICES',
     items: [
       { href: '/dashboard/skip', icon: SkipForward, label: 'Skip Day' },
       { href: '/dashboard/vacation', icon: Palmtree, label: 'Vacation Pause' },
@@ -30,10 +32,10 @@ const sidebarGroups = [
     ]
   },
   {
-    title: 'More',
+    title: 'ACCOUNT',
     items: [
-      { href: '/shop', icon: ShoppingBag, label: 'Farm Shop' },
       { href: '/account', icon: User, label: 'Account' },
+      { href: '#logout', icon: LogOut, label: 'Logout', isLogout: true },
     ]
   }
 ]
@@ -61,7 +63,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const d = new Date()
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    setDateStr(`${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`)
+    setDateStr(`${days[d.getDay()]} , ${d.getDate()} ${months[d.getMonth()]}`)
   }, [])
 
   useEffect(() => {
@@ -100,80 +102,74 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!mounted) return null
 
   return (
-    <div className="flex h-screen font-sans text-[#0f172a] overflow-hidden" style={{ background: '#F5F2EB' }}>
+    <div className="flex h-screen font-sans text-slate-900 dark:text-slate-100 overflow-hidden bg-cream-50 dark:bg-warm-white transition-colors duration-300">
 
       {/* ===== DESKTOP SIDEBAR ===== */}
-      <aside
-        className="hidden lg:flex flex-col w-[260px] z-30 flex-shrink-0"
-        style={{
-          background: '#0f172a',
-          boxShadow: '4px 0 24px rgba(0,0,0,0.15)'
-        }}
-      >
+      <aside className="hidden lg:flex flex-col w-[260px] z-30 flex-shrink-0 bg-white dark:bg-cream-100 border-r border-border/50 dark:border-slate-800/80 transition-colors duration-300">
         {/* Logo */}
-        <div
-          className="px-5 flex items-center gap-3 flex-shrink-0"
-          style={{ height: '72px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-        >
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-            style={{ background: 'linear-gradient(135deg, #D97706, #F59E0B)' }}
-          >
-            <span style={{ fontSize: '18px' }}>🥛</span>
+        <div className="px-6 h-[72px] flex items-center gap-3 flex-shrink-0 border-b border-slate-50 dark:border-slate-900/50">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-brand-primary to-brand-secondary shadow-md shadow-brand-primary/10">
+            <span className="text-lg">🥛</span>
           </div>
           <div>
-            <p className="text-[20px] font-black text-white leading-none tracking-tight font-display">Amruth</p>
-            <p className="text-[8px] font-extrabold uppercase tracking-widest mt-1" style={{ color: '#D97706', letterSpacing: '2px' }}>
-              My Subscription
+            <p className="text-[18px] font-black text-slate-900 dark:text-white leading-none tracking-tight font-display">Amruth</p>
+            <p className="text-[9px] font-bold uppercase tracking-widest mt-1.5 text-brand-secondary dark:text-brand-secondary/85">
+              Organic Dairy
             </p>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto custom-scrollbar-hidden">
-          {sidebarGroups.map((group, gIdx) => (
-            <div key={group.title}>
-              <p
-                className="text-[9px] font-extrabold uppercase tracking-[2px] px-3 mb-1.5"
-                style={{ color: 'rgba(255,255,255,0.25)', paddingTop: gIdx === 0 ? '4px' : '16px' }}
-              >
+        <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto hide-scrollbar">
+          {sidebarGroups.map((group) => (
+            <div key={group.title} className="space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-400 dark:text-slate-500">
                 {group.title}
               </p>
-              <div className="space-y-[2px]">
+              <div className="space-y-[3px]">
                 {group.items.map((item) => {
                   const isActive = pathname === item.href || (pathname.startsWith(item.href + '/') && item.href !== '/dashboard')
                   const Icon = item.icon
+                  
+                  const linkContent = (
+                    <div
+                      className={cn(
+                        "flex items-center gap-3 px-3 h-10 rounded-xl transition-all duration-150 relative overflow-hidden",
+                        isActive 
+                          ? "bg-brand-primary/10 dark:bg-brand-secondary/20 text-brand-primary dark:text-brand-secondary font-bold" 
+                          : "text-slate-600 dark:text-slate-400 hover:text-brand-primary dark:hover:text-brand-secondary hover:bg-slate-50 dark:hover:bg-slate-900/50 font-medium"
+                      )}
+                    >
+                      {isActive && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r-full bg-brand-primary dark:bg-brand-secondary" />
+                      )}
+                      <Icon
+                        size={17}
+                        className={cn(
+                          "relative z-10 flex-shrink-0 transition-colors",
+                          isActive ? "text-brand-primary dark:text-brand-secondary" : "text-slate-400 dark:text-slate-500 group-hover:text-brand-primary dark:group-hover:text-brand-secondary"
+                        )}
+                        strokeWidth={isActive ? 2.5 : 2}
+                      />
+                      <span className="text-[13px] relative z-10">{item.label}</span>
+                    </div>
+                  )
+
+                  if (item.isLogout) {
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={handleLogout}
+                        className="w-full text-left bg-transparent border-none p-0 outline-none cursor-pointer block group"
+                      >
+                        {linkContent}
+                      </button>
+                    )
+                  }
+
                   return (
                     <Link key={item.href} href={item.href} className="relative block group">
-                      <div
-                        className="flex items-center gap-3 px-3 rounded-xl transition-all duration-150 relative overflow-hidden"
-                        style={{
-                          height: '42px',
-                          background: isActive
-                            ? 'linear-gradient(135deg, rgba(30,58,143,0.9), rgba(37,99,235,0.8))'
-                            : 'transparent',
-                          color: isActive ? '#ffffff' : 'rgba(255,255,255,0.55)',
-                          border: isActive ? '1px solid rgba(96,165,250,0.2)' : '1px solid transparent',
-                          boxShadow: isActive ? '0 2px 12px rgba(37,99,235,0.4)' : 'none'
-                        }}
-                      >
-                        {!isActive && (
-                          <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors" />
-                        )}
-                        {isActive && (
-                          <div
-                            className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] rounded-r-[3px]"
-                            style={{ background: '#60a5fa' }}
-                          />
-                        )}
-                        <Icon
-                          size={18}
-                          strokeWidth={isActive ? 2.5 : 2}
-                          style={{ color: isActive ? '#ffffff' : 'rgba(255,255,255,0.4)' }}
-                          className="relative z-10 flex-shrink-0"
-                        />
-                        <span className="text-[13px] font-bold relative z-10">{item.label}</span>
-                      </div>
+                      {linkContent}
                     </Link>
                   )
                 })}
@@ -183,52 +179,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         {/* User Area */}
-        <div className="p-3 flex-shrink-0 flex flex-col gap-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="p-4 flex-shrink-0 flex flex-col gap-3 border-t border-slate-50 dark:border-slate-900/50 bg-slate-50/25 dark:bg-slate-900/10">
           {dateStr && (
-            <div
-              className="py-1.5 px-3 rounded-lg text-[11px] font-bold text-center"
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                color: 'rgba(255,255,255,0.5)'
-              }}
-            >
+            <div className="py-1.5 px-3 rounded-xl text-[11px] font-bold text-center bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 text-slate-600 dark:text-slate-400 shadow-sm">
               📅 {dateStr}
             </div>
           )}
-          <div className="flex items-center gap-2.5 p-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)' }}>
-            <div
-              className="w-[34px] h-[34px] rounded-lg flex items-center justify-center font-black text-[13px] text-white flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #1e3a8f, #2563eb)' }}
-            >
+          <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 shadow-sm">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-[13px] text-white flex-shrink-0 bg-gradient-to-br from-brand-primary to-brand-secondary shadow-sm shadow-brand-primary/10">
               {initials}
             </div>
             <div className="min-w-0">
-              <p className="text-[12px] font-bold text-white truncate">{profileName}</p>
-              <p className="text-[10px] font-semibold text-white/40 truncate">{profilePhone}</p>
+              <p className="text-[12px] font-bold text-slate-800 dark:text-slate-200 truncate leading-tight">{profileName}</p>
+              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 truncate mt-0.5 leading-none">{profilePhone}</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-bold transition-all border outline-none cursor-pointer"
-            style={{
-              height: '34px',
-              background: 'rgba(239,68,68,0.08)',
-              borderColor: 'rgba(239,68,68,0.15)',
-              color: 'rgba(239,68,68,0.7)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(239,68,68,0.15)'
-              e.currentTarget.style.color = '#ef4444'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(239,68,68,0.08)'
-              e.currentTarget.style.color = 'rgba(239,68,68,0.7)'
-            }}
-          >
-            <LogOut size={14} />
-            <span>Logout</span>
-          </button>
         </div>
       </aside>
 
@@ -236,73 +201,66 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex-1 flex flex-col min-w-0 relative">
 
         {/* Topbar */}
-        <header
-          className="bg-white flex items-center px-6 z-20 flex-shrink-0 sticky top-0"
-          style={{ height: '64px', borderBottom: '1px solid #e8edf5', justifyContent: 'space-between' }}
-        >
-          <div className="flex items-center gap-4" style={{ flexShrink: 0 }}>
+        <header className="bg-white dark:bg-cream-100 flex items-center justify-between px-6 z-20 flex-shrink-0 sticky top-0 border-b border-border/45 dark:border-slate-800/80 h-16 transition-colors duration-300">
+          <div className="flex items-center gap-4 min-w-0">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden text-[#475569] hover:text-[#0f172a] bg-transparent border-none cursor-pointer"
+              className="lg:hidden text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 bg-transparent border-none cursor-pointer flex items-center justify-center"
             >
               <Menu size={22} />
             </button>
-            <span className="text-[11px] font-bold tracking-wide text-[#94a3b8] truncate">
+            <span className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
               {getBreadcrumbs()}
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0">
             {/* Status Badge */}
             <div
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold"
-              style={{
-                background: status === 'active' ? '#dcfce7' : '#fef3c7',
-                color: status === 'active' ? '#16a34a' : '#d97706',
-                border: `1px solid ${status === 'active' ? '#bbf7d0' : '#fde68a'}`
-              }}
+              className={cn(
+                "hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border",
+                status === 'active' 
+                  ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-200/40 dark:border-green-900/30" 
+                  : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200/40 dark:border-amber-900/30"
+              )}
             >
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: status === 'active' ? '#16a34a' : '#d97706' }} />
+              <span 
+                className={cn(
+                  "w-1.5 h-1.5 rounded-full", 
+                  status === 'active' ? "bg-green-500" : "bg-amber-500"
+                )} 
+              />
               {status === 'active' ? 'Active Plan' : status === 'paused' ? 'Paused' : 'Payment Due'}
             </div>
 
-            <div className="w-[1px]" style={{ height: '24px', background: '#e8edf5' }} />
+            <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-800" />
+            
+            <ThemeToggle />
+
+            <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-800" />
 
             {/* Profile Chip */}
-            <div
-              className="flex items-center gap-2 p-1 rounded-xl transition-colors cursor-pointer border border-[#e8edf5]"
-              style={{ background: '#f8fafc' }}
-            >
-              <div
-                className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center font-black text-xs text-white"
-                style={{ background: 'linear-gradient(135deg, #1e3a8f, #2563eb)' }}
-              >
+            <div className="flex items-center gap-2 p-1 rounded-xl transition-colors cursor-pointer border border-border/50 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-900">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs text-white bg-gradient-to-br from-brand-primary to-brand-secondary">
                 {initials}
               </div>
               <div className="hidden sm:block text-left min-w-0 pr-1">
-                <p className="text-[12px] font-bold text-[#0f172a] leading-none">{profileName.split(' ')[0]}</p>
-                <p className="text-[10px] font-semibold text-[#94a3b8] mt-0.5 leading-none">Subscriber</p>
+                <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 leading-none">{profileName.split(' ')[0]}</p>
+                <p className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5 leading-none">Subscriber</p>
               </div>
-              <ChevronDown size={14} className="text-[#94a3b8]" />
+              <ChevronDown size={13} className="text-slate-400 dark:text-slate-500" />
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-24 lg:pb-6" style={{ background: '#F5F2EB' }}>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-24 lg:p-8 bg-cream-50 dark:bg-warm-white transition-colors duration-300">
           {children}
         </main>
       </div>
 
       {/* ===== MOBILE BOTTOM NAV ===== */}
-      <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex"
-        style={{
-          background: '#ffffff',
-          borderTop: '1px solid #e8edf5',
-          boxShadow: '0 -4px 20px rgba(0,0,0,0.06)'
-        }}
-      >
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex bg-white dark:bg-cream-100 border-t border-border/50 dark:border-slate-800/80 shadow-[0_-4px_20px_rgba(0,0,0,0.015)] transition-colors duration-300">
         {mobileNavItems.map((item) => {
           const isActive = pathname === item.href
           const Icon = item.icon
@@ -310,14 +268,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Link
               key={item.href}
               href={item.href}
-              className="flex-1 flex flex-col items-center gap-0.5 py-3 transition-colors min-w-0"
-              style={{
-                color: isActive ? '#2563eb' : '#94a3b8',
-                textDecoration: 'none'
-              }}
+              className={cn(
+                "flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors min-w-0 text-center",
+                isActive ? "text-brand-primary dark:text-brand-secondary" : "text-slate-400 dark:text-slate-500"
+              )}
             >
               <Icon size={18} />
-              <span className="text-[9px] font-extrabold truncate">{item.label}</span>
+              <span className="text-[9px] font-bold truncate">{item.label}</span>
             </Link>
           )
         })}
@@ -332,52 +289,82 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] lg:hidden"
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] lg:hidden"
             />
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 bottom-0 left-0 w-[280px] z-[70] lg:hidden shadow-2xl flex flex-col"
-              style={{ background: '#0f172a' }}
+              className="fixed top-0 bottom-0 left-0 w-[280px] z-[70] lg:hidden shadow-2xl flex flex-col bg-white dark:bg-cream-100 border-r border-border/50 dark:border-slate-800/80 transition-colors duration-300"
             >
-              <div
-                className="px-6 flex items-center justify-between flex-shrink-0"
-                style={{ height: '72px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-              >
+              <div className="px-6 h-[72px] flex items-center justify-between flex-shrink-0 border-b border-slate-50 dark:border-slate-900/50">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-                    style={{ background: 'linear-gradient(135deg, #D97706, #F59E0B)' }}
-                  >
-                    <span style={{ fontSize: '18px' }}>🥛</span>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-brand-primary to-brand-secondary shadow-sm">
+                    <span className="text-lg">🥛</span>
                   </div>
                   <div>
-                    <p className="text-[20px] font-black text-white leading-none tracking-tight font-display">Amruth</p>
-                    <p className="text-[8px] font-extrabold uppercase tracking-widest mt-1" style={{ color: '#D97706' }}>
-                      My Subscription
+                    <p className="text-[18px] font-black text-slate-900 dark:text-white leading-none tracking-tight font-display">Amruth</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest mt-1 text-brand-secondary dark:text-brand-secondary/85">
+                      Organic Dairy
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-white/10 bg-transparent border-none cursor-pointer"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 bg-transparent border-none cursor-pointer"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <nav className="flex-1 px-4 py-4 space-y-4 overflow-y-auto">
+              <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
                 {sidebarGroups.map((group) => (
-                  <div key={group.title}>
-                    <p className="text-[9px] font-extrabold uppercase tracking-[2px] px-3 mb-1.5 text-white/20">
+                  <div key={group.title} className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-400 dark:text-slate-500">
                       {group.title}
                     </p>
-                    <div className="space-y-[2px]">
+                    <div className="space-y-[3px]">
                       {group.items.map((item) => {
-                        const isActive = pathname === item.href
+                        const isActive = pathname === item.href || (pathname.startsWith(item.href + '/') && item.href !== '/dashboard')
                         const Icon = item.icon
+                        
+                        const linkContent = (
+                          <div
+                            className={cn(
+                              "flex items-center gap-3 px-3 h-10 rounded-xl transition-all duration-150 relative overflow-hidden",
+                              isActive 
+                                ? "bg-brand-primary/10 dark:bg-brand-secondary/20 text-brand-primary dark:text-brand-secondary font-bold" 
+                                : "text-slate-600 dark:text-slate-400 hover:text-brand-primary dark:hover:text-brand-secondary hover:bg-slate-50 dark:hover:bg-slate-900/50 font-medium"
+                            )}
+                          >
+                            {isActive && (
+                              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r-full bg-brand-primary dark:bg-brand-secondary" />
+                            )}
+                            <Icon
+                              size={17}
+                              className={isActive ? "text-brand-primary dark:text-brand-secondary" : "text-slate-400 dark:text-slate-500"}
+                              strokeWidth={isActive ? 2.5 : 2}
+                            />
+                            <span className="text-[13px]">{item.label}</span>
+                          </div>
+                        )
+
+                        if (item.isLogout) {
+                          return (
+                            <button
+                              key={item.label}
+                              onClick={() => {
+                                setIsMobileMenuOpen(false)
+                                handleLogout()
+                              }}
+                              className="w-full text-left bg-transparent border-none p-0 outline-none cursor-pointer block group"
+                            >
+                              {linkContent}
+                            </button>
+                          )
+                        }
+
                         return (
                           <Link
                             key={item.href}
@@ -385,25 +372,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             onClick={() => setIsMobileMenuOpen(false)}
                             className="relative block group"
                           >
-                            <div
-                              className="flex items-center gap-3 px-3 rounded-xl transition-all relative overflow-hidden"
-                              style={{
-                                height: '42px',
-                                background: isActive
-                                  ? 'linear-gradient(135deg, rgba(30,58,143,0.9), rgba(37,99,235,0.8))'
-                                  : 'transparent',
-                                color: isActive ? '#ffffff' : 'rgba(255,255,255,0.55)',
-                                border: isActive ? '1px solid rgba(96,165,250,0.2)' : '1px solid transparent',
-                                boxShadow: isActive ? '0 2px 12px rgba(37,99,235,0.4)' : 'none'
-                              }}
-                            >
-                              <Icon
-                                size={18}
-                                style={{ color: isActive ? '#ffffff' : 'rgba(255,255,255,0.4)' }}
-                                className="relative z-10 flex-shrink-0"
-                              />
-                              <span className="text-[13px] font-bold relative z-10">{item.label}</span>
-                            </div>
+                            {linkContent}
                           </Link>
                         )
                       })}
@@ -412,16 +381,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 ))}
               </nav>
 
-              <div className="p-4 flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="p-4 flex-shrink-0 border-t border-slate-50 dark:border-slate-900/50">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-bold transition-all border outline-none cursor-pointer"
-                  style={{
-                    height: '36px',
-                    background: 'rgba(239,68,68,0.08)',
-                    borderColor: 'rgba(239,68,68,0.15)',
-                    color: 'rgba(239,68,68,0.7)',
-                  }}
+                  className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-bold transition-all border border-red-200/40 dark:border-red-900/40 bg-red-500/10 dark:bg-red-500/5 text-red-600 dark:text-red-400 hover:bg-red-500/15 cursor-pointer h-9"
                 >
                   <LogOut size={14} />
                   <span>Logout</span>
@@ -431,16 +394,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </>
         )}
       </AnimatePresence>
-
-      <style jsx global>{`
-        .custom-scrollbar-hidden::-webkit-scrollbar {
-          display: none;
-        }
-        .custom-scrollbar-hidden {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
     </div>
   )
 }
+

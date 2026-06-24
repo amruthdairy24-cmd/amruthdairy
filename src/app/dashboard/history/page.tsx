@@ -94,13 +94,13 @@ export default function DeliveryHistoryPage() {
   if (loading) {
     return (
       <div className="max-w-3xl space-y-6 animate-pulse">
-        <div className="h-6 w-48 bg-slate-200 rounded-lg" />
-        <div className="h-80 bg-slate-200 rounded-3xl" />
+        <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+        <div className="h-80 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
         <div className="grid grid-cols-4 gap-3">
-          <div className="h-20 bg-slate-200 rounded-2xl" />
-          <div className="h-20 bg-slate-200 rounded-2xl" />
-          <div className="h-20 bg-slate-200 rounded-2xl" />
-          <div className="h-20 bg-slate-200 rounded-2xl" />
+          <div className="h-20 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+          <div className="h-20 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+          <div className="h-20 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+          <div className="h-20 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
         </div>
       </div>
     )
@@ -110,65 +110,65 @@ export default function DeliveryHistoryPage() {
     <div className="max-w-3xl space-y-6">
 
       <div>
-        <h1 className="text-[22px] font-black text-[#0f172a] font-display tracking-tight mb-1 flex items-center gap-2">
-          <CalendarDays size={24} className="text-[#64748b]" /> Delivery History
+        <h1 className="text-[22px] font-black text-slate-900 dark:text-white font-display tracking-tight mb-1 flex items-center gap-2">
+          <CalendarDays size={24} className="text-slate-450 dark:text-slate-500" /> Delivery History
         </h1>
-        <p className="text-[13px] font-semibold text-[#64748b]">Calendar view of your milk delivery records.</p>
+        <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400">Calendar view of your milk delivery records.</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white border border-[#e8edf5] rounded-[20px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.05)] text-center">
-          <div className="w-8 h-8 rounded-lg bg-[#dcfce7] text-[#16a34a] flex items-center justify-center mx-auto mb-2 border border-[#bbf7d0]">
+        <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm text-center">
+          <div className="w-8 h-8 rounded-lg bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-400 flex items-center justify-center mx-auto mb-2 border border-green-200/30 dark:border-green-900/30">
             <Truck size={14} strokeWidth={2.5} />
           </div>
-          <p className="text-[20px] font-black text-[#0f172a] font-mono leading-none">{summary.delivered}</p>
-          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mt-1">Delivered</p>
+          <p className="text-[20px] font-black text-slate-900 dark:text-white font-mono leading-none">{summary.delivered}</p>
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Delivered</p>
         </div>
-        <div className="bg-white border border-[#e8edf5] rounded-[20px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.05)] text-center">
-          <div className="w-8 h-8 rounded-lg bg-[#fee2e2] text-[#ef4444] flex items-center justify-center mx-auto mb-2 border border-[#fecaca]">
+        <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm text-center">
+          <div className="w-8 h-8 rounded-lg bg-rose-500/10 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto mb-2 border border-rose-200/30 dark:border-rose-900/30">
             <SkipForward size={14} strokeWidth={2.5} />
           </div>
-          <p className="text-[20px] font-black text-[#0f172a] font-mono leading-none">{summary.skipped}</p>
-          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mt-1">Skipped</p>
+          <p className="text-[20px] font-black text-slate-900 dark:text-white font-mono leading-none">{summary.skipped}</p>
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Skipped</p>
         </div>
-        <div className="bg-white border border-[#e8edf5] rounded-[20px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.05)] text-center">
-          <div className="w-8 h-8 rounded-lg bg-[#dbeafe] text-[#2563eb] flex items-center justify-center mx-auto mb-2 border border-[#bfdbfe]">
+        <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm text-center">
+          <div className="w-8 h-8 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 flex items-center justify-center mx-auto mb-2 border border-blue-200/30 dark:border-blue-900/30">
             <Palmtree size={14} strokeWidth={2.5} />
           </div>
-          <p className="text-[20px] font-black text-[#0f172a] font-mono leading-none">{summary.paused}</p>
-          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mt-1">Vacation</p>
+          <p className="text-[20px] font-black text-slate-900 dark:text-white font-mono leading-none">{summary.paused}</p>
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Vacation</p>
         </div>
-        <div className="bg-white border border-[#e8edf5] rounded-[20px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.05)] text-center">
-          <div className="w-8 h-8 rounded-lg bg-[#fef3c7] text-[#d97706] flex items-center justify-center mx-auto mb-2 border border-[#fde68a]">
+        <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm text-center">
+          <div className="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-750 dark:text-amber-400 flex items-center justify-center mx-auto mb-2 border border-amber-200/30 dark:border-amber-900/30">
             <Milk size={14} strokeWidth={2.5} />
           </div>
-          <p className="text-[20px] font-black text-[#0f172a] font-mono leading-none">{summary.totalLitres.toFixed(1)}L</p>
-          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mt-1">Total Milk</p>
+          <p className="text-[20px] font-black text-slate-900 dark:text-white font-mono leading-none">{summary.totalLitres.toFixed(1)}L</p>
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Total Milk</p>
         </div>
       </div>
 
-      <div className="bg-white border border-[#e8edf5] rounded-[24px] shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-hidden">
+      <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-3xl shadow-sm overflow-hidden">
         
-        <div className="p-5 border-b border-[#e8edf5] flex items-center justify-between bg-[#f8fafc]">
+        <div className="p-5 border-b border-border/50 dark:border-slate-800/80 flex items-center justify-between bg-slate-50 dark:bg-slate-900/35">
           <button
             onClick={goToPreviousMonth}
-            className="w-9 h-9 rounded-xl border border-[#e8edf5] bg-white flex items-center justify-center hover:bg-[#e2e8f0] transition-all cursor-pointer shadow-sm"
+            className="w-9 h-9 rounded-xl border border-border/50 dark:border-slate-800/85 bg-white dark:bg-cream-100 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-900 transition-all cursor-pointer shadow-sm"
           >
-            <ChevronLeft size={16} className="text-[#64748b]" />
+            <ChevronLeft size={16} className="text-slate-500 dark:text-slate-400" />
           </button>
-          <h2 className="text-[15px] font-black text-[#0f172a] font-display">{monthName}</h2>
+          <h2 className="text-[15px] font-black text-slate-900 dark:text-white font-display">{monthName}</h2>
           <button
             onClick={goToNextMonth}
             disabled={isCurrentMonth}
-            className="w-9 h-9 rounded-xl border border-[#e8edf5] bg-white flex items-center justify-center hover:bg-[#e2e8f0] transition-all cursor-pointer shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-9 h-9 rounded-xl border border-border/50 dark:border-slate-800/85 bg-white dark:bg-cream-100 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-900 transition-all cursor-pointer shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <ChevronRight size={16} className="text-[#64748b]" />
+            <ChevronRight size={16} className="text-slate-500 dark:text-slate-400" />
           </button>
         </div>
 
-        <div className="grid grid-cols-7 border-b border-[#e8edf5] bg-[#f8fafc]">
+        <div className="grid grid-cols-7 border-b border-border/50 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/35">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="text-center py-2.5 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">
+            <div key={day} className="text-center py-2.5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
               {day}
             </div>
           ))}
@@ -177,42 +177,42 @@ export default function DeliveryHistoryPage() {
         <div className="grid grid-cols-7">
           {calendarCells.map((cell, idx) => {
             if (cell.day === null) {
-              return <div key={`empty-${idx}`} className="h-16 md:h-24 border-b border-r border-[#e8edf5]/60 bg-slate-50/50" />
+              return <div key={`empty-${idx}`} className="h-16 md:h-24 border-b border-r border-border/40 dark:border-slate-800/60 bg-slate-50/20 dark:bg-slate-900/10" />
             }
 
             const isToday = isCurrentMonth && cell.day === today
             const status = cell.record?.delivery_status
             const isFuture = isCurrentMonth && cell.day > today
 
-            let bgColor = 'bg-white'
+            let bgColor = 'bg-white dark:bg-cream-100'
             let statusIcon = null
 
             if (status === 'delivered') {
-              bgColor = 'bg-[#f0fdf4]'
-              statusIcon = <CheckCircle2 size={12} className="text-[#16a34a]" />
+              bgColor = 'bg-green-500/5 dark:bg-green-950/10'
+              statusIcon = <CheckCircle2 size={12} className="text-emerald-655 dark:text-emerald-400" />
             } else if (status === 'skipped') {
-              bgColor = 'bg-[#fef2f2]'
-              statusIcon = <SkipForward size={12} className="text-[#ef4444]" />
+              bgColor = 'bg-rose-500/5 dark:bg-rose-950/10'
+              statusIcon = <SkipForward size={12} className="text-rose-650 dark:text-rose-400" />
             } else if (status === 'paused' || status === 'vacation') {
-              bgColor = 'bg-[#eff6ff]'
-              statusIcon = <Palmtree size={12} className="text-[#2563eb]" />
+              bgColor = 'bg-blue-500/5 dark:bg-blue-950/10'
+              statusIcon = <Palmtree size={12} className="text-blue-650 dark:text-blue-400" />
             } else if (status === 'pending') {
-              bgColor = 'bg-[#fffbeb]'
+              bgColor = 'bg-amber-500/5 dark:bg-amber-950/10'
             }
 
             return (
               <div
                 key={cell.day}
                 className={cn(
-                  'h-16 md:h-24 border-b border-r border-[#e8edf5] p-2 md:p-3 flex flex-col transition-colors relative',
+                  'h-16 md:h-24 border-b border-r border-border/50 dark:border-slate-800/80 p-2 md:p-3 flex flex-col transition-colors relative',
                   bgColor,
-                  isToday && 'ring-2 ring-inset ring-[#2563eb] z-10 rounded-lg shadow-sm',
-                  isFuture && !status && 'opacity-40 bg-[#f8fafc]'
+                  isToday && 'ring-2 ring-inset ring-brand-secondary z-10 rounded-lg shadow-sm',
+                  isFuture && !status && 'opacity-40 bg-slate-50 dark:bg-slate-900/30'
                 )}
               >
                 <span className={cn(
                   'text-[12px] md:text-[14px] font-black leading-none',
-                  isToday ? 'text-[#2563eb]' : 'text-[#0f172a]'
+                  isToday ? 'text-brand-secondary' : 'text-slate-900 dark:text-white'
                 )}>
                   {cell.day}
                 </span>
@@ -220,7 +220,7 @@ export default function DeliveryHistoryPage() {
                   <div className="flex-1 flex items-end justify-between mt-1">
                     {statusIcon}
                     {cell.record && cell.record.total_litres > 0 && status === 'delivered' && (
-                      <span className="text-[9px] md:text-[11px] font-black text-[#16a34a] font-mono bg-[#dcfce7] px-1 rounded border border-[#bbf7d0]">
+                      <span className="text-[9px] md:text-[11px] font-black text-green-750 dark:text-green-400 font-mono bg-green-500/10 dark:bg-green-500/25 px-1 rounded border border-green-250/20 dark:border-green-900/20">
                         {cell.record.total_litres}L
                       </span>
                     )}
@@ -228,7 +228,7 @@ export default function DeliveryHistoryPage() {
                 )}
                 {isToday && (
                   <div className="absolute top-2 right-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#2563eb] animate-pulse" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-brand-secondary animate-pulse" />
                   </div>
                 )}
               </div>
@@ -237,26 +237,26 @@ export default function DeliveryHistoryPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-[#e8edf5] rounded-[20px] p-5 shadow-[0_2px_16px_rgba(0,0,0,0.05)]">
-        <div className="flex flex-wrap items-center gap-6 text-[11px] font-bold text-[#64748b]">
+      <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm">
+        <div className="flex flex-wrap items-center gap-6 text-[11px] font-bold text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#dcfce7] border border-[#bbf7d0]" />
+            <div className="w-3 h-3 rounded bg-green-500/10 dark:bg-green-500/25 border border-green-200/30 dark:border-green-900/30" />
             <span>Delivered</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#fee2e2] border border-[#fecaca]" />
+            <div className="w-3 h-3 rounded bg-rose-500/10 dark:bg-rose-500/25 border border-rose-200/30 dark:border-rose-900/30" />
             <span>Skipped</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#dbeafe] border border-[#bfdbfe]" />
+            <div className="w-3 h-3 rounded bg-blue-500/10 dark:bg-blue-500/25 border border-blue-200/30 dark:border-blue-900/30" />
             <span>Vacation</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#fef3c7] border border-[#fde68a]" />
+            <div className="w-3 h-3 rounded bg-amber-500/10 dark:bg-amber-500/25 border border-amber-200/30 dark:border-amber-900/30" />
             <span>Pending</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#2563eb] animate-pulse" />
+            <div className="w-2.5 h-2.5 rounded-full bg-brand-secondary animate-pulse" />
             <span>Today</span>
           </div>
         </div>

@@ -24,64 +24,48 @@ export function TestimonialsSection() {
   ]
 
   return (
-    <section id="testimonials" style={{ background: '#fff', padding: '96px 0' }}>
+    <section id="testimonials" className="bg-white dark:bg-warm-white py-24">
       <div className="container-page">
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '8px',
-            background: '#e8f5f1', color: '#0D4F4F', borderRadius: '999px',
-            padding: '6px 16px', fontSize: '0.72rem', fontWeight: 700,
-            textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px'
-          }}>
+        <div className="text-center mb-16 flex flex-col items-center">
+          <div className="inline-flex items-center gap-2 bg-[#e8f5f1] dark:bg-teal-950/40 text-[#0D4F4F] dark:text-teal-400 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider mb-4">
             Testimonials
           </div>
-          <h2 style={{ fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', fontWeight: 800, color: '#0a2e2e', letterSpacing: '-0.02em', lineHeight: 1.15, marginBottom: '12px' }}>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-955 dark:text-white tracking-tight leading-tight mb-3">
             Trusted by 250+ local families
           </h2>
-          <p style={{ fontSize: '1rem', color: 'rgba(8,46,46,0.5)', maxWidth: '440px', margin: '0 auto', lineHeight: 1.65 }}>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-brown-600 max-w-[440px] mx-auto leading-relaxed">
             Hear what our long-term subscribers in Padil have to say about our milk and service.
           </p>
         </div>
 
         {/* Reviews Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '28px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
           {reviews.map((r, i) => (
             <div
               key={i}
-              style={{
-                background: '#F8FAFC',
-                border: '1px solid #E2E8F0',
-                borderRadius: '24px',
-                padding: '36px',
-                display: 'flex',
-                flexDirection: 'column',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.02)'
-              }}
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-border rounded-[24px] p-9 flex flex-col shadow-sm text-left"
             >
               {/* Stars */}
-              <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', color: '#F59C1A', fontSize: '16px' }}>
+              <div className="flex gap-1 mb-5 text-amber-500 text-base">
                 {Array.from({ length: r.rating }).map((_, idx) => (
                   <span key={idx}>★</span>
                 ))}
               </div>
 
               {/* Quote */}
-              <p style={{ fontSize: '0.9rem', color: 'rgba(8,46,46,0.65)', lineHeight: 1.65, fontStyle: 'italic', marginBottom: '28px', flex: 1 }}>
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic mb-7 flex-1">
                 &ldquo;{r.quote}&rdquo;
               </p>
 
               {/* Author */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  width: '40px', height: '40px', borderRadius: '50%', background: '#0D4F4F', color: '#fff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem'
-                }}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#0D4F4F] dark:bg-teal-900 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
                   {r.avatar}
                 </div>
                 <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0a2e2e', lineHeight: 1.2 }}>{r.name}</h4>
-                  <p style={{ fontSize: '0.75rem', color: 'rgba(8,46,46,0.4)', fontWeight: 600 }}>{r.location}</p>
+                  <h4 className="text-sm font-black text-slate-950 dark:text-white leading-tight">{r.name}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{r.location}</p>
                 </div>
               </div>
             </div>
