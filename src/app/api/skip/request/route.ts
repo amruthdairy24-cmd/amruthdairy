@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'skip_date is required' }, { status: 400 });
     }
 
-    // Get active subscription (admin bypasses RLS)
+    // Get active subscription
     const { data: subscription, error: subError } = await adminSupabase
       .from('subscriptions')
       .select('*')
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Active subscription not found' }, { status: 400 });
     }
 
-    // DEADLINE CHECK
+    // DEADLINE CHECK (server-side, uses DB function — Rule #6)
     const { data: isWithinDeadline } = await adminSupabase.rpc('is_within_skip_deadline', {
       p_skip_date: skip_date
     });
@@ -76,11 +76,12 @@ export async function POST(request: Request) {
     skipDateObj.setDate(1);
     const credit_month = skipDateObj.toISOString().split('T')[0];
 
+    // Deadline = previous day at 9 PM IST (15:30 UTC)
     const deadlineObj = new Date(skip_date);
     deadlineObj.setDate(deadlineObj.getDate() - 1);
-    deadlineObj.setUTCHours(15, 30, 0, 0); // 9 PM IST = 15:30 UTC
+    deadlineObj.setUTCHours(15, 30, 0, 0);
 
-    // INSERT skip_request
+    // INSERT skip_request (supabase_setup.sql column names)
     const { data: skipRequest, error: insertError } = await adminSupabase
       .from('skip_requests')
       .insert({
@@ -100,14 +101,43 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Failed to request skip' }, { status: 500 });
     }
 
-    // UPDATE daily_delivery_sheet
-    await adminSupabase
+    // UPSERT daily_delivery_sheet — create row if cron hasn't generated it yet
+    const { data: existingDelivery } = await adminSupabase
       .from('daily_delivery_sheet')
-      .update({ is_skip: true, delivery_status: 'skipped', total_litres: 0, skip_id: skipRequest.id })
+      .select('id')
       .eq('subscription_id', subscription.id)
-      .eq('delivery_date', skip_date);
+      .eq('delivery_date', skip_date)
+      .maybeSingle();
 
-    // UPDATE billing_adjustments (Rule #7: Carry-forward credits go to billing_adjustments table)
+    if (existingDelivery) {
+      await adminSupabase
+        .from('daily_delivery_sheet')
+        .update({
+          is_skip: true,
+          delivery_status: 'skipped',
+          total_litres: 0,
+          skip_id: skipRequest.id
+        })
+        .eq('id', existingDelivery.id);
+    } else {
+      await adminSupabase
+        .from('daily_delivery_sheet')
+        .insert({
+          delivery_date: skip_date,
+          customer_id: user.id,
+          subscription_id: subscription.id,
+          regular_litres: subscription.quantity_litres,
+          extra_litres: 0,
+          total_litres: 0,
+          is_skip: true,
+          is_vacation: false,
+          is_extra: false,
+          skip_id: skipRequest.id,
+          delivery_status: 'skipped'
+        });
+    }
+
+    // INSERT billing_adjustment (Rule #7: Carry-forward credits go to billing_adjustments)
     const { error: adjustmentError } = await adminSupabase
       .from('billing_adjustments')
       .insert({
@@ -116,15 +146,15 @@ export async function POST(request: Request) {
         adjustment_type: 'skip_credit',
         amount: credit_amount,
         target_month: credit_month,
-        notes: `Skip credit for ${skip_date}`
+        description: `Skip credit for ${skip_date}`
       });
 
     if (adjustmentError) {
       console.error('Adjustment error:', adjustmentError.message);
-      // Proceed anyway, we can re-sync later, but log it
+      // Proceed anyway — can re-sync later
     }
 
-    // UPDATE daily_capacity
+    // UPDATE daily_capacity — free up the skipped litres
     const { data: capacity } = await adminSupabase
       .from('daily_capacity')
       .select('*')
@@ -138,6 +168,8 @@ export async function POST(request: Request) {
         .update({ booked_litres: newBooked })
         .eq('id', capacity.id);
     }
+
+
 
     return NextResponse.json({
       success: true,

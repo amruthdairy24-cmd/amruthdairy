@@ -51,13 +51,15 @@ interface DashboardClientProps {
     cancelled: number
     pending: number
   }
+  rawMilkPricing?: any
 }
 
 export default function DashboardClient({ 
   stats, 
   deliveriesList, 
   recentActivities, 
-  subOverview 
+  subOverview,
+  rawMilkPricing
 }: DashboardClientProps) {
   const [greeting, setGreeting] = useState('Good Morning')
   const [formattedDate, setFormattedDate] = useState('')
@@ -68,6 +70,17 @@ export default function DashboardClient({
   const [priceApplyMode, setPriceApplyMode] = useState<'next_month' | 'immediate'>('next_month')
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
   const [priceMessage, setPriceMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null)
+
+  const openPriceModal = () => {
+    const activePricesToEdit = rawMilkPricing?.next_prices || rawMilkPricing?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
+    setPrices({
+      '0.5': activePricesToEdit['0.5']?.toString() || '41.34',
+      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '82.67',
+      '1.5': activePricesToEdit['1.5']?.toString() || '124',
+      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '165.34'
+    })
+    setShowPriceModal(true)
+  }
 
   const handlePriceUpdate = async () => {
     try {
@@ -87,24 +100,20 @@ export default function DashboardClient({
 
       const body: any = { key: 'milk_tier_prices' };
       
-      if (priceApplyMode === 'immediate') {
-        body.value = { prices: numPrices }
-      } else {
-        // Apply next month
-        const today = new Date();
-        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-        const effectiveDateStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
-        
-        // Fetch current to keep it
-        const res = await fetch('/api/admin/settings?key=milk_tier_prices');
-        const currentData = await res.json();
-        const currentPrices = currentData?.value?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
+      // Apply next month
+      const today = new Date();
+      const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      const effectiveDateStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
+      
+      // Fetch current to keep it
+      const res = await fetch('/api/admin/settings?key=milk_tier_prices');
+      const currentData = await res.json();
+      const currentPrices = currentData?.value?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
 
-        body.value = {
-          prices: currentPrices,
-          next_prices: numPrices,
-          effective_date: effectiveDateStr
-        }
+      body.value = {
+        prices: currentPrices,
+        next_prices: numPrices,
+        effective_date: effectiveDateStr
       }
 
       const response = await fetch('/api/admin/settings', {
@@ -475,7 +484,7 @@ export default function DashboardClient({
             </Link>
 
             <button 
-              onClick={() => setShowPriceModal(true)}
+              onClick={openPriceModal}
               className="group flex flex-col items-center justify-center gap-1.5 rounded-xl border border-border/50 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950 transition-all hover:bg-blue-500/10 dark:hover:bg-blue-500/25 hover:border-blue-400/30 hover:-translate-y-0.5 hover:shadow-sm cursor-pointer h-[68px]"
             >
               <IndianRupee size={20} className="text-brand-secondary group-hover:scale-105 transition-transform" />

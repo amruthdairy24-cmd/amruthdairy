@@ -51,6 +51,7 @@ interface DashboardData {
   active_vacation: { pause_start: string; pause_end: string; total_credit: number } | null;
   next_month_change: { quantity: number; amount: number } | null;
   recent_deliveries: Array<{ delivery_date: string; total_litres: number; delivery_status: string }>;
+  upcoming_adjustments?: Array<{ id: string, adjustment_type: string, amount: number, description: string, target_month: string, refund_status?: string }>;
 }
 
 // Framer Motion Animation Configurations (with explicit types locked)
@@ -550,34 +551,32 @@ export default function CustomerDashboard() {
                 </div>
               </div>
             </div>
-
-            {/* Right Summary Highlight Box (Gourmet Gold Panel) */}
-            <div className="bg-cream-100/50 dark:bg-slate-900/40 border-t md:border-t-0 md:border-l border-border/40 dark:border-slate-800/60 p-6 flex flex-col justify-between items-stretch md:w-[220px] lg:w-[240px] flex-shrink-0">
-              <div className="space-y-1 text-left">
-                <span className="inline-flex items-center gap-1 bg-amber-500/10 text-[#D97706] text-[9px] px-2 py-0.5 rounded-full font-bold border border-amber-200/40">
-                  <CreditCard size={10} />
-                  <span>NET BALANCE</span>
-                </span>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-bold pt-2">Total Net Due</p>
-                <p className="text-3xl font-black font-mono text-slate-800 dark:text-white tracking-tight leading-none pt-1">
-                  ₹{(current_month?.net_due || 0).toFixed(2)}
-                </p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold pt-1">
-                  Billing cycle: {current_month?.billing_month || 'Current Month'}
-                </p>
-              </div>
-
-              <div className="pt-6 space-y-2">
-                <Link 
-                  href="/dashboard/bills" 
-                  className="w-full inline-flex items-center justify-center h-10 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-xs shadow-sm transition-all duration-150 gap-1 cursor-pointer"
-                >
-                  <span>Pay Balance</span>
-                  <ArrowUpRight size={14} />
-                </Link>
-                <p className="text-[9px] text-slate-400 dark:text-slate-500 text-center font-bold">Statements generated monthly on the 1st</p>
-              </div>
+            <div className="flex justify-between items-center pt-2 pb-3 text-[14px] font-black text-[#0f172a]">
+              <span>Net Due for this month:</span>
+              <span className="text-[#2563eb] font-mono text-[18px]">₹{(current_month?.net_due || 0).toFixed(2)}</span>
             </div>
+            
+            {data.upcoming_adjustments && data.upcoming_adjustments.length > 0 && (
+              <div className="pt-3 border-t border-[#e8edf5] space-y-3">
+                <p className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest">Unapplied Credits & Charges</p>
+                <p className="text-[10px] font-semibold text-[#64748b]">These will automatically adjust your next month's bill.</p>
+                {data.upcoming_adjustments.map((adj, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-[13px] font-semibold text-[#64748b]">
+                    <span className="flex flex-col">
+                      <span className="text-[#0f172a] font-bold">
+                        {adj.adjustment_type.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                        {adj.refund_status === 'requested' && <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Refund Pending</span>}
+                        {adj.refund_status === 'processed' && <span className="ml-2 text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Refunded</span>}
+                      </span>
+                      <span className="text-[11px] font-normal">{adj.description || 'Adjustment'}</span>
+                    </span>
+                    <span className={cn("font-bold", adj.adjustment_type.includes('credit') || adj.amount < 0 ? "text-[#16a34a]" : "text-[#ef4444]")}>
+                      {adj.adjustment_type.includes('credit') || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
 
