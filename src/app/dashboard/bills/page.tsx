@@ -25,10 +25,31 @@ export default function BillsPage() {
   const [error, setError] = useState('')
   const [bill, setBill] = useState<BillingData | null>(null)
   const [profile, setProfile] = useState<any>(null)
+  const [upcomingAdjustments, setUpcomingAdjustments] = useState<any[]>([])
   
   const [showPayModal, setShowPayModal] = useState(false)
   const [paymentStep, setPaymentStep] = useState<'details' | 'processing' | 'success'>('details')
   const [mockPaid, setMockPaid] = useState(false)
+  const [isRequestingRefund, setIsRequestingRefund] = useState(false)
+
+  async function handleRefundRequest() {
+    if (!confirm('Are you sure you want to request a cash refund? This will convert your carry-forward credits to cash, and they will no longer reduce your next bill.')) return;
+    setIsRequestingRefund(true);
+    try {
+      const res = await fetch('/api/customer/refund', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        alert('Refund requested successfully! Our admin will process your request shortly.');
+        loadData();
+      } else {
+        alert(data.message || 'Failed to request refund');
+      }
+    } catch (err) {
+      alert('Network error while requesting refund');
+    } finally {
+      setIsRequestingRefund(false);
+    }
+  }
 
   async function loadData() {
     try {
@@ -37,6 +58,7 @@ export default function BillsPage() {
       const json = await res.json()
       if (json.success) {
         if (json.profile) setProfile(json.profile)
+        if (json.upcoming_adjustments) setUpcomingAdjustments(json.upcoming_adjustments)
         if (json.current_month) {
           setBill(json.current_month)
         } else {
@@ -258,6 +280,53 @@ export default function BillsPage() {
               </div>
             )}
           </div>
+
+          {upcomingAdjustments.length > 0 && (
+            <div className="bg-white border border-[#e8edf5] rounded-[20px] shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-hidden mt-6">
+              <div className="p-5 border-b border-[#e8edf5] bg-[#f8fafc]">
+                <h3 className="text-[14px] font-black text-[#0f172a] font-display">Upcoming Adjustments</h3>
+                <p className="text-[11px] text-[#94a3b8] font-bold mt-0.5 uppercase tracking-widest">Applies to next month's bill</p>
+              </div>
+              <div className="p-5 space-y-3">
+                {upcomingAdjustments.map((adj, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-[13px] font-semibold text-[#64748b]">
+                    <span className="flex flex-col">
+                      <span className="text-[#0f172a] font-bold">
+                        {adj.adjustment_type.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                        {adj.refund_status === 'requested' && <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Refund Pending</span>}
+                        {adj.refund_status === 'processed' && <span className="ml-2 text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Refunded</span>}
+                      </span>
+                      <span className="text-[11px] font-normal">{adj.description || 'Adjustment'}</span>
+                    </span>
+                    <span className={cn("font-bold", adj.adjustment_type.includes('credit') || adj.amount < 0 ? "text-[#16a34a]" : "text-[#ef4444]")}>
+                      {adj.adjustment_type.includes('credit') || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+
+                {(() => {
+                  const refundableAmt = upcomingAdjustments
+                    .filter(a => a.amount < 0 && (!a.refund_status || a.refund_status === 'none'))
+                    .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+                  
+                  if (refundableAmt > 0) {
+                    return (
+                      <div className="pt-4 mt-4 border-t border-[#e8edf5]">
+                        <button 
+                          onClick={handleRefundRequest}
+                          disabled={isRequestingRefund}
+                          className="w-full h-10 rounded-xl bg-white border-2 border-[#2563eb] text-[#2563eb] hover:bg-[#eff6ff] active:scale-[0.98] font-bold text-[13px] transition-all disabled:opacity-50"
+                        >
+                          {isRequestingRefund ? 'Requesting...' : `Request Refund to Bank (₹${refundableAmt.toFixed(2)})`}
+                        </button>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="md:col-span-2 space-y-4">

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Invalid extra_litres amount' }, { status: 400 });
     }
 
-    // DEADLINE CHECK
+    // DEADLINE CHECK (server-side, uses DB function)
     const { data: isWithinDeadline } = await adminSupabase.rpc('is_within_skip_deadline', {
       p_skip_date: order_date
     });
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Get active subscription (admin bypasses RLS)
+    // Get active subscription
     const { data: subscription, error: subError } = await adminSupabase
       .from('subscriptions')
       .select('*')
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'You have already requested extra milk for this date.' }, { status: 400 });
     }
 
-    // CAPACITY BOOKING
+    // CAPACITY BOOKING (atomic via RPC)
     const { data: bookingSuccess, error: capacityError } = await adminSupabase.rpc('book_capacity_single_day', {
       p_date: order_date,
       p_litres: extra_litres
@@ -78,30 +78,33 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Calculate using admin-managed pricing
+    // Calculate charge using admin-managed pricing
     const prices = await fetchMilkPrices(adminSupabase);
     const charge_amount = calculateExtraMilkCharge(extra_litres, prices);
 
+    // Charge goes to NEXT month's bill
     const chargeDateObj = new Date(order_date);
     chargeDateObj.setMonth(chargeDateObj.getMonth() + 1);
     chargeDateObj.setDate(1);
     const charge_month = chargeDateObj.toISOString().split('T')[0];
 
+    // Deadline = previous day at 9 PM IST (15:30 UTC)
     const deadlineObj = new Date(order_date);
     deadlineObj.setDate(deadlineObj.getDate() - 1);
-    deadlineObj.setUTCHours(15, 30, 0, 0); // 9 PM IST
+    deadlineObj.setUTCHours(15, 30, 0, 0);
 
-    // INSERT extra_milk_order
+    // INSERT extra_milk_order (using supabase_setup.sql column names)
     const { data: extraOrder, error: insertError } = await adminSupabase
       .from('extra_milk_orders')
       .insert({
         subscription_id: subscription.id,
         customer_id: user.id,
         order_date,
-        extra_quantity_litres: extra_litres,
+        extra_litres,
+        total_litres_that_day: subscription.quantity_litres + extra_litres,
         charge_amount,
-        charge_applied_to_month: charge_month,
-        deadline_time: deadlineObj.toISOString(),
+        charge_month,
+        deadline: deadlineObj.toISOString(),
         status: 'confirmed'
       })
       .select()
@@ -115,22 +118,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: `DB Error: ${insertError.message}` }, { status: 500 });
     }
 
-    // Note: capacity was already safely booked and locked via book_capacity_single_day
-
-    // Note: The charge is recorded in `extra_milk_orders`.
-    // The monthly billing chron `generate-monthly-bills` will aggregate `extra_milk_orders` at the end of the month
-    // to calculate the final `extra_charges` and `net_due`. 
-    // Per Rule #7, we NEVER modify existing bills.
-
-    // UPDATE daily_delivery_sheet if exists
-    const { data: deliverySheet } = await adminSupabase
+    // UPSERT daily_delivery_sheet — create row if cron hasn't generated it yet
+    const { data: existingDelivery } = await adminSupabase
       .from('daily_delivery_sheet')
       .select('id')
       .eq('subscription_id', subscription.id)
       .eq('delivery_date', order_date)
       .maybeSingle();
 
-    if (deliverySheet) {
+    if (existingDelivery) {
       await adminSupabase
         .from('daily_delivery_sheet')
         .update({
@@ -139,8 +135,26 @@ export async function POST(request: Request) {
           extra_order_id: extraOrder.id,
           total_litres: subscription.quantity_litres + extra_litres
         })
-        .eq('id', deliverySheet.id);
+        .eq('id', existingDelivery.id);
+    } else {
+      await adminSupabase
+        .from('daily_delivery_sheet')
+        .insert({
+          delivery_date: order_date,
+          customer_id: user.id,
+          subscription_id: subscription.id,
+          regular_litres: subscription.quantity_litres,
+          extra_litres,
+          total_litres: subscription.quantity_litres + extra_litres,
+          is_skip: false,
+          is_vacation: false,
+          is_extra: true,
+          extra_order_id: extraOrder.id,
+          delivery_status: 'pending'
+        });
     }
+
+
 
     return NextResponse.json({
       success: true,

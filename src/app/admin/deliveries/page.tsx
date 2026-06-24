@@ -6,13 +6,8 @@ export const dynamic = 'force-dynamic'
 export default async function DeliveriesPage() {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from('daily_delivery_sheet')
-    .select(`id, delivery_date, total_litres, delivery_status, profiles(full_name, area)`)
-    .order('delivery_date', { ascending: false })
-    .limit(100)
+  // Get today's date in IST
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
 
-  if (error) return <div className="text-red-500">Error: {error.message}</div>
-
-  return <DeliveriesClient data={(data as any) || []} />
+  return <DeliveriesClient initialDate={todayStr} />
 }

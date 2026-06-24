@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 export async function GET(
   request: NextRequest,
@@ -50,8 +51,10 @@ export async function GET(
     }
 
     // Format the response
-    const formattedDeliveries = deliveries.map(d => ({
+    const formattedDeliveries = (deliveries || []).map(d => ({
       id: d.id,
+      subscription_id: d.subscription_id,
+      customer_id: d.customer_id,
       customer_name: d.profiles?.full_name,
       phone: d.profiles?.phone,
       address: d.profiles?.address,
@@ -65,13 +68,23 @@ export async function GET(
       is_skip: d.is_skip,
       is_vacation: d.is_vacation,
       is_extra: d.is_extra,
+      extra_order_id: d.extra_order_id,
+      delivered_at: d.delivered_at,
       notes: d.notes
     }));
+
+    // Get capacity for this date
+    const { data: capacity } = await supabase
+      .from('daily_capacity')
+      .select('total_litres, booked_litres')
+      .eq('date', date)
+      .maybeSingle();
 
     return NextResponse.json({
       success: true,
       date: date,
       summary: summary || { total_customers: 0, delivering: 0, skipped: 0, on_vacation: 0, total_litres_needed: 0 },
+      capacity: capacity || { total_litres: 100, booked_litres: 0 },
       deliveries: formattedDeliveries
     });
 
@@ -107,12 +120,25 @@ export async function PATCH(
       return NextResponse.json({ success: false, message: 'Missing deliveryId or status' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const adminSupabase = createAdminClient();
+
+    // Build update payload
+    const updatePayload: Record<string, any> = {
+      delivery_status: status,
+    };
+
+    if (notes !== undefined) {
+      updatePayload.notes = notes;
+    }
+
+    // Set delivered_at timestamp when marking as delivered
+    if (status === 'delivered') {
+      updatePayload.delivered_at = new Date().toISOString();
+    }
+
+    const { data, error } = await adminSupabase
       .from('daily_delivery_sheet')
-      .update({
-        delivery_status: status,
-        notes: notes !== undefined ? notes : null
-      })
+      .update(updatePayload)
       .eq('id', deliveryId)
       .eq('delivery_date', date)
       .select()
@@ -123,6 +149,36 @@ export async function PATCH(
       return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }
 
+    // CASCADING UPDATES when marking as delivered
+    if (status === 'delivered' && data) {
+      // 1. Update billing_months.days_delivered
+      const billingMonthStr = `${date.substring(0, 7)}-01`;
+
+      const { data: billingMonth } = await adminSupabase
+        .from('billing_months')
+        .select('id, days_delivered')
+        .eq('subscription_id', data.subscription_id)
+        .eq('billing_month', billingMonthStr)
+        .maybeSingle();
+
+      if (billingMonth) {
+        await adminSupabase
+          .from('billing_months')
+          .update({
+            days_delivered: Number(billingMonth.days_delivered) + 1
+          })
+          .eq('id', billingMonth.id);
+      }
+
+      // 2. Update extra_milk_orders.status to 'delivered' if this delivery had extras
+      if (data.extra_order_id) {
+        await adminSupabase
+          .from('extra_milk_orders')
+          .update({ status: 'delivered' })
+          .eq('id', data.extra_order_id);
+      }
+    }
+
     return NextResponse.json({ success: true, data });
 
   } catch (err: any) {
@@ -131,3 +187,93 @@ export async function PATCH(
   }
 }
 
+// BATCH MARK DELIVERED — mark all pending deliveries for a date as delivered
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ date: string }> }
+) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Verify Admin
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+    }
+
+    const { date } = await params;
+    const adminSupabase = createAdminClient();
+
+    // Get all pending deliveries for this date
+    const { data: pendingDeliveries, error: fetchError } = await adminSupabase
+      .from('daily_delivery_sheet')
+      .select('id, subscription_id, extra_order_id')
+      .eq('delivery_date', date)
+      .eq('delivery_status', 'pending');
+
+    if (fetchError || !pendingDeliveries || pendingDeliveries.length === 0) {
+      return NextResponse.json({
+        success: true,
+        message: 'No pending deliveries to mark',
+        updated_count: 0
+      });
+    }
+
+    const deliveryIds = pendingDeliveries.map(d => d.id);
+    const now = new Date().toISOString();
+
+    // Batch update delivery statuses
+    const { error: updateError } = await adminSupabase
+      .from('daily_delivery_sheet')
+      .update({
+        delivery_status: 'delivered',
+        delivered_at: now
+      })
+      .in('id', deliveryIds);
+
+    if (updateError) {
+      return NextResponse.json({ success: false, message: updateError.message }, { status: 500 });
+    }
+
+    // Update billing_months.days_delivered for each subscription
+    const billingMonthStr = `${date.substring(0, 7)}-01`;
+    for (const delivery of pendingDeliveries) {
+      const { data: bm } = await adminSupabase
+        .from('billing_months')
+        .select('id, days_delivered')
+        .eq('subscription_id', delivery.subscription_id)
+        .eq('billing_month', billingMonthStr)
+        .maybeSingle();
+
+      if (bm) {
+        await adminSupabase
+          .from('billing_months')
+          .update({ days_delivered: Number(bm.days_delivered) + 1 })
+          .eq('id', bm.id);
+      }
+
+      // Update extra_milk_orders if applicable
+      if (delivery.extra_order_id) {
+        await adminSupabase
+          .from('extra_milk_orders')
+          .update({ status: 'delivered' })
+          .eq('id', delivery.extra_order_id);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `${deliveryIds.length} deliveries marked as delivered`,
+      updated_count: deliveryIds.length
+    });
+
+  } catch (err: any) {
+    console.error('Batch mark delivered exception:', err);
+    return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
+  }
+}
