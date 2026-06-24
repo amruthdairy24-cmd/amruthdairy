@@ -3,8 +3,8 @@
 import { useState, useMemo } from 'react'
 import {
   Wallet, Users, TrendingUp, CheckCircle2,
-  Clock, XCircle, Droplets, Calendar,
-  ArrowUpRight, Filter, Download, RefreshCw,
+  Clock, XCircle, Droplets,
+  ArrowUpRight, Download,
   ChevronDown
 } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
@@ -67,93 +67,44 @@ function StatCard({
   trendUp?: boolean
 }) {
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        border: '1px solid #e8edf5',
-        borderRadius: 20,
-        padding: '20px 22px',
-        display: 'flex',
-        flexDirection: 'column' as const,
-        gap: 14,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-        position: 'relative' as const,
-        overflow: 'hidden',
-      }}
-    >
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col gap-3.5 shadow-sm relative overflow-hidden transition-all hover:shadow-md duration-200">
       {/* Subtle top-right glow */}
       <div
-        style={{
-          position: 'absolute',
-          top: -20,
-          right: -20,
-          width: 80,
-          height: 80,
-          borderRadius: '50%',
-          background: iconBg,
-          opacity: 0.5,
-          filter: 'blur(20px)',
-          pointerEvents: 'none',
-        }}
+        className="absolute -top-5 -right-5 w-20 h-20 rounded-full opacity-30 blur-xl pointer-events-none"
+        style={{ background: iconBg }}
       />
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+      <div className="flex items-start justify-between relative z-10">
         <div
-          style={{
-            width: 42,
-            height: 42,
-            borderRadius: 12,
-            background: iconBg,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ backgroundColor: iconBg }}
         >
-          <Icon size={20} color={iconColor} strokeWidth={2.2} />
+          <Icon size={20} style={{ color: iconColor }} strokeWidth={2.2} />
         </div>
 
         {trend && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 3,
-              background: trendUp ? '#dcfce7' : '#fef2f2',
-              color: trendUp ? '#16a34a' : '#dc2626',
-              fontSize: 10,
-              fontWeight: 800,
-              padding: '3px 8px',
-              borderRadius: 999,
-              border: `1px solid ${trendUp ? '#bbf7d0' : '#fecaca'}`,
-            }}
-          >
+          <div className={`flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+            trendUp 
+              ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50' 
+              : 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50'
+          }`}>
             <ArrowUpRight
               size={10}
-              style={{ transform: trendUp ? 'none' : 'rotate(90deg)' }}
+              className={trendUp ? '' : 'rotate-90'}
             />
             {trend}
           </div>
         )}
       </div>
 
-      <div>
-        <p
-          style={{
-            fontSize: 28,
-            fontWeight: 900,
-            color: '#0f172a',
-            lineHeight: 1,
-            marginBottom: 4,
-            fontFamily: 'var(--font-display, system-ui)',
-            letterSpacing: '-0.5px',
-          }}
-        >
+      <div className="relative z-10">
+        <p className="text-3xl font-extrabold text-slate-900 dark:text-white leading-none mb-1 font-display tracking-tight">
           {value}
         </p>
-        <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 2 }}>
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-0.5">
           {label}
         </p>
-        <p style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8' }}>{sub}</p>
+        <p className="text-[10px] font-semibold text-slate-450 dark:text-slate-500">{sub}</p>
       </div>
     </div>
   )
@@ -180,51 +131,37 @@ function DistributionBar({ data }: { data: SubscriptionData[] }) {
     { label: 'Vacation', count: vacation, color: '#3b82f6', bg: '#dbeafe' },
   ].filter((s) => s.count > 0)
 
+  const getSegmentClasses = (label: string) => {
+    switch (label.toLowerCase()) {
+      case 'active': return 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
+      case 'inactive': return 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400'
+      case 'pending': return 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400'
+      case 'vacation': return 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400'
+      default: return 'bg-slate-50 dark:bg-slate-950/30 text-slate-600 dark:text-slate-400'
+    }
+  }
+
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        border: '1px solid #e8edf5',
-        borderRadius: 20,
-        padding: '20px 22px',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <p style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>
+          <p className="text-sm font-extrabold text-slate-950 dark:text-white mb-0.5">
             Status Distribution
           </p>
-          <p style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8' }}>
+          <p className="text-[10px] font-semibold text-slate-450 dark:text-slate-500">
             Breakdown of all subscriptions
           </p>
         </div>
-        <div
-          style={{
-            fontSize: 22,
-            fontWeight: 900,
-            color: '#0f172a',
-            fontFamily: 'var(--font-display, system-ui)',
-          }}
-        >
+        <div className="text-xl font-black text-slate-950 dark:text-white font-display">
           {data.length}
-          <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', marginLeft: 4 }}>
+          <span className="text-xs font-semibold text-slate-450 dark:text-slate-500 ml-1">
             total
           </span>
         </div>
       </div>
 
       {/* Bar */}
-      <div
-        style={{
-          height: 10,
-          borderRadius: 999,
-          background: '#f1f5f9',
-          overflow: 'hidden',
-          display: 'flex',
-          marginBottom: 14,
-        }}
-      >
+      <div className="h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex mb-3.5">
         {segments.map((s) => (
           <div
             key={s.label}
@@ -239,31 +176,17 @@ function DistributionBar({ data }: { data: SubscriptionData[] }) {
       </div>
 
       {/* Legend */}
-      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 10 }}>
+      <div className="flex flex-wrap gap-2.5">
         {segments.map((s) => (
-          <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div key={s.label} className="flex items-center gap-1.5">
             <div
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: s.color,
-                flexShrink: 0,
-              }}
+              className="width-2 height-2 rounded-full shrink-0 w-2 h-2"
+              style={{ background: s.color }}
             />
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#475569' }}>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
               {s.label}
             </span>
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 800,
-                color: s.color,
-                background: s.bg,
-                padding: '1px 6px',
-                borderRadius: 999,
-              }}
-            >
+            <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${getSegmentClasses(s.label)}`}>
               {s.count}
             </span>
           </div>
@@ -293,71 +216,35 @@ function QuantityBreakdown({ data }: { data: SubscriptionData[] }) {
   }
 
   return (
-    <div
-      style={{
-        background: '#ffffff',
-        border: '1px solid #e8edf5',
-        borderRadius: 20,
-        padding: '20px 22px',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-      }}
-    >
-      <div style={{ marginBottom: 16 }}>
-        <p style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', marginBottom: 2 }}>
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+      <div className="mb-4">
+        <p className="text-sm font-extrabold text-slate-950 dark:text-white mb-0.5">
           Quantity Breakdown
         </p>
-        <p style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8' }}>
+        <p className="text-[10px] font-semibold text-slate-450 dark:text-slate-500">
           Subscribers by daily litres
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+      <div className="flex flex-col gap-2.5">
         {entries.map(([qty, count]) => {
-          const pct = (count / max) * 100
+          const pct = (count / max) * 105 // slight adjustment for visual hierarchy
           const color = qtyColors[qty] || '#94a3b8'
           return (
-            <div key={qty} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div
-                style={{
-                  width: 36,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color: '#475569',
-                  flexShrink: 0,
-                  textAlign: 'right' as const,
-                }}
-              >
+            <div key={qty} className="flex items-center gap-2.5">
+              <div className="w-9 text-xs font-bold text-slate-600 dark:text-slate-400 shrink-0 text-right">
                 {qty}L
               </div>
-              <div
-                style={{
-                  flex: 1,
-                  height: 8,
-                  borderRadius: 999,
-                  background: '#f1f5f9',
-                  overflow: 'hidden',
-                }}
-              >
+              <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 <div
+                  className="h-full rounded-full transition-all duration-500"
                   style={{
-                    height: '100%',
-                    width: `${pct}%`,
-                    borderRadius: 999,
+                    width: `${Math.min(pct, 100)}%`,
                     background: color,
-                    transition: 'width 0.5s ease',
                   }}
                 />
               </div>
-              <div
-                style={{
-                  width: 28,
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color: '#0f172a',
-                  textAlign: 'right' as const,
-                  flexShrink: 0,
-                }}
-              >
+              <div className="w-7 text-xs font-bold text-slate-950 dark:text-white text-right shrink-0">
                 {count}
               </div>
             </div>
@@ -366,29 +253,13 @@ function QuantityBreakdown({ data }: { data: SubscriptionData[] }) {
       </div>
 
       {/* Total litres */}
-      <div
-        style={{
-          marginTop: 16,
-          paddingTop: 14,
-          borderTop: '1px solid #f1f5f9',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>
+      <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
           Total daily output
         </span>
-        <span
-          style={{
-            fontSize: 16,
-            fontWeight: 900,
-            color: '#0f172a',
-            fontFamily: 'var(--font-display, system-ui)',
-          }}
-        >
+        <span className="text-lg font-black text-slate-955 dark:text-white font-display">
           {data.reduce((s, d) => s + d.quantity_litres, 0).toFixed(1)}
-          <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', marginLeft: 3 }}>
+          <span className="text-xs font-semibold text-slate-450 dark:text-slate-500 ml-1">
             L / day
           </span>
         </span>
@@ -442,30 +313,18 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
         const initials = getInitials(name)
         const [bg, fg] = getAvatarColor(name)
         return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="flex items-center gap-2.5">
             <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 10,
-                background: bg,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 11,
-                fontWeight: 900,
-                color: fg,
-                flexShrink: 0,
-                letterSpacing: '0.5px',
-              }}
+              className="w-8.5 h-8.5 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0 tracking-wider w-[34px] h-[34px]"
+              style={{ backgroundColor: bg, color: fg }}
             >
               {initials}
             </div>
             <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug">
                 {name}
               </p>
-              <p style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8' }}>
+              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
                 #{row.id.slice(0, 8)}
               </p>
             </div>
@@ -478,19 +337,9 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
       cell: (row) => {
         const plan = 'Standard Plan'
         return (
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              background: '#f0f9ff',
-              border: '1px solid #bae6fd',
-              borderRadius: 8,
-              padding: '4px 10px',
-            }}
-          >
-            <Droplets size={11} color="#0284c7" />
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#0369a1' }}>{plan}</span>
+          <div className="inline-flex items-center gap-1.5 bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-900/50 rounded-lg px-2.5 py-1">
+            <Droplets size={11} className="text-sky-600 dark:text-sky-405" />
+            <span className="text-[11px] font-bold text-sky-700 dark:text-sky-400">{plan}</span>
           </div>
         )
       },
@@ -502,33 +351,15 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
         const qty = row.quantity_litres
         const isHigh = qty >= 2
         return (
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              background: isHigh ? '#fef3c7' : '#f0fdf4',
-              border: `1px solid ${isHigh ? '#fde68a' : '#bbf7d0'}`,
-              borderRadius: 8,
-              padding: '4px 10px',
-            }}
-          >
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 900,
-                color: isHigh ? '#92400e' : '#166534',
-              }}
-            >
+          <div className={`inline-flex items-center gap-1 border rounded-lg px-2.5 py-1 ${
+            isHigh 
+              ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50' 
+              : 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50'
+          }`}>
+            <span className={`text-xs font-black ${isHigh ? 'text-amber-800 dark:text-amber-400' : 'text-emerald-800 dark:text-emerald-400'}`}>
               {qty}
             </span>
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: isHigh ? '#b45309' : '#16a34a',
-              }}
-            >
+            <span className={`text-[10px] font-bold ${isHigh ? 'text-amber-600 dark:text-amber-550' : 'text-emerald-600 dark:text-emerald-550'}`}>
               L
             </span>
           </div>
@@ -543,8 +374,8 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
         const daysAgo = Math.floor((Date.now() - d.getTime()) / 86400000)
         return (
           <div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: '#334155' }}>{dateStr}</p>
-            <p style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8' }}>
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{dateStr}</p>
+            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
               {daysAgo === 0 ? 'Today' : daysAgo === 1 ? 'Yesterday' : `${daysAgo}d ago`}
             </p>
           </div>
@@ -559,146 +390,42 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
   ]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 24 }}>
+    <div className="flex flex-col gap-6">
 
       {/* ── PAGE HEADER ── */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8f 60%, #1e40af 100%)',
-          borderRadius: 24,
-          padding: '28px 32px',
-          position: 'relative' as const,
-          overflow: 'hidden',
-          boxShadow: '0 8px 32px rgba(15,23,42,0.2)',
-        }}
-      >
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-blue-900 px-8 py-7 shadow-lg">
         {/* Decorative blobs */}
-        <div
-          style={{
-            position: 'absolute',
-            top: -40,
-            right: -40,
-            width: 200,
-            height: 200,
-            borderRadius: '50%',
-            background: 'rgba(96,165,250,0.15)',
-            filter: 'blur(40px)',
-            pointerEvents: 'none',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            bottom: -30,
-            left: '30%',
-            width: 160,
-            height: 100,
-            borderRadius: '50%',
-            background: 'rgba(167,139,250,0.1)',
-            filter: 'blur(30px)',
-            pointerEvents: 'none',
-          }}
-        />
+        <div className="absolute -top-10 -right-10 w-50 h-50 rounded-full bg-blue-400/15 blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-8 left-[30%] w-40 h-25 rounded-full bg-purple-400/10 blur-2xl pointer-events-none" />
 
-        <div
-          style={{
-            position: 'relative' as const,
-            zIndex: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap' as const,
-            gap: 16,
-          }}
-        >
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
           {/* Left */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 16,
-                background: 'rgba(255,255,255,0.12)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backdropFilter: 'blur(8px)',
-              }}
-            >
-              <Wallet size={24} color="#ffffff" strokeWidth={2} />
+          <div className="flex items-center gap-4">
+            <div className="w-13 h-13 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md w-[52px] h-[52px]">
+              <Wallet size={24} className="text-white" strokeWidth={2} />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <h1
-                  style={{
-                    fontSize: 24,
-                    fontWeight: 900,
-                    color: '#ffffff',
-                    letterSpacing: '-0.5px',
-                    fontFamily: 'var(--font-display, system-ui)',
-                  }}
-                >
+              <div className="flex items-center gap-2.5 mb-1">
+                <h1 className="text-2xl font-black text-white tracking-tight font-display">
                   Subscriptions
                 </h1>
-                <span
-                  style={{
-                    background: 'rgba(255,255,255,0.15)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    borderRadius: 999,
-                    padding: '2px 10px',
-                    fontSize: 11,
-                    fontWeight: 800,
-                    color: '#93c5fd',
-                    backdropFilter: 'blur(8px)',
-                  }}
-                >
+                <span className="bg-white/15 border border-white/25 rounded-full px-2.5 py-0.5 text-[11px] font-bold text-blue-200 backdrop-blur-md">
                   {data.length} total
                 </span>
               </div>
-              <p style={{ fontSize: 12, fontWeight: 500, color: 'rgba(219,234,254,0.7)' }}>
+              <p className="text-xs font-medium text-blue-200/75">
                 Manage recurring milk delivery subscriptions
               </p>
             </div>
           </div>
 
           {/* Right — action buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '9px 16px',
-                borderRadius: 12,
-                border: '1px solid rgba(255,255,255,0.15)',
-                background: 'rgba(255,255,255,0.08)',
-                color: '#e2e8f0',
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: 'pointer',
-                backdropFilter: 'blur(8px)',
-              }}
-            >
+          <div className="flex items-center gap-2.5">
+            <button className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 active:bg-white/15 text-slate-200 text-xs font-bold cursor-pointer backdrop-blur-md transition-all duration-200">
               <Download size={14} />
               Export
             </button>
-            <button
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '9px 18px',
-                borderRadius: 12,
-                border: 'none',
-                background: '#ffffff',
-                color: '#1e3a8f',
-                fontSize: 12,
-                fontWeight: 800,
-                cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              }}
-            >
+            <button className="flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl border-0 bg-white hover:bg-slate-50 active:bg-slate-100 text-blue-900 text-xs font-black cursor-pointer shadow-md transition-all duration-200">
               <Users size={14} />
               New Subscription
             </button>
@@ -706,16 +433,7 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
         </div>
 
         {/* Quick stat pills inside header */}
-        <div
-          style={{
-            position: 'relative' as const,
-            zIndex: 2,
-            display: 'flex',
-            gap: 10,
-            marginTop: 20,
-            flexWrap: 'wrap' as const,
-          }}
-        >
+        <div className="relative z-10 flex flex-wrap gap-2.5 mt-5">
           {[
             { icon: CheckCircle2, label: `${stats.active} Active`, color: '#4ade80' },
             { icon: Clock, label: `${stats.pending} Pending`, color: '#fbbf24' },
@@ -724,19 +442,10 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
           ].map((p) => (
             <div
               key={p.label}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 999,
-                padding: '5px 12px',
-                backdropFilter: 'blur(8px)',
-              }}
+              className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 backdrop-blur-md"
             >
-              <p.icon size={11} color={p.color} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
+              <p.icon size={11} style={{ color: p.color }} />
+              <span className="text-[11px] font-bold text-white/85">
                 {p.label}
               </span>
             </div>
@@ -745,13 +454,7 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
       </div>
 
       {/* ── STAT CARDS ROW ── */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-          gap: 16,
-        }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Active Subscriptions"
           value={stats.active}
@@ -793,35 +496,17 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
       </div>
 
       {/* ── CHARTS ROW ── */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 16,
-        }}
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <DistributionBar data={data} />
         <QuantityBreakdown data={data} />
       </div>
 
       {/* ── FILTER BAR ── */}
-      <div
-        style={{
-          background: '#ffffff',
-          border: '1px solid #e8edf5',
-          borderRadius: 18,
-          padding: '16px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          flexWrap: 'wrap' as const,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-        }}
-      >
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3 flex-wrap shadow-sm">
         {/* Search */}
-        <div style={{ position: 'relative' as const, flex: 1, minWidth: 200 }}>
+        <div className="relative flex-1 min-w-[200px]">
           <svg
-            style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}
+            className="absolute left-3 top-1/2 -translate-y-1/2"
             width="15" height="15" viewBox="0 0 24 24" fill="none"
             stroke="#94a3b8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
           >
@@ -831,43 +516,16 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search customers or plans..."
-            style={{
-              width: '100%',
-              height: 40,
-              paddingLeft: 36,
-              paddingRight: 14,
-              border: '1.5px solid #e2e8f0',
-              borderRadius: 12,
-              fontSize: 13,
-              fontWeight: 500,
-              color: '#334155',
-              background: '#f8fafc',
-              outline: 'none',
-              fontFamily: 'inherit',
-            }}
+            className="w-full h-10 pl-9 pr-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
           />
         </div>
 
         {/* Status filter */}
-        <div style={{ position: 'relative' as const }}>
+        <div className="relative">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            style={{
-              height: 40,
-              paddingLeft: 14,
-              paddingRight: 32,
-              border: '1.5px solid #e2e8f0',
-              borderRadius: 12,
-              fontSize: 12,
-              fontWeight: 700,
-              color: '#334155',
-              background: '#f8fafc',
-              outline: 'none',
-              cursor: 'pointer',
-              appearance: 'none' as const,
-              fontFamily: 'inherit',
-            }}
+            className="h-10 pl-3.5 pr-8 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none cursor-pointer appearance-none transition-all focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="all">All Statuses</option>
             {uniqueStatuses.map((s) => (
@@ -876,31 +534,16 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
           </select>
           <ChevronDown
             size={13}
-            color="#94a3b8"
-            style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+            className="text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
           />
         </div>
 
         {/* Qty filter */}
-        <div style={{ position: 'relative' as const }}>
+        <div className="relative">
           <select
             value={qtyFilter}
             onChange={(e) => setQtyFilter(e.target.value)}
-            style={{
-              height: 40,
-              paddingLeft: 14,
-              paddingRight: 32,
-              border: '1.5px solid #e2e8f0',
-              borderRadius: 12,
-              fontSize: 12,
-              fontWeight: 700,
-              color: '#334155',
-              background: '#f8fafc',
-              outline: 'none',
-              cursor: 'pointer',
-              appearance: 'none' as const,
-              fontFamily: 'inherit',
-            }}
+            className="h-10 pl-3.5 pr-8 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none cursor-pointer appearance-none transition-all focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="all">All Quantities</option>
             {uniqueQtys.map((q) => (
@@ -909,8 +552,7 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
           </select>
           <ChevronDown
             size={13}
-            color="#94a3b8"
-            style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+            className="text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
           />
         </div>
 
@@ -918,20 +560,7 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
         {(search || statusFilter !== 'all' || qtyFilter !== 'all') && (
           <button
             onClick={() => { setSearch(''); setStatusFilter('all'); setQtyFilter('all') }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
-              height: 40,
-              padding: '0 14px',
-              borderRadius: 12,
-              border: '1.5px solid #fecaca',
-              background: '#fef2f2',
-              color: '#dc2626',
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
+            className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-450 text-xs font-bold cursor-pointer transition-all hover:bg-rose-100 dark:hover:bg-rose-950/50"
           >
             <XCircle size={13} />
             Reset
@@ -939,18 +568,8 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
         )}
 
         {/* Results count */}
-        <div style={{ marginLeft: 'auto' }}>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#94a3b8',
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: 8,
-              padding: '4px 10px',
-            }}
-          >
+        <div className="ml-auto">
+          <span className="text-[11px] font-bold text-slate-450 dark:text-slate-400 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1">
             {filtered.length} of {data.length} results
           </span>
         </div>

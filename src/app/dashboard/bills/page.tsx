@@ -150,19 +150,19 @@ export default function BillsPage() {
   if (loading) {
     return (
       <div className="max-w-xl space-y-6 animate-pulse">
-        <div className="h-6 w-32 bg-slate-200 rounded-lg" />
-        <div className="h-56 bg-slate-200 rounded-3xl" />
+        <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+        <div className="h-56 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
       </div>
     )
   }
 
   if (error || !bill) {
     return (
-      <div className="max-w-md mx-auto text-center py-12 bg-white border border-[#e8edf5] rounded-[24px] p-8 shadow-[0_2px_16px_rgba(0,0,0,0.05)]">
-        <AlertCircle className="text-red-500 mx-auto mb-4" size={40} />
-        <h3 className="text-lg font-black text-[#0f172a]">Statement Unavailable</h3>
-        <p className="text-[13px] font-semibold text-[#64748b] mt-2 mb-6">{error || 'No active statements found.'}</p>
-        <button onClick={loadData} className="inline-flex items-center justify-center px-5 h-10 bg-[#2563eb] text-white font-extrabold rounded-xl text-[13px] shadow-sm hover:bg-[#1e40af] border-none cursor-pointer">
+      <div className="max-w-md mx-auto text-center py-12 bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-3xl p-8 shadow-md">
+        <AlertCircle className="text-rose-500 mx-auto mb-4" size={40} />
+        <h3 className="text-lg font-black text-slate-900 dark:text-white font-display">Statement Unavailable</h3>
+        <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 mt-2 mb-6">{error || 'No active statements found.'}</p>
+        <button onClick={loadData} className="inline-flex items-center justify-center px-5 h-10 bg-brand-secondary hover:bg-brand-secondary/90 text-white font-extrabold rounded-xl text-[13px] shadow-sm border-none cursor-pointer transition-colors">
           Retry Loading
         </button>
       </div>
@@ -176,81 +176,81 @@ export default function BillsPage() {
     <div className="max-w-3xl space-y-6 relative">
       
       <div>
-        <h1 className="text-[22px] font-black text-[#0f172a] font-display tracking-tight mb-1 flex items-center gap-2">
-          <FileText size={24} className="text-[#64748b]" /> My Bills & Statements
+        <h1 className="text-[22px] font-black text-slate-900 dark:text-white font-display tracking-tight mb-1 flex items-center gap-2">
+          <FileText size={24} className="text-slate-450 dark:text-slate-550" /> My Bills & Statements
         </h1>
-        <p className="text-[13px] font-semibold text-[#64748b]">Review monthly invoices, credit breakdowns, and billing logs.</p>
+        <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400">Review monthly invoices, credit breakdowns, and billing logs.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         
         <div className="md:col-span-3 space-y-5">
-          <div className="bg-white border border-[#e8edf5] rounded-[20px] shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-hidden">
+          <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden">
             
-            <div className="p-5 border-b border-[#e8edf5] bg-[#f8fafc] flex justify-between items-center">
+            <div className="p-5 border-b border-border/50 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/35 flex justify-between items-center">
               <div>
-                <h3 className="text-[14px] font-black text-[#0f172a] font-display">{monthName} Statement</h3>
-                <p className="text-[11px] text-[#94a3b8] font-bold mt-0.5 uppercase tracking-widest">Amruth Dairy Farm Invoice</p>
+                <h3 className="text-[14px] font-black text-slate-900 dark:text-white font-display">{monthName} Statement</h3>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold mt-0.5 uppercase tracking-widest">Amruth Dairy Farm Invoice</p>
               </div>
               <div>
                 {mockPaid ? (
-                  <span className="text-[10px] font-black uppercase text-[#16a34a] bg-[#dcfce7] border border-[#bbf7d0] px-3 py-1 rounded-full">Paid</span>
+                  <span className="text-[10px] font-black uppercase text-green-700 dark:text-green-400 bg-green-500/10 dark:bg-green-500/20 border border-green-200/30 dark:border-green-900/30 px-3 py-1 rounded-full">Paid</span>
                 ) : hasPendingBill ? (
-                  <span className="text-[10px] font-black uppercase text-[#d97706] bg-[#fef3c7] border border-[#fde68a] px-3 py-1 rounded-full">Pending</span>
+                  <span className="text-[10px] font-black uppercase text-amber-700 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20 border border-amber-200/30 dark:border-amber-900/30 px-3 py-1 rounded-full">Pending</span>
                 ) : (
-                  <span className="text-[10px] font-black uppercase text-[#16a34a] bg-[#dcfce7] border border-[#bbf7d0] px-3 py-1 rounded-full">Cleared</span>
+                  <span className="text-[10px] font-black uppercase text-green-750 dark:text-green-400 bg-green-500/10 dark:bg-green-500/20 border border-green-200/30 dark:border-green-900/30 px-3 py-1 rounded-full">Cleared</span>
                 )}
               </div>
             </div>
 
-            <div className="p-5 space-y-4 text-[13px] font-semibold text-[#64748b]">
-              <div className="flex justify-between items-center pb-3 border-b border-[#e8edf5]">
+            <div className="p-5 space-y-4 text-[13px] font-semibold text-slate-600 dark:text-slate-400">
+              <div className="flex justify-between items-center pb-3 border-b border-border/50 dark:border-slate-800/60">
                 <span>Base Plan charges:</span>
-                <span className="font-bold text-[#0f172a]">₹{(bill.net_due + bill.skip_credit + bill.pause_credit - bill.extra_charges).toFixed(2)}</span>
+                <span className="font-bold text-slate-900 dark:text-slate-200">₹{(bill.net_due + bill.skip_credit + bill.pause_credit - bill.extra_charges).toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between items-center pb-3 border-b border-[#e8edf5]">
+              <div className="flex justify-between items-center pb-3 border-b border-border/50 dark:border-slate-800/60">
                 <span className="flex items-center gap-1.5">
                   <span>Skip Day Credits:</span>
-                  <span className="bg-[#f8fafc] text-[#64748b] border border-[#e8edf5] text-[10px] px-1.5 py-0.5 rounded font-extrabold">{bill.days_skipped} days</span>
+                  <span className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border border-border/40 dark:border-slate-800/60 text-[10px] px-1.5 py-0.5 rounded font-extrabold">{bill.days_skipped} days</span>
                 </span>
-                <span className="font-bold text-[#16a34a]">-₹{bill.skip_credit.toFixed(2)}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">-₹{bill.skip_credit.toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between items-center pb-3 border-b border-[#e8edf5]">
+              <div className="flex justify-between items-center pb-3 border-b border-border/50 dark:border-slate-800/60">
                 <span className="flex items-center gap-1.5">
                   <span>Vacation Pause Credits:</span>
-                  <span className="bg-[#f8fafc] text-[#64748b] border border-[#e8edf5] text-[10px] px-1.5 py-0.5 rounded font-extrabold">{bill.days_paused} days</span>
+                  <span className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border border-border/40 dark:border-slate-800/60 text-[10px] px-1.5 py-0.5 rounded font-extrabold">{bill.days_paused} days</span>
                 </span>
-                <span className="font-bold text-[#16a34a]">-₹{bill.pause_credit.toFixed(2)}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">-₹{bill.pause_credit.toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between items-center pb-3 border-b border-[#e8edf5]">
+              <div className="flex justify-between items-center pb-3 border-b border-border/50 dark:border-slate-800/60">
                 <span className="flex items-center gap-1.5">
                   <span>Extra Milk Orders:</span>
-                  <span className="bg-[#f8fafc] text-[#64748b] border border-[#e8edf5] text-[10px] px-1.5 py-0.5 rounded font-extrabold">{bill.extra_litres_ordered}L</span>
+                  <span className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border border-border/40 dark:border-slate-800/60 text-[10px] px-1.5 py-0.5 rounded font-extrabold">{bill.extra_litres_ordered}L</span>
                 </span>
-                <span className="font-bold text-[#ef4444]">+₹{bill.extra_charges.toFixed(2)}</span>
+                <span className="font-bold text-rose-600 dark:text-rose-450">+₹{bill.extra_charges.toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between items-center pb-3 border-b border-[#e8edf5]">
+              <div className="flex justify-between items-center pb-3 border-b border-border/50 dark:border-slate-800/60">
                 <span>Carry in balance:</span>
-                <span className={cn("font-bold", bill.carry_in_balance >= 0 ? "text-[#16a34a]" : "text-[#ef4444]")}>
+                <span className={cn("font-bold", bill.carry_in_balance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-450")}>
                   {bill.carry_in_balance >= 0 ? '-' : '+'}₹{Math.abs(bill.carry_in_balance).toFixed(2)}
                 </span>
               </div>
 
-              <div className="flex justify-between items-center pt-2 text-[15px] font-black text-[#0f172a]">
+              <div className="flex justify-between items-center pt-2 text-[15px] font-black text-slate-900 dark:text-white">
                 <span>Total Net Due:</span>
-                <span className="text-[#2563eb] font-mono text-[18px]">₹{mockPaid ? '0.00' : bill.net_due.toFixed(2)}</span>
+                <span className="text-brand-secondary font-mono text-[18px]">₹{mockPaid ? '0.00' : bill.net_due.toFixed(2)}</span>
               </div>
             </div>
 
             {hasPendingBill && (
-              <div className="p-5 bg-[#f8fafc] border-t border-[#e8edf5]">
+              <div className="p-5 bg-slate-50 dark:bg-slate-900/35 border-t border-border/50 dark:border-slate-800/80">
                 <button
                   onClick={() => { setShowPayModal(true); setPaymentStep('details'); }}
-                  className="w-full h-11 rounded-xl bg-[#2563eb] hover:bg-[#1e40af] active:scale-[0.98] text-white font-extrabold text-[13px] shadow-sm transition-all border-none flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full h-11 rounded-xl bg-brand-secondary hover:bg-brand-secondary/90 active:scale-[0.98] text-white font-extrabold text-[13px] shadow-sm transition-all border-none flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <CreditCard size={14} />
                   <span>Pay Balance Due (₹{bill.net_due.toFixed(2)})</span>
@@ -261,22 +261,22 @@ export default function BillsPage() {
         </div>
 
         <div className="md:col-span-2 space-y-4">
-          <div className="bg-white border border-[#e8edf5] rounded-[20px] shadow-[0_2px_16px_rgba(0,0,0,0.05)] p-5 space-y-4 text-[13px] font-semibold text-[#64748b]">
-            <h3 className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest flex items-center gap-1.5">
-              <TrendingUp size={14} className="text-[#2563eb]" /> Pricing Formula
+          <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl shadow-sm p-5 space-y-4 text-[13px] font-semibold text-slate-600 dark:text-slate-400">
+            <h3 className="text-[11px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <TrendingUp size={14} className="text-brand-secondary" /> Pricing Formula
             </h3>
             <div className="space-y-3">
               <p className="leading-relaxed">
-                Pricing is set by the admin and calculated based on <span className="font-bold text-[#0f172a]">actual days in the month</span>. Your daily rate is applied to each delivery day.
+                Pricing is set by the admin and calculated based on <span className="font-bold text-slate-900 dark:text-white">actual days in the month</span>. Your daily rate is applied to each delivery day.
               </p>
               <p className="leading-relaxed">
                 Skips and pauses accumulate credit at your subscription's daily rate, which automatically reduces your next monthly statement.
               </p>
             </div>
-            <div className="h-[1px] bg-[#e8edf5]" />
+            <div className="h-[1px] bg-border/50 dark:bg-slate-800/60" />
             <div className="flex gap-2.5">
-              <Info size={16} className="text-[#94a3b8] flex-shrink-0 mt-0.5" />
-              <p className="text-[11px] text-[#94a3b8] leading-relaxed font-bold">
+              <Info size={16} className="text-slate-400 dark:text-slate-500 flex-shrink-0 mt-0.5" />
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed font-bold">
                 Online payment balances update instantly. For cash payments, contact delivery managers.
               </p>
             </div>
@@ -300,23 +300,23 @@ export default function BillsPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-white border border-[#e8edf5] rounded-[24px] w-full max-w-sm p-6 shadow-2xl relative z-10 overflow-hidden text-[#0f172a]"
+              className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-3xl w-full max-w-sm p-6 shadow-2xl relative z-10 overflow-hidden text-slate-900 dark:text-white"
             >
-              <div className="absolute top-0 left-0 right-0 h-1 bg-[#2563eb]" />
+              <div className="absolute top-0 left-0 right-0 h-1 bg-brand-secondary" />
 
               {paymentStep === 'details' && (
                 <div className="space-y-5">
                   <div>
-                    <h3 className="text-lg font-black font-display text-[#0f172a]">Secure Checkout</h3>
-                    <p className="text-[12px] font-semibold text-[#64748b] mt-1">Complete your subscription payment securely via Razorpay.</p>
+                    <h3 className="text-lg font-black font-display text-slate-900 dark:text-white">Secure Checkout</h3>
+                    <p className="text-[12px] font-semibold text-slate-500 dark:text-slate-400 mt-1">Complete your subscription payment securely via Razorpay.</p>
                   </div>
 
-                  <div className="bg-[#f8fafc] border border-[#e8edf5] p-4 rounded-xl text-[13px] font-semibold text-[#64748b] space-y-2">
+                  <div className="bg-slate-50 dark:bg-slate-900/40 border border-border/50 dark:border-slate-800/80 p-4 rounded-xl text-[13px] font-semibold text-slate-600 dark:text-slate-400 space-y-2">
                     <div className="flex justify-between">
                       <span>Statement Amount:</span>
-                      <span className="font-bold">₹{bill.net_due.toFixed(2)}</span>
+                      <span className="font-bold text-slate-900 dark:text-white">₹{bill.net_due.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between font-black text-[#0f172a] border-t border-[#e8edf5] pt-2 mt-2">
+                    <div className="flex justify-between font-black text-slate-900 dark:text-white border-t border-border/40 dark:border-slate-800/60 pt-2 mt-2">
                       <span>Paying Total:</span>
                       <span>₹{bill.net_due.toFixed(2)}</span>
                     </div>
@@ -325,13 +325,13 @@ export default function BillsPage() {
                   <div className="flex gap-3 pt-2">
                     <button
                       onClick={() => setShowPayModal(false)}
-                      className="w-1/3 h-10 rounded-xl border border-[#e8edf5] text-[#64748b] font-bold text-[13px] hover:bg-[#f8fafc] transition-all cursor-pointer bg-transparent"
+                      className="w-1/3 h-10 rounded-xl border border-border/50 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 font-bold text-[13px] hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-all cursor-pointer bg-transparent"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={startPayment}
-                      className="w-2/3 h-10 rounded-xl bg-[#2563eb] hover:bg-[#1e40af] active:scale-[0.98] text-white font-extrabold text-[13px] shadow-sm border-none cursor-pointer transition-all"
+                      className="w-2/3 h-10 rounded-xl bg-brand-secondary hover:bg-brand-secondary/90 active:scale-[0.98] text-white font-extrabold text-[13px] shadow-sm border-none cursor-pointer transition-all"
                     >
                       Pay Now
                     </button>
@@ -341,11 +341,11 @@ export default function BillsPage() {
 
               {paymentStep === 'processing' && (
                 <div className="text-center py-8 space-y-4">
-                  <div className="w-14 h-14 border-4 border-[#2563eb] border-t-transparent rounded-full animate-spin mx-auto" />
+                  <div className="w-14 h-14 border-4 border-brand-secondary border-t-transparent rounded-full animate-spin mx-auto" />
                   <div>
-                    <p className="text-[15px] font-black text-[#0f172a]">Processing Payment...</p>
-                    <p className="text-[11px] font-semibold text-[#64748b] mt-1 flex items-center justify-center gap-1">
-                      <ShieldCheck size={14} className="text-[#16a34a]" /> Secured by SSL encryption
+                    <p className="text-[15px] font-black text-slate-900 dark:text-white">Processing Payment...</p>
+                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-center gap-1">
+                      <ShieldCheck size={14} className="text-emerald-600 dark:text-emerald-400" /> Secured by SSL encryption
                     </p>
                   </div>
                 </div>
@@ -353,16 +353,16 @@ export default function BillsPage() {
 
               {paymentStep === 'success' && (
                 <div className="text-center py-6 space-y-4">
-                  <div className="w-14 h-14 bg-[#dcfce7] border border-[#bbf7d0] rounded-full flex items-center justify-center mx-auto text-[#16a34a] animate-[float_3s_ease-in-out_infinite]">
+                  <div className="w-14 h-14 bg-green-500/10 dark:bg-green-500/20 border border-green-200/30 dark:border-green-900/30 rounded-full flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 animate-[float_3s_ease-in-out_infinite]">
                     <CheckCircle2 size={30} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-[#0f172a] font-display">Payment Successful!</h3>
-                    <p className="text-[13px] font-semibold text-[#64748b] mt-1">₹{bill.net_due.toFixed(2)} credited successfully.</p>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white font-display">Payment Successful!</h3>
+                    <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 mt-1">₹{bill.net_due.toFixed(2)} credited successfully.</p>
                   </div>
                   <button
                     onClick={() => setShowPayModal(false)}
-                    className="w-full h-11 rounded-xl bg-[#f8fafc] border border-[#e8edf5] hover:bg-[#e2e8f0] text-[#0f172a] font-extrabold text-[13px] cursor-pointer mt-4 transition-all"
+                    className="w-full h-11 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-border/50 dark:border-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-extrabold text-[13px] cursor-pointer mt-4 transition-all"
                   >
                     Close Invoice
                   </button>

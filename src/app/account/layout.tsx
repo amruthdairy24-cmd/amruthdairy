@@ -3,6 +3,7 @@ import { Milk, SkipForward, PalmtreeIcon, Plus, FileText, ShoppingBag, Settings 
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const navItems = [
   { href: '/dashboard', icon: '📊', label: 'Dashboard' },
@@ -36,9 +37,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     fetchProfile()
   }, [])
   return (
-    <div className="min-h-screen flex bg-[#FDFBF7]">
+    <div className="min-h-screen flex bg-[#FDFBF7] dark:bg-slate-950 transition-colors duration-300">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 bg-[#0F172A] fixed top-0 bottom-0 left-0 z-30 border-r border-[#E2E8F0]/20">
+      <aside className="hidden lg:flex flex-col w-60 bg-[#0F172A] fixed top-0 bottom-0 left-0 z-30 border-r border-[#E2E8F0]/20 dark:border-slate-800/40">
         
         {/* Logo */}
         <div className="px-6 py-6 border-b border-white/10">
@@ -95,7 +96,6 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 'text-sm font-semibold text-white/70',
                 'transition-all duration-150',
                 'hover:bg-white/10 hover:text-white',
-                // For demo dashboard active state
                 item.href === '/account' && 'bg-white/10 text-white border-l-[3.5px] border-[#0284C7]'
               )}
             >
@@ -107,14 +107,26 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
         {/* Logout */}
         <div className="px-3 pb-6">
-          <button className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-sm font-semibold text-white/40 hover:bg-white/10 hover:text-white transition-colors">
+          <button className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-sm font-semibold text-white/40 hover:bg-white/10 hover:text-white transition-colors border-none cursor-pointer bg-transparent text-left">
             <span>🚪</span> Logout
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 lg:ml-60 flex flex-col">
+      <main className="flex-1 lg:ml-60 flex flex-col min-w-0">
+        {/* Desktop Topbar header */}
+        <header className="hidden lg:flex items-center justify-between px-8 bg-white dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800/80 h-16 sticky top-0 z-20 transition-colors duration-300">
+          <div className="flex items-center gap-4">
+            <span className="text-[11px] font-black tracking-wider text-slate-400 dark:text-slate-500 uppercase">
+              Profile & Security Settings
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+          </div>
+        </header>
+
         {/* Mobile top nav */}
         <div className="lg:hidden sticky top-0 z-20 bg-[#0F172A] px-4 py-3 flex items-center justify-between border-b border-[#E2E8F0]/10">
           <Link href="/" className="flex items-center gap-2">
@@ -123,8 +135,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
             </div>
             <span className="text-sm font-bold text-white">Amruth Milk</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span className="text-xs text-white/60 font-semibold">{profileName}</span>
+            <ThemeToggle />
           </div>
         </div>
 
@@ -133,7 +146,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         </div>
 
         {/* Mobile bottom nav */}
-        <nav className="lg:hidden sticky bottom-0 bg-white border-t border-[#E2E8F0]/20 flex z-30" aria-label="Mobile navigation">
+        <nav className="lg:hidden sticky bottom-0 bg-white dark:bg-slate-900 border-t border-[#E2E8F0]/20 dark:border-slate-800 flex z-30 transition-colors duration-300" aria-label="Mobile navigation">
           {navItems.slice(0, 5).map((item) => {
             const isActive = item.href === '/account'
             return (
@@ -141,8 +154,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex-1 flex flex-col items-center gap-1 py-3 text-slate-400 hover:text-[#0284C7] transition-colors min-w-0",
-                  isActive && "text-[#0284C7]"
+                  "flex-1 flex flex-col items-center gap-1 py-3 text-slate-450 dark:text-slate-500 hover:text-[#0284C7] dark:hover:text-sky-400 transition-colors min-w-0",
+                  isActive && "text-[#0284C7] dark:text-sky-400"
                 )}
               >
                 <span className="text-lg" role="img" aria-label={item.label}>{item.icon}</span>

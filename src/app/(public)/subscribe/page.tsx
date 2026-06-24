@@ -153,7 +153,6 @@ export default function SubscribePage() {
       })
       const data = await res.json()
       if (data.success) {
-        // Logged in! Save their profile details
         const profileRes = await fetch('/api/customer/profile', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -249,26 +248,27 @@ export default function SubscribePage() {
   return (
     <>
       <Navbar />
-      <main className="sub-page-root">
+      <main className="min-h-screen bg-cream-50 dark:bg-warm-white text-slate-800 dark:text-slate-100 pb-20 transition-colors duration-300">
 
         {/* ── HERO HEADER SECTION ─────────────────── */}
-        <div className="sub-hero">
+        <div className="relative overflow-hidden bg-brand-primary text-white p-8 sm:p-12 lg:p-16 flex flex-col lg:flex-row items-center justify-between gap-12 milk-drop-pattern rounded-b-[40px] shadow-lg mb-12">
+          
           {/* Left hero text */}
-          <div className="sub-hero-left">
-            <div className="sub-pure-badge">
-              <span className="sub-pure-dot" />
+          <div className="flex-1 max-w-2xl flex flex-col gap-6 z-10">
+            <div className="flex items-center gap-2 self-start px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10px] font-extrabold tracking-wider uppercase text-cream-50 select-none">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-secondary animate-ping" />
               100% PURE • FARM FRESH
             </div>
-            <h1 className="sub-hero-title">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black font-display tracking-tight leading-tight">
               Start Your Milk Subscription
             </h1>
-            <p className="sub-hero-desc">
+            <p className="text-slate-300 font-medium text-sm sm:text-base leading-relaxed">
               Pure, farm-fresh milk delivered to your doorstep daily.<br />
               Standard 1 Litre/Day subscription.
             </p>
 
             {/* Stepper */}
-            <div className="sub-stepper">
+            <div className="flex items-center gap-4 mt-4 overflow-x-auto py-2 no-scrollbar">
               {[
                 { num: 1, label: 'DETAILS' },
                 { num: 2, label: 'REVIEW' },
@@ -277,20 +277,20 @@ export default function SubscribePage() {
                 const done = step > num
                 const active = step === num
                 return (
-                  <div key={num} className="sub-stepper-item">
+                  <div key={num} className="flex items-center gap-2 flex-shrink-0">
                     {i > 0 && (
-                      <div className={cn('sub-stepper-line', step > num ? 'sub-stepper-line-done' : '')} />
+                      <div className={cn('w-8 sm:w-12 h-0.5 bg-white/20 rounded', step > num ? 'bg-brand-secondary' : '')} />
                     )}
                     <button
                       onClick={() => num < step && setStep(num as StepNum)}
                       className={cn(
-                        'sub-step-circle',
-                        done ? 'sub-step-done' : active ? 'sub-step-active' : 'sub-step-idle'
+                        'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 cursor-pointer',
+                        done ? 'bg-brand-secondary text-white shadow-[0_0_12px_rgba(2,132,199,0.4)]' : active ? 'bg-white text-brand-primary font-black shadow-lg scale-110 ring-4 ring-white/10' : 'bg-white/10 text-white border border-white/15'
                       )}
                     >
                       {done ? <Check size={13} strokeWidth={3} /> : num}
                     </button>
-                    <span className={cn('sub-step-label', active ? 'sub-step-label-active' : '')}>
+                    <span className={cn('text-[10px] font-extrabold tracking-wider text-slate-300 select-none uppercase', active ? 'text-white font-black' : '')}>
                       {label}
                     </span>
                   </div>
@@ -300,43 +300,38 @@ export default function SubscribePage() {
           </div>
 
           {/* Right hero - bottle + splash */}
-          <div className="sub-hero-right" aria-hidden>
+          <div className="hidden lg:flex items-center justify-center relative w-72 h-80 opacity-90 pointer-events-none z-10" aria-hidden>
             {/* Milk splash bg */}
-            <div className="sub-splash-bg" />
-            <div className="sub-splash-arc-l" />
-            <div className="sub-splash-arc-r" />
-            <div className="sub-drop sub-drop-1" />
-            <div className="sub-drop sub-drop-2" />
-            <div className="sub-drop sub-drop-3" />
-            <div className="sub-drop sub-drop-4" />
-            {/* Bottle */}
-            <div className="sub-bottle">
-              <div className="sub-bottle-cap" />
-              <div className="sub-bottle-neck" />
-              <div className="sub-bottle-body">
-                <div className="sub-bottle-shine" />
-                <div className="sub-bottle-label">
-                  <div className="sub-bottle-label-cow">🐄</div>
-                  <div className="sub-bottle-label-name">Amruth<br />Dairy</div>
-                </div>
+            <div className="absolute w-72 h-72 rounded-full bg-brand-secondary/20 blur-[60px] animate-pulse" />
+            
+            {/* Tailwind Vector Bottle */}
+            <div className="w-32 h-64 border border-white/20 rounded-[28px] bg-white/5 backdrop-blur-md p-3 flex flex-col items-center justify-center relative shadow-2xl z-20">
+              <div className="w-10 h-6 border border-white/20 rounded-t-xl bg-white/10 absolute -top-6" />
+              <div className="w-1 h-full bg-white/10 absolute left-1/2 -translate-x-1/2 top-0" />
+              <div className="text-center flex flex-col items-center justify-center">
+                <div className="text-3xl mb-2">🐄</div>
+                <div className="text-xs font-black tracking-widest text-white leading-none">AMRUTH</div>
+                <div className="text-[6px] font-bold text-slate-300 tracking-wider mt-1">PURE A2 MILK</div>
+                <div className="w-8 h-0.5 bg-brand-secondary my-2" />
+                <div className="text-[5px] text-slate-300 font-medium">100% Pure & Natural<br />Farm Fresh</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── MAIN CONTENT ────────────────────────── */}
-        <div className="sub-content">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatePresence mode="wait">
             {!paymentSuccess ? (
               <motion.div
                 key="wizard"
-                className="sub-wizard-layout"
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
 
                 {/* LEFT: Form Card */}
-                <div className="sub-form-card">
+                <div className="lg:col-span-8 p-6 sm:p-8 rounded-brand-2xl border border-border/40 dark:border-slate-800/80 bg-white dark:bg-cream-100 shadow-[0_4px_24px_var(--shadow)] flex flex-col gap-6">
                   <AnimatePresence mode="wait">
 
                     {/* STEP 1 */}
@@ -350,20 +345,20 @@ export default function SubscribePage() {
                           transition={{ duration: 0.25 }}
                         >
                           {/* Card header */}
-                          <div className="sub-form-card-header">
-                            <div className="sub-form-card-icon" style={{ backgroundColor: '#fff8e8', borderColor: '#fdeef3' }}>
-                              <Smartphone size={20} color="#f59e0b" />
+                          <div className="flex items-start gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-5">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-500/10 border border-amber-200/50 dark:border-amber-900/30 text-amber-500 flex-shrink-0">
+                              <Smartphone size={20} />
                             </div>
                             <div>
-                              <h2 className="sub-form-card-title">Verify Your Mobile</h2>
-                              <p className="sub-form-card-sub">
-                                We sent a 6-digit OTP code to <strong style={{ color: '#0f172a' }}>+91 {phone}</strong>
+                              <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-tight">Verify Your Mobile</h2>
+                              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                                We sent a 6-digit OTP code to <strong className="text-slate-900 dark:text-white">+91 {phone}</strong>
                               </p>
                             </div>
                           </div>
 
                           {/* OTP Boxes */}
-                          <div className="otp-boxes" style={{ maxWidth: '380px', margin: '24px auto' }}>
+                          <div className="grid grid-cols-6 gap-2 sm:gap-3 py-1 my-6 max-w-[380px] mx-auto">
                             {otp.map((digit, i) => (
                               <input
                                 key={i}
@@ -375,55 +370,48 @@ export default function SubscribePage() {
                                 onChange={e => handleOtpChange(e.target.value, i)}
                                 onKeyDown={e => handleOtpKeyDown(e, i)}
                                 className={cn(
-                                  'otp-box',
-                                  otpError ? 'otp-box-error' : digit ? 'otp-box-filled' : ''
+                                  'w-full aspect-square text-center text-lg font-bold text-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-brand-secondary/30 focus:border-brand-secondary transition-all',
+                                  otpError ? 'border-red-500 ring-2 ring-red-500/10' : digit ? 'border-brand-secondary ring-2 ring-brand-secondary/10 bg-white dark:bg-slate-900' : ''
                                 )}
-                                style={{
-                                  border: '1.5px solid #e2e8f0',
-                                  borderRadius: '10px',
-                                  background: '#fffdf7',
-                                }}
                               />
                             ))}
                           </div>
 
                           {otpError && (
-                            <p className="sub-error" style={{ textAlign: 'center', marginBottom: 12 }}>⚠️ {otpError}</p>
+                            <p className="text-xs font-bold text-red-500 flex items-center justify-center gap-1.5 mt-2 mb-4">⚠️ {otpError}</p>
                           )}
 
-                          <div className="resend-row" style={{ marginBottom: 24 }}>
+                          <div className="text-center text-xs py-1 mb-6">
                             {resendCountdown > 0 ? (
-                              <span className="resend-timer" style={{ fontSize: '13px' }}>
-                                Resend code in <strong style={{ color: '#f59e0b' }}>{resendCountdown}s</strong>
+                              <span className="text-slate-400 dark:text-slate-500 font-semibold">
+                                Resend code in <strong className="text-slate-700 dark:text-slate-300">{resendCountdown}s</strong>
                               </span>
                             ) : (
-                              <button onClick={sendOtpCode} className="resend-btn" style={{ color: '#f59e0b', fontSize: '13px', border: 'none', background: 'none', cursor: 'pointer' }}>
+                              <button onClick={sendOtpCode} className="font-bold text-brand-secondary hover:underline cursor-pointer bg-transparent border-none">
                                 Resend OTP Code
                               </button>
                             )}
                           </div>
 
                           {/* CTA Row */}
-                          <div className="sub-form-footer sub-form-footer-row" style={{ display: 'flex', gap: '12px' }}>
+                          <div className="border-t border-slate-100 dark:border-slate-800/60 pt-5 mt-4 flex items-center justify-between gap-4">
                             <button
                               onClick={() => {
                                 setShowOtp(false)
                                 setOtp(['', '', '', '', '', ''])
                                 setOtpError('')
                               }}
-                              className="sub-btn-back"
-                              style={{ flex: 1 }}
+                              className="px-5 h-12 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all cursor-pointer flex-1"
                             >
                               <ChevronLeft size={14} /> Back
                             </button>
                             <button
                               onClick={() => verifyOtpCode(otp.join(''))}
                               disabled={otpLoading || otp.some(d => d === '')}
-                              className="sub-btn-primary"
-                              style={{ flex: 2 }}
+                              className="px-6 h-12 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-[0_4px_16px_rgba(2,132,199,0.3)] active:translate-y-0 hover:-translate-y-0.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:translate-y-0 flex-[2]"
                             >
                               {otpLoading ? (
-                                <><span className="sub-spinner" /> Verifying...</>
+                                <><span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> Verifying...</>
                               ) : (
                                 <>Verify & Continue <ChevronRight size={14} /></>
                               )}
@@ -437,61 +425,45 @@ export default function SubscribePage() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -14 }}
                           transition={{ duration: 0.25 }}
+                          className="flex flex-col gap-6"
                         >
                           {/* Card header */}
-                          <div className="sub-form-card-header">
-                            <div className="sub-form-card-icon">
-                              <MapPin size={20} color="#2563eb" />
+                          <div className="flex items-start gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-5">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/10 border border-blue-200/50 dark:border-blue-900/30 text-brand-secondary flex-shrink-0">
+                              <MapPin size={20} />
                             </div>
                             <div>
-                              <h2 className="sub-form-card-title">Delivery Details</h2>
-                              <p className="sub-form-card-sub">Where should we deliver your fresh milk?</p>
+                              <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-tight">Delivery Details</h2>
+                              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Where should we deliver your fresh milk?</p>
                             </div>
                           </div>
 
                           {/* Fields grid */}
-                          <div className="sub-fields-grid">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 py-2">
                             {/* Full Name */}
-                            <div className="sub-field">
-                              <label className="sub-label">
-                                <User size={12} className="sub-label-icon" /> Full Name
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
+                                <User size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Full Name
                               </label>
-                              <div className="sub-input-wrap">
-                                <User size={14} className="sub-input-icon" />
+                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-12 relative">
+                                <User size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 flex-shrink-0 pointer-events-none" />
                                 <input
                                   type="text"
                                   placeholder="Ravi Nayak"
                                   value={fullname}
                                   onChange={e => { setFullname(e.target.value); setFormError('') }}
-                                  className="sub-input"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Full Delivery Address */}
-                            <div className="sub-field">
-                              <label className="sub-label">
-                                <MapPin size={12} className="sub-label-icon" /> Full Delivery Address
-                              </label>
-                              <div className="sub-input-wrap">
-                                <MapPin size={14} className="sub-input-icon" style={{ alignSelf: 'flex-start', marginTop: 14 }} />
-                                <textarea
-                                  placeholder="Flat/House No, Building, Street, Landmark"
-                                  value={address}
-                                  onChange={e => { setAddress(e.target.value); setFormError('') }}
-                                  rows={2}
-                                  className="sub-input sub-textarea"
+                                  className="w-full pl-11 pr-4 h-full text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400"
                                 />
                               </div>
                             </div>
 
                             {/* Mobile */}
-                            <div className="sub-field">
-                              <label className="sub-label">
-                                <Phone size={12} className="sub-label-icon" /> Mobile Number (10-Digit)
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
+                                <Phone size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Mobile Number (10-Digit)
                               </label>
-                              <div className="sub-phone-wrap">
-                                <span className="sub-phone-prefix">
+                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-12">
+                                <span className="flex items-center gap-1 px-4 h-full border-r border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100/50 dark:bg-slate-900 select-none">
                                   <Phone size={12} /> +91
                                 </span>
                                 <input
@@ -501,61 +473,78 @@ export default function SubscribePage() {
                                   placeholder="98765 43210"
                                   value={phone}
                                   onChange={e => { setPhone(e.target.value.replace(/\D/g, '').slice(0, 10)); setFormError('') }}
-                                  className="sub-input sub-phone-input"
+                                  className="w-full px-4 h-full text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400 disabled:opacity-60"
                                   disabled={isLoggedIn}
                                 />
                               </div>
                             </div>
 
-                            {/* Start Date */}
-                            <div className="sub-field">
-                              <label className="sub-label">
-                                <Calendar size={12} className="sub-label-icon" /> Subscription Start Date
+                            {/* Full Delivery Address */}
+                            <div className="flex flex-col gap-2 sm:col-span-2">
+                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
+                                <MapPin size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Full Delivery Address
                               </label>
-                              <div className="sub-input-wrap">
-                                <Calendar size={14} className="sub-input-icon" />
+                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-24 relative">
+                                <MapPin size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 flex-shrink-0 pointer-events-none top-4" />
+                                <textarea
+                                  placeholder="Flat/House No, Building, Street, Landmark"
+                                  value={address}
+                                  onChange={e => { setAddress(e.target.value); setFormError('') }}
+                                  rows={2}
+                                  className="w-full pl-11 pr-4 py-3 text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400 min-h-[72px] resize-none"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Start Date */}
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
+                                <Calendar size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Subscription Start Date
+                              </label>
+                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-12 relative">
+                                <Calendar size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 flex-shrink-0 pointer-events-none" />
                                 <input
                                   type="date"
                                   value={startDate}
                                   min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
                                   onChange={e => setStartDate(e.target.value)}
-                                  className="sub-input"
+                                  className="w-full pl-11 pr-4 h-full text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400"
                                 />
                               </div>
                             </div>
 
                             {/* Area */}
-                            <div className="sub-field">
-                              <label className="sub-label">
-                                <MapPin size={12} className="sub-label-icon" /> Select Area / Locality
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
+                                <MapPin size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Select Area / Locality
                               </label>
-                              <div className="sub-input-wrap sub-select-wrap">
-                                <MapPin size={14} className="sub-input-icon" />
+                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-12 relative">
+                                <MapPin size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 flex-shrink-0 pointer-events-none" />
                                 <select
                                   value={area}
                                   onChange={e => setArea(e.target.value)}
-                                  className="sub-input sub-select"
+                                  className="w-full pl-11 pr-10 h-full text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400 cursor-pointer appearance-none"
                                 >
                                   {DELIVERY_AREAS.map((a: string) => (
-                                    <option key={a} value={a}>{a} (Mangalore)</option>
+                                    <option key={a} value={a} className="dark:bg-slate-900">{a} (Mangalore)</option>
                                   ))}
                                 </select>
                               </div>
                             </div>
 
                             {/* Notes */}
-                            <div className="sub-field">
-                              <label className="sub-label">
-                                <FileText size={12} className="sub-label-icon" /> Delivery Notes (Optional)
+                            <div className="flex flex-col gap-2 sm:col-span-2">
+                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
+                                <FileText size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Delivery Notes (Optional)
                               </label>
-                              <div className="sub-input-wrap">
-                                <FileText size={14} className="sub-input-icon" />
+                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-12 relative">
+                                <FileText size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 flex-shrink-0 pointer-events-none" />
                                 <input
                                   type="text"
                                   placeholder="Ring bell or leave bag at the door"
                                   value={notes}
                                   onChange={e => setNotes(e.target.value)}
-                                  className="sub-input"
+                                  className="w-full pl-11 pr-4 h-full text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400"
                                 />
                               </div>
                             </div>
@@ -563,31 +552,25 @@ export default function SubscribePage() {
 
                           {/* Error */}
                           {formError && (
-                            <p className="sub-error">⚠️ {formError}</p>
+                            <p className="text-xs font-bold text-red-500 flex items-center gap-1.5 mt-2">⚠️ {formError}</p>
                           )}
 
                           {/* Delivery banner */}
-                          <div className="sub-delivery-banner">
-                            <div className="sub-delivery-banner-icon">
-                              <Truck size={20} color="#2563eb" />
+                          <div className="sm:col-span-2 mb-2 p-5 rounded-brand-md border border-blue-200/50 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/25 flex gap-4 text-slate-700 dark:text-slate-300 text-xs font-semibold relative overflow-hidden shadow-sm">
+                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-brand-secondary flex items-center justify-center flex-shrink-0 shadow-sm">
+                              <Truck size={20} />
                             </div>
                             <div>
-                              <p className="sub-delivery-banner-title">Quick & Reliable Delivery</p>
-                              <p className="sub-delivery-banner-desc">
-                                We ensure your milk reaches you fresh, on time, every morning.
+                              <p className="font-extrabold text-slate-800 dark:text-slate-200 text-sm">Quick & Reliable Delivery</p>
+                              <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">
+                                We ensure your milk reaches you fresh, on time, every morning. Delivered before 7:00 AM.
                               </p>
-                            </div>
-                            {/* Farm sketch (CSS) */}
-                            <div className="sub-farm-sketch" aria-hidden>
-                              <div className="farm-barn" />
-                              <div className="farm-tree farm-tree-1" />
-                              <div className="farm-tree farm-tree-2" />
                             </div>
                           </div>
 
                           {/* CTA */}
-                          <div className="sub-form-footer">
-                            <button onClick={handleNextFromStep1} className="sub-btn-primary sub-btn-full">
+                          <div className="border-t border-slate-100 dark:border-slate-800/60 pt-5 mt-4">
+                            <button onClick={handleNextFromStep1} className="w-full px-6 h-12 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-[0_4px_16px_rgba(2,132,199,0.3)] active:translate-y-0 hover:-translate-y-0.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all cursor-pointer">
                               Continue to Review <ChevronRight size={16} />
                             </button>
                           </div>
@@ -603,20 +586,21 @@ export default function SubscribePage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -14 }}
                         transition={{ duration: 0.25 }}
+                        className="flex flex-col gap-6"
                       >
-                        <div className="sub-form-card-header">
-                          <div className="sub-form-card-icon">
-                            <Package size={20} color="#2563eb" />
+                        <div className="flex items-start gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-5">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/10 border border-blue-200/50 dark:border-blue-900/30 text-brand-secondary flex-shrink-0">
+                            <Package size={20} />
                           </div>
                           <div>
-                            <h2 className="sub-form-card-title">Review Subscription</h2>
-                            <p className="sub-form-card-sub">Confirm your details before proceeding to payment</p>
+                            <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-tight">Review Subscription</h2>
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Confirm your details before proceeding to payment</p>
                           </div>
                         </div>
 
-                        <div className="sub-review-block">
-                          <p className="sub-review-block-title">Subscription Outline</p>
-                          <div className="sub-review-grid">
+                        <div className="flex flex-col gap-3 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 my-1">
+                          <p className="text-xs font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase pb-2 border-b border-slate-100 dark:border-slate-800/40">Subscription Outline</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             {[
                               { label: 'Plan', val: 'Standard Monthly' },
                               { label: 'Volume', val: '1 Litre / Day', blue: true },
@@ -624,8 +608,8 @@ export default function SubscribePage() {
                               { label: 'Start Date', val: formatDate(startDate) },
                             ].map(r => (
                               <div key={r.label}>
-                                <p className="sub-review-key">{r.label}</p>
-                                <p className={cn('sub-review-val', r.blue ? 'sub-review-val-blue' : '')}>{r.val}</p>
+                                <p className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase">{r.label}</p>
+                                <p className={cn('text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-1', r.blue ? 'text-brand-secondary font-black' : '')}>{r.val}</p>
                               </div>
                             ))}
                           </div>
@@ -639,21 +623,21 @@ export default function SubscribePage() {
                           maxMonthsAhead={1}
                         />
 
-                        <div className="sub-review-block">
-                          <p className="sub-review-block-title">Delivery Address</p>
-                          <p className="sub-review-name">{fullname}</p>
-                          <p className="sub-review-phone">+91 {phone}</p>
-                          <p className="sub-review-addr">{address}, {area}, Mangalore</p>
+                        <div className="flex flex-col gap-3 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 my-1">
+                          <p className="text-xs font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase pb-2 border-b border-slate-100 dark:border-slate-800/40">Delivery Address</p>
+                          <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200">{fullname}</p>
+                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5">+91 {phone}</p>
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed mt-1">{address}, {area}, Mangalore</p>
                           {notes && (
-                            <div className="sub-review-notes">📝 {notes}</div>
+                            <div className="text-xs font-bold text-amber-600 dark:text-amber-400 mt-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-200/20 dark:border-amber-900/20">📝 {notes}</div>
                           )}
                         </div>
 
-                        <div className="sub-form-footer sub-form-footer-row">
-                          <button onClick={() => setStep(1)} className="sub-btn-back">
+                        <div className="border-t border-slate-100 dark:border-slate-800/60 pt-5 mt-4 flex items-center justify-between gap-4">
+                          <button onClick={() => setStep(1)} className="px-5 h-12 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all cursor-pointer">
                             <ChevronLeft size={14} /> Back
                           </button>
-                          <button onClick={() => setStep(3)} className="sub-btn-primary">
+                          <button onClick={() => setStep(3)} className="px-6 h-12 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-[0_4px_16px_rgba(2,132,199,0.3)] active:translate-y-0 hover:-translate-y-0.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all cursor-pointer">
                             Proceed to Payment <ChevronRight size={14} />
                           </button>
                         </div>
@@ -668,60 +652,61 @@ export default function SubscribePage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -14 }}
                         transition={{ duration: 0.25 }}
+                        className="flex flex-col gap-6"
                       >
-                        <div className="sub-form-card-header">
-                          <div className="sub-form-card-icon">
-                            <CreditCard size={20} color="#2563eb" />
+                        <div className="flex items-start gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-5">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/10 border border-blue-200/50 dark:border-blue-900/30 text-brand-secondary flex-shrink-0">
+                            <CreditCard size={20} />
                           </div>
                           <div>
-                            <h2 className="sub-form-card-title">Confirm & Pay</h2>
-                            <p className="sub-form-card-sub">Review your subscription invoice details</p>
+                            <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-tight">Confirm & Pay</h2>
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Review your subscription invoice details</p>
                           </div>
                         </div>
 
-                        <div className="sub-invoice">
-                          <p className="sub-invoice-title">Order Invoice</p>
-                          <div className="sub-invoice-rows">
-                            <div className="sub-invoice-row">
+                        <div className="flex flex-col gap-4 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 my-1">
+                          <p className="text-xs font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase pb-2 border-b border-slate-100 dark:border-slate-800/40">Order Invoice</p>
+                          <div className="flex flex-col gap-3 text-xs font-bold text-slate-600 dark:text-slate-400">
+                            <div className="flex justify-between items-center">
                               <span>Milk (1L/Day × {deliveryDays} days)</span>
                               <span>₹{priceLoading ? '...' : monthlyPrice.toFixed(2)}</span>
                             </div>
-                            <div className="sub-invoice-row">
+                            <div className="flex justify-between items-center">
                               <span>Daily rate</span>
                               <span>₹{priceLoading ? '...' : dailyRate.toFixed(2)}/day</span>
                             </div>
-                            <div className="sub-invoice-row">
+                            <div className="flex justify-between items-center">
                               <span>Delivery charge</span>
-                              <span className="sub-invoice-free">FREE</span>
+                              <span className="text-green-500 font-extrabold">FREE</span>
                             </div>
                           </div>
-                          <div className="sub-invoice-total">
+                          <div className="flex justify-between items-center border-t border-slate-200/60 dark:border-slate-800/80 pt-4 text-sm font-extrabold text-slate-800 dark:text-slate-200">
                             <span>Amount Due</span>
-                            <span className="sub-invoice-total-amt">₹{priceLoading ? '...' : monthlyPrice.toFixed(0)}</span>
+                            <span className="text-lg font-black text-brand-primary dark:text-white">₹{priceLoading ? '...' : monthlyPrice.toFixed(0)}</span>
                           </div>
                         </div>
 
-                        {formError && <p className="sub-error">{formError}</p>}
+                        {formError && <p className="text-xs font-bold text-red-500 flex items-center gap-1.5 mt-2">⚠️ {formError}</p>}
 
                         <button
                           onClick={handlePayment}
                           disabled={isPaying}
-                          className="sub-pay-btn"
+                          className="w-full h-12 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-[0_4px_16px_rgba(2,132,199,0.3)] active:translate-y-0 hover:-translate-y-0.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:translate-y-0 mt-2"
                         >
                           {isPaying ? (
-                            <><span className="sub-spinner" /> Securing Connection...</>
+                            <><span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> Securing Connection...</>
                           ) : (
                             <><CreditCard size={15} /> Pay ₹{priceLoading ? '...' : monthlyPrice.toFixed(0)} securely</>
                           )}
                         </button>
 
-                        <div className="sub-secure-row">
-                          <Check size={12} color="#22c55e" />
+                        <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-3 select-none">
+                          <Check size={12} className="text-green-500" />
                           <span>256-bit SSL Encrypted · Powered by Razorpay</span>
                         </div>
 
-                        <div className="sub-form-footer sub-form-footer-row" style={{ marginTop: 16 }}>
-                          <button onClick={() => setStep(2)} className="sub-btn-back">
+                        <div className="border-t border-slate-100 dark:border-slate-800/60 pt-5 mt-4 flex items-center justify-between gap-4">
+                          <button onClick={() => setStep(2)} className="px-5 h-12 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all cursor-pointer">
                             <ChevronLeft size={14} /> Back
                           </button>
                         </div>
@@ -731,80 +716,80 @@ export default function SubscribePage() {
                 </div>
 
                 {/* RIGHT: Subscription Summary Card */}
-                <div className="sub-summary-card">
-                  <div className="sub-summary-header">
-                    <div className="sub-summary-header-icon">
-                      <Milk size={20} color="#2563eb" />
+                <div className="lg:col-span-4 p-6 rounded-brand-2xl border border-border/40 dark:border-slate-800/80 bg-white dark:bg-cream-100 shadow-[0_4px_24px_var(--shadow)] flex flex-col gap-6">
+                  <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-4">
+                    <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-brand-secondary flex items-center justify-center flex-shrink-0">
+                      <Milk size={20} />
                     </div>
-                    <h3 className="sub-summary-title">Your Subscription</h3>
+                    <h3 className="font-extrabold font-display text-slate-900 dark:text-white text-base tracking-tight">Your Subscription</h3>
                   </div>
 
                   {/* Mini bottle + plan info */}
-                  <div className="sub-plan-row">
+                  <div className="flex gap-4 items-center p-4 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60">
                     {/* Mini bottle */}
-                    <div className="sub-mini-bottle">
-                      <div className="sub-mini-cap" />
-                      <div className="sub-mini-neck" />
-                      <div className="sub-mini-body">
-                        <span className="sub-mini-label-text">🐄<br /><span style={{fontSize:6}}>Amruth<br/>Dairy</span></span>
+                    <div className="w-12 h-20 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 p-1 flex flex-col items-center justify-center relative shadow-sm flex-shrink-0 select-none">
+                      <div className="w-4 h-2.5 border border-slate-200 dark:border-slate-800 rounded-t bg-slate-200/50 dark:bg-slate-800 absolute -top-2.5" />
+                      <div className="text-center flex flex-col items-center justify-center">
+                        <span className="text-[10px]">🐄</span>
+                        <span className="text-[5px] font-black tracking-tighter text-slate-500 leading-none mt-0.5">AMRUTH</span>
                       </div>
                     </div>
-                    <div className="sub-plan-info">
-                      <p className="sub-plan-name">Standard Plan</p>
-                      <p className="sub-plan-qty">1 Litre / Day</p>
-                      <div className="sub-plan-tags">
-                        <span>Daily Delivery</span>
-                        <span className="sub-plan-tag-active">Active</span>
+                    <div className="flex-1 flex flex-col">
+                      <p className="text-xs font-extrabold text-slate-800 dark:text-slate-200">Standard Plan</p>
+                      <p className="text-sm font-black text-brand-secondary mt-0.5">1 Litre / Day</p>
+                      <div className="flex items-center gap-2 mt-1.5 text-[9px] font-bold uppercase tracking-wider">
+                        <span className="text-slate-400 dark:text-slate-500">Daily Delivery</span>
+                        <span className="px-1.5 py-0.5 rounded bg-green-500/10 text-green-600 dark:text-green-400 font-extrabold">Active</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Details list */}
-                  <div className="sub-details-list">
+                  <div className="flex flex-col gap-3 border-t border-slate-100 dark:border-slate-800/60 pt-4">
                     {[
                       { icon: Package, label: 'Quantity', val: '1 Litre / Day' },
                       { icon: Clock, label: 'Delivery Time', val: 'Before 7:00 AM' },
                       { icon: Tag, label: 'Plan Type', val: 'Daily Subscription' },
                       { icon: MapPin, label: 'Price', val: priceLoading ? 'Loading...' : `₹${dailyRate.toFixed(2)} / Day` },
                     ].map(({ icon: Icon, label, val }) => (
-                      <div key={label} className="sub-detail-row">
-                        <span className="sub-detail-label">
-                          <Icon size={13} className="sub-detail-icon" /> {label}
+                      <div key={label} className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                          <Icon size={13} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> {label}
                         </span>
-                        <span className="sub-detail-val">{val}</span>
+                        <span className="font-extrabold text-slate-800 dark:text-slate-200">{val}</span>
                       </div>
                     ))}
                   </div>
 
                   {/* Monthly estimate */}
-                  <div className="sub-monthly-box">
-                    <div className="sub-monthly-row">
+                  <div className="p-4 rounded-xl border border-border/30 dark:border-slate-800/60 bg-cream-50 dark:bg-slate-900/60 mt-2">
+                    <div className="flex justify-between items-center">
                       <div>
-                        <p className="sub-monthly-label">Estimated Monthly</p>
-                        <p className="sub-monthly-days">({daysInMonth} Days)</p>
-                        <p className="sub-monthly-tax">No additional taxes</p>
+                        <p className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase leading-none">Estimated Monthly</p>
+                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">({daysInMonth} Days)</p>
+                        <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 mt-0.5">No additional taxes</p>
                       </div>
-                      <div className="sub-monthly-price">
-                        <span className="sub-monthly-rupee">₹</span>
-                        <span className="sub-monthly-amt">{priceLoading ? '...' : monthlyPrice.toLocaleString()}</span>
-                        <span className="sub-monthly-star">✦</span>
+                      <div className="flex items-baseline font-black text-slate-800 dark:text-white">
+                        <span className="text-sm mr-0.5 text-slate-400 dark:text-slate-500">₹</span>
+                        <span className="text-2xl font-black font-display tracking-tight text-brand-primary dark:text-white">{priceLoading ? '...' : monthlyPrice.toLocaleString()}</span>
+                        <span className="text-xs text-amber-500 ml-1">✦</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Feature pills */}
-                  <div className="sub-feature-pills">
+                  <div className="grid grid-cols-3 gap-3 border-t border-slate-100 dark:border-slate-800/60 pt-4">
                     {[
                       { icon: Leaf, label: 'Farm Fresh', desc: 'Direct from our farm' },
-                      { icon: ShieldCheck, label: 'No Preservatives', desc: '100% Pure & Natural' },
-                      { icon: Truck, label: 'On-Time Delivery', desc: 'Before 7 AM, Everyday' },
+                      { icon: ShieldCheck, label: 'Pure A2', desc: '100% Natural' },
+                      { icon: Truck, label: 'Morning', desc: 'Before 7 AM daily' },
                     ].map(({ icon: Icon, label, desc }) => (
-                      <div key={label} className="sub-feature-pill">
-                        <div className="sub-feature-pill-icon">
-                          <Icon size={16} color="#2563eb" />
+                      <div key={label} className="flex flex-col items-center text-center p-2.5 rounded-xl border border-slate-100/40 dark:border-slate-800/40 bg-slate-50/40 dark:bg-slate-900/20">
+                        <div className="w-8 h-8 rounded-full bg-blue-500/10 text-brand-secondary flex items-center justify-center mb-1.5">
+                          <Icon size={16} />
                         </div>
-                        <p className="sub-feature-pill-label">{label}</p>
-                        <p className="sub-feature-pill-desc">{desc}</p>
+                        <p className="text-[9px] font-extrabold text-slate-700 dark:text-slate-300 uppercase leading-snug">{label}</p>
+                        <p className="text-[8px] font-medium text-slate-400 dark:text-slate-500 mt-0.5 leading-none">{desc}</p>
                       </div>
                     ))}
                   </div>
@@ -817,35 +802,34 @@ export default function SubscribePage() {
                 key="success"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="sub-success"
+                className="max-w-md mx-auto p-6 sm:p-8 rounded-brand-2xl border border-border/40 dark:border-slate-800/80 bg-white dark:bg-cream-100 shadow-[0_4px_24px_var(--shadow)] flex flex-col items-center text-center gap-6 my-10"
               >
-                <div className="sub-success-icon">
-                  <div className="sub-success-ping" />
-                  <Check size={40} color="#16a34a" />
+                <div className="w-16 h-16 rounded-full bg-green-500/10 text-green-500 dark:text-green-400 flex items-center justify-center relative">
+                  <div className="w-20 h-20 rounded-full bg-green-500/5 animate-ping absolute" />
+                  <Check size={40} />
                 </div>
-                <h2 className="sub-success-title">Subscription Confirmed!</h2>
-                <p className="sub-success-desc">
+                <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-tight">Subscription Confirmed!</h2>
+                <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
                   Thank you! Your standard 1L/day delivery starts from{' '}
                   {new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}.
                 </p>
-                <div className="sub-success-card">
-                  <div className="sub-success-row">
+                <div className="w-full flex flex-col gap-3 p-4 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 text-xs font-bold text-slate-600 dark:text-slate-400">
+                  <div className="flex justify-between items-center">
                     <span>Order ID</span>
-                    <span className="sub-success-mono">#{orderId}</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">#{orderId}</span>
                   </div>
-                  <div className="sub-success-row">
+                  <div className="flex justify-between items-center">
                     <span>Amount Paid</span>
-                    <span className="sub-success-mono">₹{monthlyPrice.toFixed(0)}</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">₹{monthlyPrice.toFixed(0)}</span>
                   </div>
-                  <div className="sub-success-row">
+                  <div className="flex justify-between items-center">
                     <span>Starts From</span>
-                    <span className="sub-success-mono">{formatDate(startDate)}</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">{formatDate(startDate)}</span>
                   </div>
                 </div>
                 <button
                   onClick={() => window.location.href = '/dashboard'}
-                  className="sub-btn-primary"
-                  style={{ marginTop: 8 }}
+                  className="w-full px-6 h-12 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-[0_4px_16px_rgba(2,132,199,0.3)] active:translate-y-0 hover:-translate-y-0.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all cursor-pointer mt-2"
                 >
                   Go to Dashboard <ArrowRight size={16} />
                 </button>
@@ -857,4 +841,4 @@ export default function SubscribePage() {
       <Footer />
     </>
   )
-}
+}

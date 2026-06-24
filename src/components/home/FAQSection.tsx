@@ -35,17 +35,17 @@ export function FAQSection() {
   const [open, setOpen] = useState<number | null>(0)
 
   return (
-    <section className="bg-white section-py" id="faq">
+    <section className="bg-white dark:bg-warm-white section-py" id="faq">
       <div className="container-page">
         {/* Header */}
         <div className="text-center max-w-xl mx-auto mb-14">
           <p className="section-label justify-center">FAQ</p>
-          <h2 className="text-heading text-teal-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-black text-teal-900 dark:text-white mb-4">
             Common questions answered
           </h2>
-          <p className="text-body text-teal-900/55">
+          <p className="text-sm sm:text-base text-teal-900/55 dark:text-slate-450">
             Still have questions? Call us at{' '}
-            <a href="tel:+919048571147" className="text-teal-700 font-semibold hover:underline">
+            <a href="tel:+919048571147" className="text-teal-750 dark:text-teal-400 font-semibold hover:underline">
               90485 71147
             </a>
           </p>
@@ -85,27 +85,29 @@ function FAQItem({
   return (
     <div
       className={cn(
-        'bg-milk-50 border rounded-[18px] overflow-hidden',
+        'bg-milk-50 border rounded-brand-md overflow-hidden',
         'transition-all duration-200',
-        isOpen ? 'border-teal-200' : 'border-milk-300'
+        isOpen 
+          ? 'border-teal-200 dark:border-teal-900/50 bg-teal-50/10' 
+          : 'border-milk-300 dark:border-border dark:bg-slate-900'
       )}
     >
       <button
         onClick={onToggle}
         className={cn(
           'w-full flex items-center justify-between gap-4',
-          'px-6 py-5 text-left',
+          'px-6 py-5 text-left cursor-pointer',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-inset'
         )}
         id={`faq-${index}`}
         aria-expanded={isOpen}
         aria-controls={`faq-answer-${index}`}
       >
-        <span className="text-small font-bold text-teal-900 leading-snug">{question}</span>
+        <span className="text-sm font-bold text-teal-900 dark:text-white leading-snug">{question}</span>
         <ChevronDown
           size={18}
           className={cn(
-            'text-teal-700 flex-shrink-0 transition-transform duration-200',
+            'text-teal-700 dark:text-teal-400 flex-shrink-0 transition-transform duration-200',
             isOpen && 'rotate-180'
           )}
           aria-hidden="true"
@@ -123,7 +125,7 @@ function FAQItem({
           opacity: isOpen ? 1 : 0,
         }}
       >
-        <p className="px-6 pb-5 text-small text-teal-900/60 leading-relaxed">
+        <p className="px-6 pb-5 text-sm text-teal-900/60 dark:text-slate-400 leading-relaxed">
           {answer}
         </p>
       </div>

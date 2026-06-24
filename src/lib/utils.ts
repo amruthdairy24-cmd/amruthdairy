@@ -1,3 +1,6 @@
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
 /**
  * formatRupees — Convert paise (integer) to display string
  * ALWAYS use this for displaying monetary values. Never store rupees.
@@ -121,10 +124,10 @@ export function getDailyRate(monthlyAmountPaise: number, date: Date): number {
 }
 
 /**
- * cn — Class name utility (simple version without clsx)
+ * cn — Class name utility
  */
-export function cn(...classes: (string | undefined | null | false)[]): string {
-  return classes.filter(Boolean).join(' ')
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }
 
 /**
