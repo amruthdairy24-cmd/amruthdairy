@@ -52,13 +52,15 @@ interface DashboardClientProps {
     cancelled: number
     pending: number
   }
+  rawMilkPricing?: any
 }
 
 export default function DashboardClient({ 
   stats, 
   deliveriesList, 
   recentActivities, 
-  subOverview 
+  subOverview,
+  rawMilkPricing
 }: DashboardClientProps) {
   const [greeting, setGreeting] = useState('Good Morning')
   const [formattedDate, setFormattedDate] = useState('')
@@ -69,6 +71,17 @@ export default function DashboardClient({
   const [priceApplyMode, setPriceApplyMode] = useState<'next_month' | 'immediate'>('next_month')
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
   const [priceMessage, setPriceMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null)
+
+  const openPriceModal = () => {
+    const activePricesToEdit = rawMilkPricing?.next_prices || rawMilkPricing?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
+    setPrices({
+      '0.5': activePricesToEdit['0.5']?.toString() || '41.34',
+      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '82.67',
+      '1.5': activePricesToEdit['1.5']?.toString() || '124',
+      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '165.34'
+    })
+    setShowPriceModal(true)
+  }
 
   const handlePriceUpdate = async () => {
     try {
@@ -676,7 +689,7 @@ export default function DashboardClient({
             </Link>
 
             <button 
-              onClick={() => setShowPriceModal(true)}
+              onClick={openPriceModal}
               className="group flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[#e8edf5] bg-[#f8fafc] transition-all hover:bg-[#eff6ff] hover:border-[#bfdbfe] hover:-translate-y-0.5 cursor-pointer"
               style={{ height: '68px' }}
               onMouseEnter={(e) => {
