@@ -3,6 +3,7 @@ import { Milk, SkipForward, PalmtreeIcon, Plus, FileText, ShoppingBag, Settings 
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
+import { useTheme } from 'next-themes'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 const navItems = [
@@ -16,6 +17,7 @@ const navItems = [
 ]
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
+  const { setTheme } = useTheme()
   const [profileName, setProfileName] = useState('Customer')
   const [profilePhone, setProfilePhone] = useState('')
   const [status, setStatus] = useState<string>('active')
@@ -39,12 +41,12 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   return (
     <div className="min-h-screen flex bg-[#FDFBF7] dark:bg-slate-950 transition-colors duration-300">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 bg-[#0F172A] fixed top-0 bottom-0 left-0 z-30 border-r border-[#E2E8F0]/20 dark:border-slate-800/40">
+      <aside className="hidden lg:flex flex-col w-60 bg-white dark:bg-cream-100 fixed top-0 bottom-0 left-0 z-30 border-r border-border/50 dark:border-slate-800/80">
         
         {/* Logo */}
-        <div className="px-6 py-6 border-b border-white/10">
+        <div className="px-6 py-6 border-b border-slate-50 dark:border-slate-900/50">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/15 transition-transform duration-500 group-hover:rotate-[360deg]">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#014DA4] to-brand-secondary flex items-center justify-center text-white border border-[#E2E8F0]/10 transition-transform duration-500 group-hover:rotate-[360deg]">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5">
                 <path d="M5 10c0-2 2-3 4-3h6c2 0 4 1 4 3" />
                 <path d="M5 10v6c0 2 2 3 4 3h6c2 0 4-1 4-3v-6" />
@@ -56,29 +58,29 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
               </svg>
             </div>
             <div>
-              <p className="text-sm font-black text-white leading-tight">Amruth</p>
-              <p className="text-[10px] text-[#0284C7] font-black uppercase tracking-wider">Dairy Farm</p>
+              <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">Amruth</p>
+              <p className="text-[10px] text-brand-secondary dark:text-brand-secondary/85 font-black uppercase tracking-wider">Dairy Farm</p>
             </div>
           </Link>
         </div>
 
         {/* Customer info */}
-        <div className="px-6 py-4 border-b border-white/10">
+        <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-900/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white/10 text-white font-bold text-sm flex items-center justify-center flex-shrink-0 border border-white/10">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#014DA4] to-brand-secondary text-white font-black text-sm flex items-center justify-center flex-shrink-0 border border-[#E2E8F0]/10">
               {profileName.substring(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-white truncate">{profileName}</p>
-              <p className="text-[11px] text-white/50 truncate">{profilePhone}</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{profileName}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{profilePhone}</p>
             </div>
           </div>
           <div className="mt-3">
             <span className={cn(
               "text-[10px] font-bold border rounded-xl px-2.5 py-0.5 inline-block",
               status === 'active' 
-                ? "text-[#4ade80] bg-[#4ade80]/10 border-[#4ade80]/20" 
-                : "text-amber-400 bg-amber-400/10 border-amber-400/20"
+                ? "text-[#16a34a] bg-green-500/10 border-green-500/20" 
+                : "text-amber-600 bg-amber-500/10 border-amber-500/20"
             )}>
               ● {status === 'active' ? 'Active Subscription' : 'Subscription ' + status}
             </span>
@@ -93,10 +95,10 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
               href={item.href}
               className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-xl mb-1',
-                'text-sm font-semibold text-white/70',
+                'text-sm font-semibold text-slate-655 dark:text-white/70',
                 'transition-all duration-150',
-                'hover:bg-white/10 hover:text-white',
-                item.href === '/account' && 'bg-white/10 text-white border-l-[3.5px] border-[#0284C7]'
+                'hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#014DA4] dark:hover:text-brand-secondary',
+                item.href === '/account' && 'bg-[#014DA4]/10 dark:bg-white/10 text-[#014DA4] dark:text-white border-l-[3.5px] border-[#014DA4] dark:border-white'
               )}
             >
               <span role="img" aria-label={item.label}>{item.icon}</span>
@@ -116,7 +118,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
       {/* Main content */}
       <main className="flex-1 lg:ml-60 flex flex-col min-w-0">
         {/* Desktop Topbar header */}
-        <header className="hidden lg:flex items-center justify-between px-8 bg-white dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800/80 h-16 sticky top-0 z-20 transition-colors duration-300">
+        <header className="hidden lg:flex items-center justify-between px-8 bg-white dark:bg-cream-100 border-b border-border/45 dark:border-slate-800/80 h-16 sticky top-0 z-20 transition-colors duration-300">
           <div className="flex items-center gap-4">
             <span className="text-[11px] font-black tracking-wider text-slate-400 dark:text-slate-500 uppercase">
               Profile & Security Settings
@@ -128,15 +130,15 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         </header>
 
         {/* Mobile top nav */}
-        <div className="lg:hidden sticky top-0 z-20 bg-[#0F172A] px-4 py-3 flex items-center justify-between border-b border-[#E2E8F0]/10">
+        <div className="lg:hidden sticky top-0 z-20 bg-white dark:bg-cream-100 px-4 py-3 flex items-center justify-between border-b border-border/45 dark:border-slate-800/80">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#014DA4] to-brand-secondary rounded-lg flex items-center justify-center text-white">
               <span className="text-sm">🥛</span>
             </div>
-            <span className="text-sm font-bold text-white">Amruth Milk</span>
+            <span className="text-sm font-bold text-slate-950 dark:text-white">Amruth Milk</span>
           </Link>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-white/60 font-semibold">{profileName}</span>
+            <span className="text-xs text-slate-600 dark:text-slate-400 font-semibold">{profileName}</span>
             <ThemeToggle />
           </div>
         </div>
@@ -146,7 +148,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         </div>
 
         {/* Mobile bottom nav */}
-        <nav className="lg:hidden sticky bottom-0 bg-white dark:bg-slate-900 border-t border-[#E2E8F0]/20 dark:border-slate-800 flex z-30 transition-colors duration-300" aria-label="Mobile navigation">
+        <nav className="lg:hidden sticky bottom-0 bg-white dark:bg-cream-100 border-t border-border/50 dark:border-slate-800/80 flex z-30 transition-colors duration-300" aria-label="Mobile navigation">
           {navItems.slice(0, 5).map((item) => {
             const isActive = item.href === '/account'
             return (
@@ -154,8 +156,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex-1 flex flex-col items-center gap-1 py-3 text-slate-450 dark:text-slate-500 hover:text-[#0284C7] dark:hover:text-sky-400 transition-colors min-w-0",
-                  isActive && "text-[#0284C7] dark:text-sky-400"
+                  "flex-1 flex flex-col items-center gap-1 py-3 text-slate-450 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-sky-400 transition-colors min-w-0",
+                  isActive && "text-[#014DA4] dark:text-sky-400"
                 )}
               >
                 <span className="text-lg" role="img" aria-label={item.label}>{item.icon}</span>

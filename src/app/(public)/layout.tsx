@@ -1,6 +1,14 @@
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
+'use client'
+
+import { useEffect } from 'react'
+import { useTheme } from 'next-themes'
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
-  return children
+  const { setTheme } = useTheme()
+
+  useEffect(() => {
+    setTheme('light')
+  }, [setTheme])
+
+  return <>{children}</>
 }
