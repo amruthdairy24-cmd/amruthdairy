@@ -79,18 +79,14 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
 
       const body: any = { key: 'milk_tier_prices' };
       
-      if (priceApplyMode === 'immediate') {
-        body.value = { prices: numPrices }
-      } else {
-        const today = new Date();
-        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-        const effectiveDateStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
-        
-        body.value = {
-          prices: milkPrices,
-          next_prices: numPrices,
-          effective_date: effectiveDateStr
-        }
+      const today = new Date();
+      const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      const effectiveDateStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
+      
+      body.value = {
+        prices: milkPrices,
+        next_prices: numPrices,
+        effective_date: effectiveDateStr
       }
 
       const response = await fetch('/api/admin/settings', {
@@ -180,20 +176,20 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
     { header: 'Stock', accessorKey: 'stock_available', align: 'right' },
     { header: 'Status', align: 'center', cell: (row) => <StatusBadge status={row.is_active ? 'Active' : 'Inactive'} /> },
     { header: 'Actions', align: 'center', cell: (row) => (
-      <button onClick={() => openEditModal(row)} className="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+      <button onClick={() => openEditModal(row)} className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-semibold">
         Edit
       </button>
     ) },
   ]
 
   const planColumns: ColumnDef<SubscriptionPlan>[] = [
-    { header: 'Plan Name', cell: (row) => <div className="font-bold text-[#0f172a] flex items-center gap-2"><Milk size={16} className="text-blue-600" /> {row.name}</div> },
+    { header: 'Plan Name', cell: (row) => <div className="font-bold text-[#0f172a] dark:text-slate-100 flex items-center gap-2"><Milk size={16} className="text-blue-600 dark:text-blue-400" /> {row.name}</div> },
     { header: 'Quantity/Day', cell: (row) => `${row.quantity_litres} L` },
     { header: 'Monthly Price', align: 'right', cell: (row) => `₹${row.monthly_price}` },
     { header: 'Daily Rate', align: 'right', cell: (row) => `₹${row.daily_rate}` },
     { header: 'Badge', align: 'center', cell: (row) => row.is_popular ? <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-700">POPULAR</span> : null },
     { header: 'Actions', align: 'center', cell: () => (
-      <button onClick={openMilkPriceModal} className="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+      <button onClick={openMilkPriceModal} className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-semibold">
         Edit Prices
       </button>
     ) },
@@ -212,7 +208,7 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
       {/* MILK SUBSCRIPTION PLANS */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[16px] font-black text-[#0f172a] flex items-center gap-2">
+          <h2 className="text-[16px] font-black text-[#0f172a] dark:text-slate-100 flex items-center gap-2">
             Milk Subscription Plans
           </h2>
           {rawMilkPricing?.next_prices && rawMilkPricing?.effective_date && (
@@ -230,7 +226,7 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
 
       {/* RETAIL PRODUCTS */}
       <div>
-        <h2 className="text-[16px] font-black text-[#0f172a] mb-4">
+        <h2 className="text-[16px] font-black text-[#0f172a] dark:text-slate-100 mb-4">
           Retail Products
         </h2>
         <DataTable data={data} columns={productColumns} />
@@ -238,64 +234,57 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
 
       {/* ADD PRODUCT MODAL */}
       {showModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
-        }}>
-          <div style={{
-            background: '#fff', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '500px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#0f172a' }}>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 w-full max-w-[500px] shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3 text-slate-900 dark:text-white">
                 <Plus size={24} />
-                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>{editProductId ? 'Edit Product' : 'Add New Product'}</h3>
+                <h3 className="text-xl font-extrabold">{editProductId ? 'Edit Product' : 'Add New Product'}</h3>
               </div>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <X size={20} color="#64748b" />
+              <button onClick={() => setShowModal(false)} className="bg-transparent border-0 cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <X size={20} className="text-slate-500 dark:text-slate-400" />
               </button>
             </div>
             
             <form onSubmit={handleAddProduct} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Product Name</label>
-                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-sm" placeholder="e.g. Farm Paneer" />
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 uppercase tracking-wider">Product Name</label>
+                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-sm text-slate-900 dark:text-white" placeholder="e.g. Farm Paneer" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Category</label>
-                  <input required type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-sm" placeholder="e.g. dairy" />
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 uppercase tracking-wider">Category</label>
+                  <input required type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-sm text-slate-900 dark:text-white" placeholder="e.g. dairy" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Unit</label>
-                  <input required type="text" value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-sm" placeholder="e.g. 500g" />
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 uppercase tracking-wider">Unit</label>
+                  <input required type="text" value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-sm text-slate-900 dark:text-white" placeholder="e.g. 500g" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Price (₹)</label>
-                  <input required type="number" step="0.01" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-sm" placeholder="0.00" />
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 uppercase tracking-wider">Price (₹)</label>
+                  <input required type="number" step="0.01" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-sm text-slate-900 dark:text-white" placeholder="0.00" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Initial Stock</label>
-                  <input required type="number" value={formData.stock_available} onChange={e => setFormData({...formData, stock_available: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-sm" placeholder="0" />
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 uppercase tracking-wider">Initial Stock</label>
+                  <input required type="number" value={formData.stock_available} onChange={e => setFormData({...formData, stock_available: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-sm text-slate-900 dark:text-white" placeholder="0" />
                 </div>
               </div>
 
               {editProductId && (
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mt-2">
-                    <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" />
+                  <label className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300 mt-2">
+                    <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 dark:border-slate-800 dark:bg-slate-950" />
                     Product is Active
                   </label>
                 </div>
               )}
 
               {errorMsg && (
-                <div className="p-3 bg-red-50 text-red-700 rounded-xl text-sm font-bold border border-red-100">
+                <div className="p-3 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 rounded-xl text-sm font-bold border border-red-100 dark:border-red-900/50">
                   {errorMsg}
                 </div>
               )}
@@ -303,12 +292,7 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
               <button 
                 type="submit"
                 disabled={isSubmitting}
-                style={{
-                  width: '100%', padding: '16px', background: '#2563eb', color: '#fff', border: 'none',
-                  borderRadius: '12px', fontSize: '15px', fontWeight: 700, cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  opacity: isSubmitting ? 0.7 : 1, marginTop: '24px',
-                  boxShadow: '0 4px 14px rgba(37,99,235,0.3)'
-                }}
+                className="w-full py-4 bg-blue-600 dark:bg-blue-500 text-white border-0 rounded-xl text-sm font-bold disabled:cursor-not-allowed disabled:opacity-70 mt-6 shadow-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-all duration-200"
               >
                 {isSubmitting ? 'Saving Product...' : (editProductId ? 'Update Product' : 'Save Product')}
               </button>
@@ -319,72 +303,60 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
 
       {/* MILK PRICE MODAL */}
       {showMilkPriceModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
-        }}>
-          <div style={{
-            background: '#fff', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '500px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#0f172a' }}>
-                <Milk size={24} className="text-blue-600" />
-                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>Update Milk Prices</h3>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 w-full max-w-[500px] shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3 text-slate-900 dark:text-white">
+                <Milk size={24} className="text-blue-600 dark:text-blue-500" />
+                <h3 className="text-xl font-extrabold">Update Milk Prices</h3>
               </div>
-              <button onClick={() => setShowMilkPriceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <X size={20} color="#64748b" />
+              <button onClick={() => setShowMilkPriceModal(false)} className="bg-transparent border-0 cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <X size={20} className="text-slate-500 dark:text-slate-400" />
               </button>
             </div>
             
-            <form onSubmit={handleMilkPriceUpdate} className="space-y-4">
-              <p style={{ color: '#475569', fontSize: '14px', marginBottom: '24px', lineHeight: 1.5 }}>
+            <form onSubmit={handleMilkPriceUpdate} className="space-y-6">
+              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                 Set the new daily price for each tier explicitly. This allows custom prices for different quantities.
               </p>
 
-              <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>0.5 L (₹)</label>
-                  <input required type="number" step="0.01" value={milkPricesForm['0.5']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '0.5': e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '16px', fontWeight: 800 }} />
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">0.5 L (₹)</label>
+                  <input required type="number" step="0.01" value={milkPricesForm['0.5']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '0.5': e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white text-base font-bold transition-all" />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>1.0 L (₹)</label>
-                  <input required type="number" step="0.01" value={milkPricesForm['1.0']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '1.0': e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '16px', fontWeight: 800 }} />
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">1.0 L (₹)</label>
+                  <input required type="number" step="0.01" value={milkPricesForm['1.0']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '1.0': e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white text-base font-bold transition-all" />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>1.5 L (₹)</label>
-                  <input required type="number" step="0.01" value={milkPricesForm['1.5']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '1.5': e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '16px', fontWeight: 800 }} />
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">1.5 L (₹)</label>
+                  <input required type="number" step="0.01" value={milkPricesForm['1.5']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '1.5': e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white text-base font-bold transition-all" />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>2.0 L (₹)</label>
-                  <input required type="number" step="0.01" value={milkPricesForm['2.0']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '2.0': e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '16px', fontWeight: 800 }} />
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">2.0 L (₹)</label>
+                  <input required type="number" step="0.01" value={milkPricesForm['2.0']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '2.0': e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white text-base font-bold transition-all" />
                 </div>
               </div>
 
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2.5 uppercase tracking-wider">
                   When should this apply?
                 </label>
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '16px', border: priceApplyMode === 'next_month' ? '2px solid #2563eb' : '2px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', background: priceApplyMode === 'next_month' ? '#eff6ff' : '#fff' }}>
-                    <input type="radio" name="applyModeMilk" checked={priceApplyMode === 'next_month'} onChange={() => setPriceApplyMode('next_month')} style={{ accentColor: '#2563eb', width: '18px', height: '18px' }} />
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Next Month<br/><span style={{ fontSize: '12px', color: '#64748b', fontWeight: 400 }}>Recommended</span></span>
+                <div className="grid grid-cols-2 gap-4">
+                  <label className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${priceApplyMode === 'next_month' ? 'border-blue-600 dark:border-blue-500 bg-blue-50/50 dark:bg-blue-950/20' : 'border-slate-200 dark:border-slate-800 bg-transparent'}`}>
+                    <input type="radio" name="applyModeMilk" checked={priceApplyMode === 'next_month'} onChange={() => setPriceApplyMode('next_month')} className="accent-blue-600 w-4 h-4" />
+                    <span className="text-sm font-semibold text-slate-900 dark:text-white leading-tight">Next Month<br/><span className="text-xs text-slate-500 dark:text-slate-400 font-normal">Recommended</span></span>
                   </label>
-                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '16px', border: priceApplyMode === 'immediate' ? '2px solid #2563eb' : '2px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', background: priceApplyMode === 'immediate' ? '#eff6ff' : '#fff' }}>
-                    <input type="radio" name="applyModeMilk" checked={priceApplyMode === 'immediate'} onChange={() => setPriceApplyMode('immediate')} style={{ accentColor: '#2563eb', width: '18px', height: '18px' }} />
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Immediately<br/><span style={{ fontSize: '12px', color: '#64748b', fontWeight: 400 }}>Applies today</span></span>
+                  <label className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${priceApplyMode === 'immediate' ? 'border-blue-600 dark:border-blue-500 bg-blue-50/50 dark:bg-blue-950/20' : 'border-slate-200 dark:border-slate-800 bg-transparent'}`}>
+                    <input type="radio" name="applyModeMilk" checked={priceApplyMode === 'immediate'} onChange={() => setPriceApplyMode('immediate')} className="accent-blue-600 w-4 h-4" />
+                    <span className="text-sm font-semibold text-slate-900 dark:text-white leading-tight">Immediately<br/><span className="text-xs text-slate-500 dark:text-slate-400 font-normal">Applies today</span></span>
                   </label>
                 </div>
               </div>
 
               {priceMessage && (
-                <div style={{
-                  padding: '12px 16px', borderRadius: '12px', fontSize: '14px', fontWeight: 600,
-                  background: priceMessage.type === 'success' ? '#dcfce7' : '#fee2e2',
-                  color: priceMessage.type === 'success' ? '#166534' : '#991b1b',
-                  display: 'flex', alignItems: 'center', gap: '8px'
-                }}>
+                <div className={`p-4 rounded-xl text-sm font-semibold flex items-center gap-2 ${priceMessage.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/50' : 'bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 border border-rose-100 dark:border-rose-900/50'}`}>
                   {priceMessage.text}
                 </div>
               )}
@@ -392,12 +364,7 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
               <button 
                 type="submit" 
                 disabled={isUpdatingPrice}
-                style={{
-                  width: '100%', padding: '16px', background: '#2563eb', color: '#fff', border: 'none',
-                  borderRadius: '12px', fontSize: '16px', fontWeight: 700, cursor: isUpdatingPrice ? 'not-allowed' : 'pointer',
-                  opacity: isUpdatingPrice ? 0.7 : 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-                  boxShadow: '0 4px 14px rgba(37,99,235,0.3)'
-                }}
+                className="w-full py-4 bg-blue-600 dark:bg-blue-500 text-white border-0 rounded-xl text-base font-bold disabled:cursor-not-allowed disabled:opacity-70 flex justify-center items-center gap-2 shadow-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-all duration-200"
               >
                 {isUpdatingPrice ? 'Updating...' : 'Confirm Update'}
               </button>

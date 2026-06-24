@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import { cn } from '@/lib/utils'
 
 interface TransparentImageProps {
   src: string
@@ -176,16 +177,16 @@ export function TransparentImage({
   }, [src])
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', ...style }} className={className}>
+    <div style={style} className={cn('relative w-full h-full', className)}>
       {processedSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={processedSrc}
           alt={alt}
-          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          className="w-full h-full object-contain"
         />
       ) : (
-        <div style={{ width: '100%', height: '100%', background: 'transparent' }} />
+        <div className="w-full h-full bg-transparent" />
       )}
     </div>
   )

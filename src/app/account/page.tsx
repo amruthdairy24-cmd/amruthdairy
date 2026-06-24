@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, MapPin, Phone, Edit3, Save, X, AlertCircle, CheckCircle, Milk, Calendar, FileText, Shield } from 'lucide-react'
+import { User, MapPin, Phone, Edit3, Save, AlertCircle, CheckCircle, Milk, FileText, Calendar, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DELIVERY_AREAS } from '@/lib/constants'
 
@@ -111,11 +111,11 @@ export default function AccountPage() {
   if (loading) {
     return (
       <div className="max-w-3xl space-y-6 animate-pulse">
-        <div className="h-8 w-48 bg-slate-200 rounded-xl" />
-        <div className="h-48 bg-slate-200 rounded-3xl" />
+        <div className="h-8 w-48 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+        <div className="h-48 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
         <div className="grid grid-cols-2 gap-5">
-          <div className="h-32 bg-slate-200 rounded-2xl" />
-          <div className="h-32 bg-slate-200 rounded-2xl" />
+          <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+          <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
         </div>
       </div>
     )
@@ -126,15 +126,15 @@ export default function AccountPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-black text-[#0f172a] font-display tracking-tight mb-1 flex items-center gap-2">
-            <User size={24} className="text-[#64748b]" /> My Account
+          <h1 className="text-[22px] font-black text-slate-900 dark:text-white font-display tracking-tight mb-1 flex items-center gap-2">
+            <User size={24} className="text-slate-400 dark:text-slate-500" /> My Account
           </h1>
-          <p className="text-[13px] font-semibold text-[#64748b]">Manage your profile, delivery details, and subscription info.</p>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Manage your profile, delivery details, and subscription info.</p>
         </div>
         {!isEditing && (
           <button
             onClick={startEditing}
-            className="inline-flex items-center gap-1.5 px-4 h-9 rounded-xl bg-white border border-[#e8edf5] text-[#0f172a] font-extrabold text-[12px] hover:bg-[#f8fafc] shadow-sm transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-extrabold text-[12px] hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all cursor-pointer"
           >
             <Edit3 size={13} />
             <span>Edit Profile</span>
@@ -143,15 +143,15 @@ export default function AccountPage() {
       </div>
 
       {successMsg && (
-        <div className="bg-[#dcfce7] border border-[#bbf7d0] rounded-xl p-3 flex items-center gap-2 text-[12px] font-bold text-[#16a34a] animate-fade-in shadow-sm">
+        <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/30 rounded-xl p-3 flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 animate-fade-in shadow-sm">
           <CheckCircle size={16} />
           {successMsg}
         </div>
       )}
 
-      <div className="bg-white border border-[#e8edf5] rounded-[24px] shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-250/60 dark:border-slate-800 rounded-[24px] shadow-sm overflow-hidden">
 
-        <div className="p-6 md:p-8 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8f 55%, #1e40af 100%)' }}>
+        <div className="p-6 md:p-8 relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-blue-900">
           <div className="absolute top-0 right-0 w-48 h-48 bg-white/[0.05] rounded-full blur-3xl pointer-events-none" />
           <div className="flex items-center gap-5 relative z-10">
             <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center text-3xl font-black text-white border border-white/20 backdrop-blur-md shadow-inner">
@@ -159,7 +159,7 @@ export default function AccountPage() {
             </div>
             <div>
               <h2 className="text-[22px] font-black font-display text-white">{profile.full_name || 'Customer'}</h2>
-              <p className="text-[13px] text-blue-200/80 font-semibold flex items-center gap-1.5 mt-1">
+              <p className="text-xs text-blue-200/80 font-semibold flex items-center gap-1.5 mt-1">
                 <Phone size={13} />
                 {profile.phone || 'No phone'}
               </p>
@@ -174,83 +174,90 @@ export default function AccountPage() {
         </div>
 
         {isEditing ? (
-          <form onSubmit={handleSave} className="p-6 space-y-5 bg-[#f8fafc]">
+          <form onSubmit={handleSave} className="p-6 md:p-8 space-y-5 bg-slate-50/50 dark:bg-slate-950/30">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest">Full Name *</label>
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Full Name *</label>
                 <input
                   required
                   type="text"
                   value={editForm.full_name}
                   onChange={e => setEditForm({ ...editForm, full_name: e.target.value })}
-                  className="h-11 rounded-xl border border-[#e8edf5] bg-white px-4 text-[13px] font-bold text-[#0f172a] outline-none focus:ring-2 focus:ring-[#2563eb]/20 focus:border-[#2563eb] shadow-sm"
+                  className="h-11 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 text-sm font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                   placeholder="Your full name"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest">Phone</label>
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Phone</label>
                 <input
                   disabled
                   type="text"
                   value={editForm.phone}
-                  className="h-11 rounded-xl border border-[#e8edf5] bg-[#e2e8f0]/40 px-4 text-[13px] font-bold text-[#64748b] outline-none cursor-not-allowed opacity-80"
+                  className="h-11 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/60 px-4 text-sm font-bold text-slate-400 dark:text-slate-500 outline-none cursor-not-allowed opacity-85"
                 />
-                <span className="text-[10px] text-[#94a3b8] font-bold">Phone cannot be changed</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Phone cannot be changed</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest">Delivery Area *</label>
-              <select
-                required
-                value={editForm.area}
-                onChange={e => setEditForm({ ...editForm, area: e.target.value })}
-                className="h-11 rounded-xl border border-[#e8edf5] bg-white px-4 text-[13px] font-bold text-[#0f172a] outline-none focus:ring-2 focus:ring-[#2563eb]/20 focus:border-[#2563eb] appearance-none shadow-sm"
-              >
-                <option value="">Select area</option>
-                {DELIVERY_AREAS.map(a => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
+              <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Delivery Area *</label>
+              <div className="relative">
+                <select
+                  required
+                  value={editForm.area}
+                  onChange={e => setEditForm({ ...editForm, area: e.target.value })}
+                  className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 text-sm font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm appearance-none cursor-pointer"
+                >
+                  <option value="">Select area</option>
+                  {DELIVERY_AREAS.map(a => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                  </svg>
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest">Full Address *</label>
+              <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Full Address *</label>
               <textarea
                 required
                 rows={2}
                 value={editForm.address}
                 onChange={e => setEditForm({ ...editForm, address: e.target.value })}
-                className="rounded-xl border border-[#e8edf5] bg-white px-4 py-3 text-[13px] font-bold text-[#0f172a] outline-none focus:ring-2 focus:ring-[#2563eb]/20 focus:border-[#2563eb] resize-none shadow-sm"
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-sm font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none shadow-sm"
                 placeholder="House/flat number, street, building"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest">Landmark</label>
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Landmark</label>
                 <input
                   type="text"
                   value={editForm.landmark}
                   onChange={e => setEditForm({ ...editForm, landmark: e.target.value })}
-                  className="h-11 rounded-xl border border-[#e8edf5] bg-white px-4 text-[13px] font-bold text-[#0f172a] outline-none focus:ring-2 focus:ring-[#2563eb]/20 focus:border-[#2563eb] shadow-sm"
+                  className="h-11 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 text-sm font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm"
                   placeholder="Near temple, opposite park..."
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest">Floor / Gate Notes</label>
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Floor / Gate Notes</label>
                 <input
                   type="text"
                   value={editForm.floor_notes}
                   onChange={e => setEditForm({ ...editForm, floor_notes: e.target.value })}
-                  className="h-11 rounded-xl border border-[#e8edf5] bg-white px-4 text-[13px] font-bold text-[#0f172a] outline-none focus:ring-2 focus:ring-[#2563eb]/20 focus:border-[#2563eb] shadow-sm"
+                  className="h-11 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 text-sm font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm"
                   placeholder="2nd floor, left gate..."
                 />
               </div>
             </div>
 
             {error && (
-              <p className="text-[12px] text-[#ef4444] font-bold flex items-center gap-1.5">
+              <p className="text-xs text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1.5">
                 <AlertCircle size={14} /> {error}
               </p>
             )}
@@ -259,14 +266,14 @@ export default function AccountPage() {
               <button
                 type="button"
                 onClick={cancelEditing}
-                className="flex-1 h-11 rounded-xl border border-[#e8edf5] bg-white text-[#64748b] font-bold text-[13px] cursor-pointer hover:bg-[#f8fafc] transition-all shadow-sm"
+                className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-bold text-xs cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 h-11 rounded-xl bg-[#2563eb] hover:bg-[#1e40af] active:scale-[0.98] text-white font-extrabold text-[13px] shadow-sm border-none cursor-pointer transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                className="flex-1 h-11 rounded-xl bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 active:scale-[0.98] text-white font-extrabold text-xs shadow-sm border-none cursor-pointer transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
                 {saving ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -280,32 +287,32 @@ export default function AccountPage() {
             </div>
           </form>
         ) : (
-          <div className="p-6 space-y-4 bg-white">
+          <div className="p-6 md:p-8 space-y-4 bg-white dark:bg-slate-900">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-[#f8fafc] border border-[#e8edf5] rounded-[16px] p-5">
-                <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest mb-1.5">Full Name</p>
-                <p className="text-[14px] font-black text-[#0f172a]">{profile.full_name || '—'}</p>
+              <div className="bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-5">
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Full Name</p>
+                <p className="text-sm font-black text-slate-900 dark:text-white">{profile.full_name || '—'}</p>
               </div>
-              <div className="bg-[#f8fafc] border border-[#e8edf5] rounded-[16px] p-5">
-                <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest mb-1.5">Phone</p>
-                <p className="text-[14px] font-black text-[#0f172a]">{profile.phone || '—'}</p>
+              <div className="bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-5">
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Phone</p>
+                <p className="text-sm font-black text-slate-900 dark:text-white">{profile.phone || '—'}</p>
               </div>
             </div>
-            <div className="bg-[#f8fafc] border border-[#e8edf5] rounded-[16px] p-5">
-              <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest mb-1.5">Delivery Area</p>
-              <p className="text-[14px] font-black text-[#0f172a] flex items-center gap-1.5">
-                <MapPin size={16} className="text-[#2563eb]" />
+            <div className="bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-5">
+              <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Delivery Area</p>
+              <p className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <MapPin size={16} className="text-blue-600 dark:text-blue-500" />
                 {profile.area || '—'}
               </p>
             </div>
-            <div className="bg-[#f8fafc] border border-[#e8edf5] rounded-[16px] p-5">
-              <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest mb-1.5">Address</p>
-              <p className="text-[14px] font-black text-[#0f172a]">{profile.address || '—'}</p>
+            <div className="bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-5">
+              <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Address</p>
+              <p className="text-sm font-black text-slate-900 dark:text-white">{profile.address || '—'}</p>
               {profile.landmark && (
-                <p className="text-[12px] text-[#64748b] font-bold mt-2">Landmark: {profile.landmark}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-2">Landmark: {profile.landmark}</p>
               )}
               {profile.floor_notes && (
-                <p className="text-[12px] text-[#64748b] font-bold mt-1">Notes: {profile.floor_notes}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1">Notes: {profile.floor_notes}</p>
               )}
             </div>
           </div>
@@ -314,52 +321,54 @@ export default function AccountPage() {
 
       {subscription && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white border border-[#e8edf5] rounded-[20px] p-5 shadow-[0_2px_16px_rgba(0,0,0,0.05)]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[20px] p-5 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#dcfce7] border border-[#bbf7d0] text-[#16a34a] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-emerald-55 dark:bg-emerald-950/30 border border-emerald-200/40 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-450 flex items-center justify-center">
                 <Milk size={18} strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Daily Plan</p>
-                <p className="text-[18px] font-black text-[#0f172a] font-mono leading-none mt-1">{subscription.quantity_litres}L</p>
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Daily Plan</p>
+                <p className="text-lg font-black text-slate-900 dark:text-white font-mono leading-none mt-1">{subscription.quantity_litres}L</p>
               </div>
             </div>
-            <p className="text-[11px] font-bold text-[#64748b]">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
               ₹{subscription.daily_rate?.toFixed(2)} / day
             </p>
           </div>
 
-          <div className="bg-white border border-[#e8edf5] rounded-[20px] p-5 shadow-[0_2px_16px_rgba(0,0,0,0.05)]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[20px] p-5 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#fef3c7] border border-[#fde68a] text-[#d97706] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-amber-55 dark:bg-amber-950/30 border border-amber-200/45 dark:border-amber-900/30 text-amber-600 dark:text-amber-450 flex items-center justify-center">
                 <FileText size={18} strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Monthly Bill</p>
-                <p className="text-[18px] font-black text-[#0f172a] font-mono leading-none mt-1">₹{subscription.monthly_amount?.toFixed(0)}</p>
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Monthly Bill</p>
+                <p className="text-lg font-black text-slate-900 dark:text-white font-mono leading-none mt-1">₹{subscription.monthly_amount?.toFixed(0)}</p>
               </div>
             </div>
-            <p className="text-[11px] font-bold text-[#64748b]">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
               Net due: ₹{(currentMonth?.net_due || 0).toFixed(2)}
             </p>
           </div>
 
-          <div className="bg-white border border-[#e8edf5] rounded-[20px] p-5 shadow-[0_2px_16px_rgba(0,0,0,0.05)] flex flex-col justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[20px] p-5 shadow-sm flex flex-col justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#eff6ff] border border-[#bfdbfe] text-[#2563eb] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-250/45 dark:border-blue-900/30 text-blue-650 dark:text-blue-450 flex items-center justify-center">
                 <Calendar size={18} strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Member Since</p>
-                <p className="text-[13px] font-black text-[#0f172a] mt-1">{memberSince}</p>
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Member Since</p>
+                <p className="text-[13px] font-black text-slate-900 dark:text-white mt-1">{memberSince}</p>
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-[#e8edf5]">
+            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <span className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest",
-                subscription.status === 'active' ? 'bg-[#dcfce7] text-[#16a34a] border border-[#bbf7d0]' : 'bg-[#fef3c7] text-[#d97706] border border-[#fde68a]'
+                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border",
+                subscription.status === 'active' 
+                  ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50' 
+                  : 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/50'
               )}>
-                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                 {subscription.status}
               </span>
             </div>
@@ -367,9 +376,9 @@ export default function AccountPage() {
         </div>
       )}
 
-      <div className="bg-[#f8fafc] border border-[#e8edf5] rounded-[20px] p-5 flex items-start gap-4">
-        <Shield size={20} className="text-[#94a3b8] flex-shrink-0" />
-        <div className="text-[12px] font-semibold text-[#64748b] leading-relaxed">
+      <div className="bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60 rounded-[20px] p-5 flex items-start gap-4">
+        <Shield size={20} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
+        <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 leading-relaxed">
           <p>Your account is secured via phone OTP authentication. All payment data is encrypted and processed through Razorpay's PCI-DSS compliant gateway. For account deletion or phone number changes, please contact our support team.</p>
         </div>
       </div>

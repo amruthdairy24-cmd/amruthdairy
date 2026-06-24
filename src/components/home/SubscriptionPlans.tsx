@@ -16,63 +16,22 @@ export function SubscriptionPlans() {
   return (
     <section 
       id="plans" 
-      style={{ 
-        background: 'linear-gradient(to bottom, #F8FAFC 0%, #FDFBF7 60%, #ffffff 100%)', 
-        padding: '120px 0',
-        position: 'relative'
-      }}
+      className="bg-gradient-to-b from-[#F8FAFC] via-[#FDFBF7] to-white dark:from-[#0f1115] dark:via-[#171923] dark:to-[#0f1115] py-28 relative"
     >
       {/* Top Cream wave decoration */}
-      <div 
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '24px',
-          background: '#F8FAFC'
-        }}
-      />
+      <div className="absolute top-0 left-0 right-0 h-6 bg-[#F8FAFC] dark:bg-[#0f1115]" />
 
       <div className="container-page relative z-10 max-w-4xl mx-auto">
-        {/* Header (Bespoke Editorial Serif Style with Scroll Reveal) */}
+        {/* Header */}
         <ScrollReveal direction="up" delay={0}>
-          <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              background: '#fff',
-              border: '1.5px solid rgba(2, 132, 199, 0.15)',
-              color: '#0284C7',
-              borderRadius: '999px',
-              padding: '6px 16px',
-              fontSize: '0.75rem',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              marginBottom: '18px',
-              boxShadow: '0 2px 6px rgba(2, 132, 199, 0.04)'
-            }}>
+          <div className="text-center mb-16 flex flex-col items-center">
+            <div className="inline-flex items-center bg-white dark:bg-warm-white border border-sky-500/15 text-sky-600 dark:text-sky-400 rounded-full px-4 py-1.5 text-xs font-extrabold uppercase tracking-widest mb-4.5 shadow-[0_2px_6px_rgba(2,132,199,0.04)]">
               Standard Subscription
             </div>
-            <h2 style={{ 
-              fontFamily: 'var(--font-playfair), Georgia, serif',
-              fontSize: 'clamp(2rem, 3.8vw, 3rem)', 
-              fontWeight: 500, 
-              color: '#0F172A', 
-              letterSpacing: '-0.01em', 
-              lineHeight: 1.2, 
-              marginBottom: '16px' 
-            }}>
+            <h2 className="font-playfair text-3xl sm:text-4xl md:text-5xl font-medium text-slate-950 dark:text-white tracking-tight leading-tight mb-4">
               One Simple Plan. Full Flexibility.
             </h2>
-            <p style={{ 
-              fontSize: '1rem', 
-              color: '#475569', 
-              fontWeight: 500,
-              maxWidth: '500px',
-              margin: '0 auto'
-            }}>
+            <p className="text-sm sm:text-base text-slate-605 dark:text-brown-650 font-medium max-w-[500px] mx-auto">
               We believe in keeping things simple. A standard 1 Litre daily delivery, with complete freedom to adjust as needed.
             </p>
           </div>
@@ -80,111 +39,50 @@ export function SubscriptionPlans() {
 
         {/* Single Wide Plan Card */}
         <ScrollReveal direction="up" delay={150} duration={900}>
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '24px',
-              padding: '0',
-              border: '2px solid #0284C7',
-              position: 'relative',
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: '0 20px 50px rgba(2, 132, 199, 0.08)',
-              overflow: 'hidden'
-            }}
-            className="md:flex-row items-stretch"
-          >
+          <div className="bg-white dark:bg-slate-900 rounded-[24px] border-2 border-sky-500 relative flex flex-col md:flex-row items-stretch shadow-[0_20px_50px_rgba(2,132,199,0.08)] overflow-hidden">
             {/* Left/Top Side: Details & Pricing */}
-            <div className="flex-1 p-8 sm:p-12 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col justify-center">
-              <div style={{
-                display: 'inline-flex',
-                background: '#0284C7',
-                color: '#fff',
-                fontSize: '0.7rem',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                padding: '6px 16px',
-                borderRadius: '999px',
-                letterSpacing: '0.08em',
-                marginBottom: '24px',
-                width: 'fit-content',
-                boxShadow: '0 4px 12px rgba(2, 132, 199, 0.2)'
-              }}>
+            <div className="flex-1 p-8 sm:p-12 border-b md:border-b-0 md:border-r border-slate-100 dark:border-border flex flex-col justify-center text-left">
+              <div className="inline-flex bg-sky-600 dark:bg-sky-500 text-white text-[11px] font-extrabold uppercase px-4 py-1.5 rounded-full tracking-wider mb-6 w-fit shadow-[0_4px_12px_rgba(2,132,199,0.2)]">
                 Standard Monthly
               </div>
 
               <div className="flex items-center gap-4 mb-4">
-                <div style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '16px',
-                  background: 'rgba(2, 132, 199, 0.08)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#0284C7'
-                }}>
+                <div className="w-14 h-14 rounded-2xl bg-sky-50 dark:bg-sky-950/20 flex items-center justify-center text-sky-600 dark:text-sky-450 flex-shrink-0">
                   <Milk size={28} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', lineHeight: 1 }}>1 Litre / Day</h3>
+                  <h3 className="text-3xl font-extrabold text-slate-950 dark:text-white leading-none">1 Litre / Day</h3>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', margin: '32px 0' }}>
-                <span style={{ fontSize: '3.5rem', fontWeight: 900, color: '#0F172A', lineHeight: 1, letterSpacing: '-0.03em' }}>
+              <div className="flex items-baseline gap-2 my-8">
+                <span className="text-5xl md:text-6xl font-black text-slate-950 dark:text-white tracking-tighter leading-none font-mono-num">
                   ₹1,699
                 </span>
-                <span style={{ fontSize: '1rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span className="text-sm sm:text-base text-slate-600 dark:text-brown-600 font-bold uppercase tracking-widest">
                   / month
                 </span>
               </div>
 
-              <Link href="/subscribe" style={{ textDecoration: 'none' }}>
-                <div style={{
-                  width: '100%',
-                  height: '60px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(to bottom, #0EA5E9 0%, #0369A1 100%)',
-                  color: '#fff',
-                  fontWeight: 700,
-                  fontSize: '1.05rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.15), 0 8px 20px rgba(3, 105, 161, 0.25)',
-                  border: '1px solid rgba(3, 105, 161, 0.15)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                className="hover:scale-[1.02] active:scale-[0.98]"
-                >
+              <Link href="/subscribe" className="no-underline">
+                <div className="w-full h-[60px] rounded-xl bg-gradient-to-b from-sky-400 to-sky-650 text-white font-bold text-base flex items-center justify-center border border-sky-650/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(0,0,0,0.15),0_8px_20px_rgba(3,105,161,0.25)] cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
                   Start Subscription
                 </div>
               </Link>
             </div>
 
             {/* Right/Bottom Side: Features */}
-            <div className="flex-1 bg-slate-50/50 p-8 sm:p-12 flex flex-col justify-center">
-              <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '24px' }}>
+            <div className="flex-1 bg-slate-50/50 dark:bg-slate-950/40 p-8 sm:p-12 flex flex-col justify-center text-left">
+              <h4 className="text-lg font-extrabold text-slate-950 dark:text-white mb-6">
                 Everything you need
               </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="flex flex-col gap-4">
                 {features.map((feature, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
-                      background: '#10b981',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0
-                    }}>
+                  <div key={idx} className="flex items-center gap-4">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
                       <Check size={14} color="#fff" strokeWidth={3} />
                     </div>
-                    <span style={{ fontSize: '1rem', color: '#475569', fontWeight: 600 }}>
+                    <span className="text-sm sm:text-base text-slate-600 dark:text-brown-600 font-semibold">
                       {feature}
                     </span>
                   </div>

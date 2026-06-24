@@ -82,8 +82,8 @@ export default function ExtraMilkPage() {
   if (pageLoading) {
     return (
       <div className="max-w-xl space-y-6 animate-pulse">
-        <div className="h-6 w-32 bg-slate-200 rounded-lg" />
-        <div className="h-44 bg-slate-200 rounded-3xl" />
+        <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+        <div className="h-44 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
       </div>
     )
   }
@@ -92,28 +92,28 @@ export default function ExtraMilkPage() {
     <div className="max-w-xl space-y-6">
       
       <div>
-        <h1 className="text-[22px] font-black text-[#0f172a] font-display tracking-tight mb-1 flex items-center gap-2">
-          <PlusCircle size={24} className="text-[#16a34a]" /> Order Extra Milk
+        <h1 className="text-[22px] font-black text-slate-900 dark:text-white font-display tracking-tight mb-1 flex items-center gap-2">
+          <PlusCircle size={24} className="text-emerald-600 dark:text-emerald-400" /> Order Extra Milk
         </h1>
-        <p className="text-[13px] font-semibold text-[#64748b]">Need more milk tomorrow? Add a one-time extra order to your delivery.</p>
+        <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-450">Need more milk tomorrow? Add a one-time extra order to your delivery.</p>
       </div>
 
-      <div className="bg-[#fef3c7] border border-[#fde68a] rounded-[16px] p-4 flex items-start gap-3 shadow-sm">
-        <ShieldAlert className="text-[#d97706] flex-shrink-0 mt-0.5" size={18} />
+      <div className="bg-amber-500/10 dark:bg-amber-550/15 border border-amber-200/30 dark:border-amber-900/30 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+        <ShieldAlert className="text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5" size={18} />
         <div>
-          <h4 className="text-[11px] font-black text-[#b45309] uppercase tracking-wider">9:00 PM Deadline</h4>
-          <p className="text-[12px] font-semibold text-[#92400e] mt-1 leading-relaxed">
+          <h4 className="text-[11px] font-black text-amber-800 dark:text-amber-350 uppercase tracking-wider">9:00 PM Deadline</h4>
+          <p className="text-[12px] font-semibold text-amber-900 dark:text-amber-200/80 mt-1 leading-relaxed">
             Extra orders must be placed before 9:00 PM on the previous night. Booking is subject to daily farm capacity.
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleExtraSubmit} className="bg-white border border-[#e8edf5] rounded-[20px] p-5 sm:p-7 shadow-[0_2px_16px_rgba(0,0,0,0.05)] space-y-6">
+      <form onSubmit={handleExtraSubmit} className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 sm:p-7 shadow-sm space-y-6">
         
         <div className="flex flex-col gap-1.5">
-          <label className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest">Select Delivery Date</label>
-          <div className="flex items-center h-11 rounded-xl border border-[#e8edf5] bg-[#f8fafc] px-3 gap-2 focus-within:ring-2 focus-within:ring-[#2563eb]/20 focus-within:border-[#2563eb]">
-            <Calendar size={15} className="text-[#94a3b8]" />
+          <label className="text-[11px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest">Select Delivery Date</label>
+          <div className="flex items-center h-11 rounded-xl border border-border/50 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/40 px-3 gap-2 focus-within:ring-2 focus-within:ring-brand-secondary/20 focus-within:border-brand-secondary">
+            <Calendar size={15} className="text-slate-400 dark:text-slate-500" />
             <input
               type="date"
               required
@@ -124,13 +124,13 @@ export default function ExtraMilkPage() {
                 return tomorrow.toISOString().split('T')[0]
               })()}
               onChange={(e) => { setOrderDate(e.target.value); setError(''); setSuccessMsg('') }}
-              className="flex-1 h-full bg-transparent text-[13px] font-bold text-[#0f172a] outline-none"
+              className="flex-1 h-full bg-transparent text-[13px] font-bold text-slate-900 dark:text-white outline-none"
             />
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest">Choose Extra Litres</label>
+          <label className="text-[11px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest">Choose Extra Litres</label>
           <div className="grid grid-cols-3 gap-3">
             {[0.5, 1.0, 1.5].map((litres) => (
               <button
@@ -139,42 +139,42 @@ export default function ExtraMilkPage() {
                 onClick={() => { setExtraLitres(litres); setError(''); setSuccessMsg('') }}
                 className={`h-20 rounded-xl border flex flex-col items-center justify-center p-3 gap-1.5 transition-all ${
                   extraLitres === litres
-                    ? 'border-[#2563eb] bg-[#eff6ff] ring-1 ring-[#2563eb] text-[#1e3a8f]'
-                    : 'border-[#e8edf5] bg-white hover:bg-[#f8fafc] text-[#64748b]'
+                    ? 'border-brand-secondary bg-blue-500/10 dark:bg-blue-550/20 ring-1 ring-brand-secondary text-blue-850 dark:text-blue-400 font-bold'
+                    : 'border-border/50 dark:border-slate-800/80 bg-white dark:bg-cream-100 hover:bg-slate-50 dark:hover:bg-slate-900/50 text-slate-500 dark:text-slate-400'
                 }`}
               >
                 <span className="text-[18px] font-black leading-none">+{litres}L</span>
-                <span className="text-[10px] font-bold text-[#94a3b8]">Extra Milk</span>
+                <span className="text-[10px] font-bold text-inherit opacity-70">Extra Milk</span>
               </button>
             ))}
           </div>
         </div>
 
         {extraLitres > 0 && (
-          <div className="bg-[#f8fafc] border border-[#e8edf5] rounded-xl p-5 space-y-3.5 text-[13px] font-bold text-[#64748b]">
-            <div className="flex justify-between items-center pb-3 border-b border-[#e8edf5]">
+          <div className="bg-slate-50 dark:bg-slate-900/40 border border-border/50 dark:border-slate-800/80 rounded-xl p-5 space-y-3.5 text-[13px] font-bold text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between items-center pb-3 border-b border-border/40 dark:border-slate-800/65">
               <span>Your regular delivery:</span>
-              <span className="font-extrabold text-[#0f172a]">{baseQty} Litres</span>
+              <span className="font-extrabold text-slate-900 dark:text-white">{baseQty} Litres</span>
             </div>
-            <div className="flex justify-between items-center pb-3 border-b border-[#e8edf5]">
+            <div className="flex justify-between items-center pb-3 border-b border-border/40 dark:border-slate-800/65">
               <span>Tomorrow&apos;s total:</span>
-              <span className="font-extrabold text-[#2563eb]">{(baseQty + extraLitres)} Litres</span>
+              <span className="font-extrabold text-brand-secondary">{(baseQty + extraLitres)} Litres</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="flex items-center gap-1.5"><Info size={14} className="text-[#94a3b8]" /> Extra Charge:</span>
-              <span className="font-extrabold text-[#ef4444] font-mono text-sm">₹{estimatedCharge.toFixed(2)}</span>
+              <span className="flex items-center gap-1.5"><Info size={14} className="text-slate-400 dark:text-slate-500" /> Extra Charge:</span>
+              <span className="font-extrabold text-rose-600 dark:text-rose-450 font-mono text-sm">₹{estimatedCharge.toFixed(2)}</span>
             </div>
           </div>
         )}
 
         {error && (
-          <p className="text-[12px] text-[#ef4444] font-bold flex items-center gap-1.5">
+          <p className="text-[12px] text-rose-650 dark:text-rose-400 font-bold flex items-center gap-1.5">
             <ShieldAlert size={14} /> {error}
           </p>
         )}
 
         {successMsg && (
-          <p className="text-[12px] text-[#16a34a] font-bold flex items-center gap-1.5">
+          <p className="text-[12px] text-emerald-650 dark:text-emerald-400 font-bold flex items-center gap-1.5">
             <CheckCircle size={14} /> {successMsg}
           </p>
         )}
@@ -182,7 +182,7 @@ export default function ExtraMilkPage() {
         <button
           type="submit"
           disabled={loading || !orderDate}
-          className="w-full h-11 rounded-xl bg-[#2563eb] hover:bg-[#1e40af] active:scale-[0.98] text-white font-extrabold text-[13px] shadow-sm transition-all border-none flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-11 rounded-xl bg-brand-secondary hover:bg-brand-secondary/90 active:scale-[0.98] text-white font-extrabold text-[13px] shadow-sm transition-all border-none flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

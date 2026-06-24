@@ -17,19 +17,19 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
 
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5 w-full">
         {label && (
           <label
             htmlFor={inputId}
-            className="text-small font-semibold text-teal-900"
+            className="text-sm font-semibold text-teal-900 dark:text-teal-400"
           >
             {label}
           </label>
         )}
 
-        <div className="relative flex items-center">
+        <div className="relative flex items-center w-full">
           {leadingIcon && (
-            <div className="absolute left-4 flex items-center text-teal-900/50 pointer-events-none z-10">
+            <div className="absolute left-4 flex items-center text-teal-900/50 dark:text-teal-400/50 pointer-events-none z-10">
               {leadingIcon}
             </div>
           )}
@@ -39,17 +39,17 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             className={cn(
               // Base
-              'w-full h-12 rounded-[14px] px-4 text-sm',
-              'font-sans text-teal-900',
-              'bg-milk-100 border border-milk-300',
-              'placeholder:text-teal-900/40',
+              'w-full h-12 rounded-brand-md px-4 text-sm',
+              'font-sans text-teal-900 dark:text-white',
+              'bg-milk-100 border border-milk-300 dark:bg-cream-100 dark:border-border',
+              'placeholder:text-teal-900/40 dark:placeholder:text-slate-500',
               // Focus
               'focus:outline-none focus:border-teal-700 focus:bg-white',
-              'focus:ring-2 focus:ring-teal-100',
+              'focus:ring-2 focus:ring-teal-100 dark:focus:ring-teal-950 dark:focus:border-teal-500 dark:focus:bg-cream-50',
               // Transition
               'transition-all duration-150',
               // Error
-              error && 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-100',
+              error && 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-100 dark:border-red-500 dark:bg-red-950/10 dark:focus:border-red-400 dark:focus:ring-red-950',
               // Prefix/suffix padding
               leadingIcon != null ? 'pl-10' : undefined,
               trailingIcon != null ? 'pr-10' : undefined,
@@ -59,21 +59,21 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           />
 
           {trailingIcon && (
-            <div className="absolute right-4 flex items-center text-teal-900/50 z-10">
+            <div className="absolute right-4 flex items-center text-teal-900/50 dark:text-teal-400/50 z-10">
               {trailingIcon}
             </div>
           )}
         </div>
 
         {error && (
-          <p className="text-tiny text-red-500 flex items-center gap-1" role="alert">
+          <p className="text-xs text-red-500 flex items-center gap-1" role="alert">
             <AlertCircle size={14} aria-hidden="true" />
             {error}
           </p>
         )}
 
         {hint && !error && (
-          <p className="text-tiny text-teal-900/50">{hint}</p>
+          <p className="text-xs text-teal-900/50 dark:text-teal-400/50">{hint}</p>
         )}
       </div>
     )
@@ -105,7 +105,7 @@ export const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
         maxLength={10}
         placeholder="98765 43210"
         leadingIcon={
-          <span className="text-sm font-semibold text-teal-700 pr-2 border-r border-milk-300">
+          <span className="text-sm font-semibold text-teal-700 pr-2 border-r border-milk-300 dark:text-teal-400 dark:border-border">
             +91
           </span>
         }

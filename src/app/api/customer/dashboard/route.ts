@@ -52,10 +52,24 @@ export async function GET(request: Request) {
 
         const { data: current_month } = await supabase
       .from('billing_months')
-      .select('id, billing_month, days_delivered, days_skipped, days_paused, extra_litres_ordered, skip_credit, pause_credit, extra_charges, carry_in_balance, net_due, amount_paid')
+      .select('id, billing_month, days_delivered, days_skipped, days_paused, extra_litres_ordered, skip_credit, pause_credit, extra_charges, carry_in_balance, net_due, amount_paid, monthly_amount')
       .eq('subscription_id', subId)
       .eq('billing_month', formattedBillingMonth)
       .maybeSingle();
+
+    // Live-calculate net_due from billing_months data for accuracy
+    let live_net_due = current_month?.net_due ?? 0;
+    if (current_month) {
+      const monthlyAmt = Number(current_month.monthly_amount) || 0;
+      const skipCredit = Number(current_month.skip_credit) || 0;
+      const pauseCredit = Number(current_month.pause_credit) || 0;
+      const extraCharges = Number(current_month.extra_charges) || 0;
+      const carryIn = Number(current_month.carry_in_balance) || 0;
+      const amountPaid = Number(current_month.amount_paid) || 0;
+
+      live_net_due = monthlyAmt - skipCredit - pauseCredit + extraCharges - carryIn - amountPaid;
+      live_net_due = Math.round(live_net_due * 100) / 100;
+    }
 
     // 4. Upcoming skips
     const { data: upcoming_skips } = await supabase
@@ -88,22 +102,42 @@ export async function GET(request: Request) {
     
     const { data: recent_deliveries } = await supabase
       .from('daily_delivery_sheet')
-      .select('delivery_date, total_litres, delivery_status')
+      .select('delivery_date, total_litres, delivery_status, is_skip, is_extra, extra_litres, delivered_at')
       .eq('subscription_id', subId)
       .gte('delivery_date', sevenDaysAgo.toISOString().split('T')[0])
       .order('delivery_date', { ascending: false });
+
+    // 8. Upcoming extra milk orders
+    const { data: upcoming_extras } = await supabase
+      .from('extra_milk_orders')
+      .select('order_date, extra_litres, charge_amount, status')
+      .eq('subscription_id', subId)
+      .gte('order_date', currentDate.toISOString().split('T')[0])
+      .in('status', ['confirmed']);
+
+    // 9. Upcoming adjustments
+    const { data: upcoming_adjustments } = await supabase
+      .from('billing_adjustments')
+      .select('id, adjustment_type, amount, description, target_month, refund_status')
+      .eq('subscription_id', subId)
+      .eq('is_applied', false);
 
     return NextResponse.json({
       success: true,
       profile,
       subscription,
-      current_month: current_month || null,
+      current_month: current_month ? {
+        ...current_month,
+        net_due: live_net_due
+      } : null,
       upcoming_skips: upcoming_skips || [],
+      upcoming_extras: upcoming_extras || [],
       active_vacation: active_vacation || null,
       next_month_change: next_month_change ? { 
         quantity: next_month_change.to_quantity, 
         amount: next_month_change.new_monthly_amount 
       } : null,
+      upcoming_adjustments: upcoming_adjustments || [],
       recent_deliveries: recent_deliveries || []
     });
 

@@ -40,14 +40,14 @@ export function PricingSection() {
   return (
     <>
       {/* Tech Stack */}
-      <section className="bg-milk-200 section-py" id="tech-stack">
+      <section className="bg-milk-200 dark:bg-slate-950 section-py" id="tech-stack">
         <div className="container-page">
           <div className="text-center max-w-xl mx-auto mb-12">
             <p className="section-label justify-center">Technology</p>
-            <h2 className="text-heading text-teal-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-black text-teal-900 dark:text-white mb-4">
               Built on world-class infrastructure
             </h2>
-            <p className="text-body text-teal-900/55">
+            <p className="text-sm sm:text-base text-teal-900/55 dark:text-slate-455">
               Enterprise-grade tools used by companies 1000x our size — at a small-business price.
             </p>
           </div>
@@ -57,18 +57,18 @@ export function PricingSection() {
               <div
                 key={tech.name}
                 className={cn(
-                  'bg-white border border-milk-200 rounded-[20px] p-6',
+                  'bg-white dark:bg-slate-900 border border-milk-200 dark:border-border rounded-brand-lg p-6',
                   'flex flex-col items-center text-center',
                   'transition-all duration-300',
                   'hover:-translate-y-1 hover:border-teal-100 hover:shadow-card'
                 )}
               >
-                <div className="text-teal-600 mb-3" aria-hidden="true">
+                <div className="text-teal-600 dark:text-teal-400 mb-3" aria-hidden="true">
                   {getTechIcon(tech.icon, "w-8 h-8")}
                 </div>
-                <p className="text-small font-bold text-teal-900 mb-0.5">{tech.name}</p>
-                <p className="text-tiny font-semibold text-teal-500 uppercase tracking-wider mb-2">{tech.role}</p>
-                <p className="text-tiny text-teal-900/50 leading-relaxed">{tech.desc}</p>
+                <p className="text-sm font-bold text-teal-900 dark:text-white mb-0.5">{tech.name}</p>
+                <p className="text-xs font-semibold text-teal-500 dark:text-teal-400 uppercase tracking-wider mb-2">{tech.role}</p>
+                <p className="text-xs text-teal-900/50 dark:text-slate-400 leading-relaxed">{tech.desc}</p>
               </div>
             ))}
           </div>
@@ -76,72 +76,63 @@ export function PricingSection() {
       </section>
 
       {/* Pricing */}
-      <section className="bg-teal-900 section-py" id="pricing">
+      <section className="bg-teal-900 dark:bg-[#0b0c10] section-py" id="pricing">
         <div className="container-page">
           <div className="text-center max-w-xl mx-auto mb-12">
-            <p className="section-label justify-center" style={{ color: '#1A7A5E' }}>
+            <p className="section-label justify-center text-teal-400 dark:text-teal-500">
               Investment
             </p>
-            <h2 className="text-heading text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
               One-time development. Lifetime value.
             </h2>
-            <p className="text-body text-white/55">
+            <p className="text-sm sm:text-base text-white/55 dark:text-slate-400">
               A fixed-price project. No surprises, no scope creep. Everything listed below, delivered in 6 weeks.
             </p>
           </div>
 
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-[28px] overflow-hidden shadow-float">
+            <div className="bg-white dark:bg-slate-900 rounded-brand-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.4)]">
               <div className="grid grid-cols-1 lg:grid-cols-2">
                 {/* Left — Price */}
-                <div className="p-10 border-b lg:border-b-0 lg:border-r border-milk-200">
-                  <p className="text-tiny text-teal-900/40 line-through mb-2">Market price: ₹60,000–₹80,000</p>
+                <div className="p-10 border-b lg:border-b-0 lg:border-r border-milk-200 dark:border-border">
+                  <p className="text-xs text-teal-900/40 dark:text-slate-500 line-through mb-2">Market price: ₹60,000–₹80,000</p>
 
                   <div className="flex items-baseline gap-2 mb-2">
-                    <span className="font-extrabold text-teal-700 font-mono-num"
-                      style={{ fontSize: '3.5rem', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                    <span className="font-extrabold text-teal-700 dark:text-white font-mono-num text-5xl md:text-6xl tracking-tighter leading-none">
                       ₹30,000
                     </span>
                   </div>
-                  <p className="text-small text-teal-900/50 mb-8">Fixed price. No recurring fees from EKodrix.</p>
+                  <p className="text-sm text-teal-900/50 dark:text-slate-450 mb-8">Fixed price. No recurring fees from EKodrix.</p>
 
-                  <div className="bg-milk-50 border border-milk-200 rounded-2xl p-5 mb-8">
-                    <p className="text-tiny font-bold text-teal-900 uppercase tracking-widest mb-4">Payment Structure</p>
+                  <div className="bg-milk-50 dark:bg-slate-950 border border-milk-200 dark:border-border rounded-2xl p-5 mb-8">
+                    <p className="text-xs font-bold text-teal-900 dark:text-white uppercase tracking-widest mb-4">Payment Structure</p>
                     <div className="flex gap-4">
-                      <div className="flex-1 text-center bg-white rounded-xl p-4">
-                        <p className="text-heading font-extrabold text-teal-700 font-mono-num">₹15K</p>
-                        <p className="text-tiny text-teal-900/50 mt-1">On project start</p>
+                      <div className="flex-1 text-center bg-white dark:bg-slate-900 rounded-xl p-4">
+                        <p className="text-base sm:text-lg font-extrabold text-teal-700 dark:text-teal-400 font-mono-num">₹15K</p>
+                        <p className="text-xs text-teal-900/50 dark:text-slate-400 mt-1">On start</p>
                       </div>
-                      <div className="flex-1 text-center bg-white rounded-xl p-4">
-                        <p className="text-heading font-extrabold text-amber-500 font-mono-num">₹15K</p>
-                        <p className="text-tiny text-teal-900/50 mt-1">On delivery</p>
+                      <div className="flex-1 text-center bg-white dark:bg-slate-900 rounded-xl p-4">
+                        <p className="text-base sm:text-lg font-extrabold text-amber-500 dark:text-amber-400 font-mono-num">₹15K</p>
+                        <p className="text-xs text-teal-900/50 dark:text-slate-400 mt-1">On delivery</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-2 mb-8">
-                    <div className="flex items-center gap-2 text-small text-teal-900/70">
-                      <Calendar className="w-4 h-4 text-teal-500" /> 6 weeks delivery timeline
+                    <div className="flex items-center gap-2 text-sm text-teal-900/70 dark:text-slate-300">
+                      <Calendar className="w-4 h-4 text-teal-500 dark:text-teal-400" /> 6 weeks delivery timeline
                     </div>
-                    <div className="flex items-center gap-2 text-small text-teal-900/70">
-                      <Lock className="w-4 h-4 text-teal-500" /> 1 month post-launch support
+                    <div className="flex items-center gap-2 text-sm text-teal-900/70 dark:text-slate-300">
+                      <Lock className="w-4 h-4 text-teal-500 dark:text-teal-400" /> 1 month post-launch support
                     </div>
-                    <div className="flex items-center gap-2 text-small text-teal-900/70">
-                      <BookOpen className="w-4 h-4 text-teal-500" /> Admin training session included
+                    <div className="flex items-center gap-2 text-sm text-teal-900/70 dark:text-slate-300">
+                      <BookOpen className="w-4 h-4 text-teal-500 dark:text-teal-400" /> Admin training session included
                     </div>
                   </div>
 
                   <Link
                     href="/contact"
-                    className={cn(
-                      'flex items-center justify-center gap-2',
-                      'w-full h-14 rounded-full',
-                      'bg-teal-700 text-white font-bold',
-                      'shadow-button hover:bg-teal-500',
-                      'hover:scale-[1.02] hover:-translate-y-px',
-                      'active:scale-[0.97]',
-                      'transition-all duration-200'
-                    )}
+                    className="flex items-center justify-center gap-2 w-full h-14 rounded-full bg-teal-700 dark:bg-teal-600 text-white font-bold shadow-button hover:bg-teal-500 dark:hover:bg-teal-500 hover:scale-[1.02] hover:-translate-y-px active:scale-[0.97] transition-all duration-200"
                   >
                     Get Started → Call 90485 71147
                   </Link>
@@ -149,11 +140,11 @@ export function PricingSection() {
 
                 {/* Right — Features */}
                 <div className="p-10">
-                  <p className="text-small font-bold text-teal-900 mb-6">Everything included:</p>
-                  <ul className="flex flex-col gap-3">
+                  <p className="text-sm font-bold text-teal-900 dark:text-white mb-6">Everything included:</p>
+                  <ul className="flex flex-col gap-3 pl-0 list-none">
                     {features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3 text-small text-teal-900/70">
-                        <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
+                      <li key={feature} className="flex items-start gap-3 text-sm text-teal-900/70 dark:text-slate-300">
+                        <span className="w-5 h-5 rounded-full bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
                           ✓
                         </span>
                         {feature}
