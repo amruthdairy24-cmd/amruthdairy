@@ -129,7 +129,7 @@ export default function CustomerDashboard() {
 
   if (error || !data) {
     return (
-      <div className="max-w-md mx-auto text-center py-16 bg-white dark:bg-cream-100 border border-border/40 dark:border-slate-800/85 rounded-2xl p-8 shadow-sm">
+      <div className="max-w-md mx-auto text-center py-16 bg-white dark:bg-slate-900 border border-border/40 dark:border-slate-800/85 rounded-2xl p-8 shadow-sm">
         <AlertTriangle className="text-rose-500 mx-auto mb-4" size={40} />
         <h3 className="text-lg font-black text-slate-800 dark:text-white font-display">Dashboard Unavailable</h3>
         <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-2 mb-6">{error || 'Failed to load details.'}</p>
@@ -196,7 +196,7 @@ export default function CustomerDashboard() {
 
         <motion.div
           variants={itemVariants}
-          className="bg-white dark:bg-cream-100 border border-border/40 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-4 text-[13px] font-semibold text-slate-600 dark:text-slate-400 leading-relaxed"
+          className="bg-white dark:bg-slate-900 border border-border/40 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-4 text-[13px] font-semibold text-slate-600 dark:text-slate-400 leading-relaxed"
         >
           <h3 className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2">
             <HelpCircle size={15} className="text-brand-secondary" /> How the Waitlist Works
@@ -251,13 +251,12 @@ export default function CustomerDashboard() {
       {/* ─── 1. HERO BENTO SECTION (Pasture Green welcome card) ─── */}
       <motion.div
         variants={itemVariants}
-        // className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-600 text-white p-6 sm:p-8 shadow-md border border-white/10 z-10"
-        className="relative overflow-hidden rounded-2xl bg-[#014DA4] text-white p-6 sm:p-8 shadow-md border border-white/10 z-10"
+        className="relative overflow-hidden rounded-2xl bg-[#014DA4] dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-950 text-white p-6 sm:p-8 shadow-md border border-white/10 dark:border-slate-800 z-10"
       >
-        <div className="absolute -top-5 -right-5 w-60 h-60 rounded-full pointer-events-none filter blur-[50px] opacity-25 bg-amber-300" />
+        <div className="absolute -top-5 -right-5 w-60 h-60 rounded-full pointer-events-none filter blur-[50px] opacity-25 dark:opacity-10 bg-amber-300" />
 
         {/* Custom Charming Farm Scene SVG Vector Illustration */}
-        <svg width="240" height="160" viewBox="0 0 240 160" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute right-8 bottom-0 opacity-90 pointer-events-none hidden md:block select-none transform translate-y-3">
+        <svg width="240" height="160" viewBox="0 0 240 160" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute right-8 bottom-0 opacity-90 dark:opacity-30 pointer-events-none hidden md:block select-none transform translate-y-3">
           {/* Glowing rising sun */}
           <circle cx="160" cy="70" r="35" fill="url(#sunGlow)" opacity="0.3"/>
           <circle cx="160" cy="70" r="14" fill="#FCD34D"/>
@@ -293,7 +292,7 @@ export default function CustomerDashboard() {
         {/* Content Layout */}
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-4 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 bg-white/12 backdrop-blur-md px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-emerald-50 border border-white/10">
+            <span className="inline-flex items-center gap-1.5 bg-white/12 dark:bg-slate-950/40 backdrop-blur-md px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-emerald-5 dark:text-slate-300 border border-white/10 dark:border-slate-800/50">
               <Milk size={11} className="text-amber-300 animate-pulse" />
               <span>{subscription.quantity_litres} Litre Daily Plan</span>
             </span>
@@ -301,7 +300,7 @@ export default function CustomerDashboard() {
               <h2 className="text-2xl sm:text-3xl font-bold font-display tracking-tight leading-tight mt-1">
                 Welcome to your morning harvest! 🌾
               </h2>
-              <p className="text-xs sm:text-sm font-medium text-emerald-100/90 mt-2 leading-relaxed">
+              <p className="text-xs sm:text-sm font-medium text-emerald-100/90 dark:text-slate-300 mt-2 leading-relaxed">
                 {subscription.status === 'active' 
                   ? 'Your raw, farm-fresh milk subscription is active. Delivered daily before 7:00 AM straight to your home.'
                   : 'Your subscription is currently paused. Resume your milk delivery anytime below.'
@@ -317,15 +316,15 @@ export default function CustomerDashboard() {
                 <span>Manage Subscription</span>
                 <ArrowRight size={13} />
               </Link>
-              <span className="text-[11px] font-bold text-emerald-55/80 bg-emerald-950/20 backdrop-blur-sm border border-white/5 py-2 px-3.5 rounded-xl select-none">
+              <span className="text-[11px] font-bold text-emerald-55/80 dark:text-slate-400 bg-emerald-950/20 dark:bg-slate-950/30 backdrop-blur-sm border border-white/5 dark:border-slate-800/50 py-2 px-3.5 rounded-xl select-none">
                 Zone: Mangalore Metro
               </span>
             </div>
           </div>
 
           <div className="flex-shrink-0 self-start md:self-center pr-6 flex flex-col items-end">
-            <div className="bg-white/12 border border-white/10 backdrop-blur-md px-4 py-3.5 rounded-2xl min-w-[170px] text-left md:text-right shadow-sm select-none">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-200 uppercase tracking-widest">
+            <div className="bg-white/12 dark:bg-slate-950/40 border border-white/10 dark:border-slate-800/50 backdrop-blur-md px-4 py-3.5 rounded-2xl min-w-[170px] text-left md:text-right shadow-sm select-none">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-200 dark:text-slate-400 uppercase tracking-widest">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                 <span>Next Delivery</span>
               </span>
@@ -341,7 +340,7 @@ export default function CustomerDashboard() {
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10"
       >
         {/* Card 1: Account Balance */}
-        <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
+        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Account Balance</p>
             <p className={cn("text-xl font-black font-mono tracking-tight mt-1 leading-none", balanceVal >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-600 dark:text-rose-400")}>
@@ -357,7 +356,7 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Card 2: Deliveries This Month */}
-        <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
+        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Days Delivered</p>
             <p className="text-xl font-black text-slate-900 dark:text-emerald-500 tracking-tight mt-1 leading-none font-sans">
@@ -373,7 +372,7 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Card 3: Skipped Days */}
-        <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
+        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Days Skipped</p>
             <p className="text-xl font-black text-slate-900 dark:text-emerald-500 tracking-tight mt-1 leading-none font-sans">
@@ -389,7 +388,7 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Card 4: Plan Details */}
-        <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
+        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Plan Capacity</p>
             <p className="text-xl font-black text-slate-900 dark:text-emerald-500 tracking-tight mt-1 leading-none font-sans">
@@ -412,7 +411,7 @@ export default function CustomerDashboard() {
 
           {/* Skip Day */}
           <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
-            <Link href="/dashboard/skip" className="flex flex-col items-center text-center bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
+            <Link href="/dashboard/skip" className="flex flex-col items-center text-center bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center flex-shrink-0 group-hover:bg-rose-500/20 transition-colors shadow-sm">
                 <SkipForward size={20} strokeWidth={2.5} />
               </div>
@@ -431,7 +430,7 @@ export default function CustomerDashboard() {
 
           {/* Vacation Pause */}
           <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
-            <Link href="/dashboard/vacation" className="flex flex-col items-center text-center bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
+            <Link href="/dashboard/vacation" className="flex flex-col items-center text-center bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors shadow-sm">
                 <Palmtree size={20} strokeWidth={2.5} />
               </div>
@@ -450,7 +449,7 @@ export default function CustomerDashboard() {
 
           {/* Extra Milk */}
           <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
-            <Link href="/dashboard/extra" className="flex flex-col items-center text-center bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
+            <Link href="/dashboard/extra" className="flex flex-col items-center text-center bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-colors shadow-sm">
                 <PlusCircle size={20} strokeWidth={2.5} />
               </div>
@@ -469,7 +468,7 @@ export default function CustomerDashboard() {
 
           {/* My Bills */}
           <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
-            <Link href="/dashboard/bills" className="flex flex-col items-center text-center bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
+            <Link href="/dashboard/bills" className="flex flex-col items-center text-center bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-500/20 transition-colors shadow-sm">
                 <FileText size={20} strokeWidth={2.5} />
               </div>
@@ -494,7 +493,7 @@ export default function CustomerDashboard() {
         {/* Live Billing Calculator (Artisanal Split Card) */}
         <motion.div variants={itemVariants} className="lg:col-span-3 flex flex-col space-y-3.5">
           <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] px-1">Live Billing Calculator</h3>
-          <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row flex-1">
+          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row flex-1">
             
             {/* Left Breakdown Column */}
             <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-5">
@@ -570,14 +569,14 @@ export default function CustomerDashboard() {
             </div>
 
             {/* Right Column: Invoice Summary */}
-            <div className="p-6 sm:p-7 bg-slate-50 dark:bg-slate-50 border-t md:border-t-0 md:border-l border-border/50 dark:border-slate-100 w-full md:w-[260px] lg:w-[290px] flex flex-col justify-between gap-6">
+            <div className="p-6 sm:p-7 bg-slate-50 dark:bg-slate-950/40 border-t md:border-t-0 md:border-l border-border/50 dark:border-slate-800 w-full md:w-[260px] lg:w-[290px] flex flex-col justify-between gap-6">
               <div className="space-y-4">
                 <div className="text-left">
                   <h4 className="text-[13px] font-bold text-slate-800 dark:text-slate-900 uppercase tracking-wider">Net Outstanding</h4>
                   <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">Calculated in real-time</p>
                 </div>
 
-                <div className="bg-white dark:bg-white border border-border/60 dark:border-slate-200/80 p-5 rounded-2xl shadow-xs text-left relative overflow-hidden group">
+                <div className="bg-white dark:bg-slate-900 border border-border/60 dark:border-slate-800 p-5 rounded-2xl shadow-xs text-left relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#014DA4]/3 rounded-full translate-x-8 -translate-y-8 pointer-events-none transition-transform group-hover:scale-110" />
                   <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest leading-none">Amount Due</span>
                   <p className="text-3xl font-black text-[#014DA4] dark:text-[#014DA4] tracking-tight mt-2 leading-none font-mono">
@@ -601,7 +600,7 @@ export default function CustomerDashboard() {
                     </div>
                     <div className="space-y-2 max-h-[145px] overflow-y-auto pr-1">
                       {data.upcoming_adjustments.map((adj, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-[11.5px] bg-white dark:bg-white border border-border/50 dark:border-slate-105 p-2.5 rounded-xl shadow-3xs hover:border-slate-300 transition-colors">
+                        <div key={idx} className="flex justify-between items-center text-[11.5px] bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 p-2.5 rounded-xl shadow-3xs hover:border-slate-700 dark:hover:border-slate-600 transition-colors">
                           <span className="flex flex-col min-w-0 text-left">
                             <span className="text-slate-800 dark:text-slate-900 font-bold truncate">
                               {adj.adjustment_type.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
@@ -616,7 +615,7 @@ export default function CustomerDashboard() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-5 bg-white border border-dashed border-border/70 rounded-2xl flex flex-col items-center justify-center gap-2 p-4">
+                  <div className="text-center py-5 bg-white dark:bg-slate-900 border border-dashed border-border/70 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2 p-4">
                     <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
                       <FileText size={15} />
                     </div>
@@ -639,7 +638,7 @@ export default function CustomerDashboard() {
             <span className="text-[9.5px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/50">Last 5 Deliveries</span>
           </div>
           
-          <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm flex-1 flex flex-col justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm flex-1 flex flex-col justify-between">
             {recent_deliveries.length === 0 ? (
               <div className="py-16 text-center text-[13px] font-medium text-slate-450 flex flex-col items-center justify-center gap-3 flex-grow">
                 <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-355 shadow-sm">
@@ -652,7 +651,7 @@ export default function CustomerDashboard() {
               </div>
             ) : (
               <div className="space-y-4 flex-grow">
-                <div className="relative border-l-2 border-slate-100 dark:border-slate-100/80 ml-3.5 pl-6.5 space-y-5.5 py-1">
+                <div className="relative border-l-2 border-slate-100 dark:border-slate-800 ml-3.5 pl-6.5 space-y-5.5 py-1">
                   {recent_deliveries.slice(0, 5).map((delivery, index) => {
                     const delDate = new Date(delivery.delivery_date)
                     const dayName = delDate.toLocaleDateString('en-IN', { weekday: 'short' })
@@ -673,7 +672,7 @@ export default function CustomerDashboard() {
                         />
                         
                         {/* Entry row card on hover */}
-                        <div className="flex items-center justify-between gap-3 min-w-0 p-2.5 -mx-3.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-50/50 transition-all duration-200 group-hover/timeline:translate-x-0.5 cursor-default">
+                        <div className="flex items-center justify-between gap-3 min-w-0 p-2.5 -mx-3.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all duration-200 group-hover/timeline:translate-x-0.5 cursor-default">
                           <div className="min-w-0 text-left">
                             <p className="text-[13.5px] font-bold text-slate-800 dark:text-slate-900 leading-none">
                               {dayName}, {dateNum}

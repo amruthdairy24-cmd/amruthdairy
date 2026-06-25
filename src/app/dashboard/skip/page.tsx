@@ -176,7 +176,7 @@ export default function SkipDayPage() {
         
         <Link 
           href="/dashboard" 
-          className="inline-flex items-center justify-center px-5 h-10 rounded-xl border border-border bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs shadow-sm transition-all duration-150 cursor-pointer self-start sm:self-center"
+          className="inline-flex items-center justify-center px-5 h-10 rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-xs shadow-sm transition-all duration-150 cursor-pointer self-start sm:self-center"
         >
           Back to Dashboard
         </Link>
@@ -187,30 +187,30 @@ export default function SkipDayPage() {
         
         {/* Left Column: Date Selector Form & Skip Day Guide */}
         <motion.div variants={itemVariants} className="lg:col-span-3 space-y-6">
-          <form onSubmit={handleSubmit} className="bg-white border border-border/50 rounded-3xl p-6 shadow-sm space-y-6">
+          <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
             
             {/* Header controls */}
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-extrabold text-slate-450 uppercase tracking-[2px] pl-0.5 select-none">Select Skip Date</label>
+              <label className="text-[11px] font-extrabold text-slate-455 dark:text-slate-500 uppercase tracking-[2px] pl-0.5 select-none">Select Skip Date</label>
               
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setCurrentWeekOffset(prev => Math.max(0, prev - 1))}
                   disabled={currentWeekOffset === 0}
-                  className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:bg-slate-50 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer bg-white shadow-3xs"
+                  className="w-8 h-8 rounded-lg border border-border dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer bg-white dark:bg-slate-900 shadow-3xs"
                   title="Previous Week"
                 >
-                  <ChevronLeft size={14} className="text-slate-500" />
+                  <ChevronLeft size={14} className="text-slate-550 dark:text-slate-400" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setCurrentWeekOffset(prev => Math.min(1, prev + 1))}
                   disabled={currentWeekOffset === 1 || pickerDays.length < 7}
-                  className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:bg-slate-50 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer bg-white shadow-3xs"
+                  className="w-8 h-8 rounded-lg border border-border dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer bg-white dark:bg-slate-900 shadow-3xs"
                   title="Next Week"
                 >
-                  <ChevronRight size={14} className="text-slate-500" />
+                  <ChevronRight size={14} className="text-slate-555 dark:text-slate-400" />
                 </button>
               </div>
             </div>
@@ -233,10 +233,10 @@ export default function SkipDayPage() {
                     className={cn(
                       'h-20 sm:h-[84px] rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all relative overflow-hidden select-none',
                       isSelected
-                        ? 'border-[#014DA4] bg-[#014DA4]/5 ring-1 ring-[#014DA4] text-[#014DA4]'
+                        ? 'border-[#014DA4] dark:border-blue-400 bg-[#014DA4]/5 dark:bg-blue-950/15 ring-1 ring-[#014DA4] dark:ring-blue-400 text-[#014DA4] dark:text-blue-400'
                         : isDisabled
-                        ? 'border-border/30 bg-slate-50/75 text-slate-350 cursor-not-allowed opacity-65'
-                        : 'border-border bg-white hover:border-slate-300 hover:bg-slate-50/50 text-slate-550 cursor-pointer shadow-3xs'
+                        ? 'border-border/30 dark:border-slate-800/45 bg-slate-50/75 dark:bg-slate-950/40 text-slate-350 dark:text-slate-600 cursor-not-allowed opacity-65'
+                        : 'border-border dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 text-slate-550 dark:text-slate-300 cursor-pointer shadow-3xs'
                     )}
                   >
                     <span className="text-[9.5px] font-extrabold uppercase tracking-wider">
@@ -244,7 +244,7 @@ export default function SkipDayPage() {
                     </span>
                     <span className={cn(
                       "text-xl font-black leading-none",
-                      isSelected ? "text-[#014DA4]" : (isDisabled ? "text-slate-300" : "text-slate-800")
+                      isSelected ? "text-[#014DA4] dark:text-blue-400" : (isDisabled ? "text-slate-300 dark:text-slate-600" : "text-slate-800 dark:text-slate-200")
                     )}>
                       {date.getDate()}
                     </span>
@@ -261,16 +261,16 @@ export default function SkipDayPage() {
 
             {/* Confirmation details */}
             {selectedDate && (
-              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4.5 flex items-center justify-between select-none">
+              <div className="bg-slate-50 dark:bg-slate-950/45 border border-slate-100 dark:border-slate-800 rounded-2xl p-4.5 flex items-center justify-between select-none">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Confirming Skip For</p>
-                  <p className="text-[14px] font-black text-slate-800">
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Confirming Skip For</p>
+                  <p className="text-[14px] font-black text-slate-800 dark:text-slate-200">
                     {selectedDate.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Statement Credit</p>
-                  <p className="text-[14.5px] font-black text-emerald-650 font-mono">+₹{subscription?.daily_rate.toFixed(2)}</p>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Statement Credit</p>
+                  <p className="text-[14.5px] font-black text-emerald-650 dark:text-emerald-500 font-mono">+₹{subscription?.daily_rate.toFixed(2)}</p>
                 </div>
               </div>
             )}
@@ -308,41 +308,41 @@ export default function SkipDayPage() {
           </form>
 
           {/* Skip Day Guide Card */}
-          <div className="bg-white border border-border/50 rounded-3xl p-6 shadow-sm space-y-5 text-[12.5px] font-semibold text-slate-500">
-            <h3 className="text-[11px] font-extrabold text-slate-400 uppercase tracking-[2.5px] pl-0.5 select-none">Skip Day Guide</h3>
+          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5 text-[12.5px] font-semibold text-slate-500 dark:text-slate-400">
+            <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] pl-0.5 select-none">Skip Day Guide</h3>
             
             <div className="space-y-4 text-left leading-relaxed">
               <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200/50 flex items-center justify-center text-[#014DA4] flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">1</div>
+                <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">1</div>
                 <div>
-                  <p className="font-bold text-slate-800 text-sm">Select Your Date</p>
-                  <p className="text-slate-450 mt-1">Identify which day you want to skip. You have the flexibility to schedule skips up to 14 days in advance.</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Select Your Date</p>
+                  <p className="text-slate-450 dark:text-slate-400 mt-1">Identify which day you want to skip. You have the flexibility to schedule skips up to 14 days in advance.</p>
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200/50 flex items-center justify-center text-[#014DA4] flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">2</div>
+                <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">2</div>
                 <div>
-                  <p className="font-bold text-slate-800 text-sm">Observe the Cut-off</p>
-                  <p className="text-slate-450 mt-1">To ensure farm operations are adjusted, skips must be submitted before the <strong className="text-rose-500 font-black">9:00 PM</strong> deadline on the preceding evening.</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Observe the Cut-off</p>
+                  <p className="text-slate-450 dark:text-slate-400 mt-1">To ensure farm operations are adjusted, skips must be submitted before the <strong className="text-rose-500 dark:text-rose-455 font-black">9:00 PM</strong> deadline on the preceding evening.</p>
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200/50 flex items-center justify-center text-[#014DA4] flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
+                <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
                 <div>
-                  <p className="font-bold text-slate-800 text-sm">Automatic Bill Credit</p>
-                  <p className="text-slate-455 mt-1">Each skipped day generates a credit equal to your subscription's daily rate of <strong className="text-emerald-650 font-extrabold">₹{subscription?.daily_rate.toFixed(2)}</strong>, reducing your next statement.</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Automatic Bill Credit</p>
+                  <p className="text-slate-455 dark:text-slate-400 mt-1">Each skipped day generates a credit equal to your subscription's daily rate of <strong className="text-emerald-650 dark:text-emerald-500 font-extrabold">₹{subscription?.daily_rate.toFixed(2)}</strong>, reducing your next statement.</p>
                 </div>
               </div>
             </div>
             
             {isCutoffPassed && (
-              <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl flex gap-2.5">
+              <div className="p-3 bg-rose-50/10 dark:bg-rose-950/20 border border-rose-100/40 dark:border-rose-900/30 rounded-xl flex gap-2.5">
                 <AlertCircle className="text-rose-500 flex-shrink-0 mt-0.5" size={16} />
                 <div className="text-left">
-                  <h4 className="text-[10px] font-black text-rose-700 uppercase tracking-wide">Cut-off Deadline Passed</h4>
-                  <p className="text-[10.5px] text-rose-900 font-semibold leading-normal mt-0.5">It is past 9:00 PM. Skips for tomorrow's morning slot are closed. You can schedule skips for any subsequent dates.</p>
+                  <h4 className="text-[10px] font-black text-rose-700 dark:text-rose-400 uppercase tracking-wide">Cut-off Deadline Passed</h4>
+                  <p className="text-[10.5px] text-rose-900 dark:text-rose-300 font-semibold leading-normal mt-0.5">It is past 9:00 PM. Skips for tomorrow's morning slot are closed. You can schedule skips for any subsequent dates.</p>
                 </div>
               </div>
             )}
@@ -353,33 +353,33 @@ export default function SkipDayPage() {
         <motion.div variants={itemVariants} className="lg:col-span-2 space-y-6">
           
           {/* Confirmed Skips Card */}
-          <div className="bg-white border border-border/50 rounded-3xl shadow-sm overflow-hidden flex flex-col justify-between">
-            <div className="p-5 border-b border-border/50 bg-slate-50/60 text-left select-none">
-              <h3 className="text-[13px] font-black text-[#014DA4] uppercase tracking-wider font-display">Confirmed Skips</h3>
-              <p className="text-[10px] text-slate-400 font-semibold mt-0.5 uppercase tracking-widest">Upcoming paused slots</p>
+          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden flex flex-col justify-between">
+            <div className="p-5 border-b border-border/50 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 text-left select-none">
+              <h3 className="text-[13px] font-black text-[#014DA4] dark:text-blue-400 uppercase tracking-wider font-display">Confirmed Skips</h3>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5 uppercase tracking-widest">Upcoming paused slots</p>
             </div>
             
             <div className="p-2">
               {upcomingSkips.length === 0 ? (
                 <div className="text-center py-12 px-5">
-                  <CalendarDays size={32} className="text-slate-350 mx-auto mb-3 stroke-[1.5]" />
-                  <p className="text-[12px] text-slate-400 font-semibold">
+                  <CalendarDays size={32} className="text-slate-350 dark:text-slate-600 mx-auto mb-3 stroke-[1.5]" />
+                  <p className="text-[12px] text-slate-400 dark:text-slate-500 font-semibold">
                     No upcoming skipped deliveries. Select a date on the calendar to schedule a skip.
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100 max-h-[400px] overflow-y-auto pr-1">
+                <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[400px] overflow-y-auto pr-1">
                   {upcomingSkips.map((skip, idx) => (
-                    <div key={idx} className="p-4 flex items-center justify-between hover:bg-slate-50/40 transition-colors">
+                    <div key={idx} className="p-4 flex items-center justify-between hover:bg-slate-50/40 dark:hover:bg-slate-800/30 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="w-8.5 h-8.5 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center flex-shrink-0">
                           <CalendarDays size={15} />
                         </div>
                         <div className="text-left">
-                          <p className="text-[13.5px] font-bold text-slate-800 leading-none">
+                          <p className="text-[13.5px] font-bold text-slate-800 dark:text-slate-200 leading-none">
                             {new Date(skip.skip_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
                           </p>
-                          <p className="text-[10.5px] font-medium text-slate-400 mt-1">Credit applied to next bill</p>
+                          <p className="text-[10.5px] font-medium text-slate-400 dark:text-slate-500 mt-1">Credit applied to next bill</p>
                         </div>
                       </div>
                       
@@ -387,7 +387,7 @@ export default function SkipDayPage() {
                         <span className="inline-flex text-[9px] font-extrabold text-green-700 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-200/15">
                           Confirmed
                         </span>
-                        <p className="text-sm font-black text-emerald-650 font-mono mt-1">+₹{skip.credit_amount.toFixed(2)}</p>
+                        <p className="text-sm font-black text-emerald-650 dark:text-emerald-500 font-mono mt-1">+₹{skip.credit_amount.toFixed(2)}</p>
                       </div>
                     </div>
                   ))}

@@ -41,10 +41,10 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   return (
     <div className="min-h-screen flex bg-[#FDFBF7] dark:bg-slate-950 transition-colors duration-300">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 bg-white dark:bg-cream-100 fixed top-0 bottom-0 left-0 z-30 border-r border-border/50 dark:border-slate-800/80">
+      <aside className="hidden lg:flex flex-col w-60 bg-white dark:bg-slate-900 fixed top-0 bottom-0 left-0 z-30 border-r border-border/50 dark:border-slate-800">
         
         {/* Logo */}
-        <div className="px-6 py-6 border-b border-slate-50 dark:border-slate-900/50">
+        <div className="px-6 py-6 border-b border-slate-50 dark:border-slate-800">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#014DA4] to-brand-secondary flex items-center justify-center text-white border border-[#E2E8F0]/10 transition-transform duration-500 group-hover:rotate-[360deg]">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4.5 h-4.5">
@@ -65,7 +65,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         </div>
 
         {/* Customer info */}
-        <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-900/50">
+        <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#014DA4] to-brand-secondary text-white font-black text-sm flex items-center justify-center flex-shrink-0 border border-[#E2E8F0]/10">
               {profileName.substring(0, 2).toUpperCase()}
@@ -95,10 +95,10 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
               href={item.href}
               className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-xl mb-1',
-                'text-sm font-semibold text-slate-655 dark:text-white/70',
+                'text-sm font-semibold text-slate-655 dark:text-slate-300',
                 'transition-all duration-150',
-                'hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#014DA4] dark:hover:text-brand-secondary',
-                item.href === '/account' && 'bg-[#014DA4]/10 dark:bg-white/10 text-[#014DA4] dark:text-white border-l-[3.5px] border-[#014DA4] dark:border-white'
+                'hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-[#014DA4] dark:hover:text-blue-400',
+                item.href === '/account' && 'bg-[#014DA4]/10 dark:bg-[#014DA4]/15 text-[#014DA4] dark:text-blue-400 border-l-[3.5px] border-[#014DA4] dark:border-blue-500'
               )}
             >
               <span role="img" aria-label={item.label}>{item.icon}</span>
@@ -109,7 +109,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
         {/* Logout */}
         <div className="px-3 pb-6">
-          <button className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-sm font-semibold text-white/40 hover:bg-white/10 hover:text-white transition-colors border-none cursor-pointer bg-transparent text-left">
+          <button className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-sm font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 transition-colors border-none cursor-pointer bg-transparent text-left">
             <span>🚪</span> Logout
           </button>
         </div>
@@ -118,7 +118,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
       {/* Main content */}
       <main className="flex-1 lg:ml-60 flex flex-col min-w-0">
         {/* Desktop Topbar header */}
-        <header className="hidden lg:flex items-center justify-between px-8 bg-white dark:bg-cream-100 border-b border-border/45 dark:border-slate-800/80 h-16 sticky top-0 z-20 transition-colors duration-300">
+        <header className="hidden lg:flex items-center justify-between px-8 bg-white dark:bg-slate-900 border-b border-border/45 dark:border-slate-800 h-16 sticky top-0 z-20 transition-colors duration-300">
           <div className="flex items-center gap-4">
             <span className="text-[11px] font-black tracking-wider text-slate-400 dark:text-slate-500 uppercase">
               Profile & Security Settings
@@ -130,7 +130,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         </header>
 
         {/* Mobile top nav */}
-        <div className="lg:hidden sticky top-0 z-20 bg-white dark:bg-cream-100 px-4 py-3 flex items-center justify-between border-b border-border/45 dark:border-slate-800/80">
+        <div className="lg:hidden sticky top-0 z-20 bg-white dark:bg-slate-900 px-4 py-3 flex items-center justify-between border-b border-border/45 dark:border-slate-800">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-[#014DA4] to-brand-secondary rounded-lg flex items-center justify-center text-white">
               <span className="text-sm">🥛</span>
@@ -148,7 +148,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         </div>
 
         {/* Mobile bottom nav */}
-        <nav className="lg:hidden sticky bottom-0 bg-white dark:bg-cream-100 border-t border-border/50 dark:border-slate-800/80 flex z-30 transition-colors duration-300" aria-label="Mobile navigation">
+        <nav className="lg:hidden sticky bottom-0 bg-white dark:bg-slate-900 border-t border-border/50 dark:border-slate-800 flex z-30 transition-colors duration-300" aria-label="Mobile navigation">
           {navItems.slice(0, 5).map((item) => {
             const isActive = item.href === '/account'
             return (
@@ -156,8 +156,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex-1 flex flex-col items-center gap-1 py-3 text-slate-450 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-sky-400 transition-colors min-w-0",
-                  isActive && "text-[#014DA4] dark:text-sky-400"
+                  "flex-1 flex flex-col items-center gap-1 py-3 text-slate-450 dark:text-slate-400 hover:text-[#014DA4] dark:hover:text-blue-400 transition-colors min-w-0",
+                  isActive && "text-[#014DA4] dark:text-blue-400"
                 )}
               >
                 <span className="text-lg" role="img" aria-label={item.label}>{item.icon}</span>
