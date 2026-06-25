@@ -251,7 +251,8 @@ export default function CustomerDashboard() {
       {/* ─── 1. HERO BENTO SECTION (Pasture Green welcome card) ─── */}
       <motion.div
         variants={itemVariants}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-600 text-white p-6 sm:p-8 shadow-md border border-white/10 z-10"
+        // className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-600 text-white p-6 sm:p-8 shadow-md border border-white/10 z-10"
+        className="relative overflow-hidden rounded-2xl bg-[#014DA4] text-white p-6 sm:p-8 shadow-md border border-white/10 z-10"
       >
         <div className="absolute -top-5 -right-5 w-60 h-60 rounded-full pointer-events-none filter blur-[50px] opacity-25 bg-amber-300" />
 
@@ -340,10 +341,10 @@ export default function CustomerDashboard() {
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10"
       >
         {/* Card 1: Account Balance */}
-        <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
+        <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Account Balance</p>
-            <p className={cn("text-xl font-black font-mono tracking-tight mt-1 leading-none", balanceVal >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+            <p className={cn("text-xl font-black font-mono tracking-tight mt-1 leading-none", balanceVal >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-600 dark:text-rose-400")}>
               {balanceVal >= 0 ? `${balanceText} Credit` : `${balanceText} Due`}
             </p>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1.5 truncate">
@@ -356,10 +357,10 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Card 2: Deliveries This Month */}
-        <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
+        <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Days Delivered</p>
-            <p className="text-xl font-black text-slate-900 dark:text-white tracking-tight mt-1 leading-none font-sans">
+            <p className="text-xl font-black text-slate-900 dark:text-emerald-500 tracking-tight mt-1 leading-none font-sans">
               {current_month?.days_delivered || 0} Days
             </p>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1.5 truncate">
@@ -372,10 +373,10 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Card 3: Skipped Days */}
-        <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
+        <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Days Skipped</p>
-            <p className="text-xl font-black text-slate-900 dark:text-white tracking-tight mt-1 leading-none font-sans">
+            <p className="text-xl font-black text-slate-900 dark:text-emerald-500 tracking-tight mt-1 leading-none font-sans">
               {current_month?.days_skipped || 0} Days
             </p>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1.5 truncate">
@@ -388,10 +389,10 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Card 4: Plan Details */}
-        <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
+        <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Plan Capacity</p>
-            <p className="text-xl font-black text-slate-900 dark:text-white tracking-tight mt-1 leading-none font-sans">
+            <p className="text-xl font-black text-slate-900 dark:text-emerald-500 tracking-tight mt-1 leading-none font-sans">
               {subscription.quantity_litres} Litres
             </p>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1.5 truncate">
@@ -411,17 +412,17 @@ export default function CustomerDashboard() {
 
           {/* Skip Day */}
           <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
-            <Link href="/dashboard/skip" className="flex flex-col items-start bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
+            <Link href="/dashboard/skip" className="flex flex-col items-center text-center bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center flex-shrink-0 group-hover:bg-rose-500/20 transition-colors shadow-sm">
                 <SkipForward size={20} strokeWidth={2.5} />
               </div>
-              <div className="mt-5 text-left">
+              <div className="mt-5 flex flex-col items-center">
                 <p className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">Skip Day</p>
-                <p className="text-xs text-slate-400 dark:text-slate-550 font-medium leading-relaxed mt-2">
+                <p className="text-xs text-slate-400 dark:text-slate-550 font-medium leading-relaxed mt-2 max-w-[220px]">
                   Need to skip tomorrow morning&apos;s milk? Make skips instantly before 9:00 PM cutoff.
                 </p>
               </div>
-              <div className="mt-4 text-[10.5px] font-bold text-rose-600 flex items-center gap-1">
+              <div className="mt-4 text-[10.5px] font-bold text-rose-600 flex items-center justify-center gap-1">
                 <span>Configure Skips</span>
                 <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
               </div>
@@ -430,17 +431,17 @@ export default function CustomerDashboard() {
 
           {/* Vacation Pause */}
           <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
-            <Link href="/dashboard/vacation" className="flex flex-col items-start bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
+            <Link href="/dashboard/vacation" className="flex flex-col items-center text-center bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors shadow-sm">
                 <Palmtree size={20} strokeWidth={2.5} />
               </div>
-              <div className="mt-5 text-left">
+              <div className="mt-5 flex flex-col items-center">
                 <p className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">Vacation Pause</p>
-                <p className="text-xs text-slate-400 dark:text-slate-555 font-medium leading-relaxed mt-2">
+                <p className="text-xs text-slate-400 dark:text-slate-555 font-medium leading-relaxed mt-2 max-w-[220px]">
                   Going away on holiday? Pause deliveries temporarily for a custom date range.
                 </p>
               </div>
-              <div className="mt-4 text-[10.5px] font-bold text-blue-600 flex items-center gap-1">
+              <div className="mt-4 text-[10.5px] font-bold text-blue-600 flex items-center justify-center gap-1">
                 <span>Set Dates</span>
                 <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
               </div>
@@ -449,17 +450,17 @@ export default function CustomerDashboard() {
 
           {/* Extra Milk */}
           <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
-            <Link href="/dashboard/extra" className="flex flex-col items-start bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
+            <Link href="/dashboard/extra" className="flex flex-col items-center text-center bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/20 transition-colors shadow-sm">
                 <PlusCircle size={20} strokeWidth={2.5} />
               </div>
-              <div className="mt-5 text-left">
+              <div className="mt-5 flex flex-col items-center">
                 <p className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">Extra Milk</p>
-                <p className="text-xs text-slate-400 dark:text-slate-555 font-medium leading-relaxed mt-2">
+                <p className="text-xs text-slate-400 dark:text-slate-555 font-medium leading-relaxed mt-2 max-w-[220px]">
                   Guests arriving? Request extra litres of milk for tomorrow morning&apos;s delivery.
                 </p>
               </div>
-              <div className="mt-4 text-[10.5px] font-bold text-brand-secondary flex items-center gap-1">
+              <div className="mt-4 text-[10.5px] font-bold text-brand-secondary flex items-center justify-center gap-1">
                 <span>Order Extra</span>
                 <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
               </div>
@@ -468,17 +469,17 @@ export default function CustomerDashboard() {
 
           {/* My Bills */}
           <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
-            <Link href="/dashboard/bills" className="flex flex-col items-start bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
+            <Link href="/dashboard/bills" className="flex flex-col items-center text-center bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-500/20 transition-colors shadow-sm">
                 <FileText size={20} strokeWidth={2.5} />
               </div>
-              <div className="mt-5 text-left">
+              <div className="mt-5 flex flex-col items-center">
                 <p className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">My Bills</p>
-                <p className="text-xs text-slate-400 dark:text-slate-555 font-medium leading-relaxed mt-2">
+                <p className="text-xs text-slate-400 dark:text-slate-555 font-medium leading-relaxed mt-2 max-w-[220px]">
                   Review monthly transactions, carry-forwards, and download billing invoices.
                 </p>
               </div>
-              <div className="mt-4 text-[10.5px] font-bold text-[#D97706] flex items-center gap-1">
+              <div className="mt-4 text-[10.5px] font-bold text-[#D97706] flex items-center justify-center gap-1">
                 <span>View Statements</span>
                 <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
               </div>
@@ -491,156 +492,240 @@ export default function CustomerDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 relative z-10">
 
         {/* Live Billing Calculator (Artisanal Split Card) */}
-        <motion.div variants={itemVariants} className="lg:col-span-3 space-y-3.5">
+        <motion.div variants={itemVariants} className="lg:col-span-3 flex flex-col space-y-3.5">
           <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] px-1">Live Billing Calculator</h3>
-          <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row">
+          <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row flex-1">
             
             {/* Left Breakdown Column */}
-            <div className="p-6 flex-1 space-y-4">
-              <div className="text-left">
-                <h4 className="text-[13px] font-bold text-slate-800 dark:text-white uppercase tracking-wider">Statement Breakdown</h4>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-1">Estimates for current month cycle</p>
-              </div>
-              
-              <div className="space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800/60 text-[13px]">
-                {/* Base Plan */}
-                <div className="flex justify-between items-center py-2.5 first:pt-0">
-                  <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
-                    <Milk size={14} className="text-brand-secondary" />
-                    <span>Base Plan Amount:</span>
-                  </span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">₹{subscription.monthly_amount.toFixed(2)}</span>
+            <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-5">
+              <div className="space-y-4">
+                <div className="text-left">
+                  <h4 className="text-[14px] font-bold text-slate-800 dark:text-slate-900 uppercase tracking-wider">Statement Breakdown</h4>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">Estimated calculations for current billing cycle</p>
                 </div>
-
-                {/* Skips Credit */}
-                <div className="flex justify-between items-center py-2.5">
-                  <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
-                    <SkipForward size={14} className="text-rose-500" />
-                    <span>Skips Credit ({current_month?.days_skipped || 0} days):</span>
-                  </span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">-₹{(current_month?.skip_credit || 0).toFixed(2)}</span>
-                </div>
-
-                {/* Vacation Credit */}
-                <div className="flex justify-between items-center py-2.5">
-                  <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
-                    <Palmtree size={14} className="text-blue-500" />
-                    <span>Vacation Credit ({current_month?.days_paused || 0} days):</span>
-                  </span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">-₹{(current_month?.pause_credit || 0).toFixed(2)}</span>
-                </div>
-
-                {/* Extra Milk Charges */}
-                <div className="flex justify-between items-center py-2.5">
-                  <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
-                    <PlusCircle size={14} className="text-emerald-500" />
-                    <span>Extra Milk (+{current_month?.extra_litres_ordered || 0}L):</span>
-                  </span>
-                  <span className="font-bold text-rose-500 dark:text-rose-400 font-mono">+₹{(current_month?.extra_charges || 0).toFixed(2)}</span>
-                </div>
-
-                {/* Carry In Balance */}
-                <div className="flex justify-between items-center py-2.5">
-                  <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
-                    <Wallet size={14} className="text-amber-500" />
-                    <span>Previous Carry-over:</span>
-                  </span>
-                  <span className={cn("font-bold font-mono", (current_month?.carry_in_balance || 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400")}>
-                    {((current_month?.carry_in_balance || 0) >= 0 ? '-' : '+')}₹{Math.abs(current_month?.carry_in_balance || 0).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-between items-center pt-2 pb-3 text-[14px] font-black text-[#0f172a]">
-              <span>Net Due for this month:</span>
-              <span className="text-[#2563eb] font-mono text-[18px]">₹{(current_month?.net_due || 0).toFixed(2)}</span>
-            </div>
-            
-            {data.upcoming_adjustments && data.upcoming_adjustments.length > 0 && (
-              <div className="pt-3 border-t border-[#e8edf5] space-y-3">
-                <p className="text-[11px] font-extrabold text-[#94a3b8] uppercase tracking-widest">Unapplied Credits & Charges</p>
-                <p className="text-[10px] font-semibold text-[#64748b]">These will automatically adjust your next month's bill.</p>
-                {data.upcoming_adjustments.map((adj, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-[13px] font-semibold text-[#64748b]">
-                    <span className="flex flex-col">
-                      <span className="text-[#0f172a] font-bold">
-                        {adj.adjustment_type.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                        {adj.refund_status === 'requested' && <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Refund Pending</span>}
-                        {adj.refund_status === 'processed' && <span className="ml-2 text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Refunded</span>}
-                      </span>
-                      <span className="text-[11px] font-normal">{adj.description || 'Adjustment'}</span>
+                
+                <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-100/50 text-[13px]">
+                  {/* Base Plan */}
+                  <div className="flex justify-between items-center py-3 first:pt-0">
+                    <span className="flex items-center gap-2.5 text-slate-600 dark:text-slate-750 font-semibold">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                        <Milk size={14} />
+                      </div>
+                      <span>Base Plan Amount</span>
                     </span>
-                    <span className={cn("font-bold", adj.adjustment_type.includes('credit') || adj.amount < 0 ? "text-[#16a34a]" : "text-[#ef4444]")}>
-                      {adj.adjustment_type.includes('credit') || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
+                    <span className="font-bold text-slate-800 dark:text-slate-900 font-mono text-sm">₹{subscription.monthly_amount.toFixed(2)}</span>
+                  </div>
+
+                  {/* Skips Credit */}
+                  <div className="flex justify-between items-center py-3">
+                    <span className="flex items-center gap-2.5 text-slate-600 dark:text-slate-750 font-semibold">
+                      <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                        <SkipForward size={13} />
+                      </div>
+                      <span>Skips Credit ({current_month?.days_skipped || 0} days)</span>
+                    </span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-600 font-mono text-sm">-₹{(current_month?.skip_credit || 0).toFixed(2)}</span>
+                  </div>
+
+                  {/* Vacation Credit */}
+                  <div className="flex justify-between items-center py-3">
+                    <span className="flex items-center gap-2.5 text-slate-600 dark:text-slate-750 font-semibold">
+                      <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-550 flex items-center justify-center">
+                        <Palmtree size={13} />
+                      </div>
+                      <span>Vacation Credit ({current_month?.days_paused || 0} days)</span>
+                    </span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-600 font-mono text-sm">-₹{(current_month?.pause_credit || 0).toFixed(2)}</span>
+                  </div>
+
+                  {/* Extra Milk Charges */}
+                  <div className="flex justify-between items-center py-3">
+                    <span className="flex items-center gap-2.5 text-slate-600 dark:text-slate-750 font-semibold">
+                      <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-650 flex items-center justify-center">
+                        <PlusCircle size={13} />
+                      </div>
+                      <span>Extra Milk (+{current_month?.extra_litres_ordered || 0}L)</span>
+                    </span>
+                    <span className="font-bold text-rose-500 dark:text-rose-500 font-mono text-sm">+₹{(current_month?.extra_charges || 0).toFixed(2)}</span>
+                  </div>
+
+                  {/* Carry In Balance */}
+                  <div className="flex justify-between items-center py-3">
+                    <span className="flex items-center gap-2.5 text-slate-600 dark:text-slate-750 font-semibold">
+                      <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 flex items-center justify-center">
+                        <Wallet size={13} />
+                      </div>
+                      <span>Previous Carry-over</span>
+                    </span>
+                    <span className={cn("font-bold font-mono text-sm", (current_month?.carry_in_balance || 0) >= 0 ? "text-emerald-600" : "text-rose-500")}>
+                      {((current_month?.carry_in_balance || 0) >= 0 ? '-' : '+')}₹{Math.abs(current_month?.carry_in_balance || 0).toFixed(2)}
                     </span>
                   </div>
-                ))}
+                </div>
               </div>
-            )}
+              
+              <p className="text-[10px] text-slate-400 dark:text-slate-555 font-semibold leading-normal pt-2">
+                * All credits and adjustments are verified and applied automatically at the end of each monthly billing cycle.
+              </p>
+            </div>
+
+            {/* Right Column: Invoice Summary */}
+            <div className="p-6 sm:p-7 bg-slate-50 dark:bg-slate-50 border-t md:border-t-0 md:border-l border-border/50 dark:border-slate-100 w-full md:w-[260px] lg:w-[290px] flex flex-col justify-between gap-6">
+              <div className="space-y-4">
+                <div className="text-left">
+                  <h4 className="text-[13px] font-bold text-slate-800 dark:text-slate-900 uppercase tracking-wider">Net Outstanding</h4>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">Calculated in real-time</p>
+                </div>
+
+                <div className="bg-white dark:bg-white border border-border/60 dark:border-slate-200/80 p-5 rounded-2xl shadow-xs text-left relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-[#014DA4]/3 rounded-full translate-x-8 -translate-y-8 pointer-events-none transition-transform group-hover:scale-110" />
+                  <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest leading-none">Amount Due</span>
+                  <p className="text-3xl font-black text-[#014DA4] dark:text-[#014DA4] tracking-tight mt-2 leading-none font-mono">
+                    ₹{(current_month?.net_due || 0).toFixed(2)}
+                  </p>
+                  <div className="mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 text-[9.5px] font-bold uppercase tracking-wide border border-emerald-500/15">
+                    <CheckCircle size={11} className="text-emerald-600" />
+                    <span>Auto-pay active</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 flex-1 flex flex-col justify-end">
+                {data.upcoming_adjustments && data.upcoming_adjustments.length > 0 ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between px-0.5">
+                      <p className="text-[9.5px] font-bold text-slate-450 dark:text-slate-550 uppercase tracking-wider">Pending Adjustments</p>
+                      <span className="text-[9.5px] px-1.5 py-0.5 rounded-full bg-[#014DA4]/10 text-[#014DA4] font-black border border-[#014DA4]/15">
+                        {data.upcoming_adjustments.length}
+                      </span>
+                    </div>
+                    <div className="space-y-2 max-h-[145px] overflow-y-auto pr-1">
+                      {data.upcoming_adjustments.map((adj, idx) => (
+                        <div key={idx} className="flex justify-between items-center text-[11.5px] bg-white dark:bg-white border border-border/50 dark:border-slate-105 p-2.5 rounded-xl shadow-3xs hover:border-slate-300 transition-colors">
+                          <span className="flex flex-col min-w-0 text-left">
+                            <span className="text-slate-800 dark:text-slate-900 font-bold truncate">
+                              {adj.adjustment_type.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                            </span>
+                            <span className="text-[9.5px] text-slate-400 font-medium truncate mt-0.5">{adj.description || 'Adjustment'}</span>
+                          </span>
+                          <span className={cn("font-mono font-black ml-2.5 text-right flex-shrink-0 text-[12px]", adj.adjustment_type.includes('credit') || adj.amount < 0 ? "text-emerald-600" : "text-rose-550")}>
+                            {adj.adjustment_type.includes('credit') || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-5 bg-white border border-dashed border-border/70 rounded-2xl flex flex-col items-center justify-center gap-2 p-4">
+                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+                      <FileText size={15} />
+                    </div>
+                    <div>
+                      <p className="text-[10.5px] font-bold text-slate-755">No Pending Adjustments</p>
+                      <p className="text-[9.5px] text-slate-400 mt-0.5 leading-normal max-w-[170px] mx-auto">Future credits will be listed here before statement generation.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
         </motion.div>
 
         {/* Recent Delivery Log (Artisanal Timeline Component) */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 space-y-3.5">
-          <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] px-1">Recent Delivery Log</h3>
-          <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm">
+        <motion.div variants={itemVariants} className="lg:col-span-2 flex flex-col space-y-3.5">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px]">Recent Delivery Log</h3>
+            <span className="text-[9.5px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/50">Last 5 Deliveries</span>
+          </div>
+          
+          <div className="bg-white dark:bg-white border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm flex-1 flex flex-col justify-between">
             {recent_deliveries.length === 0 ? (
-              <div className="p-12 text-center text-[13px] font-medium text-slate-400 flex flex-col items-center gap-2">
-                <Milk size={28} className="text-slate-200 dark:text-slate-800" />
-                <span>No deliveries recorded in the last 7 days.</span>
+              <div className="py-16 text-center text-[13px] font-medium text-slate-450 flex flex-col items-center justify-center gap-3 flex-grow">
+                <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-355 shadow-sm">
+                  <Milk size={22} />
+                </div>
+                <div>
+                  <p className="font-bold text-slate-700">No Recent Deliveries</p>
+                  <p className="text-xs text-slate-400 mt-1 max-w-[190px] mx-auto">We couldn't find any recorded deliveries for the last 7 days.</p>
+                </div>
               </div>
             ) : (
-              <div className="relative border-l border-border/40 dark:border-slate-800/60 ml-2.5 pl-6 space-y-6 py-1">
-                {recent_deliveries.slice(0, 5).map((delivery, index) => {
-                  const delDate = new Date(delivery.delivery_date)
-                  const dayName = delDate.toLocaleDateString('en-IN', { weekday: 'short' })
-                  const dateNum = delDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-                  
-                  return (
-                    <div key={index} className="relative group">
-                      
-                      {/* Timeline Dot with Color-coding */}
-                      <span 
-                        className={cn(
-                          "absolute -left-[30px] top-0.5 w-4 h-4 rounded-full border-4 border-white dark:border-cream-100 flex items-center justify-center shadow-sm z-10 transition-transform duration-200 group-hover:scale-110",
-                          delivery.delivery_status === 'delivered' && "bg-emerald-600",
-                          delivery.delivery_status === 'skipped' && "bg-rose-500",
-                          delivery.delivery_status === 'paused' && "bg-blue-500",
-                          delivery.delivery_status === 'pending' && "bg-[#D97706]"
-                        )}
-                      />
-                      
-                      {/* Entry details */}
-                      <div className="flex items-start justify-between gap-3 min-w-0">
-                        <div className="min-w-0 text-left">
-                          <p className="text-[13px] font-bold text-slate-800 dark:text-white leading-none">
-                            {dayName}, {dateNum}
-                          </p>
-                          <p className="text-[11.5px] text-slate-400 dark:text-slate-500 font-semibold mt-1">
-                            {delivery.total_litres} Litres Delivered
-                          </p>
-                        </div>
+              <div className="space-y-4 flex-grow">
+                <div className="relative border-l-2 border-slate-100 dark:border-slate-100/80 ml-3.5 pl-6.5 space-y-5.5 py-1">
+                  {recent_deliveries.slice(0, 5).map((delivery, index) => {
+                    const delDate = new Date(delivery.delivery_date)
+                    const dayName = delDate.toLocaleDateString('en-IN', { weekday: 'short' })
+                    const dateNum = delDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                    
+                    return (
+                      <div key={index} className="relative group/timeline">
                         
-                        <div>
-                          {delivery.delivery_status === 'delivered' && (
-                            <span className="text-[9px] font-bold text-green-700 dark:text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-200/30">Delivered</span>
+                        {/* Timeline Dot with Color-coding */}
+                        <span 
+                          className={cn(
+                            "absolute -left-[35px] top-1 w-3.5 h-3.5 rounded-full border-3 border-white dark:border-white flex items-center justify-center shadow-sm z-10 transition-transform duration-200 group-hover/timeline:scale-120",
+                            delivery.delivery_status === 'delivered' && "bg-emerald-600 ring-2 ring-emerald-500/20",
+                            delivery.delivery_status === 'skipped' && "bg-rose-550 ring-2 ring-rose-500/20",
+                            delivery.delivery_status === 'paused' && "bg-blue-550 ring-2 ring-blue-500/20",
+                            delivery.delivery_status === 'pending' && "bg-[#D97706] ring-2 ring-amber-550/20 animate-pulse"
                           )}
-                          {delivery.delivery_status === 'skipped' && (
-                            <span className="text-[9px] font-bold text-rose-700 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-200/30">Skipped</span>
-                          )}
-                          {delivery.delivery_status === 'paused' && (
-                            <span className="text-[9px] font-bold text-blue-700 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-200/30">Vacation</span>
-                          )}
-                          {delivery.delivery_status === 'pending' && (
-                            <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-200/30">Pending</span>
-                          )}
+                        />
+                        
+                        {/* Entry row card on hover */}
+                        <div className="flex items-center justify-between gap-3 min-w-0 p-2.5 -mx-3.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-50/50 transition-all duration-200 group-hover/timeline:translate-x-0.5 cursor-default">
+                          <div className="min-w-0 text-left">
+                            <p className="text-[13.5px] font-bold text-slate-800 dark:text-slate-900 leading-none">
+                              {dayName}, {dateNum}
+                            </p>
+                            <p className="text-xs text-slate-450 dark:text-slate-500 font-semibold mt-1 flex items-center gap-1.5">
+                              <span>{delivery.total_litres} Litres</span>
+                              <span className="w-1 h-1 rounded-full bg-slate-300" />
+                              <span className="font-normal text-[11px] text-slate-400">Morning Slot</span>
+                            </p>
+                          </div>
+                          
+                          <div className="flex-shrink-0">
+                            {delivery.delivery_status === 'delivered' && (
+                              <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-green-700 bg-green-500/10 px-2.5 py-0.5 rounded-full border border-green-200/20">
+                                <span className="w-1 h-1 rounded-full bg-green-600" />
+                                <span>Delivered</span>
+                              </span>
+                            )}
+                            {delivery.delivery_status === 'skipped' && (
+                              <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-rose-700 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-200/20">
+                                <span className="w-1 h-1 rounded-full bg-rose-650" />
+                                <span>Skipped</span>
+                              </span>
+                            )}
+                            {delivery.delivery_status === 'paused' && (
+                              <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-blue-700 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-200/20">
+                                <span className="w-1 h-1 rounded-full bg-blue-600" />
+                                <span>Vacation</span>
+                              </span>
+                            )}
+                            {delivery.delivery_status === 'pending' && (
+                              <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-amber-700 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-200/20">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                                <span>Pending</span>
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
             )}
+            
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-100/80 flex items-center justify-between text-[11px] font-bold text-slate-400 dark:text-slate-550 px-1">
+              <span>Updated daily at 7:30 AM</span>
+              <Link href="/dashboard/history" className="text-[#014DA4] hover:underline flex items-center gap-0.5 font-extrabold group/btn">
+                <span>View Full Log</span>
+                <ArrowRight size={10} className="group-hover/btn:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
           </div>
         </motion.div>
       </div>

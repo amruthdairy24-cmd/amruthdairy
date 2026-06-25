@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowLeftRight, Milk, AlertTriangle, CheckCircle, Info, ArrowRight } from 'lucide-react'
+import { ArrowLeftRight, Milk, AlertTriangle, CheckCircle, Info, ArrowRight, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 const QUANTITY_OPTIONS = [
   { litres: 0.5, label: '½ L', description: 'Perfect for 1-2 people' },
@@ -10,6 +12,29 @@ const QUANTITY_OPTIONS = [
   { litres: 1.5, label: '1.5 L', description: 'Great for families' },
   { litres: 2.0, label: '2 L', description: 'Large household plan' },
 ]
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+} as const
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 260,
+      damping: 24
+    }
+  },
+} as const
 
 export default function QuantityChangePage() {
   const [pageLoading, setPageLoading] = useState(true)
@@ -79,179 +104,251 @@ export default function QuantityChangePage() {
 
   if (pageLoading) {
     return (
-      <div className="max-w-2xl space-y-6 animate-pulse">
-        <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-        <div className="h-48 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
-        <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+      <div className="max-w-5xl space-y-6 animate-pulse">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-6 w-48 bg-slate-200 rounded-lg" />
+            <div className="h-4 w-40 bg-slate-200 rounded-md" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-3 h-[420px] bg-slate-200 rounded-3xl" />
+          <div className="lg:col-span-2 h-[350px] bg-slate-200 rounded-3xl" />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
-
-      <div>
-        <h1 className="text-[22px] font-black text-slate-900 dark:text-white font-display tracking-tight mb-1 flex items-center gap-2">
-          <ArrowLeftRight size={24} className="text-brand-secondary" /> Change Plan Quantity
-        </h1>
-        <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-450">Upgrade or downgrade your daily milk delivery amount.</p>
-      </div>
-
-      <div className="rounded-3xl p-6 bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 relative overflow-hidden shadow-sm">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="flex items-center justify-between relative z-10">
-          <div>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-black mb-1">Current Plan</p>
-            <p className="text-2xl font-black font-display text-slate-900 dark:text-white">
-              {currentQty === 0.5 ? '½' : currentQty} Litre / Day
-            </p>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 font-semibold mt-1">₹{currentDailyRate.toFixed(2)}/day · ₹{currentMonthly.toFixed(2)}/month</p>
-          </div>
-          <div className="w-14 h-14 rounded-full bg-slate-50 dark:bg-slate-900/40 border border-border/50 dark:border-slate-800/80 flex items-center justify-center">
-            <Milk size={28} className="text-brand-secondary" />
-          </div>
-        </div>
-      </div>
-
-      {pendingChange && (
-        <div className="bg-blue-500/10 dark:bg-blue-550/15 border border-blue-200/30 dark:border-blue-900/30 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
-          <Info className="text-brand-secondary flex-shrink-0 mt-0.5" size={18} />
-          <div>
-            <h4 className="text-[11px] font-black text-blue-800 dark:text-blue-350 uppercase tracking-wider">Pending Change</h4>
-            <p className="text-[12px] font-semibold text-blue-900 dark:text-blue-200 mt-1 leading-relaxed">
-              Your plan will change to <strong>{pendingChange.quantity}L/day</strong> starting {effectiveMonthStr}.
-              New monthly amount: <strong>₹{pendingChange.amount?.toFixed(2) || '—'}</strong>.
-            </p>
-          </div>
-        </div>
-      )}
-
-      <div className="bg-amber-500/10 dark:bg-amber-550/15 border border-amber-200/30 dark:border-amber-900/30 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
-        <AlertTriangle className="text-amber-700 dark:text-amber-405 flex-shrink-0 mt-0.5" size={18} />
+    <motion.div 
+      initial="hidden"
+      animate="show"
+      variants={containerVariants}
+      className="max-w-5xl space-y-8 relative"
+    >
+      {/* Header section */}
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h4 className="text-[11px] font-black text-amber-800 dark:text-amber-350 uppercase tracking-wider">Change Policy</h4>
-          <p className="text-[12px] font-semibold text-amber-900 dark:text-amber-200/80 mt-1 leading-relaxed">
-            Quantity changes take effect from <strong>1st {effectiveMonthStr}</strong>. Your current month's plan and billing remain unchanged. Changes are subject to capacity availability.
+          <h1 className="text-[26px] sm:text-[32px] font-bold text-slate-900 font-display tracking-tight leading-tight flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
+              <ArrowLeftRight size={22} className="stroke-[2.2]" />
+            </div>
+            <span>Change Plan Quantity</span>
+          </h1>
+          <p className="text-[13px] font-semibold text-slate-500 mt-2 pl-1 flex items-center gap-1.5">
+            <Milk size={14} className="text-slate-400" />
+            <span>Upgrade or downgrade your daily milk delivery amount</span>
           </p>
         </div>
-      </div>
+        
+        <Link 
+          href="/dashboard" 
+          className="inline-flex items-center justify-center px-5 h-10 rounded-xl border border-border bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs shadow-sm transition-all duration-150 cursor-pointer self-start sm:self-center"
+        >
+          Back to Dashboard
+        </Link>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-
-        <div className="md:col-span-3 space-y-5">
-          <form onSubmit={handleSubmit} className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm space-y-5">
-            <div className="flex flex-col gap-2.5">
-              <label className="text-[11px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest">Select New Quantity</label>
-
-              <div className="grid grid-cols-2 gap-3">
-                {QUANTITY_OPTIONS.map((opt) => {
-                  const isCurrent = opt.litres === currentQty
-                  const isSelected = opt.litres === selectedQty
-                  return (
-                    <button
-                      key={opt.litres}
-                      type="button"
-                      disabled={isCurrent}
-                      onClick={() => { setSelectedQty(opt.litres); setError(''); setSuccessMsg('') }}
-                      className={cn(
-                        'h-24 rounded-xl border flex flex-col items-center justify-center p-3 gap-1 transition-all relative',
-                        isSelected
-                          ? 'border-brand-secondary bg-blue-500/10 dark:bg-blue-550/20 ring-1 ring-brand-secondary text-blue-850 dark:text-blue-400'
-                          : isCurrent
-                          ? 'border-green-500/50 dark:border-green-500/30 bg-green-500/10 dark:bg-green-500/20 text-green-750 dark:text-green-400 cursor-not-allowed opacity-80'
-                          : 'border-border/50 dark:border-slate-800/80 bg-white dark:bg-cream-100 hover:bg-slate-50 dark:hover:bg-slate-900/50 text-slate-550 dark:text-slate-400 cursor-pointer'
-                      )}
-                    >
-                      {isCurrent && (
-                        <span className="absolute top-2 right-2 text-[8px] font-black text-green-750 dark:text-green-400 bg-white/40 dark:bg-slate-900/40 border border-green-200/30 dark:border-green-900/30 px-1.5 py-0.5 rounded-full">
-                          CURRENT
-                        </span>
-                      )}
-                      {opt.litres === 1.0 && !isCurrent && (
-                        <span className="absolute top-2 right-2 text-[8px] font-black text-brand-secondary bg-blue-500/10 dark:bg-blue-550/20 border border-blue-200/30 dark:border-blue-900/30 px-1.5 py-0.5 rounded-full">
-                          POPULAR
-                        </span>
-                      )}
-                      <span className="text-xl font-black leading-none">{opt.label}</span>
-                      <span className="text-[9px] font-bold text-inherit opacity-70">{opt.description}</span>
-                    </button>
-                  )
-                })}
+      {/* Columns Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        
+        {/* Left Column: Form & Current Plan details */}
+        <motion.div variants={itemVariants} className="lg:col-span-3 space-y-6">
+          
+          {/* Current Plan Card */}
+          <div className="bg-white border border-border/50 rounded-3xl p-6 sm:p-7 relative overflow-hidden shadow-sm">
+            <div className="absolute top-0 right-0 w-36 h-36 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex items-center justify-between relative z-10">
+              <div className="text-left">
+                <p className="text-[10px] text-slate-400 uppercase tracking-[2px] font-extrabold mb-1">Active Subscription Plan</p>
+                <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-900 leading-tight">
+                  {currentQty === 0.5 ? '½' : currentQty} Litre / Day
+                </h3>
+                <p className="text-[13.5px] text-[#014DA4] font-bold mt-1.5">
+                  ₹{currentDailyRate.toFixed(2)}/day · ₹{currentMonthly.toFixed(2)}/month
+                </p>
+              </div>
+              <div className="w-14 h-14 rounded-2xl bg-sky-500/10 text-[#014DA4] flex items-center justify-center flex-shrink-0 shadow-3xs border border-sky-500/5">
+                <Milk size={28} className="stroke-[2]" />
               </div>
             </div>
+          </div>
 
+          {/* Form Card */}
+          <form onSubmit={handleSubmit} className="bg-white border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <h2 className="text-[16px] font-bold text-slate-800 tracking-tight">Select Quantity</h2>
+              <span className="text-[10px] font-black text-emerald-700 bg-green-500/10 border border-green-200/15 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                Flexible Tiers
+              </span>
+            </div>
+
+            {/* Options grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {QUANTITY_OPTIONS.map((opt) => {
+                const isCurrent = opt.litres === currentQty
+                const isSelected = opt.litres === selectedQty
+                
+                return (
+                  <button
+                    key={opt.litres}
+                    type="button"
+                    disabled={isCurrent}
+                    onClick={() => { setSelectedQty(opt.litres); setError(''); setSuccessMsg('') }}
+                    className={cn(
+                      'h-[96px] rounded-2xl border flex flex-col items-center justify-center p-4 gap-1.5 transition-all relative select-none',
+                      isSelected
+                        ? 'border-[#014DA4] bg-[#014DA4]/5 ring-1 ring-[#014DA4] text-[#014DA4]'
+                        : isCurrent
+                        ? 'border-green-500/30 bg-green-500/5 text-green-700 cursor-not-allowed opacity-80'
+                        : 'border-border bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-550 cursor-pointer shadow-3xs'
+                    )}
+                  >
+                    {isCurrent && (
+                      <span className="absolute top-2.5 right-3 text-[8.5px] font-black text-green-700 bg-white border border-green-200/30 px-2 py-0.5 rounded-full">
+                        CURRENT PLAN
+                      </span>
+                    )}
+                    {opt.litres === 1.0 && !isCurrent && (
+                      <span className="absolute top-2.5 right-3 text-[8.5px] font-black text-[#014DA4] bg-sky-500/10 px-2 py-0.5 rounded-full">
+                        POPULAR
+                      </span>
+                    )}
+                    
+                    <span className={cn(
+                      "text-[22px] font-black leading-none mt-1",
+                      isSelected ? "text-[#014DA4]" : (isCurrent ? "text-green-700" : "text-slate-800")
+                    )}>
+                      {opt.label}
+                    </span>
+                    <span className="text-[10px] font-bold text-inherit opacity-75">{opt.description}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Selection preview */}
             {selectedQty && selectedQty !== currentQty && (
-              <div className="bg-slate-50 dark:bg-slate-900/40 border border-border/50 dark:border-slate-800/80 rounded-xl p-4 space-y-2.5 text-[13px] font-bold text-slate-650 dark:text-slate-400 animate-fade-in">
-                <div className="flex items-center justify-center gap-3 pb-3 border-b border-border/40 dark:border-slate-800/65">
+              <motion.div 
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-3.5 text-[13.5px] font-bold text-slate-650 shadow-3xs"
+              >
+                <div className="flex items-center justify-center gap-6 pb-3 border-b border-slate-200/50 select-none">
                   <div className="text-center">
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">Current</p>
-                    <p className="text-lg font-black text-slate-900 dark:text-white">{currentQty === 0.5 ? '½' : currentQty}L</p>
+                    <p className="text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-wider">Current Quantity</p>
+                    <p className="text-xl font-black text-slate-800">{currentQty === 0.5 ? '½' : currentQty}L</p>
                   </div>
-                  <ArrowRight size={20} className="text-brand-secondary" />
+                  <ArrowRight size={20} className="text-[#014DA4] stroke-[2.5]" />
                   <div className="text-center">
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-1 uppercase tracking-wider">New</p>
-                    <p className="text-lg font-black text-brand-secondary">{selectedQty === 0.5 ? '½' : selectedQty}L</p>
+                    <p className="text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-wider">New Quantity</p>
+                    <p className="text-xl font-black text-[#014DA4]">{selectedQty === 0.5 ? '½' : selectedQty}L</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Effective from:</span>
-                  <span className="font-extrabold text-brand-secondary">1st {effectiveMonthStr}</span>
+                  <span className="text-slate-500">Effective Date:</span>
+                  <span className="font-extrabold text-[#014DA4]">1st {effectiveMonthStr}</span>
                 </div>
-              </div>
+              </motion.div>
             )}
 
+            {/* Notifications */}
             {error && (
-              <p className="text-[12px] text-rose-650 dark:text-rose-400 font-bold flex items-center gap-1.5">
-                <AlertTriangle size={14} /> {error}
+              <p className="text-xs text-rose-600 font-bold flex items-center gap-2 pl-1">
+                <AlertTriangle size={14} className="text-rose-500" /> 
+                <span>{error}</span>
               </p>
             )}
 
             {successMsg && (
-              <p className="text-[12px] text-emerald-650 dark:text-emerald-400 font-bold flex items-center gap-1.5">
-                <CheckCircle size={14} /> {successMsg}
+              <p className="text-xs text-emerald-650 font-bold flex items-center gap-2 pl-1">
+                <CheckCircle size={14} className="text-emerald-500" /> 
+                <span>{successMsg}</span>
               </p>
             )}
 
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading || !selectedQty || selectedQty === currentQty}
-              className="w-full h-11 rounded-xl bg-brand-secondary hover:bg-brand-secondary/90 active:scale-[0.98] text-white font-extrabold text-[13px] shadow-sm transition-all border-none flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-12 rounded-xl bg-[#014DA4] hover:bg-[#014DA4]/95 active:scale-[0.98] text-white font-extrabold text-xs shadow-sm transition-all border-none flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <ArrowLeftRight size={14} strokeWidth={2.5} />
+                  <ArrowLeftRight size={14} className="stroke-[2.5]" />
                   <span>Confirm Quantity Change</span>
                 </>
               )}
             </button>
           </form>
-        </div>
+        </motion.div>
 
-        <div className="md:col-span-2 space-y-4">
-          <h3 className="text-[11px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest pl-1">How It Works</h3>
-          <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-2xl shadow-sm p-5 space-y-4 text-[13px] font-semibold text-slate-650 dark:text-slate-400 leading-relaxed">
-            <div className="flex gap-3">
-              <div className="w-6 h-6 rounded-full bg-slate-50 dark:bg-slate-900/50 border border-border/50 dark:border-slate-800/85 text-brand-secondary flex items-center justify-center font-black text-[11px] flex-shrink-0">1</div>
-              <p>Select your desired new quantity from the options.</p>
+        {/* Right Column: Information & Policies */}
+        <motion.div variants={itemVariants} className="lg:col-span-2 space-y-6">
+          
+          {/* Pending changes card if present */}
+          {pendingChange && (
+            <div className="bg-white border border-blue-200/50 rounded-3xl p-5 shadow-sm flex items-start gap-3.5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-sky-500/5 rounded-full blur-2xl pointer-events-none" />
+              <Info className="text-[#014DA4] flex-shrink-0 mt-0.5" size={18} />
+              <div className="text-left relative z-10">
+                <h4 className="text-[11px] font-black text-[#014DA4] uppercase tracking-wider">Pending Change Confirmed</h4>
+                <p className="text-[12px] font-semibold text-slate-650 mt-1.5 leading-relaxed">
+                  Your plan is scheduled to change to <strong className="text-slate-800">{pendingChange.quantity}L/day</strong> starting <strong className="text-[#014DA4]">{effectiveMonthStr}</strong>.
+                </p>
+                <p className="text-[11.5px] text-slate-500 font-semibold mt-1">
+                  New Monthly Estimate: <strong className="text-slate-800">₹{pendingChange.amount?.toFixed(2) || '—'}</strong>.
+                </p>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <div className="w-6 h-6 rounded-full bg-slate-50 dark:bg-slate-900/50 border border-border/50 dark:border-slate-800/85 text-brand-secondary flex items-center justify-center font-black text-[11px] flex-shrink-0">2</div>
-              <p>Changes apply from <strong>1st of next month</strong>. Current month billing remains unchanged.</p>
+          )}
+
+          {/* Policy Card */}
+          <div className="bg-white border border-border/50 rounded-3xl p-6 shadow-sm space-y-5 text-[12.5px] font-semibold text-slate-500">
+            <h3 className="text-[11px] font-extrabold text-slate-450 uppercase tracking-[2.5px] pl-0.5 select-none">Change Policy</h3>
+            
+            <div className="space-y-4 text-left leading-relaxed">
+              <div className="flex gap-3">
+                <div className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200/50 flex items-center justify-center text-[#014DA4] flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">1</div>
+                <div>
+                  <p className="font-bold text-slate-800 text-sm">Next Month Renewal Policy</p>
+                  <p className="text-slate-450 mt-1">All subscription changes are scheduled for the 1st day of the next billing month: <strong>1st {effectiveMonthStr}</strong>. The current month is unaffected.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200/50 flex items-center justify-center text-[#014DA4] flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">2</div>
+                <div>
+                  <p className="font-bold text-slate-800 text-sm">Strict Billing Cut-off</p>
+                  <p className="text-slate-455 mt-1">Billing and deliveries for the active month are locked to protect current statement calculations.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200/50 flex items-center justify-center text-[#014DA4] flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
+                <div>
+                  <p className="font-bold text-slate-800 text-sm">Capacity Allocations</p>
+                  <p className="text-slate-450 mt-1">If the dairy farm reaches maximum capacity, subscription increases may temporarily be placed on a waiting list.</p>
+                </div>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <div className="w-6 h-6 rounded-full bg-slate-50 dark:bg-slate-900/50 border border-border/50 dark:border-slate-800/85 text-brand-secondary flex items-center justify-center font-black text-[11px] flex-shrink-0">3</div>
-              <p>If capacity is full, your increase request may be waitlisted.</p>
+
+            <div className="p-3.5 bg-amber-500/5 border border-amber-200/30 rounded-xl flex gap-2.5 mt-2">
+              <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={16} />
+              <div className="text-left">
+                <h4 className="text-[10px] font-black text-amber-855 uppercase tracking-wide">Important Reminder</h4>
+                <p className="text-[10.5px] text-amber-900/85 font-semibold leading-normal mt-0.5">
+                  Confirming a new quantity registers the change on our servers for next month. You can only request one change per billing cycle.
+                </p>
+              </div>
             </div>
-            <div className="h-[1px] bg-border/50 dark:bg-slate-800/60" />
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold">
-              Price is calculated based on admin-set tier pricing. Contact support if you need a custom plan.
-            </p>
           </div>
-        </div>
+
+        </motion.div>
 
       </div>
-    </div>
+    </motion.div>
   )
 }
