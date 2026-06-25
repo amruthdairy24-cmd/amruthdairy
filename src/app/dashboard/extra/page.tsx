@@ -148,7 +148,7 @@ export default function ExtraMilkPage() {
         
         <Link 
           href="/dashboard" 
-          className="inline-flex items-center justify-center px-5 h-10 rounded-xl border border-border bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs shadow-sm transition-all duration-150 cursor-pointer self-start sm:self-center"
+          className="inline-flex items-center justify-center px-5 h-10 rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-xs shadow-sm transition-all duration-150 cursor-pointer self-start sm:self-center"
         >
           Back to Dashboard
         </Link>
@@ -159,10 +159,10 @@ export default function ExtraMilkPage() {
         
         {/* Left Column: Form Card */}
         <motion.div variants={itemVariants} className="lg:col-span-3 space-y-5">
-          <form onSubmit={handleExtraSubmit} className="bg-white border border-border/50 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <h2 className="text-[16px] font-bold text-slate-800 tracking-tight">One-Time Order</h2>
-              <span className="text-[11px] font-extrabold text-[#014DA4] bg-sky-500/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
+          <form onSubmit={handleExtraSubmit} className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <h2 className="text-[16px] font-bold text-slate-800 dark:text-white tracking-tight">One-Time Order</h2>
+              <span className="text-[11px] font-extrabold text-[#014DA4] dark:text-blue-400 bg-sky-500/10 dark:bg-blue-950/25 px-2.5 py-1 rounded-full uppercase tracking-wider">
                 Base Quantity: {baseQty} L
               </span>
             </div>
@@ -170,7 +170,7 @@ export default function ExtraMilkPage() {
             {/* Delivery Date Picker */}
             <div className="flex flex-col gap-2">
               <label className="text-[11px] font-extrabold text-slate-450 uppercase tracking-[2px] pl-0.5">Select Delivery Date</label>
-              <div className="flex items-center h-12 rounded-xl border border-border bg-white px-3.5 gap-2.5 focus-within:ring-2 focus-within:ring-[#014DA4]/20 focus-within:border-[#014DA4] transition-all">
+              <div className="flex items-center h-12 rounded-xl border border-border dark:border-slate-850 bg-white dark:bg-slate-950 px-3.5 gap-2.5 focus-within:ring-2 focus-within:ring-[#014DA4]/20 focus-within:border-[#014DA4] transition-all">
                 <Calendar size={16} className="text-slate-400" />
                 <input
                   type="date"
@@ -182,14 +182,14 @@ export default function ExtraMilkPage() {
                     return tomorrow.toISOString().split('T')[0]
                   })()}
                   onChange={(e) => { setOrderDate(e.target.value); setError(''); setSuccessMsg('') }}
-                  className="flex-1 h-full bg-transparent text-[13.5px] font-bold text-slate-800 outline-none"
+                  className="flex-1 h-full bg-transparent text-[13.5px] font-bold text-slate-800 dark:text-slate-100 outline-none"
                 />
               </div>
             </div>
 
             {/* Extra Litre Options */}
             <div className="flex flex-col gap-3">
-              <label className="text-[11px] font-extrabold text-slate-450 uppercase tracking-[2px] pl-0.5">Choose Extra Litres</label>
+              <label className="text-[11px] font-extrabold text-slate-455 uppercase tracking-[2px] pl-0.5">Choose Extra Litres</label>
               <div className="grid grid-cols-3 gap-3.5">
                 {[0.5, 1.0, 1.5].map((litres) => {
                   const isSelected = extraLitres === litres
@@ -201,13 +201,13 @@ export default function ExtraMilkPage() {
                       className={cn(
                         'h-24 rounded-2xl border flex flex-col items-center justify-center p-3 gap-1.5 transition-all select-none',
                         isSelected
-                          ? 'border-[#014DA4] bg-[#014DA4]/5 ring-1 ring-[#014DA4] text-[#014DA4] font-bold shadow-3xs'
-                          : 'border-border bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-500 cursor-pointer shadow-3xs'
+                          ? 'border-[#014DA4] dark:border-blue-400 bg-[#014DA4]/5 dark:bg-blue-950/15 ring-1 ring-[#014DA4] dark:ring-blue-400 text-[#014DA4] dark:text-blue-400 font-bold shadow-3xs'
+                          : 'border-border dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40 text-slate-500 dark:text-slate-400 cursor-pointer shadow-3xs'
                       )}
                     >
                       <span className={cn(
                         "text-[22px] font-black leading-none",
-                        isSelected ? "text-[#014DA4]" : "text-slate-800"
+                        isSelected ? "text-[#014DA4] dark:text-blue-400" : "text-slate-800 dark:text-slate-200"
                       )}>
                         +{litres}L
                       </span>
@@ -223,26 +223,26 @@ export default function ExtraMilkPage() {
               <motion.div 
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-slate-50 border border-slate-100 rounded-2xl p-5 space-y-3.5 text-[13.5px] font-bold text-slate-650 shadow-3xs"
+                className="bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 space-y-3.5 text-[13.5px] font-bold text-slate-650 dark:text-slate-400 shadow-3xs"
               >
-                <div className="flex justify-between items-center pb-3 border-b border-slate-200/50">
-                  <span className="text-slate-500">Your Regular Delivery:</span>
-                  <span className="font-extrabold text-slate-800">{baseQty} Litres</span>
+                <div className="flex justify-between items-center pb-3 border-b border-slate-200/50 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-455">Your Regular Delivery:</span>
+                  <span className="font-extrabold text-slate-800 dark:text-slate-200">{baseQty} Litres</span>
                 </div>
-                <div className="flex justify-between items-center pb-3 border-b border-slate-200/50">
-                  <span className="text-slate-500">Selected Extra Quantity:</span>
-                  <span className="font-extrabold text-slate-800">+{extraLitres} Litres</span>
+                <div className="flex justify-between items-center pb-3 border-b border-slate-200/50 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-455">Selected Extra Quantity:</span>
+                  <span className="font-extrabold text-slate-800 dark:text-slate-200">+{extraLitres} Litres</span>
                 </div>
-                <div className="flex justify-between items-center pb-3 border-b border-slate-200/50">
-                  <span className="text-slate-500">Tomorrow's Total Delivery:</span>
-                  <span className="font-extrabold text-[#014DA4] font-mono">{(baseQty + extraLitres)} Litres</span>
+                <div className="flex justify-between items-center pb-3 border-b border-slate-200/50 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-455">Tomorrow's Total Delivery:</span>
+                  <span className="font-extrabold text-[#014DA4] dark:text-blue-400 font-mono">{(baseQty + extraLitres)} Litres</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500 flex items-center gap-1.5">
-                    <Info size={14} className="text-slate-400" /> 
+                  <span className="text-slate-500 dark:text-slate-455 flex items-center gap-1.5">
+                    <Info size={14} className="text-slate-450" /> 
                     <span>Estimated Extra Charge:</span>
                   </span>
-                  <span className="font-extrabold text-rose-600 font-mono text-base">₹{estimatedCharge.toFixed(2)}</span>
+                  <span className="font-extrabold text-rose-600 dark:text-rose-400 font-mono text-base">₹{estimatedCharge.toFixed(2)}</span>
                 </div>
               </motion.div>
             )}
@@ -284,41 +284,41 @@ export default function ExtraMilkPage() {
         <motion.div variants={itemVariants} className="lg:col-span-2 space-y-6">
           
           {/* Rules Card */}
-          <div className="bg-white border border-border/50 rounded-3xl p-6 shadow-sm space-y-5 text-[12.5px] font-semibold text-slate-500">
-            <h3 className="text-[11px] font-extrabold text-slate-400 uppercase tracking-[2.5px] pl-0.5 select-none">Order Rules</h3>
+          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5 text-[12.5px] font-semibold text-slate-500 dark:text-slate-400">
+            <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] pl-0.5 select-none">Order Rules</h3>
             
             <div className="space-y-4 text-left leading-relaxed">
               <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200/50 flex items-center justify-center text-emerald-600 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">1</div>
+                <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-emerald-650 dark:text-emerald-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">1</div>
                 <div>
-                  <p className="font-bold text-slate-800 text-sm">9:00 PM Cut-off Time</p>
-                  <p className="text-slate-450 mt-1">Extra orders for tomorrow morning must be placed before 9:00 PM tonight. Later orders cannot be processed.</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">9:00 PM Cut-off Time</p>
+                  <p className="text-slate-450 dark:text-slate-400 mt-1">Extra orders for tomorrow morning must be placed before 9:00 PM tonight. Later orders cannot be processed.</p>
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200/50 flex items-center justify-center text-emerald-600 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">2</div>
+                <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-emerald-650 dark:text-emerald-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">2</div>
                 <div>
-                  <p className="font-bold text-slate-800 text-sm">Farm Capacity Limit</p>
-                  <p className="text-slate-450 mt-1">Order confirmations are subject to milk capacity and availability. Early bookings secure allocation.</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Farm Capacity Limit</p>
+                  <p className="text-slate-450 dark:text-slate-400 mt-1">Order confirmations are subject to milk capacity and availability. Early bookings secure allocation.</p>
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <div className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200/50 flex items-center justify-center text-emerald-600 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
+                <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-emerald-650 dark:text-emerald-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
                 <div>
-                  <p className="font-bold text-slate-800 text-sm">One-Time Billing Charge</p>
-                  <p className="text-slate-455 mt-1">This order will only affect the selected day. The charge will be added directly to your monthly statement balance.</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">One-Time Billing Charge</p>
+                  <p className="text-slate-455 dark:text-slate-400 mt-1">This order will only affect the selected day. The charge will be added directly to your monthly statement balance.</p>
                 </div>
               </div>
             </div>
 
             {isCutoffPassed && (
-              <div className="p-3.5 bg-rose-50 border border-rose-100 rounded-xl flex gap-2.5">
+              <div className="p-3.5 bg-rose-50/10 dark:bg-rose-950/20 border border-rose-100/40 dark:border-rose-900/30 rounded-xl flex gap-2.5">
                 <ShieldAlert className="text-rose-500 flex-shrink-0 mt-0.5" size={16} />
                 <div className="text-left">
-                  <h4 className="text-[10px] font-black text-rose-700 uppercase tracking-wide">Cut-off Deadline Passed</h4>
-                  <p className="text-[10.5px] text-rose-900 font-semibold leading-normal mt-0.5">It is past 9:00 PM. Extra orders for tomorrow morning's slot are closed. You can schedule extra milk for any subsequent dates.</p>
+                  <h4 className="text-[10px] font-black text-rose-700 dark:text-rose-400 uppercase tracking-wide">Cut-off Deadline Passed</h4>
+                  <p className="text-[10.5px] text-rose-900 dark:text-rose-305 font-semibold leading-normal mt-0.5">It is past 9:00 PM. Extra orders for tomorrow morning's slot are closed. You can schedule extra milk for any subsequent dates.</p>
                 </div>
               </div>
             )}

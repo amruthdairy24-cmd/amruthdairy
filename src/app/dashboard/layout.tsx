@@ -104,17 +104,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!mounted) return null
 
   return (
-    <div className="flex h-screen font-sans text-slate-900 dark:text-slate-100 overflow-hidden bg-cream-50 dark:bg-warm-white transition-colors duration-300">
+    <div className="flex h-screen font-sans text-slate-900 dark:text-slate-100 overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
 
       {/* ===== DESKTOP SIDEBAR ===== */}
-      <aside className="hidden lg:flex flex-col w-[260px] z-30 flex-shrink-0 bg-white border-r border-slate-150 transition-colors duration-300">
+      <aside className="hidden lg:flex flex-col w-[260px] z-30 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-150 dark:border-slate-800 transition-colors duration-300">
         {/* Logo */}
-        <div className="px-6 h-[72px] flex items-center gap-3 flex-shrink-0 border-b border-slate-100">
+        <div className="px-6 h-[72px] flex items-center gap-3 flex-shrink-0 border-b border-slate-100 dark:border-slate-800">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-[#014DA4] to-brand-secondary shadow-md shadow-brand-primary/10">
             <span className="text-lg">🥛</span>
           </div>
           <div>
-            <p className="text-[18px] font-black text-slate-900 leading-none tracking-tight font-display">Amruth</p>
+            <p className="text-[18px] font-black text-slate-900 dark:text-white leading-none tracking-tight font-display">Amruth</p>
             <p className="text-[9px] font-bold uppercase tracking-widest mt-1.5 text-brand-secondary">
               Organic Dairy
             </p>
@@ -125,7 +125,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto hide-scrollbar">
           {sidebarGroups.map((group) => (
             <div key={group.title} className="space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-455">
+              <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-500 dark:text-slate-400">
                 {group.title}
               </p>
               <div className="space-y-[3px]">
@@ -138,8 +138,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className={cn(
                         "flex items-center gap-3 px-3 h-10 rounded-xl transition-all duration-150 relative overflow-hidden",
                         isActive 
-                          ? "bg-[#014DA4]/10 text-[#014DA4] font-bold" 
-                          : "text-slate-600 hover:text-[#014DA4] hover:bg-slate-50 font-medium"
+                          ? "bg-[#014DA4]/10 dark:bg-[#014DA4]/15 text-[#014DA4] dark:text-blue-400 font-bold" 
+                          : "text-slate-600 dark:text-slate-300 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/45 font-medium"
                       )}
                     >
                       {isActive && (
@@ -149,7 +149,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         size={17}
                         className={cn(
                           "relative z-10 flex-shrink-0 transition-colors",
-                          isActive ? "text-[#014DA4]" : "text-slate-450 group-hover:text-[#014DA4]"
+                          isActive ? "text-[#014DA4] dark:text-blue-400" : "text-slate-450 dark:text-slate-400 group-hover:text-[#014DA4] dark:group-hover:text-blue-400"
                         )}
                         strokeWidth={isActive ? 2.5 : 2}
                       />
@@ -181,19 +181,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         {/* User Area */}
-        <div className="p-4 flex-shrink-0 flex flex-col gap-3 border-t border-slate-100 bg-slate-50/55">
+        <div className="p-4 flex-shrink-0 flex flex-col gap-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/55 dark:bg-slate-900/20">
           {dateStr && (
-            <div className="py-1.5 px-3 rounded-xl text-[11px] font-bold text-center bg-white border border-slate-150 text-slate-600 shadow-sm">
+            <div className="py-1.5 px-3 rounded-xl text-[11px] font-bold text-center bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 text-slate-600 dark:text-slate-300 shadow-sm">
               📅 {dateStr}
             </div>
           )}
-          <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-slate-150 shadow-sm">
+          <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 shadow-sm">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-[13px] text-white flex-shrink-0 bg-gradient-to-br from-[#014DA4] to-brand-secondary shadow-sm shadow-brand-primary/10">
               {initials}
             </div>
             <div className="min-w-0">
-              <p className="text-[12px] font-bold text-slate-800 truncate leading-tight">{profileName}</p>
-              <p className="text-[10px] font-semibold text-slate-400 truncate mt-0.5 leading-none">{profilePhone}</p>
+              <p className="text-[12px] font-bold text-slate-800 dark:text-slate-200 truncate leading-tight">{profileName}</p>
+              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-555 truncate mt-0.5 leading-none">{profilePhone}</p>
             </div>
           </div>
         </div>
@@ -203,15 +203,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex-1 flex flex-col min-w-0 relative">
 
         {/* Topbar */}
-        <header className="bg-white flex items-center justify-between px-6 z-20 flex-shrink-0 sticky top-0 border-b border-slate-100 h-16 transition-colors duration-300">
+        <header className="bg-white dark:bg-slate-900 flex items-center justify-between px-6 z-20 flex-shrink-0 sticky top-0 border-b border-slate-100 dark:border-slate-800 h-16 transition-colors duration-300">
           <div className="flex items-center gap-4 min-w-0">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden text-slate-500 hover:text-slate-800 bg-transparent border-none cursor-pointer flex items-center justify-center"
+              className="lg:hidden text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white bg-transparent border-none cursor-pointer flex items-center justify-center"
             >
               <Menu size={22} />
             </button>
-            <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase truncate">
+            <span className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
               {getBreadcrumbs()}
             </span>
           </div>
@@ -235,20 +235,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {status === 'active' ? 'Active Plan' : status === 'paused' ? 'Paused' : 'Payment Due'}
             </div>
 
-            <div className="w-[1px] h-6 bg-slate-200" />
+            <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-800" />
             
             <ThemeToggle />
 
-            <div className="w-[1px] h-6 bg-slate-200" />
+            <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-800" />
 
             {/* Profile Chip */}
-            <div className="flex items-center gap-2 p-1 rounded-xl transition-colors cursor-pointer border border-slate-100 bg-slate-50/50 hover:bg-slate-50">
+            <div className="flex items-center gap-2 p-1 rounded-xl transition-colors cursor-pointer border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-200">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs text-white bg-gradient-to-br from-[#014DA4] to-brand-secondary">
                 {initials}
               </div>
               <div className="hidden sm:block text-left min-w-0 pr-1">
-                <p className="text-[11px] font-bold text-slate-700 leading-none">{profileName.split(' ')[0]}</p>
-                <p className="text-[9px] font-semibold text-slate-400 mt-0.5 leading-none">Subscriber</p>
+                <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200 leading-none">{profileName.split(' ')[0]}</p>
+                <p className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5 leading-none">Subscriber</p>
               </div>
               <ChevronDown size={13} className="text-slate-400" />
             </div>
@@ -256,13 +256,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-24 lg:p-8 bg-cream-50 dark:bg-warm-white transition-colors duration-300">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-24 lg:p-8 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
           {children}
         </main>
       </div>
 
       {/* ===== MOBILE BOTTOM NAV ===== */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex bg-white border-t border-slate-150 shadow-[0_-4px_20px_rgba(0,0,0,0.015)] transition-colors duration-300">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex bg-white dark:bg-slate-900 border-t border-slate-150 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.015)] transition-colors duration-300">
         {mobileNavItems.map((item) => {
           const isActive = pathname === item.href
           const Icon = item.icon
@@ -272,7 +272,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               href={item.href}
               className={cn(
                 "flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors min-w-0 text-center",
-                isActive ? "text-[#014DA4] font-bold scale-105" : "text-slate-400"
+                isActive ? "text-[#014DA4] dark:text-blue-400 font-bold scale-105" : "text-slate-400 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-blue-400"
               )}
             >
               <Icon size={18} />
@@ -298,15 +298,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 bottom-0 left-0 w-[280px] z-[70] lg:hidden shadow-2xl flex flex-col bg-white border-r border-slate-150 transition-colors duration-300"
+              className="fixed top-0 bottom-0 left-0 w-[280px] z-[70] lg:hidden shadow-2xl flex flex-col bg-white dark:bg-slate-900 border-r border-slate-150 dark:border-slate-800 transition-colors duration-300"
             >
-              <div className="px-6 h-[72px] flex items-center justify-between flex-shrink-0 border-b border-slate-100">
+              <div className="px-6 h-[72px] flex items-center justify-between flex-shrink-0 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-[#014DA4] to-brand-secondary shadow-sm">
                     <span className="text-lg">🥛</span>
                   </div>
                   <div>
-                    <p className="text-[18px] font-black text-slate-900 leading-none tracking-tight font-display">Amruth</p>
+                    <p className="text-[18px] font-black text-slate-900 dark:text-white leading-none tracking-tight font-display">Amruth</p>
                     <p className="text-[9px] font-bold uppercase tracking-widest mt-1 text-brand-secondary">
                       Organic Dairy
                     </p>
@@ -314,7 +314,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-50 bg-transparent border-none cursor-pointer"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 bg-transparent border-none cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -323,7 +323,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
                 {sidebarGroups.map((group) => (
                   <div key={group.title} className="space-y-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-400">
+                    <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-400 dark:text-slate-500">
                       {group.title}
                     </p>
                     <div className="space-y-[3px]">
@@ -336,8 +336,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             className={cn(
                               "flex items-center gap-3 px-3 h-10 rounded-xl transition-all duration-150 relative overflow-hidden",
                               isActive 
-                                ? "bg-[#014DA4]/10 text-[#014DA4] font-bold" 
-                                : "text-slate-650 hover:text-[#014DA4] hover:bg-slate-50 font-medium"
+                                ? "bg-[#014DA4]/10 dark:bg-[#014DA4]/15 text-[#014DA4] dark:text-blue-400 font-bold" 
+                                : "text-slate-655 dark:text-slate-300 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/45 font-medium"
                             )}
                           >
                             {isActive && (
@@ -345,7 +345,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             )}
                             <Icon
                               size={17}
-                              className={isActive ? "text-[#014DA4]" : "text-slate-450"}
+                              className={isActive ? "text-[#014DA4] dark:text-blue-400" : "text-slate-455 dark:text-slate-400"}
                               strokeWidth={isActive ? 2.5 : 2}
                             />
                             <span className="text-[13px]">{item.label}</span>
@@ -383,7 +383,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 ))}
               </nav>
 
-              <div className="p-4 flex-shrink-0 border-t border-slate-100">
+              <div className="p-4 flex-shrink-0 border-t border-slate-100 dark:border-slate-800">
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-bold transition-all border border-red-200/45 bg-red-500/10 text-red-600 hover:bg-red-500/15 cursor-pointer h-9"
