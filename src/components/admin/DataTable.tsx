@@ -32,7 +32,7 @@ export function DataTable<T extends { id: string | number }>({
   if (isLoading) {
     return (
       <div 
-        className="rounded-2xl border border-border/50 dark:border-slate-800/80 bg-warm-white dark:bg-cream-100 shadow-[0_2px_16px_var(--shadow)] flex flex-col items-center justify-center min-h-[400px]"
+        className="rounded-3xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col items-center justify-center min-h-[350px]"
       >
         <div 
           className="w-8 h-8 border-4 border-slate-100 dark:border-slate-800 border-t-brand-secondary rounded-full animate-spin mb-4"
@@ -45,31 +45,31 @@ export function DataTable<T extends { id: string | number }>({
   if (!data || data.length === 0) {
     return (
       <div 
-        className="rounded-2xl border border-border/50 dark:border-slate-800/80 bg-warm-white dark:bg-cream-100 shadow-[0_2px_16px_var(--shadow)] flex flex-col items-center justify-center min-h-[400px]"
+        className="rounded-3xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col items-center justify-center min-h-[350px] p-6"
       >
-        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-4">
+        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mb-4 border border-slate-100 dark:border-slate-800">
           <Search size={24} className="text-slate-300 dark:text-slate-600" />
         </div>
-        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No records found</h3>
-        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">There is no data to display here yet.</p>
+        <h3 className="text-sm font-black text-slate-855 dark:text-slate-200">No records found</h3>
+        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-1">There is no data to display here yet.</p>
       </div>
     )
   }
 
   return (
     <div 
-      className="rounded-brand-lg border border-border/50 dark:border-slate-800/80 bg-warm-white dark:bg-cream-100 shadow-[0_2px_16px_var(--shadow)] overflow-hidden flex flex-col"
+      className="rounded-3xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col"
     >
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto hide-scrollbar">
         <table className="w-full text-left min-w-[800px] border-collapse">
           <thead>
             <tr 
-              className="border-b border-border/50 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/50"
+              className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/20"
             >
               {/* Checkbox column */}
-              <th className="py-3 px-4 w-12 text-center">
+              <th className="py-4 px-4 w-12 text-center">
                 <div 
-                  className="w-4 h-4 rounded border-[1.5px] border-slate-300 dark:border-slate-700 hover:border-brand-secondary dark:hover:border-brand-secondary hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-colors mx-auto cursor-pointer flex items-center justify-center"
+                  className="w-4 h-4 rounded border border-slate-300 dark:border-slate-700 hover:border-[#014DA4] dark:hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-colors mx-auto cursor-pointer flex items-center justify-center"
                 />
               </th>
               
@@ -77,7 +77,7 @@ export function DataTable<T extends { id: string | number }>({
                 <th 
                   key={idx} 
                   className={cn(
-                    "py-3.5 px-4 text-[10px] uppercase font-extrabold tracking-wider text-slate-400 dark:text-slate-500",
+                    "py-4 px-4 text-[10.5px] uppercase font-black tracking-wider text-slate-400 dark:text-slate-500",
                     col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
                   )}
                 >
@@ -85,23 +85,23 @@ export function DataTable<T extends { id: string | number }>({
                 </th>
               ))}
               {(onEdit || onDelete || onView) && (
-                <th className="py-3.5 px-4 text-[10px] uppercase font-extrabold tracking-wider text-right text-slate-400 dark:text-slate-500">
+                <th className="py-4 px-4 text-[10.5px] uppercase font-black tracking-wider text-right text-slate-400 dark:text-slate-500">
                   Actions
                 </th>
               )}
             </tr>
           </thead>
           
-          <tbody className="divide-y divide-slate-100/60 dark:divide-slate-800/60">
+          <tbody className="divide-y divide-slate-100/70 dark:divide-slate-800/60">
             {data.map((row) => (
               <tr 
                 key={row.id} 
-                className="transition-colors group h-14 hover:bg-slate-50/50 dark:hover:bg-slate-900/30"
+                className="transition-colors group h-[60px] hover:bg-slate-50/35 dark:hover:bg-slate-800/20"
               >
                 {/* Row Checkbox */}
                 <td className="py-3 px-4 text-center">
                   <div 
-                    className="w-4 h-4 rounded border-[1.5px] border-slate-200 dark:border-slate-800 hover:border-brand-secondary dark:hover:border-brand-secondary hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-all mx-auto cursor-pointer"
+                    className="w-4 h-4 rounded border border-slate-200 dark:border-slate-855 hover:border-[#014DA4] dark:hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-all mx-auto cursor-pointer"
                   />
                 </td>
 
@@ -125,7 +125,7 @@ export function DataTable<T extends { id: string | number }>({
                       {onView && (
                         <button 
                           onClick={() => onView(row)} 
-                          className="flex items-center justify-center rounded-lg text-slate-400 hover:text-brand-secondary dark:hover:text-brand-secondary hover:bg-blue-50 dark:hover:bg-blue-950/30 border border-transparent hover:border-blue-200 dark:hover:border-blue-900 transition-colors cursor-pointer w-[30px] h-[30px]" 
+                          className="flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 border border-transparent hover:border-blue-200 dark:hover:border-blue-900 transition-colors cursor-pointer w-[30px] h-[30px]" 
                           title="View Details"
                         >
                           <Eye size={14}/>
@@ -134,7 +134,7 @@ export function DataTable<T extends { id: string | number }>({
                       {onEdit && (
                         <button 
                           onClick={() => onEdit(row)} 
-                          className="flex items-center justify-center rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-900 transition-colors cursor-pointer w-[30px] h-[30px]" 
+                          className="flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-900/40 transition-colors cursor-pointer w-[30px] h-[30px]" 
                           title="Edit"
                         >
                           <Edit2 size={14}/>
@@ -143,7 +143,7 @@ export function DataTable<T extends { id: string | number }>({
                       {onDelete && (
                         <button 
                           onClick={() => onDelete(row)} 
-                          className="flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 border border-transparent hover:border-red-200 dark:hover:border-red-900 transition-colors cursor-pointer w-[30px] h-[30px]" 
+                          className="flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 border border-transparent hover:border-red-200 dark:hover:border-red-900/40 transition-colors cursor-pointer w-[30px] h-[30px]" 
                           title="Delete"
                         >
                           <Trash2 size={14}/>
@@ -160,18 +160,18 @@ export function DataTable<T extends { id: string | number }>({
 
       {/* Pagination Footer */}
       <div 
-        className="p-4 flex items-center justify-between text-[11px] font-bold border-t border-border/50 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/50 text-slate-400 dark:text-slate-500"
+        className="p-4 flex items-center justify-between text-[11px] font-black border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/25 text-slate-455 dark:text-slate-500"
       >
         <span>Showing {data.length} records</span>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <button 
-            className="w-[30px] h-[30px] rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-white dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 text-slate-400 transition-colors cursor-pointer"
+            className="w-[30px] h-[30px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 text-slate-400 dark:text-slate-500 transition-colors cursor-pointer"
           >
             <ChevronRight size={14} className="rotate-180"/>
           </button>
-          <span className="px-2 font-extrabold text-slate-600 dark:text-slate-400">Page 1 of 1</span>
+          <span className="px-2 font-black text-slate-600 dark:text-slate-400">Page 1 of 1</span>
           <button 
-            className="w-[30px] h-[30px] rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-white dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 text-slate-400 transition-colors cursor-pointer"
+            className="w-[30px] h-[30px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 text-slate-400 dark:text-slate-500 transition-colors cursor-pointer"
           >
             <ChevronRight size={14}/>
           </button>

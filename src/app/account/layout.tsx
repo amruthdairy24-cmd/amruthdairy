@@ -23,10 +23,6 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const [status, setStatus] = useState<string>('active')
 
   useEffect(() => {
-    setTheme('light')
-  }, [setTheme])
-
-  useEffect(() => {
     async function fetchProfile() {
       try {
         const res = await fetch('/api/customer/dashboard')
