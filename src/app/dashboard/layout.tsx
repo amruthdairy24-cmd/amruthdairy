@@ -61,10 +61,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [dateStr, setDateStr] = useState('')
 
   useEffect(() => {
-    setTheme('light')
-  }, [setTheme])
-
-  useEffect(() => {
     setMounted(true)
     const d = new Date()
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
