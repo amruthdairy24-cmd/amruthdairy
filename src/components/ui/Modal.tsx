@@ -50,10 +50,10 @@ export function Modal({
             '-translate-x-1/2 -translate-y-1/2',
             'w-[calc(100%-2rem)]',
             sizeStyles[size],
-            'bg-white rounded-[28px] shadow-float',
+            'bg-white dark:bg-warm-white dark:border dark:border-border rounded-brand-2xl shadow-card',
             'p-8',
             'focus:outline-none',
-            'data-[state=open]:animate-slide-up'
+            'data-[state=open]:animate-fade-up'
           )}
         >
           {/* Close button */}
@@ -62,31 +62,31 @@ export function Modal({
               className={cn(
                 'absolute top-5 right-5',
                 'w-9 h-9 rounded-full',
-                'bg-milk-100 hover:bg-milk-200',
+                'bg-milk-100 hover:bg-milk-200 dark:bg-cream-200 dark:hover:bg-cream-200/80',
                 'flex items-center justify-center',
                 'transition-colors duration-150',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700'
               )}
               aria-label="Close modal"
             >
-              <X size={16} className="text-teal-900/60" />
+              <X size={16} className="text-teal-900/60 dark:text-teal-400/60" />
             </button>
           </Dialog.Close>
 
           {/* Header */}
           <div className="mb-6">
-            <Dialog.Title className="text-subhead font-bold text-teal-900">
+            <Dialog.Title className="text-xl font-bold text-teal-900 dark:text-white">
               {title}
             </Dialog.Title>
             {description && (
-              <Dialog.Description className="mt-1 text-small text-teal-900/55">
+              <Dialog.Description className="mt-1 text-sm text-teal-900/55 dark:text-teal-300/60">
                 {description}
               </Dialog.Description>
             )}
           </div>
 
           {/* Body */}
-          <div>{children}</div>
+          <div className="text-teal-900/80 dark:text-brown-600">{children}</div>
 
           {/* Footer */}
           {footer && (
@@ -144,7 +144,7 @@ export function ConfirmModal({
         </>
       }
     >
-      <p className="text-small text-teal-900/70 leading-relaxed">{message}</p>
+      <p className="text-sm text-teal-900/70 dark:text-teal-300/70 leading-relaxed">{message}</p>
     </Modal>
   )
 }

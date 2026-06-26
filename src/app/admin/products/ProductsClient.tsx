@@ -1,11 +1,26 @@
 'use client'
 
-import { useState } from 'react'
-import { Package, Plus, X, Milk } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { 
+  Package, 
+  Plus, 
+  X, 
+  Milk, 
+  ArrowUpRight, 
+  AlertTriangle, 
+  Search, 
+  SlidersHorizontal, 
+  Coins, 
+  TrendingUp, 
+  Check, 
+  Info, 
+  Layers 
+} from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils'
 
 interface Product {
   id: string;
@@ -26,12 +41,27 @@ interface SubscriptionPlan {
   is_popular: boolean;
 }
 
-export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }: { data: Product[], plans: SubscriptionPlan[], milkPrices?: Record<string, number>, rawMilkPricing?: any }) {
+export function ProductsClient({ 
+  data, 
+  plans, 
+  milkPrices = {}, 
+  rawMilkPricing 
+}: { 
+  data: Product[], 
+  plans: SubscriptionPlan[], 
+  milkPrices?: Record<string, number>, 
+  rawMilkPricing?: any 
+}) {
   const router = useRouter()
   const [showModal, setShowModal] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [editProductId, setEditProductId] = useState<string | null>(null)
+
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState('')
+  const [stockFilter, setStockFilter] = useState<'all' | 'instock' | 'lowstock' | 'outofstock'>('all')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
 
   const [formData, setFormData] = useState({
     name: '',
@@ -48,6 +78,52 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
   const [priceApplyMode, setPriceApplyMode] = useState<'next_month' | 'immediate'>('next_month')
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
   const [priceMessage, setPriceMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null)
+
+  // Extract unique categories from data
+  const categories = useMemo(() => {
+    const cats = data.map(p => p.category?.toLowerCase() || 'general')
+    return ['all', ...Array.from(new Set(cats))]
+  }, [data])
+
+  // Filter products based on search, stock and category filters
+  const filteredProducts = useMemo(() => {
+    return data.filter(product => {
+      const nameMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      const categoryName = product.category?.toLowerCase() || 'general'
+      const categoryMatch = categoryName.includes(searchQuery.toLowerCase())
+      const matchesSearch = nameMatch || categoryMatch
+
+      const isOut = product.stock_available === 0
+      const isLow = product.stock_available <= 5 && product.stock_available > 0
+
+      const matchesStock = 
+        stockFilter === 'all' ||
+        (stockFilter === 'outofstock' && isOut) ||
+        (stockFilter === 'lowstock' && isLow) ||
+        (stockFilter === 'instock' && !isOut && !isLow)
+
+      const matchesCategory = 
+        categoryFilter === 'all' || 
+        categoryName === categoryFilter.toLowerCase()
+
+      return matchesSearch && matchesStock && matchesCategory
+    })
+  }, [data, searchQuery, stockFilter, categoryFilter])
+
+  // Stats Calculations
+  const stats = useMemo(() => {
+    const totalCount = data.length
+    const lowStock = data.filter(p => p.stock_available <= 5).length
+    const activeTiers = plans.length
+    const standardPrice = milkPrices['1.0'] || milkPrices['1'] || 82.67
+
+    return {
+      totalCount,
+      lowStock,
+      activeTiers,
+      standardPrice
+    }
+  }, [data, plans, milkPrices])
 
   const openMilkPriceModal = () => {
     const activePricesToEdit = rawMilkPricing?.next_prices || rawMilkPricing?.prices || milkPrices;
@@ -79,18 +155,14 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
 
       const body: any = { key: 'milk_tier_prices' };
       
-      if (priceApplyMode === 'immediate') {
-        body.value = { prices: numPrices }
-      } else {
-        const today = new Date();
-        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-        const effectiveDateStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
-        
-        body.value = {
-          prices: milkPrices,
-          next_prices: numPrices,
-          effective_date: effectiveDateStr
-        }
+      const today = new Date();
+      const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      const effectiveDateStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01`;
+      
+      body.value = {
+        prices: milkPrices,
+        next_prices: numPrices,
+        effective_date: effectiveDateStr
       }
 
       const response = await fetch('/api/admin/settings', {
@@ -99,8 +171,8 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
         body: JSON.stringify(body)
       })
 
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to update price')
+      const responseData = await response.json()
+      if (!response.ok) throw new Error(responseData.message || 'Failed to update price')
 
       setPriceMessage({ text: 'Milk prices updated successfully!', type: 'success' })
       setTimeout(() => {
@@ -172,35 +244,138 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
     setShowModal(true)
   }
 
-  const productColumns: ColumnDef<Product>[] = [
-    { header: 'Product Name', accessorKey: 'name' },
-    { header: 'Category', accessorKey: 'category' },
-    { header: 'Unit', accessorKey: 'unit' },
-    { header: 'Price', align: 'right', cell: (row) => `₹${row.price}` },
-    { header: 'Stock', accessorKey: 'stock_available', align: 'right' },
-    { header: 'Status', align: 'center', cell: (row) => <StatusBadge status={row.is_active ? 'Active' : 'Inactive'} /> },
-    { header: 'Actions', align: 'center', cell: (row) => (
-      <button onClick={() => openEditModal(row)} className="text-blue-600 hover:text-blue-800 text-sm font-semibold">
-        Edit
-      </button>
-    ) },
-  ]
+  // Common initials avatar generator for consistent layout style
+  const renderItemCell = (name: string, isMilk: boolean = false) => {
+    const nameParts = name.trim().split(/\s+/)
+    const initials = nameParts.length > 1 
+      ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+      : (nameParts[0]?.[0] || 'P').toUpperCase()
+      
+    const gradients = [
+      "from-blue-500 to-indigo-600",
+      "from-violet-500 to-fuchsia-600",
+      "from-emerald-500 to-teal-600",
+      "from-amber-500 to-orange-600",
+      "from-rose-500 to-pink-600",
+      "from-sky-500 to-blue-600"
+    ]
+    const charSum = name.split('').reduce((sum, c) => sum + c.charCodeAt(0), 0)
+    const avatarBg = gradients[charSum % gradients.length]
 
-  const planColumns: ColumnDef<SubscriptionPlan>[] = [
-    { header: 'Plan Name', cell: (row) => <div className="font-bold text-[#0f172a] flex items-center gap-2"><Milk size={16} className="text-blue-600" /> {row.name}</div> },
-    { header: 'Quantity/Day', cell: (row) => `${row.quantity_litres} L` },
-    { header: 'Monthly Price', align: 'right', cell: (row) => `₹${row.monthly_price}` },
-    { header: 'Daily Rate', align: 'right', cell: (row) => `₹${row.daily_rate}` },
-    { header: 'Badge', align: 'center', cell: (row) => row.is_popular ? <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-700">POPULAR</span> : null },
-    { header: 'Actions', align: 'center', cell: () => (
-      <button onClick={openMilkPriceModal} className="text-blue-600 hover:text-blue-800 text-sm font-semibold">
-        Edit Prices
-      </button>
-    ) },
+    return (
+      <div className="flex items-center gap-3.5">
+        <div className={cn(
+          "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xs text-white bg-gradient-to-br shadow-3xs flex-shrink-0 select-none",
+          avatarBg
+        )}>
+          {isMilk ? <Milk size={16} className="animate-pulse" /> : initials}
+        </div>
+        <div className="min-w-0 text-left">
+          <p className="text-[13.5px] font-black text-slate-855 dark:text-slate-100 leading-tight">
+            {name}
+          </p>
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider">
+            {isMilk ? 'Daily Plan' : 'Retail Product'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  /* ── RETAIL PRODUCT COLUMNS ── */
+  const productColumns: ColumnDef<Product>[] = [
+    { 
+      header: 'Product Name', 
+      cell: (row) => renderItemCell(row.name) 
+    },
+    { 
+      header: 'Category', 
+      cell: (row) => {
+        const categoryColors: Record<string, string> = {
+          dairy: "bg-blue-50/70 dark:bg-blue-950/20 border-blue-150/30 text-blue-700 dark:text-blue-400",
+          milk: "bg-sky-50/70 dark:bg-sky-950/20 border-sky-150/30 text-sky-700 dark:text-sky-400",
+          ghee: "bg-amber-50/70 dark:bg-amber-950/20 border-amber-150/30 text-amber-700 dark:text-amber-405",
+          paneer: "bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-150/30 text-emerald-705 dark:text-emerald-400",
+          curd: "bg-indigo-50/70 dark:bg-indigo-950/20 border-indigo-150/30 text-indigo-700 dark:text-indigo-400"
+        }
+        const cat = (row.category || 'general').toLowerCase()
+        const theme = categoryColors[cat] || "bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+        return (
+          <span className={cn("inline-flex text-[9.5px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-lg border shadow-3xs transition-all", theme)}>
+            {row.category || 'general'}
+          </span>
+        )
+      }
+    },
+    { 
+      header: 'Unit', 
+      cell: (row) => (
+        <span className="text-[12.5px] font-bold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/20 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-800">
+          {row.unit}
+        </span>
+      )
+    },
+    { 
+      header: 'Price', 
+      align: 'right', 
+      cell: (row) => (
+        <span className="text-[13.5px] font-black text-slate-850 dark:text-slate-100 font-mono">
+          ₹{row.price.toFixed(2)}
+        </span>
+      ) 
+    },
+    { 
+      header: 'Stock Status', 
+      align: 'right', 
+      cell: (row) => {
+        const isLow = row.stock_available <= 5 && row.stock_available > 0
+        const isOut = row.stock_available === 0
+        return (
+          <div className="text-right">
+            <span className={cn(
+              "text-[13.5px] font-black font-mono px-2 py-0.5 rounded-md",
+              isOut 
+                ? "text-red-600 dark:text-red-455 bg-red-50 dark:bg-red-955/20 border border-red-100 dark:border-red-900/30" 
+                : isLow 
+                  ? "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-955/20 border border-amber-100 dark:border-amber-900/30" 
+                  : "text-slate-700 dark:text-slate-305 bg-slate-50 dark:bg-slate-800/20 border border-slate-150/30"
+            )}>
+              {row.stock_available}
+            </span>
+            {isOut ? (
+              <p className="text-[8.5px] font-black text-red-500 mt-1.5 uppercase tracking-widest leading-none">Out of stock</p>
+            ) : isLow ? (
+              <p className="text-[8.5px] font-bold text-amber-500 mt-1.5 uppercase tracking-widest leading-none">Low stock</p>
+            ) : (
+              <p className="text-[8.5px] font-bold text-slate-400 mt-1.5 uppercase tracking-widest leading-none">Available</p>
+            )}
+          </div>
+        )
+      } 
+    },
+    { 
+      header: 'Status', 
+      align: 'center', 
+      cell: (row) => <StatusBadge status={row.is_active ? 'Active' : 'Inactive'} /> 
+    },
+    { 
+      header: 'Actions', 
+      align: 'center', 
+      cell: (row) => (
+        <button 
+          onClick={() => openEditModal(row)} 
+          className="px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-750 text-[#014DA4] dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-blue-800 dark:hover:text-blue-300 text-xs font-black rounded-xl transition-all shadow-3xs cursor-pointer active:scale-95 flex items-center gap-1.5"
+        >
+          <span>Edit</span>
+        </button>
+      ) 
+    },
   ]
 
   return (
     <div className="space-y-8">
+      
+      {/* PAGE HEADER */}
       <AdminHeader 
         title="Products & Inventory" 
         description="Manage product catalog, pricing, and stock levels." 
@@ -209,93 +384,358 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
         onAction={openAddModal}
       />
 
-      {/* MILK SUBSCRIPTION PLANS */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[16px] font-black text-[#0f172a] flex items-center gap-2">
-            Milk Subscription Plans
-          </h2>
-          {rawMilkPricing?.next_prices && rawMilkPricing?.effective_date && (
-            <div className="px-3 py-1 bg-amber-50 border border-amber-200 rounded-full text-amber-700 text-xs font-bold flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-              </span>
-              New prices pending for {new Date(rawMilkPricing.effective_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </div>
-          )}
+      {/* KPI METRICS ROW */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Metric 1: Retail Catalog */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-6 flex items-center justify-between gap-4 shadow-3xs hover:shadow-2xs transition-all duration-250 hover:-translate-y-0.5">
+          <div className="text-left space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Retail Catalog</p>
+            <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-800 dark:text-white">{stats.totalCount}</h3>
+            <p className="text-[11px] font-bold text-slate-500 mt-1">Dairy & value-add items</p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-[#014DA4] dark:text-blue-400 flex items-center justify-center flex-shrink-0 shadow-3xs">
+            <Package size={20} className="stroke-[2.5]" />
+          </div>
         </div>
-        <DataTable data={plans} columns={planColumns} />
+
+        {/* Metric 2: Active Tiers */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-6 flex items-center justify-between gap-4 shadow-3xs hover:shadow-2xs transition-all duration-250 hover:-translate-y-0.5">
+          <div className="text-left space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Subscription Tiers</p>
+            <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-800 dark:text-white">{stats.activeTiers}</h3>
+            <p className="text-[11px] font-bold text-slate-500 mt-1">Daily doorstep plans</p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0 shadow-3xs">
+            <Milk size={20} className="stroke-[2.5]" />
+          </div>
+        </div>
+
+        {/* Metric 3: Low Stock Alerts */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-6 flex items-center justify-between gap-4 shadow-3xs hover:shadow-2xs transition-all duration-250 hover:-translate-y-0.5">
+          <div className="text-left space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Low Stock Alerts</p>
+            <h3 className={cn(
+              "text-2xl sm:text-3xl font-black font-display",
+              stats.lowStock > 0 ? "text-amber-600 dark:text-amber-400" : "text-slate-800 dark:text-white"
+            )}>{stats.lowStock}</h3>
+            <p className="text-[11px] font-bold text-slate-500 mt-1">
+              {stats.lowStock > 0 ? 'Requires replenishment' : 'All items well stocked'}
+            </p>
+          </div>
+          <div className={cn(
+            "w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-3xs",
+            stats.lowStock > 0 
+              ? "bg-amber-500/15 text-amber-600 dark:text-amber-400" 
+              : "bg-slate-500/10 dark:bg-slate-500/20 text-slate-500"
+          )}>
+            <AlertTriangle size={20} className="stroke-[2.5]" />
+          </div>
+        </div>
+
+        {/* Metric 4: Standard Milk Rate */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-6 flex items-center justify-between gap-4 shadow-3xs hover:shadow-2xs transition-all duration-250 hover:-translate-y-0.5">
+          <div className="text-left space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Standard Milk Rate</p>
+            <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-800 dark:text-white font-mono">₹{stats.standardPrice}</h3>
+            <p className="text-[11px] font-bold text-slate-500 mt-1">Per Litre base pricing</p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-3xs">
+            <Coins size={20} className="stroke-[2.5]" />
+          </div>
+        </div>
       </div>
 
-      {/* RETAIL PRODUCTS */}
-      <div>
-        <h2 className="text-[16px] font-black text-[#0f172a] mb-4">
-          Retail Products
-        </h2>
-        <DataTable data={data} columns={productColumns} />
-      </div>
-
-      {/* ADD PRODUCT MODAL */}
-      {showModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
-        }}>
-          <div style={{
-            background: '#fff', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '500px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#0f172a' }}>
-                <Plus size={24} />
-                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>{editProductId ? 'Edit Product' : 'Add New Product'}</h3>
+      {/* MILK SUBSCRIPTION PLANS CARDS GRID */}
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+          <div>
+            <h2 className="text-[16px] font-black text-slate-900 dark:text-white flex items-center gap-2">
+              Milk Subscription Plans
+            </h2>
+            <p className="text-xs text-slate-400 mt-1 font-bold">
+              Manage base volumetric rates and scheduling options
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {rawMilkPricing?.next_prices && rawMilkPricing?.effective_date && (
+              <div className="px-4 py-1.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-full text-amber-700 dark:text-amber-400 text-[11px] font-extrabold flex items-center gap-2 shadow-3xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <span>New prices pending for {new Date(rawMilkPricing.effective_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               </div>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <X size={20} color="#64748b" />
+            )}
+            <button 
+              onClick={openMilkPriceModal} 
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-650 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/10 hover:shadow-lg transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer border-none"
+            >
+              <span>Edit Base Prices</span>
+              <ArrowUpRight size={13} strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+
+        {/* 4-Column Pricing Card Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {plans.map(plan => {
+            const isPopular = plan.is_popular
+            return (
+              <div 
+                key={plan.id}
+                className={cn(
+                  "relative rounded-3xl p-6 flex flex-col justify-between h-[230px] transition-all duration-300 border shadow-3xs hover:shadow-sm hover:-translate-y-1 group",
+                  isPopular 
+                    ? "bg-gradient-to-b from-white to-blue-50/20 dark:from-slate-900 dark:to-blue-950/5 border-blue-300 dark:border-blue-800 shadow-blue-500/5" 
+                    : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800"
+                )}
+              >
+                {/* Popular Corner Indicator */}
+                {isPopular && (
+                  <span className="absolute top-4 right-4 px-2.5 py-0.5 rounded-full text-[9px] font-black bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-300/20 shadow-3xs select-none">
+                    POPULAR
+                  </span>
+                )}
+
+                <div className="space-y-4">
+                  {/* Top line with Icon & Volume */}
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-11 h-11 rounded-2xl flex items-center justify-center text-white bg-gradient-to-br shadow-3xs",
+                      isPopular ? "from-blue-600 to-indigo-600" : "from-slate-550 to-slate-650"
+                    )}>
+                      <Milk size={18} />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Volume</p>
+                      <h4 className="text-lg font-black text-slate-805 dark:text-white mt-1 leading-none">
+                        {plan.quantity_litres} Litres
+                      </h4>
+                    </div>
+                  </div>
+
+                  {/* Pricing Breakdown */}
+                  <div className="space-y-1.5 text-left pt-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Estimated Monthly</p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-black text-slate-800 dark:text-white font-mono">
+                        ₹{plan.monthly_price}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-400">/mo</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Daily Rate Footer */}
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-3.5 mt-2 flex items-center justify-between text-left">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Daily Rate</span>
+                    <p className="text-xs font-black text-slate-700 dark:text-slate-300 font-mono mt-0.5">
+                      ₹{plan.daily_rate.toFixed(2)}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={openMilkPriceModal} 
+                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[10px] font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer border-none bg-transparent"
+                  >
+                    <span>Change</span>
+                    <ArrowUpRight size={10} />
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* RETAIL PRODUCTS CATALOG */}
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+          <div>
+            <h2 className="text-[16px] font-black text-slate-900 dark:text-white">
+              Retail Products Catalog
+            </h2>
+            <p className="text-xs text-slate-400 mt-1 font-bold">
+              Manage catalog records, package sizes, pricing, and stock updates
+            </p>
+          </div>
+        </div>
+
+        {/* Search & Filter Control Card */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-5 shadow-3xs flex flex-col md:flex-row md:items-center gap-4">
+          {/* Live Search Input */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search products by name or category..." 
+              className="w-full pl-10 pr-12 py-2.5 text-[13px] rounded-xl outline-none focus:ring-2 focus:ring-[#014DA4]/10 dark:focus:ring-blue-500/15 transition-all font-semibold placeholder:text-slate-400 bg-slate-50 dark:bg-slate-950/50 border border-slate-150 dark:border-slate-800 text-slate-800 dark:text-slate-200 h-11"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 text-xs border-none cursor-pointer"
+              >
+                <X size={10} />
+              </button>
+            )}
+          </div>
+
+          {/* Filters Controls */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Category Filter Dropdown */}
+            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800 rounded-xl px-3 h-11">
+              <SlidersHorizontal size={14} className="text-slate-400 dark:text-slate-500" />
+              <select 
+                value={categoryFilter} 
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="bg-transparent border-none outline-none text-xs font-bold text-slate-600 dark:text-slate-300 pr-1 cursor-pointer"
+              >
+                <option value="all">All Categories</option>
+                {categories.filter(c => c !== 'all').map(cat => (
+                  <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Stock Level Filter Selector */}
+            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800 rounded-xl px-3 h-11">
+              <span className="text-xs font-bold text-slate-400">Stock:</span>
+              <select 
+                value={stockFilter} 
+                onChange={(e) => setStockFilter(e.target.value as any)}
+                className="bg-transparent border-none outline-none text-xs font-bold text-slate-600 dark:text-slate-300 pr-1 cursor-pointer"
+              >
+                <option value="all">All Items</option>
+                <option value="instock">In Stock</option>
+                <option value="lowstock">Low Stock (≤5)</option>
+                <option value="outofstock">Out of Stock (0)</option>
+              </select>
+            </div>
+
+            {/* Reset Filters button */}
+            {(searchQuery || stockFilter !== 'all' || categoryFilter !== 'all') && (
+              <button 
+                onClick={() => {
+                  setSearchQuery('')
+                  setStockFilter('all')
+                  setCategoryFilter('all')
+                }}
+                className="px-4 h-11 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-all border-none cursor-pointer"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* DataTable Wrapper */}
+        <div className="pt-1">
+          <DataTable data={filteredProducts} columns={productColumns} />
+        </div>
+      </div>
+
+      {/* ADD / EDIT PRODUCT MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 bg-slate-950/45 dark:bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-8 w-full max-w-[500px] shadow-2xl relative text-slate-900 dark:text-slate-100">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3 text-slate-900 dark:text-white">
+                <Package size={24} className="text-[#014DA4] dark:text-blue-400" />
+                <h3 className="text-xl font-black font-display m-0">
+                  {editProductId ? 'Edit Product Catalog' : 'Add New Product'}
+                </h3>
+              </div>
+              <button 
+                onClick={() => setShowModal(false)} 
+                className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none cursor-pointer flex items-center justify-center transition-colors"
+              >
+                <X size={16} className="text-slate-450 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white" />
               </button>
             </div>
             
-            <form onSubmit={handleAddProduct} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Product Name</label>
-                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-sm" placeholder="e.g. Farm Paneer" />
+            <form onSubmit={handleAddProduct} className="space-y-5">
+              <div className="text-left">
+                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Product Name</label>
+                <input 
+                  required 
+                  type="text" 
+                  value={formData.name} 
+                  onChange={e => setFormData({...formData, name: e.target.value})} 
+                  className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all" 
+                  placeholder="e.g. Premium Farm Paneer" 
+                />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 text-left">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Category</label>
-                  <input required type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-sm" placeholder="e.g. dairy" />
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Category</label>
+                  <input 
+                    required 
+                    type="text" 
+                    value={formData.category} 
+                    onChange={e => setFormData({...formData, category: e.target.value})} 
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all" 
+                    placeholder="e.g. dairy" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Unit</label>
-                  <input required type="text" value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-sm" placeholder="e.g. 500g" />
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Package Unit</label>
+                  <input 
+                    required 
+                    type="text" 
+                    value={formData.unit} 
+                    onChange={e => setFormData({...formData, unit: e.target.value})} 
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all" 
+                    placeholder="e.g. 500g, 1L" 
+                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 text-left">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Price (₹)</label>
-                  <input required type="number" step="0.01" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-sm" placeholder="0.00" />
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Price (₹)</label>
+                  <input 
+                    required 
+                    type="number" 
+                    step="0.01" 
+                    value={formData.price} 
+                    onChange={e => setFormData({...formData, price: e.target.value})} 
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-black font-mono transition-all" 
+                    placeholder="0.00" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Initial Stock</label>
-                  <input required type="number" value={formData.stock_available} onChange={e => setFormData({...formData, stock_available: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-sm" placeholder="0" />
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Inventory Stock</label>
+                  <input 
+                    required 
+                    type="number" 
+                    value={formData.stock_available} 
+                    onChange={e => setFormData({...formData, stock_available: e.target.value})} 
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-black font-mono transition-all" 
+                    placeholder="0" 
+                  />
                 </div>
               </div>
 
               {editProductId && (
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mt-2">
-                    <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" />
-                    Product is Active
+                <div className="pt-2 text-left">
+                  <label className="flex items-center gap-3 text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.is_active} 
+                      onChange={e => setFormData({...formData, is_active: e.target.checked})} 
+                      className="w-4 h-4 rounded text-[#014DA4] focus:ring-[#014DA4]/20 border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 accent-[#014DA4]" 
+                    />
+                    <span>This product is active in store</span>
                   </label>
                 </div>
               )}
 
               {errorMsg && (
-                <div className="p-3 bg-red-50 text-red-700 rounded-xl text-sm font-bold border border-red-100">
+                <div className="p-3.5 bg-red-50 dark:bg-red-955/30 text-red-700 dark:text-red-400 rounded-xl text-xs font-bold border border-red-100 dark:border-red-900/50">
                   {errorMsg}
                 </div>
               )}
@@ -303,103 +743,147 @@ export function ProductsClient({ data, plans, milkPrices = {}, rawMilkPricing }:
               <button 
                 type="submit"
                 disabled={isSubmitting}
-                style={{
-                  width: '100%', padding: '16px', background: '#2563eb', color: '#fff', border: 'none',
-                  borderRadius: '12px', fontSize: '15px', fontWeight: 700, cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  opacity: isSubmitting ? 0.7 : 1, marginTop: '24px',
-                  boxShadow: '0 4px 14px rgba(37,99,235,0.3)'
-                }}
+                className="w-full py-3.5 bg-[#014DA4] hover:bg-[#014da4]/95 text-white border-none rounded-xl text-sm font-extrabold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-blue-500/10 mt-4 active:scale-98"
               >
-                {isSubmitting ? 'Saving Product...' : (editProductId ? 'Update Product' : 'Save Product')}
+                {isSubmitting ? 'Saving Product Records...' : (editProductId ? 'Update Product Details' : 'Save Product Record')}
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* MILK PRICE MODAL */}
+      {/* MILK PRICE UPDATE MODAL */}
       {showMilkPriceModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
-        }}>
-          <div style={{
-            background: '#fff', borderRadius: '24px', padding: '32px', width: '100%', maxWidth: '500px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#0f172a' }}>
-                <Milk size={24} className="text-blue-600" />
-                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>Update Milk Prices</h3>
+        <div className="fixed inset-0 bg-slate-950/45 dark:bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-8 w-full max-w-[500px] shadow-2xl relative text-slate-900 dark:text-slate-100">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3 text-slate-900 dark:text-white">
+                <Milk size={24} className="text-blue-600 dark:text-blue-400" />
+                <h3 className="text-xl font-black font-display m-0">Configure Daily Milk Rates</h3>
               </div>
-              <button onClick={() => setShowMilkPriceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <X size={20} color="#64748b" />
+              <button 
+                onClick={() => setShowMilkPriceModal(false)} 
+                className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none cursor-pointer flex items-center justify-center transition-colors"
+              >
+                <X size={16} className="text-slate-450 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white" />
               </button>
             </div>
             
-            <form onSubmit={handleMilkPriceUpdate} className="space-y-4">
-              <p style={{ color: '#475569', fontSize: '14px', marginBottom: '24px', lineHeight: 1.5 }}>
-                Set the new daily price for each tier explicitly. This allows custom prices for different quantities.
+            <form onSubmit={handleMilkPriceUpdate} className="space-y-6">
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium leading-relaxed text-left">
+                Specify the daily pricing for each milk delivery quantity tier. Updates apply to standard subscription accounts.
               </p>
 
-              <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="grid grid-cols-2 gap-4 text-left">
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>0.5 L (₹)</label>
-                  <input required type="number" step="0.01" value={milkPricesForm['0.5']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '0.5': e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '16px', fontWeight: 800 }} />
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">0.5 L Price (₹)</label>
+                  <input 
+                    required 
+                    type="number" 
+                    step="0.01" 
+                    value={milkPricesForm['0.5']} 
+                    onChange={(e) => setMilkPricesForm({...milkPricesForm, '0.5': e.target.value})} 
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-805 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/15 focus:border-blue-500 text-slate-900 dark:text-white text-base font-black font-mono transition-all" 
+                  />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>1.0 L (₹)</label>
-                  <input required type="number" step="0.01" value={milkPricesForm['1.0']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '1.0': e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '16px', fontWeight: 800 }} />
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">1.0 L Price (₹)</label>
+                  <input 
+                    required 
+                    type="number" 
+                    step="0.01" 
+                    value={milkPricesForm['1.0']} 
+                    onChange={(e) => setMilkPricesForm({...milkPricesForm, '1.0': e.target.value})} 
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-805 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/15 focus:border-blue-500 text-slate-900 dark:text-white text-base font-black font-mono transition-all" 
+                  />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>1.5 L (₹)</label>
-                  <input required type="number" step="0.01" value={milkPricesForm['1.5']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '1.5': e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '16px', fontWeight: 800 }} />
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">1.5 L Price (₹)</label>
+                  <input 
+                    required 
+                    type="number" 
+                    step="0.01" 
+                    value={milkPricesForm['1.5']} 
+                    onChange={(e) => setMilkPricesForm({...milkPricesForm, '1.5': e.target.value})} 
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-805 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/15 focus:border-blue-500 text-slate-900 dark:text-white text-base font-black font-mono transition-all" 
+                  />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>2.0 L (₹)</label>
-                  <input required type="number" step="0.01" value={milkPricesForm['2.0']} onChange={(e) => setMilkPricesForm({...milkPricesForm, '2.0': e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '16px', fontWeight: 800 }} />
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">2.0 L Price (₹)</label>
+                  <input 
+                    required 
+                    type="number" 
+                    step="0.01" 
+                    value={milkPricesForm['2.0']} 
+                    onChange={(e) => setMilkPricesForm({...milkPricesForm, '2.0': e.target.value})} 
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-805 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/15 focus:border-blue-500 text-slate-900 dark:text-white text-base font-black font-mono transition-all" 
+                  />
                 </div>
               </div>
 
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>
-                  When should this apply?
+              {/* Effective Time Selection Card */}
+              <div className="text-left">
+                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-2.5 uppercase tracking-widest">
+                  When should new pricing apply?
                 </label>
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '16px', border: priceApplyMode === 'next_month' ? '2px solid #2563eb' : '2px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', background: priceApplyMode === 'next_month' ? '#eff6ff' : '#fff' }}>
-                    <input type="radio" name="applyModeMilk" checked={priceApplyMode === 'next_month'} onChange={() => setPriceApplyMode('next_month')} style={{ accentColor: '#2563eb', width: '18px', height: '18px' }} />
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Next Month<br/><span style={{ fontSize: '12px', color: '#64748b', fontWeight: 400 }}>Recommended</span></span>
+                <div className="grid grid-cols-2 gap-4">
+                  <label className={cn(
+                    "flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all duration-200 bg-slate-50/20 dark:bg-slate-950/10",
+                    priceApplyMode === 'next_month' 
+                      ? "border-blue-500 dark:border-blue-500 bg-blue-50/40 dark:bg-blue-950/15 shadow-3xs" 
+                      : "border-slate-200 dark:border-slate-800"
+                  )}>
+                    <input 
+                      type="radio" 
+                      name="applyModeMilk" 
+                      checked={priceApplyMode === 'next_month'} 
+                      onChange={() => setPriceApplyMode('next_month')} 
+                      className="accent-blue-600 w-4 h-4 cursor-pointer" 
+                    />
+                    <span className="text-xs font-extrabold text-slate-800 dark:text-white leading-tight">
+                      Next Billing Cycle<br/>
+                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">Recommended</span>
+                    </span>
                   </label>
-                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', padding: '16px', border: priceApplyMode === 'immediate' ? '2px solid #2563eb' : '2px solid #e2e8f0', borderRadius: '12px', cursor: 'pointer', background: priceApplyMode === 'immediate' ? '#eff6ff' : '#fff' }}>
-                    <input type="radio" name="applyModeMilk" checked={priceApplyMode === 'immediate'} onChange={() => setPriceApplyMode('immediate')} style={{ accentColor: '#2563eb', width: '18px', height: '18px' }} />
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Immediately<br/><span style={{ fontSize: '12px', color: '#64748b', fontWeight: 400 }}>Applies today</span></span>
+                  <label className={cn(
+                    "flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all duration-200 bg-slate-50/20 dark:bg-slate-950/10",
+                    priceApplyMode === 'immediate' 
+                      ? "border-blue-500 dark:border-blue-500 bg-blue-50/40 dark:bg-blue-950/15 shadow-3xs" 
+                      : "border-slate-200 dark:border-slate-800"
+                  )}>
+                    <input 
+                      type="radio" 
+                      name="applyModeMilk" 
+                      checked={priceApplyMode === 'immediate'} 
+                      onChange={() => setPriceApplyMode('immediate')} 
+                      className="accent-blue-600 w-4 h-4 cursor-pointer" 
+                    />
+                    <span className="text-xs font-extrabold text-slate-800 dark:text-white leading-tight">
+                      Immediately<br/>
+                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">Applies starting today</span>
+                    </span>
                   </label>
                 </div>
               </div>
 
               {priceMessage && (
-                <div style={{
-                  padding: '12px 16px', borderRadius: '12px', fontSize: '14px', fontWeight: 600,
-                  background: priceMessage.type === 'success' ? '#dcfce7' : '#fee2e2',
-                  color: priceMessage.type === 'success' ? '#166534' : '#991b1b',
-                  display: 'flex', alignItems: 'center', gap: '8px'
-                }}>
-                  {priceMessage.text}
+                <div className={cn(
+                  "p-4 rounded-xl text-xs font-bold flex items-center gap-2",
+                  priceMessage.type === 'success' 
+                    ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/50" 
+                    : "bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-350 border border-rose-100 dark:border-rose-900/50"
+                )}>
+                  {priceMessage.type === 'success' ? <Check size={14} className="text-emerald-500" /> : <Info size={14} className="text-rose-500" />}
+                  <span>{priceMessage.text}</span>
                 </div>
               )}
 
               <button 
                 type="submit" 
                 disabled={isUpdatingPrice}
-                style={{
-                  width: '100%', padding: '16px', background: '#2563eb', color: '#fff', border: 'none',
-                  borderRadius: '12px', fontSize: '16px', fontWeight: 700, cursor: isUpdatingPrice ? 'not-allowed' : 'pointer',
-                  opacity: isUpdatingPrice ? 0.7 : 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-                  boxShadow: '0 4px 14px rgba(37,99,235,0.3)'
-                }}
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-650 text-white border-none rounded-xl text-sm font-extrabold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 shadow-md shadow-blue-500/15 active:scale-98"
               >
-                {isUpdatingPrice ? 'Updating...' : 'Confirm Update'}
+                {isUpdatingPrice ? 'Saving Price Config...' : 'Confirm Pricing Updates'}
               </button>
             </form>
           </div>

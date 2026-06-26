@@ -150,42 +150,42 @@ export default function SubscriptionCalendar({
   }, [calendarDates, isDateSelectable])
 
   return (
-    <div className="sub-calendar-root">
+    <div className="p-6 rounded-brand-2xl border border-border/50 dark:border-slate-800/80 bg-warm-white dark:bg-cream-100 shadow-[0_4px_20px_var(--shadow)] flex flex-col gap-6">
       {/* Header */}
-      <div className="sub-cal-header">
-        <div className="sub-cal-header-left">
-          <h3 className="sub-cal-title">Select Delivery Days</h3>
-          <p className="sub-cal-subtitle">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/30 dark:border-slate-800/40 pb-4">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white font-display tracking-tight leading-tight">Select Delivery Days</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
             Click dates to exclude days you don't need milk delivery
           </p>
         </div>
-        <div className="sub-cal-stats">
-          <span className="sub-cal-stat-delivery">
+        <div className="flex items-center gap-3 text-xs">
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 border border-green-200/50 dark:border-green-800/30 font-bold uppercase tracking-[0.5px] text-[10px]">
             <Check size={12} strokeWidth={3} /> {deliveryDays} delivery days
           </span>
-          <span className="sub-cal-stat-excluded">
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-200/50 dark:border-slate-800/30 font-bold uppercase tracking-[0.5px] text-[10px]">
             <X size={12} strokeWidth={3} /> {excludedInMonth.length} excluded
           </span>
         </div>
       </div>
 
       {/* Month navigation */}
-      <div className="sub-cal-nav">
+      <div className="flex items-center justify-center gap-4 py-2">
         <button
           onClick={goToPrevMonth}
           disabled={!canGoPrev}
-          className="sub-cal-nav-btn"
+          className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 hover:border-brand-secondary dark:hover:border-brand-secondary/80 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-brand-secondary dark:hover:text-white hover:bg-blue-50/30 dark:hover:bg-blue-950/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
           aria-label="Previous month"
         >
           <ChevronLeft size={16} />
         </button>
-        <span className="sub-cal-month-label">
+        <span className="text-sm font-extrabold text-slate-800 dark:text-slate-200 min-w-36 text-center font-display">
           {MONTH_NAMES[currentMonth - 1]} {currentYear}
         </span>
         <button
           onClick={goToNextMonth}
           disabled={!canGoNext}
-          className="sub-cal-nav-btn"
+          className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 hover:border-brand-secondary dark:hover:border-brand-secondary/80 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-brand-secondary dark:hover:text-white hover:bg-blue-50/30 dark:hover:bg-blue-950/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
           aria-label="Next month"
         >
           <ChevronRight size={16} />
@@ -193,17 +193,17 @@ export default function SubscriptionCalendar({
       </div>
 
       {/* Day names header */}
-      <div className="sub-cal-daynames">
+      <div className="grid grid-cols-7 gap-2 text-center text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 pb-1">
         {DAY_NAMES.map(d => (
-          <div key={d} className="sub-cal-dayname">{d}</div>
+          <div key={d} className="py-1">{d}</div>
         ))}
       </div>
 
       {/* Calendar grid */}
-      <div className="sub-cal-grid">
+      <div className="grid grid-cols-7 gap-2">
         {/* Empty cells for days before the first day */}
         {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-          <div key={`empty-${i}`} className="sub-cal-cell sub-cal-cell-empty" />
+          <div key={`empty-${i}`} className="aspect-square rounded-xl border border-transparent bg-transparent" />
         ))}
 
         {/* Date cells */}
@@ -218,10 +218,10 @@ export default function SubscriptionCalendar({
               onClick={() => toggleDate(dateStr)}
               disabled={!selectable}
               className={cn(
-                'sub-cal-cell',
-                !selectable && 'sub-cal-cell-disabled',
-                selectable && !excluded && 'sub-cal-cell-included',
-                selectable && excluded && 'sub-cal-cell-excluded',
+                'aspect-square rounded-xl flex flex-col items-center justify-center relative border transition-all text-xs font-bold font-display cursor-pointer',
+                !selectable && 'border-slate-100 dark:border-slate-900 bg-slate-50/30 dark:bg-slate-900/20 text-slate-300 dark:text-slate-700 opacity-60 cursor-not-allowed',
+                selectable && !excluded && 'border-green-200/60 dark:border-green-800/30 bg-green-50/50 dark:bg-green-950/20 text-green-700 dark:text-green-400 hover:bg-green-100/40 dark:hover:bg-green-900/30 shadow-[0_2px_8px_rgba(34,197,94,0.05)]',
+                selectable && excluded && 'border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/50 text-slate-400 dark:text-slate-500 hover:bg-slate-100/80 dark:hover:bg-slate-800/80',
               )}
               title={
                 !selectable
@@ -231,14 +231,14 @@ export default function SubscriptionCalendar({
                   : `Click to exclude ${dateStr}`
               }
             >
-              <span className="sub-cal-day-num">{day}</span>
+              <span className="text-[13px]">{day}</span>
               {selectable && !excluded && (
-                <span className="sub-cal-day-check">
+                <span className="absolute bottom-1.5 right-1.5 text-green-500 dark:text-green-400">
                   <Check size={10} strokeWidth={3} />
                 </span>
               )}
               {selectable && excluded && (
-                <span className="sub-cal-day-x">
+                <span className="absolute bottom-1.5 right-1.5 text-slate-400 dark:text-slate-500">
                   <X size={10} strokeWidth={3} />
                 </span>
               )}
@@ -248,30 +248,37 @@ export default function SubscriptionCalendar({
       </div>
 
       {/* Quick actions */}
-      <div className="sub-cal-actions">
-        <button onClick={selectAllDays} className="sub-cal-action-btn sub-cal-action-include">
+      <div className="flex items-center justify-center gap-3 border-t border-border/30 dark:border-slate-800/40 pt-4">
+        <button 
+          onClick={selectAllDays} 
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-green-200/60 dark:border-green-800/40 bg-green-50/40 dark:bg-green-950/20 text-green-600 dark:text-green-400 hover:bg-green-100/50 dark:hover:bg-green-900/30 transition-all cursor-pointer"
+        >
           <Check size={12} /> Include all days
         </button>
-        <button onClick={clearAllDays} className="sub-cal-action-btn sub-cal-action-exclude">
+        <button 
+          onClick={clearAllDays} 
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all cursor-pointer"
+        >
           <X size={12} /> Exclude all days
         </button>
       </div>
 
       {/* Legend */}
-      <div className="sub-cal-legend">
-        <div className="sub-cal-legend-item">
-          <span className="sub-cal-legend-dot sub-cal-legend-included" />
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 border-t border-border/20 dark:border-slate-800/30 pt-4">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full border border-green-300 dark:border-green-800/80 bg-green-200 dark:bg-green-900" />
           <span>Delivery day (billed)</span>
         </div>
-        <div className="sub-cal-legend-item">
-          <span className="sub-cal-legend-dot sub-cal-legend-excluded" />
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full border border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-800" />
           <span>Excluded (not billed)</span>
         </div>
-        <div className="sub-cal-legend-item">
-          <span className="sub-cal-legend-dot sub-cal-legend-disabled" />
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full border border-slate-200 dark:border-slate-900 bg-slate-100 dark:bg-slate-900/50" />
           <span>Past / unavailable</span>
         </div>
       </div>
     </div>
   )
 }
+

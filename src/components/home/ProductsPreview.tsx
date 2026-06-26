@@ -4,21 +4,22 @@ import { useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Check,
-  Sprout,
-  Milk,
-  ShieldCheck,
-  Flame,
-  Calendar,
-  Leaf,
-  Award,
-  Activity,
-  Wind,
-  Heart
+   ChevronLeft, 
+   ChevronRight, 
+   Check,
+   Sprout,
+   Milk,
+   ShieldCheck,
+   Flame,
+   Calendar,
+   Leaf,
+   Award,
+   Activity,
+   Wind,
+   Heart
 } from 'lucide-react'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
+import { cn } from '@/lib/utils'
 
 function getIcon(name: string) {
   switch (name) {
@@ -33,7 +34,7 @@ function getIcon(name: string) {
     case '🧪': return <ShieldCheck size={12} />
     case '🛡️': return <ShieldCheck size={12} />
     case '🥄': return <Check size={12} />
-    case '✨': return <Award size={12} /> // Sparkles restricted, using Award
+    case '✨': return <Award size={12} />
     case '🗓️': return <Calendar size={12} />
     case '🔥': return <Flame size={12} />
     case '👋': return <Check size={12} />
@@ -54,16 +55,9 @@ interface ProductItem {
   image: string
   badge: string
   badgeIcon: string
-  badgeBg: string
-  badgeTextColor: string
-  badgeBorder: string
   tagline: string
   features: string[]
   featuresIcons: string[]
-  gradient: string
-  accentColor: string
-  accentLight: string
-  buttonColor: string
   isSubscription: boolean
 }
 
@@ -76,16 +70,9 @@ const products: ProductItem[] = [
     image: '/images/amruth_product_milk.png',
     badge: 'Farm Fresh',
     badgeIcon: '🌱',
-    badgeBg: 'rgba(220, 252, 231, 0.65)',
-    badgeTextColor: '#15803d',
-    badgeBorder: 'rgba(22, 163, 74, 0.2)',
     tagline: 'Delivered Before Sunrise',
     features: ['100% Pure', 'No Additives', 'A2 Certified'],
     featuresIcons: ['🥛', '🧪', '🛡️'],
-    gradient: 'linear-gradient(135deg, #FFFDF9 0%, #FAF5E6 100%)',
-    accentColor: '#0284C7',
-    accentLight: 'rgba(2, 132, 199, 0.08)',
-    buttonColor: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
     isSubscription: true
   },
   {
@@ -96,16 +83,9 @@ const products: ProductItem[] = [
     image: '/images/amruth_product_curd.png',
     badge: 'Probiotic Rich',
     badgeIcon: '🥣',
-    badgeBg: 'rgba(219, 234, 254, 0.65)',
-    badgeTextColor: '#0369A1',
-    badgeBorder: 'rgba(37, 99, 235, 0.2)',
     tagline: 'Made from A2 Cow Milk',
     features: ['Rich & Thick', 'Good for Gut', 'Daily Fresh'],
     featuresIcons: ['🥄', '✨', '🗓️'],
-    gradient: 'linear-gradient(135deg, #F8FAFC 0%, #EDF2F7 100%)',
-    accentColor: '#0369A1',
-    accentLight: 'rgba(3, 105, 161, 0.08)',
-    buttonColor: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
     isSubscription: false
   },
   {
@@ -116,16 +96,9 @@ const products: ProductItem[] = [
     image: '/images/amruth_product_ghee.png',
     badge: 'Premium Quality',
     badgeIcon: '🍯',
-    badgeBg: 'rgba(254, 243, 199, 0.65)',
-    badgeTextColor: '#b45309',
-    badgeBorder: 'rgba(217, 119, 6, 0.2)',
     tagline: 'Traditional Pure Ghee',
     features: ['100% Pure', 'Hand Crafted', 'Aromatic'],
     featuresIcons: ['🔥', '👋', '👃'],
-    gradient: 'linear-gradient(135deg, #FFFDF4 0%, #FEF7DC 100%)',
-    accentColor: '#b45309',
-    accentLight: 'rgba(180, 83, 9, 0.08)',
-    buttonColor: 'linear-gradient(135deg, #A16207 0%, #CA8A04 100%)',
     isSubscription: false
   },
   {
@@ -136,16 +109,9 @@ const products: ProductItem[] = [
     image: '/images/amruth_product_buttermilk.png',
     badge: 'Refreshing',
     badgeIcon: '🍃',
-    badgeBg: 'rgba(240, 253, 244, 0.65)',
-    badgeTextColor: '#166534',
-    badgeBorder: 'rgba(22, 101, 52, 0.2)',
     tagline: 'Traditional & Refreshing',
     features: ['Cool & Light', 'Good Digest', 'Daily Fresh'],
     featuresIcons: ['❄️', '🌿', '🗓️'],
-    gradient: 'linear-gradient(135deg, #F4FBF7 0%, #E6F7ED 100%)',
-    accentColor: '#166534',
-    accentLight: 'rgba(22, 101, 52, 0.08)',
-    buttonColor: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
     isSubscription: false
   },
   {
@@ -156,19 +122,37 @@ const products: ProductItem[] = [
     image: '/images/amruth_product_paneer.png',
     badge: 'High Protein',
     badgeIcon: '🧀',
-    badgeBg: 'rgba(243, 232, 255, 0.65)',
-    badgeTextColor: '#6b21a8',
-    badgeBorder: 'rgba(147, 51, 234, 0.2)',
     tagline: 'Soft, Pure & Protein Rich',
     features: ['100% Pure', 'High Protein', 'Soft & Fresh'],
     featuresIcons: ['🥛', '💪', '☁️'],
-    gradient: 'linear-gradient(135deg, #FAF5FF 0%, #F5EBFF 100%)',
-    accentColor: '#6b21a8',
-    accentLight: 'rgba(107, 33, 168, 0.08)',
-    buttonColor: 'linear-gradient(135deg, #581C87 0%, #7E22CE 100%)',
     isSubscription: false
   }
 ]
+
+// Tailwind class mappings to eliminate dynamic inline styles from the data loop
+const badgeClassMap: Record<string, string> = {
+  'Farm Fresh': 'bg-green-50/70 text-green-700 border-green-200/50 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20',
+  'Probiotic Rich': 'bg-blue-50/70 text-blue-700 border-blue-200/50 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20',
+  'Premium Quality': 'bg-amber-50/75 text-amber-800 border-amber-200/50 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
+  'Refreshing': 'bg-green-55/70 text-green-800 border-green-200/50 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20',
+  'High Protein': 'bg-purple-50/70 text-purple-750 border-purple-200/50 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20',
+}
+
+const gradientClassMap: Record<string, string> = {
+  'A2 Cow Milk': 'bg-gradient-to-br from-[#FFFDF9] to-[#FAF5E6] dark:from-[#1e1a0f] dark:to-[#17140a]',
+  'Fresh Curd': 'bg-gradient-to-br from-[#F8FAFC] to-[#EDF2F7] dark:from-[#171923] dark:to-[#0f1115]',
+  'Pure Cow Ghee': 'bg-gradient-to-br from-[#FFFDF4] to-[#FEF7DC] dark:from-[#1a180f] dark:to-[#13110a]',
+  'Buttermilk': 'bg-gradient-to-br from-[#F4FBF7] to-[#E6F7ED] dark:from-[#0f1d15] dark:to-[#0a140e]',
+  'Fresh Paneer': 'bg-gradient-to-br from-[#FAF5FF] to-[#F5EBFF] dark:from-[#1a0f2e] dark:to-[#120a21]',
+}
+
+const buttonClassMap: Record<string, string> = {
+  'A2 Cow Milk': 'bg-gradient-to-br from-slate-900 to-slate-850 hover:from-slate-800 hover:to-slate-750 dark:from-teal-700 dark:to-teal-800 dark:hover:from-teal-650 dark:hover:to-teal-750',
+  'Fresh Curd': 'bg-gradient-to-br from-slate-900 to-slate-850 hover:from-slate-800 hover:to-slate-750 dark:from-teal-700 dark:to-teal-800 dark:hover:from-teal-650 dark:hover:to-teal-750',
+  'Pure Cow Ghee': 'bg-gradient-to-br from-amber-700 to-amber-600 hover:from-amber-600 hover:to-amber-500',
+  'Buttermilk': 'bg-gradient-to-br from-green-700 to-green-800 hover:from-green-600 hover:to-green-700',
+  'Fresh Paneer': 'bg-gradient-to-br from-purple-900 to-purple-700 hover:from-purple-800 hover:to-purple-600',
+}
 
 export function ProductsPreview() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -212,67 +196,23 @@ export function ProductsPreview() {
   return (
     <section 
       id="products" 
-      style={{ 
-        background: 'linear-gradient(to bottom, #FFFDF7 0%, #FFFDF9 50%, #ffffff 100%)', 
-        padding: '120px 0', 
-        position: 'relative',
-        overflow: 'hidden'
-      }}
+      className="bg-gradient-to-b from-[#FFFDF7] via-[#FFFDF9] to-white dark:from-[#0f1115] dark:via-[#171923] dark:to-[#0f1115] py-28 relative overflow-hidden"
     >
       {/* Premium subtle background glow */}
-      <div style={{
-        position: 'absolute',
-        top: '20%',
-        left: '10%',
-        width: '500px',
-        height: '500px',
-        background: 'radial-gradient(circle, rgba(253, 246, 227, 0.5) 0%, rgba(253, 246, 227, 0) 70%)',
-        borderRadius: '50%',
-        filter: 'blur(60px)',
-        zIndex: 0,
-        pointerEvents: 'none'
-      }} />
+      <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(253,246,227,0.5)_0%,rgba(253,246,227,0)_70%)] dark:bg-[radial-gradient(circle,rgba(30,35,45,0.3)_0%,transparent_70%)] rounded-full blur-[60px] z-0 pointer-events-none" />
 
-      <div className="container-page" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="container-page relative z-10">
         
         {/* Header */}
         <ScrollReveal direction="up" delay={0}>
-          <div style={{ textAlign: 'center', marginBottom: '80px' }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              background: '#fff',
-              border: '1px solid rgba(212, 175, 55, 0.25)',
-              color: '#B45309',
-              borderRadius: '999px',
-              padding: '6px 16px',
-              fontSize: '0.75rem',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              marginBottom: '20px',
-              boxShadow: '0 4px 12px rgba(180, 83, 9, 0.03)'
-            }}>
-              <Award size={12} style={{ marginRight: '6px' }} /> Our Products
+          <div className="text-center mb-20 flex flex-col items-center">
+            <div className="inline-flex items-center gap-1.5 bg-white dark:bg-warm-white border border-amber-500/20 text-[#B45309] dark:text-amber-450 rounded-full px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.12em] mb-5 shadow-[0_4px_12px_rgba(180,83,9,0.03)]">
+              <Award size={12} /> Our Products
             </div>
-            <h2 style={{ 
-              fontFamily: 'var(--font-playfair), Georgia, serif',
-              fontSize: 'clamp(2.25rem, 4.5vw, 3.5rem)', 
-              fontWeight: 500, 
-              color: '#0F172A', 
-              letterSpacing: '-0.02em', 
-              lineHeight: 1.15, 
-              marginBottom: '20px' 
-            }}>
+            <h2 className="font-playfair text-3xl sm:text-4xl md:text-5xl font-medium text-slate-950 dark:text-white tracking-tight leading-none mb-5">
               Pure. Uncompromised. Royal.
             </h2>
-            <p style={{ 
-              fontSize: '1.05rem', 
-              color: '#475569', 
-              fontWeight: 500,
-              maxWidth: '600px',
-              margin: '0 auto'
-            }}>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-brown-600 font-medium max-w-[600px] mx-auto">
               Experience dairy crafted with devotion, certified pure, and delivered to your doorstep fresh before sunrise.
             </p>
           </div>
@@ -280,32 +220,12 @@ export function ProductsPreview() {
 
         {/* Slider Wrapper */}
         <ScrollReveal direction="up" delay={150} duration={1000}>
-          <div style={{ position: 'relative', padding: '0 40px' }}>
+          <div className="relative px-10">
             
             {/* Left Arrow */}
             <button
               onClick={() => scroll('left')}
-              style={{
-                position: 'absolute',
-                left: -10,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '52px',
-                height: '52px',
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.9)',
-                backdropFilter: 'blur(10px)',
-                border: '1.5px solid rgba(15, 23, 42, 0.08)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 10,
-                boxShadow: '0 10px 25px rgba(15, 23, 42, 0.06)',
-                color: '#0F172A',
-                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-              }}
-              className="hover:scale-110 hover:bg-white hover:shadow-xl active:scale-95"
+              className="absolute left-0 md:-left-2 top-1/2 -translate-y-1/2 w-13 h-13 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-950/8 dark:border-border flex items-center justify-center cursor-pointer z-10 shadow-[0_10px_25px_rgba(15,23,42,0.06)] text-slate-950 dark:text-white hover:scale-110 hover:bg-white hover:shadow-xl active:scale-95 transition-all duration-300"
               aria-label="Scroll left"
             >
               <ChevronLeft size={24} />
@@ -314,15 +234,7 @@ export function ProductsPreview() {
             {/* Scroll Container */}
             <div
               ref={scrollContainerRef}
-              style={{
-                display: 'flex',
-                gap: '32px',
-                overflowX: 'auto',
-                scrollbarWidth: 'none',
-                padding: '24px 8px',
-                scrollSnapType: 'x mandatory'
-              }}
-              className="products-scroll-container"
+              className="flex gap-8 overflow-x-auto hide-scrollbar py-6 px-2 scroll-smooth snap-x snap-mandatory"
             >
               {products.map((product) => {
                 let displayPrice = product.price
@@ -337,247 +249,111 @@ export function ProductsPreview() {
                 }
 
                 return (
-                <div
-                  key={product.name}
-                  style={{
-                    background: '#ffffff',
-                    borderRadius: '32px',
-                    border: '1px solid rgba(212, 175, 55, 0.15)',
-                    minWidth: '350px',
-                    width: '350px',
-                    padding: '24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    position: 'relative',
-                    scrollSnapAlign: 'start',
-                    boxShadow: '0 16px 40px rgba(15, 23, 42, 0.03)',
-                    transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
-                  }}
-                  className="product-card hover:-translate-y-2 hover:shadow-2xl hover:border-amber-300/40 group"
-                >
-                  
-                  {/* Category Badge */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '24px',
-                    left: '24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    background: product.badgeBg,
-                    color: product.badgeTextColor,
-                    border: `1px solid ${product.badgeBorder}`,
-                    borderRadius: '99px',
-                    padding: '6px 14px',
-                    fontSize: '0.75rem',
-                    fontWeight: 800,
-                    zIndex: 10,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-                  }}>
-                    <span className="flex items-center">{getIcon(product.badgeIcon)}</span>
-                    <span>{product.badge}</span>
-                  </div>
-
-                  {/* Product Visual Area */}
-                  <div style={{
-                    width: '100%',
-                    height: '240px',
-                    position: 'relative',
-                    marginBottom: '20px',
-                    borderRadius: '24px',
-                    background: product.gradient,
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    {/* Realistic milk splash effect behind bottle */}
-                    <div style={{
-                      position: 'absolute',
-                      inset: 0,
-                      opacity: 0.18,
-                      mixBlendMode: 'multiply',
-                      backgroundImage: 'radial-gradient(circle at center, #ffffff 0%, transparent 80%)',
-                      zIndex: 1
-                    }} />
-
-                    {/* Styled white splash vector path */}
-                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style={{
-                      position: 'absolute',
-                      width: '90%',
-                      height: '90%',
-                      opacity: 0.9,
-                      zIndex: 2,
-                      transform: 'scale(1.15) rotate(15deg)'
-                    }}>
-                      <path fill="#ffffff" d="M37.5,-49.2C50.2,-41.8,63.1,-32.4,69.5,-19.1C75.8,-5.8,75.6,11.3,69.7,25.8C63.8,40.4,52.3,52.3,38.3,59.3C24.3,66.3,7.9,68.4,-7.8,66.1C-23.5,63.8,-38.4,57.1,-49.7,46.4C-61,35.7,-68.6,21,-70.6,5.7C-72.6,-9.7,-68.9,-25.6,-60.1,-37.2C-51.3,-48.9,-37.4,-56.3,-24.1,-62.1C-10.7,-67.9,2,-72,13.4,-68.6C24.8,-65.2,24.8,-56.7,37.5,-49.2Z" transform="translate(100 100)" />
-                    </svg>
-
-                    {/* Floating Product Image */}
-                    <div 
-                      style={{
-                        position: 'relative',
-                        width: '85%',
-                        height: '85%',
-                        zIndex: 3,
-                        transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
-                      }}
-                      className="group-hover:scale-105 group-hover:-translate-y-1"
-                    >
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 350px"
-                        style={{ objectFit: 'contain' }}
-                        priority
-                      />
+                  <div
+                    key={product.name}
+                    className="relative flex flex-col w-[350px] min-w-[350px] p-6 bg-white dark:bg-slate-900 border border-amber-500/15 dark:border-border rounded-[32px] snap-start shadow-[0_16px_40px_rgba(15,23,42,0.03)] hover:shadow-2xl hover:-translate-y-2 hover:border-amber-300/45 dark:hover:border-amber-500/30 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group"
+                  >
+                    
+                    {/* Category Badge */}
+                    <div className={cn(
+                      "absolute top-6 left-6 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-extrabold z-10 shadow-[0_2px_8px_rgba(0,0,0,0.02)] border",
+                      badgeClassMap[product.badge]
+                    )}>
+                      <span className="flex items-center">{getIcon(product.badgeIcon)}</span>
+                      <span>{product.badge}</span>
                     </div>
 
-                    {/* Soft light gold light reflection */}
-                    <div style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: '50%',
-                      background: 'linear-gradient(to top, rgba(255, 255, 255, 0.4) 0%, transparent 100%)',
-                      pointerEvents: 'none',
-                      zIndex: 4
-                    }} />
-                  </div>
+                    {/* Product Visual Area */}
+                    <div className={cn(
+                      "w-full h-[240px] relative mb-5 rounded-brand-xl overflow-hidden flex items-center justify-center",
+                      gradientClassMap[product.name]
+                    )}>
+                      {/* Realistic milk splash effect behind bottle */}
+                      <div className="absolute inset-0 opacity-18 mix-blend-multiply bg-[radial-gradient(circle_at_center,#ffffff_0%,transparent_80%)] dark:bg-[radial-gradient(circle_at_center,#171923_0%,transparent_80%)] z-1" />
 
-                  {/* Glassmorphism Product Details Card */}
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.75)',
-                    backdropFilter: 'blur(16px)',
-                    border: '1px solid rgba(255, 255, 255, 0.7)',
-                    borderRadius: '24px',
-                    padding: '20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '16px',
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.01)',
-                    marginTop: 'auto'
-                  }}>
-                    {/* Title & Tagline */}
-                    <div>
-                      <h3 style={{ 
-                        fontFamily: 'var(--font-playfair), Georgia, serif',
-                        fontSize: '1.35rem', 
-                        fontWeight: 600, 
-                        color: '#0F172A', 
-                        marginBottom: '4px',
-                        letterSpacing: '-0.01em'
-                      }}>
-                        {product.name}
-                      </h3>
-                      <p style={{ fontSize: '0.82rem', color: '#475569', fontWeight: 600 }}>
-                        {product.tagline}
-                      </p>
+                      {/* Styled white splash vector path */}
+                      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="absolute w-[90%] h-[90%] opacity-90 z-2 scale-115 rotate-[15deg]">
+                        <path fill="currentColor" className="text-white dark:text-slate-900/45" d="M37.5,-49.2C50.2,-41.8,63.1,-32.4,69.5,-19.1C75.8,-5.8,75.6,11.3,69.7,25.8C63.8,40.4,52.3,52.3,38.3,59.3C24.3,66.3,7.9,68.4,-7.8,66.1C-23.5,63.8,-38.4,57.1,-49.7,46.4C-61,35.7,-68.6,21,-70.6,5.7C-72.6,-9.7,-68.9,-25.6,-60.1,-37.2C-51.3,-48.9,-37.4,-56.3,-24.1,-62.1C-10.7,-67.9,2,-72,13.4,-68.6C24.8,-65.2,24.8,-56.7,37.5,-49.2Z" transform="translate(100 100)" />
+                      </svg>
+
+                      {/* Floating Product Image */}
+                      <div className="relative w-[85%] h-[85%] z-10 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:-translate-y-1">
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 350px"
+                          className="object-contain"
+                          priority
+                        />
+                      </div>
+
+                      {/* Soft light reflection */}
+                      <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-white/40 dark:from-slate-900/40 to-transparent pointer-events-none z-20" />
                     </div>
 
-                    {/* Badges/Features row */}
-                    <div style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '8px'
-                    }}>
-                      {product.features.map((feat, idx) => (
-                        <span 
-                          key={feat}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            background: '#F8F6F0',
-                            border: '1px solid rgba(236, 216, 176, 0.5)',
-                            borderRadius: '8px',
-                            padding: '4px 10px',
-                            fontSize: '0.7rem',
-                            fontWeight: 700,
-                            color: '#5c4e37'
-                          }}
-                        >
-                          <span className="flex items-center">{getIcon(product.featuresIcons[idx])}</span>
-                          <span>{feat}</span>
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Horizontal Divider */}
-                    <div style={{ height: '1px', background: 'rgba(236, 216, 176, 0.35)' }} />
-
-                    {/* Bottom Pricing & CTA */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'between',
-                      width: '100%'
-                    }}>
-                      {/* Price */}
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
-                          Price
-                        </p>
-                        <p style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0F172A' }}>
-                          {product.price} <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>/ {product.unit}</span>
+                    {/* Glassmorphism Product Details Card */}
+                    <div className="bg-white/75 dark:bg-slate-900/75 backdrop-blur-md border border-white/70 dark:border-border/60 rounded-brand-xl p-5 flex flex-col gap-4 shadow-sm mt-auto">
+                      {/* Title & Tagline */}
+                      <div>
+                        <h3 className="font-playfair text-xl font-bold text-slate-950 dark:text-white mb-1 tracking-tight">
+                          {product.name}
+                        </h3>
+                        <p className="text-xs text-slate-600 dark:text-brown-600 font-bold">
+                          {product.tagline}
                         </p>
                       </div>
 
-                      {/* Subscribe / Buy Now Button */}
-                      <Link href={product.isSubscription ? "/subscribe" : "/shop"}>
-                        <button style={{
-                          height: '46px',
-                          padding: '0 22px',
-                          borderRadius: '14px',
-                          background: product.buttonColor,
-                          color: '#ffffff',
-                          fontWeight: 800,
-                          fontSize: '0.82rem',
-                          border: 'none',
-                          cursor: 'pointer',
-                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), 0 8px 16px rgba(15, 23, 42, 0.08)',
-                          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }} className="hover:scale-[1.03] hover:shadow-lg active:scale-95">
-                          {product.isSubscription ? 'Subscribe' : 'Buy Now'}
-                          <span style={{ fontSize: '1.05rem', lineHeight: 1 }}>→</span>
-                        </button>
-                      </Link>
-                    </div>
-                  </div>
+                      {/* Badges/Features row */}
+                      <div className="flex flex-wrap gap-2">
+                        {product.features.map((feat, idx) => (
+                          <span 
+                            key={feat}
+                            className="inline-flex items-center gap-1 bg-[#F8F6F0] dark:bg-slate-950 border border-[#ECD8B0]/50 dark:border-border rounded-lg px-2.5 py-1 text-[11px] font-bold text-[#5c4e37] dark:text-slate-400"
+                          >
+                            <span className="flex items-center">{getIcon(product.featuresIcons[idx])}</span>
+                            <span>{feat}</span>
+                          </span>
+                        ))}
+                      </div>
 
-                </div>
-              )})}
+                      {/* Horizontal Divider */}
+                      <div className="h-px bg-[#ECD8B0]/35 dark:bg-border/40" />
+
+                      {/* Bottom Pricing & CTA */}
+                      <div className="flex items-center justify-between w-full">
+                        {/* Price */}
+                        <div className="flex-1">
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                            Price
+                          </p>
+                          <p className="text-lg font-black text-slate-950 dark:text-white font-mono-num leading-tight">
+                            {displayPrice} <span className="text-xs font-semibold text-slate-600 dark:text-brown-600">/ {displayUnit}</span>
+                          </p>
+                        </div>
+
+                        {/* Subscribe / Buy Now Button */}
+                        <Link href={product.isSubscription ? "/subscribe" : "/shop"}>
+                          <button className={cn(
+                            "h-11 px-5 rounded-brand-md text-white font-extrabold text-[13px] border-none cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_8px_16px_rgba(15,23,42,0.08)] hover:scale-[1.03] hover:shadow-lg active:scale-95 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-1.5",
+                            buttonClassMap[product.name]
+                          )}>
+                            {product.isSubscription ? 'Subscribe' : 'Buy Now'}
+                            <span className="text-[14px] font-normal">→</span>
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+
+                  </div>
+                )
+              })}
             </div>
 
             {/* Right Arrow */}
             <button
               onClick={() => scroll('right')}
-              style={{
-                position: 'absolute',
-                right: -10,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '52px',
-                height: '52px',
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.9)',
-                backdropFilter: 'blur(10px)',
-                border: '1.5px solid rgba(15, 23, 42, 0.08)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 10,
-                boxShadow: '0 10px 25px rgba(15, 23, 42, 0.06)',
-                color: '#0F172A',
-                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-              }}
-              className="hover:scale-110 hover:bg-white hover:shadow-xl active:scale-95"
+              className="absolute right-0 md:-right-2 top-1/2 -translate-y-1/2 w-13 h-13 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-950/8 dark:border-border flex items-center justify-center cursor-pointer z-10 shadow-[0_10px_25px_rgba(15,23,42,0.06)] text-slate-950 dark:text-white hover:scale-110 hover:bg-white hover:shadow-xl active:scale-95 transition-all duration-300"
               aria-label="Scroll right"
             >
               <ChevronRight size={24} />
@@ -586,17 +362,6 @@ export function ProductsPreview() {
           </div>
         </ScrollReveal>
       </div>
-
-      <style>{`
-        .products-scroll-container::-webkit-scrollbar {
-          display: none;
-        }
-        @media (max-width: 600px) {
-          .products-scroll-container {
-            gap: 16px !important;
-          }
-        }
-      `}</style>
     </section>
   )
 }

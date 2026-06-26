@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Droplets, Save, AlertTriangle, Plus, X, Calendar as CalendarIcon, CheckCircle2 } from 'lucide-react'
+import { Droplets, Save, AlertTriangle, X, Calendar as CalendarIcon, CheckCircle2 } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
+import { cn } from '@/lib/utils'
 
 interface CapacityLog {
   id: string;
@@ -187,7 +188,7 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
+    <div className="flex flex-col gap-6 relative">
       
       <AdminHeader 
         title="Production Capacity" 
@@ -198,44 +199,32 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
       />
 
       {/* MAIN DISPLAY BOARD TABLE */}
-      <div style={{ 
-        background: '#ffffff', 
-        borderRadius: '24px', 
-        padding: '32px', 
-        boxShadow: '0 10px 40px rgba(0,0,0,0.04)',
-        border: '1px solid #e2e8f0'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <CalendarIcon size={24} color="#0f172a" />
-            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+      <div className="bg-white dark:bg-cream-100 rounded-3xl p-6 md:p-8 border border-border/50 dark:border-slate-800/80 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-3">
+            <CalendarIcon size={24} className="text-slate-900 dark:text-white" />
+            <h2 className="text-2xl font-black font-display text-slate-900 dark:text-white m-0">
               {viewDate.toLocaleString('default', { month: 'long' })} {viewDate.getFullYear()}
             </h2>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={() => changeMonth(-1)} style={navBtnStyle}>&larr; Prev</button>
-            <button onClick={() => setViewDate(new Date())} style={navBtnStyle}>Today</button>
-            <button onClick={() => changeMonth(1)} style={navBtnStyle}>Next &rarr;</button>
+          <div className="flex gap-2">
+            <button onClick={() => changeMonth(-1)} className="px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-border/50 dark:border-slate-800/85 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-650 dark:text-slate-350 font-bold text-sm transition-all duration-150 cursor-pointer">&larr; Prev</button>
+            <button onClick={() => setViewDate(new Date())} className="px-4 py-2 rounded-xl bg-slate-55 dark:bg-slate-950 border border-border/50 dark:border-slate-800/85 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-650 dark:text-slate-350 font-bold text-sm transition-all duration-150 cursor-pointer">Today</button>
+            <button onClick={() => changeMonth(1)} className="px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-border/50 dark:border-slate-800/85 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-650 dark:text-slate-350 font-bold text-sm transition-all duration-150 cursor-pointer">Next &rarr;</button>
           </div>
         </div>
 
         {/* Scrollable Table Container */}
-        <div style={{ 
-          maxHeight: '65vh', 
-          overflowY: 'auto', 
-          borderRadius: '12px',
-          border: '1px solid #e2e8f0',
-          background: '#f8fafc'
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead style={{ position: 'sticky', top: 0, background: '#f1f5f9', zIndex: 10, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+        <div className="max-h-[65vh] overflow-y-auto rounded-2xl border border-border/50 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/50 hide-scrollbar">
+          <table className="w-full border-collapse text-left">
+            <thead className="sticky top-0 bg-slate-100 dark:bg-slate-900 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
               <tr>
-                <th style={thStyle}>Date</th>
-                <th style={thStyle}>Status</th>
-                <th style={thStyle}>Total Capacity (L)</th>
-                <th style={thStyle}>Booked (L)</th>
-                <th style={thStyle}>Available (L)</th>
-                <th style={thStyle}>Utilization</th>
+                <th className="p-4 text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Date</th>
+                <th className="p-4 text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Status</th>
+                <th className="p-4 text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Total Capacity (L)</th>
+                <th className="p-4 text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Booked (L)</th>
+                <th className="p-4 text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Available (L)</th>
+                <th className="p-4 text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Utilization</th>
               </tr>
             </thead>
             <tbody>
@@ -251,46 +240,54 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
                 const isToday = tempToday.toISOString().split('T')[0] === dateStr;
 
                 return (
-                  <tr key={idx} style={{ 
-                    borderBottom: '1px solid #e2e8f0', 
-                    background: isToday ? '#eff6ff' : '#ffffff',
-                    transition: 'background 0.2s'
-                  }}>
-                    <td style={{ ...tdStyle, fontWeight: isToday ? 800 : 600, color: isToday ? '#1d4ed8' : '#0f172a' }}>
+                  <tr key={idx} className={cn(
+                    "border-b border-border/40 dark:border-slate-800/60 transition-colors",
+                    isToday ? "bg-blue-500/5 dark:bg-blue-950/10" : "bg-white dark:bg-cream-100 hover:bg-slate-50 dark:hover:bg-slate-900/40"
+                  )}>
+                    <td className={cn(
+                      "p-4 text-sm font-semibold",
+                      isToday ? "text-blue-700 dark:text-blue-400 font-extrabold" : "text-slate-900 dark:text-slate-200"
+                    )}>
                       {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                      {isToday && <span style={{ marginLeft: '8px', fontSize: '10px', background: '#3b82f6', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>TODAY</span>}
+                      {isToday && <span className="ml-2.5 text-[9px] bg-blue-600 text-white py-0.5 px-2 rounded font-extrabold shadow-sm">TODAY</span>}
                     </td>
-                    <td style={tdStyle}>
-                      <div style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '4px',
-                        padding: '4px 10px', borderRadius: '99px', fontSize: '12px', fontWeight: 700,
-                        background: percent >= 100 ? '#fef2f2' : (percent >= 80 ? '#fffbeb' : '#f0fdf4'),
-                        color: percent >= 100 ? '#ef4444' : (percent >= 80 ? '#d97706' : '#22c55e')
-                      }}>
-                        {percent >= 100 ? <AlertTriangle size={14}/> : <CheckCircle2 size={14}/>}
+                    <td className="p-4">
+                      <div className={cn(
+                        "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold border",
+                        percent >= 100 
+                          ? "bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-200/20 dark:border-rose-900/30" 
+                          : (percent >= 80 
+                            ? "bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-400 border-amber-200/20 dark:border-amber-900/30" 
+                            : "bg-green-500/10 dark:bg-green-500/20 text-emerald-600 dark:text-emerald-400 border-green-200/20 dark:border-green-900/30")
+                      )}>
+                        {percent >= 100 ? <AlertTriangle size={13}/> : <CheckCircle2 size={13}/>}
                         {percent >= 100 ? 'Full' : (percent >= 80 ? 'Filling Fast' : 'Available')}
                       </div>
                     </td>
-                    <td style={{ ...tdStyle, fontWeight: 700, color: '#0f172a' }}>
+                    <td className="p-4 text-sm font-extrabold text-slate-900 dark:text-white">
                       {log.total_litres} L
                     </td>
-                    <td style={{ ...tdStyle, fontWeight: 700, color: '#ea580c' }}>
+                    <td className="p-4 text-sm font-extrabold text-brand-accent">
                       {log.booked_litres} L
                     </td>
-                    <td style={{ ...tdStyle, fontWeight: 800, color: available <= 0 ? '#ef4444' : '#22c55e' }}>
+                    <td className={cn(
+                      "p-4 text-sm font-black",
+                      available <= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-605 dark:text-emerald-400"
+                    )}>
                       {available.toFixed(1)} L
                     </td>
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '99px', flex: 1, overflow: 'hidden' }}>
-                          <div style={{ 
-                            height: '100%', 
-                            width: `${percent}%`, 
-                            background: percent >= 100 ? '#ef4444' : percent > 80 ? '#f59e0b' : '#3b82f6',
-                            borderRadius: '99px'
-                          }} />
+                    <td className="p-4">
+                      <div className="flex items-center gap-3 min-w-[120px]">
+                        <div className="h-2 bg-slate-100 dark:bg-slate-900 rounded-full flex-1 overflow-hidden">
+                          <div 
+                            className={cn(
+                              "h-full rounded-full transition-all duration-300",
+                              percent >= 100 ? "bg-rose-500" : percent > 80 ? "bg-amber-500" : "bg-blue-600"
+                            )}
+                            style={{ width: `${percent}%` }}
+                          />
                         </div>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', minWidth: '35px' }}>
+                        <span className="text-[11px] font-extrabold text-slate-450 dark:text-slate-500 min-w-[32px]">
                           {Math.round(percent)}%
                         </span>
                       </div>
@@ -305,44 +302,35 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
 
       {/* ADD/EDIT CAPACITY MODAL */}
       {showModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: '#fff', borderRadius: '24px', width: '100%', maxWidth: '800px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            display: 'flex', overflow: 'hidden'
-          }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/45 backdrop-blur-sm">
+          <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-3xl w-full max-w-[800px] shadow-2xl flex flex-col md:flex-row overflow-hidden text-slate-900 dark:text-white">
             
             {/* LEFT SIDE: CALENDAR SELECTION */}
-            <div style={{ flex: 1, padding: '32px', background: '#f8fafc', borderRight: '1px solid #e2e8f0' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="flex-1 p-6 md:p-8 bg-slate-50 dark:bg-slate-950/40 border-r border-border/40 dark:border-slate-800/60">
+              <h3 className="text-[17px] font-black text-slate-900 dark:text-white mb-1.5 flex items-center gap-2 font-display">
                 <CalendarIcon size={20} /> Select Date(s)
               </h3>
-              <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '24px' }}>
+              <p className="text-[12px] text-slate-400 dark:text-slate-500 mb-6">
                 Click once for a single date, or click a second date to select a range.
               </p>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <h4 style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-[14px] font-extrabold text-slate-905 dark:text-slate-200 m-0">
                   {modalViewDate.toLocaleString('default', { month: 'long' })} {modalViewDate.getFullYear()}
                 </h4>
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  <button onClick={() => changeMonth(-1, true)} style={miniNavBtnStyle}>&larr;</button>
-                  <button onClick={() => changeMonth(1, true)} style={miniNavBtnStyle}>&rarr;</button>
+                <div className="flex gap-2">
+                  <button onClick={() => changeMonth(-1, true)} className="px-2.5 py-1 rounded-lg border border-border/50 dark:border-slate-800/85 bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-650 dark:text-slate-350 font-bold text-xs transition-colors cursor-pointer">&larr;</button>
+                  <button onClick={() => changeMonth(1, true)} className="px-2.5 py-1 rounded-lg border border-border/50 dark:border-slate-800/85 bg-white dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-650 dark:text-slate-350 font-bold text-xs transition-colors cursor-pointer">&rarr;</button>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
+              <div className="grid grid-cols-7 gap-1 mb-2 text-center text-[11px] font-bold text-slate-400 dark:text-slate-500">
                 {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-                  <div key={day} style={{ textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#94a3b8' }}>{day}</div>
+                  <div key={day} className="uppercase tracking-widest">{day}</div>
                 ))}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+              <div className="grid grid-cols-7 gap-1">
                 {modalCalendarDays.map((date, idx) => {
                   if (!date) return <div key={`empty-${idx}`} />;
                   
@@ -356,32 +344,25 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
                   const inRange = isDateInRange(date);
                   
                   const isSelectedEndpoint = isStart || isEnd;
-                  const bgColor = isSelectedEndpoint ? '#0f172a' : (inRange ? '#e2e8f0' : '#ffffff');
-                  const textColor = isSelectedEndpoint ? '#ffffff' : (inRange ? '#0f172a' : '#334155');
                   
-                  const borderRadius = (isStart && !endDate) || (isStart && isEnd) ? '8px' : 
-                                      isStart && endDate ? '8px 0 0 8px' :
-                                      isEnd ? '0 8px 8px 0' :
-                                      inRange ? '0' : '8px';
+                  const buttonRoundedClass = (isStart && !endDate) || (isStart && isEnd) ? 'rounded-lg' : 
+                                      isStart && endDate ? 'rounded-l-lg rounded-r-none' :
+                                      isEnd ? 'rounded-r-lg rounded-l-none' :
+                                      inRange ? 'rounded-none' : 'rounded-lg';
 
                   return (
                     <button
                       key={idx}
                       onClick={() => handleModalDateClick(date)}
-                      style={{
-                        aspectRatio: '1',
-                        borderRadius: borderRadius,
-                        border: 'none',
-                        background: bgColor,
-                        color: textColor,
-                        fontSize: '13px',
-                        fontWeight: isSelectedEndpoint || inRange ? 700 : 500,
-                        cursor: 'pointer',
-                        padding: 0,
-                        transition: 'background 0.2s',
-                        margin: '2px 0',
-                        boxShadow: !inRange && !isSelectedEndpoint ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
-                      }}
+                      className={cn(
+                        "aspect-square border-none cursor-pointer p-0 transition-colors text-[13px] font-bold margin-y-0.5",
+                        buttonRoundedClass,
+                        isSelectedEndpoint 
+                          ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-sm font-extrabold" 
+                          : (inRange 
+                            ? "bg-blue-500/15 dark:bg-blue-500/30 text-blue-800 dark:text-blue-300" 
+                            : "bg-white dark:bg-cream-100 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-350 border border-border/35 dark:border-slate-850/50 shadow-sm")
+                      )}
                     >
                       {date.getDate()}
                     </button>
@@ -391,21 +372,21 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
             </div>
 
             {/* RIGHT SIDE: FORM */}
-            <div style={{ flex: 1, padding: '32px', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+            <div className="flex-1 p-6 md:p-8 flex flex-col justify-between">
+              <div className="flex justify-between items-start mb-6">
+                <h3 className="text-xl font-black font-display text-slate-900 dark:text-white m-0">
                   Update Capacity
                 </h3>
-                <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
-                  <X size={24} color="#64748b" />
+                <button onClick={() => setShowModal(false)} className="background-none border-none cursor-pointer p-1">
+                  <X size={24} className="text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white" />
                 </button>
               </div>
 
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>
+              <div className="mb-6">
+                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-2 uppercase tracking-wider">
                   Selected Dates
                 </label>
-                <div style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', padding: '12px 16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <div className="text-[15px] font-bold text-slate-900 dark:text-white p-3 px-4 bg-slate-50 dark:bg-slate-950 border border-border/50 dark:border-slate-800/80 rounded-xl">
                   {!startDate ? 'None selected' : 
                     !endDate ? startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) :
                     `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
@@ -413,41 +394,35 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
                 </div>
               </div>
 
-              <div style={{ marginBottom: 'auto' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' }}>
+              <div className="mb-auto">
+                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-2 uppercase tracking-wider">
                   Total Capacity (L)
                 </label>
                 <input 
                   type="number" 
                   value={editTotal} 
                   onChange={(e) => setEditTotal(e.target.value)}
-                  style={{ 
-                    width: '100%', padding: '16px', borderRadius: '12px', border: '2px solid #e2e8f0', 
-                    outline: 'none', fontSize: '24px', fontWeight: 800, color: '#0f172a',
-                    transition: 'border-color 0.2s'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                  className="w-full p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none text-2xl font-black focus:border-blue-500 transition-colors"
                 />
               </div>
 
               {/* OVERBOOKED WARNING */}
               {overbookedAlerts && (
-                <div style={{ background: '#fef2f2', borderRadius: '12px', padding: '16px', marginTop: '24px', border: '1px solid #fee2e2' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444', marginBottom: '8px', fontWeight: 700 }}>
+                <div className="bg-rose-500/10 dark:bg-rose-950/15 border border-rose-200/30 dark:border-rose-900/30 rounded-xl p-4 mt-6">
+                  <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 mb-2 font-bold">
                     <AlertTriangle size={18} />
                     <span>Capacity Conflict</span>
                   </div>
-                  <p style={{ color: '#991b1b', fontSize: '13px', marginBottom: '12px' }}>
+                  <p className="text-rose-900 dark:text-rose-205 text-[13px] mb-3 leading-relaxed">
                     You cannot set capacity to {editTotal}L because these dates are already overbooked:
                   </p>
-                  <div style={{ maxHeight: '120px', overflowY: 'auto' }}>
+                  <div className="max-h-[120px] overflow-y-auto divide-y divide-rose-200/30 dark:divide-rose-900/20 pr-1 hide-scrollbar">
                     {overbookedAlerts.map((alert, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: idx !== overbookedAlerts.length - 1 ? '1px solid #fecaca' : 'none' }}>
-                        <span style={{ fontWeight: 600, color: '#991b1b', fontSize: '13px' }}>
+                      <div key={idx} className="flex justify-between py-1.5 first:pt-0">
+                        <span className="font-semibold text-rose-800 dark:text-rose-350 text-[13px]">
                           {new Date(alert.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
-                        <span style={{ fontWeight: 800, color: '#ef4444', fontSize: '13px' }}>
+                        <span className="font-extrabold text-rose-600 dark:text-rose-400 text-[13px]">
                           {alert.booked}L booked
                         </span>
                       </div>
@@ -457,11 +432,12 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
               )}
 
               {message && !overbookedAlerts && (
-                <div style={{ 
-                  padding: '12px 16px', borderRadius: '8px', marginTop: '24px', fontSize: '14px', fontWeight: 500,
-                  background: message.type === 'success' ? '#dcfce7' : '#fef2f2',
-                  color: message.type === 'success' ? '#166534' : '#991b1b'
-                }}>
+                <div className={cn(
+                  "p-3 px-4 rounded-xl mt-6 text-sm font-semibold border",
+                  message.type === 'success' 
+                    ? "bg-green-500/10 dark:bg-green-950/15 border-green-200/30 dark:border-green-900/30 text-emerald-700 dark:text-emerald-400" 
+                    : "bg-red-500/10 dark:bg-red-950/15 border-red-200/30 dark:border-red-900/30 text-rose-700 dark:text-rose-400"
+                )}>
                   {message.text}
                 </div>
               )}
@@ -469,12 +445,7 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
               <button 
                 onClick={handleSave}
                 disabled={isSaving || !startDate}
-                style={{
-                  width: '100%', padding: '16px', background: '#0f172a', color: '#fff', border: 'none',
-                  borderRadius: '12px', fontSize: '16px', fontWeight: 700, cursor: isSaving || !startDate ? 'not-allowed' : 'pointer',
-                  opacity: isSaving || !startDate ? 0.7 : 1, marginTop: '24px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-                }}
+                className="w-full py-4 bg-brand-primary hover:bg-brand-primary/90 text-white border-none rounded-xl text-base font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-6 flex items-center justify-center gap-2 transition-colors shadow-sm"
               >
                 <Save size={18} />
                 {isSaving ? 'Saving...' : 'Save Capacity'}
@@ -487,21 +458,3 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
     </div>
   )
 }
-
-const navBtnStyle = {
-  background: '#f1f5f9', border: 'none', borderRadius: '8px', padding: '8px 16px', 
-  cursor: 'pointer', fontWeight: 700, color: '#475569', fontSize: '14px'
-};
-
-const miniNavBtnStyle = {
-  background: '#e2e8f0', border: 'none', borderRadius: '6px', padding: '4px 8px', 
-  cursor: 'pointer', fontWeight: 700, color: '#475569', fontSize: '12px'
-};
-
-const thStyle = {
-  padding: '16px', fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' as const, letterSpacing: '0.05em'
-};
-
-const tdStyle = {
-  padding: '16px', fontSize: '14px', color: '#475569'
-};

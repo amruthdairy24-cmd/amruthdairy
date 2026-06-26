@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CalendarDays, Milk, ChevronLeft, ChevronRight, Truck, SkipForward, Palmtree, CheckCircle2 } from 'lucide-react'
+import { CalendarDays, Milk, ChevronLeft, ChevronRight, Truck, SkipForward, Palmtree, CheckCircle2, Clock, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 interface DeliveryRecord {
   delivery_date: string
@@ -17,6 +19,30 @@ interface MonthSummary {
   pending: number
   totalLitres: number
 }
+
+// Animation configurations
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+} as const
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 260,
+      damping: 24
+    }
+  },
+} as const
 
 export default function DeliveryHistoryPage() {
   const [loading, setLoading] = useState(true)
@@ -93,175 +119,288 @@ export default function DeliveryHistoryPage() {
 
   if (loading) {
     return (
-      <div className="max-w-3xl space-y-6 animate-pulse">
-        <div className="h-6 w-48 bg-slate-200 rounded-lg" />
-        <div className="h-80 bg-slate-200 rounded-3xl" />
-        <div className="grid grid-cols-4 gap-3">
-          <div className="h-20 bg-slate-200 rounded-2xl" />
-          <div className="h-20 bg-slate-200 rounded-2xl" />
-          <div className="h-20 bg-slate-200 rounded-2xl" />
-          <div className="h-20 bg-slate-200 rounded-2xl" />
+      <div className="max-w-5xl space-y-6 animate-pulse">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-6 w-48 bg-slate-200 rounded-lg" />
+            <div className="h-4 w-40 bg-slate-200 rounded-md" />
+          </div>
         </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="h-24 bg-slate-200 rounded-2xl" />
+          <div className="h-24 bg-slate-200 rounded-2xl" />
+          <div className="h-24 bg-slate-200 rounded-2xl" />
+          <div className="h-24 bg-slate-200 rounded-2xl" />
+        </div>
+        <div className="h-[450px] bg-slate-200 rounded-3xl" />
       </div>
     )
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
-
-      <div>
-        <h1 className="text-[22px] font-black text-[#0f172a] font-display tracking-tight mb-1 flex items-center gap-2">
-          <CalendarDays size={24} className="text-[#64748b]" /> Delivery History
-        </h1>
-        <p className="text-[13px] font-semibold text-[#64748b]">Calendar view of your milk delivery records.</p>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white border border-[#e8edf5] rounded-[20px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.05)] text-center">
-          <div className="w-8 h-8 rounded-lg bg-[#dcfce7] text-[#16a34a] flex items-center justify-center mx-auto mb-2 border border-[#bbf7d0]">
-            <Truck size={14} strokeWidth={2.5} />
-          </div>
-          <p className="text-[20px] font-black text-[#0f172a] font-mono leading-none">{summary.delivered}</p>
-          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mt-1">Delivered</p>
+    <motion.div 
+      initial="hidden"
+      animate="show"
+      variants={containerVariants}
+      className="max-w-5xl space-y-8 relative"
+    >
+      {/* Header section */}
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-[26px] sm:text-[32px] font-bold text-slate-900 dark:text-white font-display tracking-tight leading-tight flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#014DA4]/10 dark:bg-blue-950/20 text-[#014DA4] dark:text-blue-400 flex items-center justify-center">
+              <CalendarDays size={22} />
+            </div>
+            <span>Delivery History</span>
+          </h1>
+          <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-450 mt-2 pl-1 flex items-center gap-1.5">
+            <Calendar size={14} className="text-slate-400 dark:text-slate-500" />
+            <span>Interactive calendar tracking your raw milk delivery journal</span>
+          </p>
         </div>
-        <div className="bg-white border border-[#e8edf5] rounded-[20px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.05)] text-center">
-          <div className="w-8 h-8 rounded-lg bg-[#fee2e2] text-[#ef4444] flex items-center justify-center mx-auto mb-2 border border-[#fecaca]">
-            <SkipForward size={14} strokeWidth={2.5} />
-          </div>
-          <p className="text-[20px] font-black text-[#0f172a] font-mono leading-none">{summary.skipped}</p>
-          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mt-1">Skipped</p>
-        </div>
-        <div className="bg-white border border-[#e8edf5] rounded-[20px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.05)] text-center">
-          <div className="w-8 h-8 rounded-lg bg-[#dbeafe] text-[#2563eb] flex items-center justify-center mx-auto mb-2 border border-[#bfdbfe]">
-            <Palmtree size={14} strokeWidth={2.5} />
-          </div>
-          <p className="text-[20px] font-black text-[#0f172a] font-mono leading-none">{summary.paused}</p>
-          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mt-1">Vacation</p>
-        </div>
-        <div className="bg-white border border-[#e8edf5] rounded-[20px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.05)] text-center">
-          <div className="w-8 h-8 rounded-lg bg-[#fef3c7] text-[#d97706] flex items-center justify-center mx-auto mb-2 border border-[#fde68a]">
-            <Milk size={14} strokeWidth={2.5} />
-          </div>
-          <p className="text-[20px] font-black text-[#0f172a] font-mono leading-none">{summary.totalLitres.toFixed(1)}L</p>
-          <p className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest mt-1">Total Milk</p>
-        </div>
-      </div>
-
-      <div className="bg-white border border-[#e8edf5] rounded-[24px] shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-hidden">
         
-        <div className="p-5 border-b border-[#e8edf5] flex items-center justify-between bg-[#f8fafc]">
+        <Link 
+          href="/dashboard" 
+          className="inline-flex items-center justify-center px-5 h-10 rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-xs shadow-sm transition-all duration-150 cursor-pointer self-start sm:self-center"
+        >
+          Back to Dashboard
+        </Link>
+      </motion.div>
+
+      {/* Stats Cards Section */}
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        {/* Card 1: Delivered */}
+        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-850 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between group">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Days Delivered</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight mt-1 leading-none font-mono">
+              {summary.delivered} Days
+            </p>
+            <p className="text-[10.5px] text-slate-400 dark:text-slate-450 font-semibold mt-1.5 truncate">
+              Completed milk drops
+            </p>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105">
+            <Truck size={20} />
+          </div>
+        </div>
+
+        {/* Card 2: Skipped */}
+        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-850 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between group">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-widest">Days Skipped</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight mt-1 leading-none font-mono">
+              {summary.skipped} Days
+            </p>
+            <p className="text-[10.5px] text-slate-400 dark:text-slate-450 font-semibold mt-1.5 truncate">
+              User requested skips
+            </p>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-rose-500/10 dark:bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105">
+            <SkipForward size={20} />
+          </div>
+        </div>
+
+        {/* Card 3: Vacation */}
+        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-850 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between group">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-widest">Vacation Pause</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight mt-1 leading-none font-mono">
+              {summary.paused} Days
+            </p>
+            <p className="text-[10.5px] text-slate-400 dark:text-slate-450 font-semibold mt-1.5 truncate">
+              Subscription pauses
+            </p>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-blue-500/10 dark:bg-blue-500/10 text-blue-550 dark:text-blue-400 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105">
+            <Palmtree size={20} />
+          </div>
+        </div>
+
+        {/* Card 4: Total Volume */}
+        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-850 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between group">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-widest">Total Volume</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight mt-1 leading-none font-mono">
+              {summary.totalLitres.toFixed(1)}L
+            </p>
+            <p className="text-[10.5px] text-slate-400 dark:text-slate-455 font-semibold mt-1.5 truncate">
+              Litres consumed this month
+            </p>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-amber-500/10 dark:bg-amber-500/10 text-amber-600 dark:text-amber-455 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105">
+            <Milk size={20} />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Main Calendar Card */}
+      <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-850 rounded-3xl shadow-sm overflow-hidden">
+        
+        {/* Calendar Controller Header */}
+        <div className="p-5 sm:px-6 border-b border-border/50 dark:border-slate-850 flex items-center justify-between bg-slate-50/60 dark:bg-slate-950/40 backdrop-blur-xs select-none">
           <button
             onClick={goToPreviousMonth}
-            className="w-9 h-9 rounded-xl border border-[#e8edf5] bg-white flex items-center justify-center hover:bg-[#e2e8f0] transition-all cursor-pointer shadow-sm"
+            className="w-10 h-10 rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer shadow-2xs"
+            title="Previous Month"
           >
-            <ChevronLeft size={16} className="text-[#64748b]" />
+            <ChevronLeft size={18} className="text-slate-650 dark:text-slate-400" />
           </button>
-          <h2 className="text-[15px] font-black text-[#0f172a] font-display">{monthName}</h2>
+          
+          <h2 className="text-base sm:text-[20px] font-black text-[#014DA4] dark:text-blue-450 font-display tracking-tight leading-none">
+            {monthName}
+          </h2>
+          
           <button
             onClick={goToNextMonth}
             disabled={isCurrentMonth}
-            className="w-9 h-9 rounded-xl border border-[#e8edf5] bg-white flex items-center justify-center hover:bg-[#e2e8f0] transition-all cursor-pointer shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-10 h-10 rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer shadow-2xs disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100"
+            title="Next Month"
           >
-            <ChevronRight size={16} className="text-[#64748b]" />
+            <ChevronRight size={18} className="text-slate-650 dark:text-slate-400" />
           </button>
         </div>
 
-        <div className="grid grid-cols-7 border-b border-[#e8edf5] bg-[#f8fafc]">
+        {/* Weekday Headers */}
+        <div className="grid grid-cols-7 bg-slate-50/40 dark:bg-slate-950/20 border-b border-border/40 dark:border-slate-850 text-center py-3">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="text-center py-2.5 text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">
+            <div key={day} className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px]">
               {day}
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7">
+        {/* Calendar Grid (Crisp mathematically aligned grid via gap-px & background coloring) */}
+        <div className="grid grid-cols-7 gap-px bg-slate-150 dark:bg-slate-800">
           {calendarCells.map((cell, idx) => {
             if (cell.day === null) {
-              return <div key={`empty-${idx}`} className="h-16 md:h-24 border-b border-r border-[#e8edf5]/60 bg-slate-50/50" />
+              return (
+                <div 
+                  key={`empty-${idx}`} 
+                  className="h-20 sm:h-28 bg-slate-50/20 dark:bg-slate-900/40" 
+                />
+              )
             }
 
             const isToday = isCurrentMonth && cell.day === today
             const status = cell.record?.delivery_status
             const isFuture = isCurrentMonth && cell.day > today
 
-            let bgColor = 'bg-white'
+            let cardBg = 'bg-white dark:bg-slate-900'
             let statusIcon = null
+            let statusLabel = ''
+            let statusColorClass = ''
 
             if (status === 'delivered') {
-              bgColor = 'bg-[#f0fdf4]'
-              statusIcon = <CheckCircle2 size={12} className="text-[#16a34a]" />
+              cardBg = 'bg-emerald-500/3 dark:bg-emerald-950/10 hover:bg-emerald-500/5 dark:hover:bg-emerald-950/20'
+              statusIcon = <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+              statusLabel = 'Delivered'
+              statusColorClass = 'text-emerald-700 dark:text-emerald-400'
             } else if (status === 'skipped') {
-              bgColor = 'bg-[#fef2f2]'
-              statusIcon = <SkipForward size={12} className="text-[#ef4444]" />
+              cardBg = 'bg-rose-500/3 dark:bg-rose-950/10 hover:bg-rose-500/5 dark:hover:bg-rose-950/20'
+              statusIcon = <SkipForward size={13} className="text-rose-500 dark:text-rose-400 flex-shrink-0" />
+              statusLabel = 'Skipped'
+              statusColorClass = 'text-rose-650 dark:text-rose-400'
             } else if (status === 'paused' || status === 'vacation') {
-              bgColor = 'bg-[#eff6ff]'
-              statusIcon = <Palmtree size={12} className="text-[#2563eb]" />
+              cardBg = 'bg-blue-500/3 dark:bg-blue-950/10 hover:bg-blue-500/5 dark:hover:bg-blue-950/20'
+              statusIcon = <Palmtree size={13} className="text-blue-550 dark:text-blue-400 flex-shrink-0" />
+              statusLabel = 'Vacation'
+              statusColorClass = 'text-blue-700 dark:text-blue-400'
             } else if (status === 'pending') {
-              bgColor = 'bg-[#fffbeb]'
+              cardBg = 'bg-amber-500/3 dark:bg-amber-950/10 hover:bg-amber-500/5 dark:hover:bg-amber-950/20 animate-pulse'
+              statusIcon = <Clock size={13} className="text-amber-600 dark:text-amber-500 flex-shrink-0" />
+              statusLabel = 'Pending'
+              statusColorClass = 'text-amber-705 dark:text-amber-450'
             }
 
             return (
               <div
                 key={cell.day}
                 className={cn(
-                  'h-16 md:h-24 border-b border-r border-[#e8edf5] p-2 md:p-3 flex flex-col transition-colors relative',
-                  bgColor,
-                  isToday && 'ring-2 ring-inset ring-[#2563eb] z-10 rounded-lg shadow-sm',
-                  isFuture && !status && 'opacity-40 bg-[#f8fafc]'
+                  'h-20 sm:h-28 p-2.5 sm:p-3.5 flex flex-col justify-between transition-all duration-200 relative group/cell select-none',
+                  cardBg,
+                  isToday && 'ring-2 ring-inset ring-[#014DA4] dark:ring-blue-500 z-10 bg-[#014DA4]/2 dark:bg-blue-950/20',
+                  isFuture && !status && 'opacity-40 bg-slate-50/50 dark:bg-slate-900/50'
                 )}
               >
-                <span className={cn(
-                  'text-[12px] md:text-[14px] font-black leading-none',
-                  isToday ? 'text-[#2563eb]' : 'text-[#0f172a]'
-                )}>
-                  {cell.day}
-                </span>
-                {status && (
-                  <div className="flex-1 flex items-end justify-between mt-1">
-                    {statusIcon}
+                <div className="flex items-center justify-between">
+                  <span className={cn(
+                    'text-xs sm:text-sm font-black font-sans leading-none',
+                    isToday ? 'text-[#014DA4] dark:text-blue-400' : 'text-slate-800 dark:text-slate-200'
+                  )}>
+                    {cell.day}
+                  </span>
+                  
+                  {isToday && (
+                    <span className="text-[8px] font-extrabold bg-[#014DA4] dark:bg-blue-600 text-white px-1.5 py-0.5 rounded-md uppercase tracking-wider scale-90 sm:scale-100 origin-top-right shadow-3xs">
+                      Today
+                    </span>
+                  )}
+                </div>
+
+                {status ? (
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-1 mt-1">
+                    <div className="flex items-center gap-1">
+                      {statusIcon}
+                      <span className={cn('hidden sm:inline text-[9.5px] font-black uppercase tracking-wider', statusColorClass)}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                    
                     {cell.record && cell.record.total_litres > 0 && status === 'delivered' && (
-                      <span className="text-[9px] md:text-[11px] font-black text-[#16a34a] font-mono bg-[#dcfce7] px-1 rounded border border-[#bbf7d0]">
+                      <span className="inline-flex text-[9px] sm:text-[11px] font-black text-emerald-700 dark:text-emerald-400 font-mono bg-emerald-500/10 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/15 dark:border-emerald-500/20 max-w-fit">
                         {cell.record.total_litres}L
                       </span>
                     )}
                   </div>
-                )}
-                {isToday && (
-                  <div className="absolute top-2 right-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#2563eb] animate-pulse" />
-                  </div>
+                ) : (
+                  !isFuture && (
+                    <div className="text-[9.5px] font-bold text-slate-350 dark:text-slate-600 italic text-left leading-none mt-auto">
+                      No entry
+                    </div>
+                  )
                 )}
               </div>
             )
           })}
         </div>
-      </div>
+      </motion.div>
 
-      <div className="bg-white border border-[#e8edf5] rounded-[20px] p-5 shadow-[0_2px_16px_rgba(0,0,0,0.05)]">
-        <div className="flex flex-wrap items-center gap-6 text-[11px] font-bold text-[#64748b]">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#dcfce7] border border-[#bbf7d0]" />
-            <span>Delivered</span>
+      {/* Legend Card */}
+      <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-850 rounded-2xl p-5 shadow-sm">
+        <div className="grid grid-cols-2 md:flex md:flex-row md:items-center md:justify-between gap-4 md:px-2 text-slate-600 dark:text-slate-300">
+          
+          <div className="flex items-center gap-2.5">
+            <div className="w-5 h-5 rounded-md bg-emerald-500/10 dark:bg-emerald-500/10 border border-emerald-500/15 dark:border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 size={12} className="text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <span className="text-[11px] sm:text-xs font-bold tracking-wide">Delivered Daily Drop</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#fee2e2] border border-[#fecaca]" />
-            <span>Skipped</span>
+
+          <div className="flex items-center gap-2.5">
+            <div className="w-5 h-5 rounded-md bg-rose-500/10 dark:bg-rose-500/10 border border-rose-500/15 dark:border-rose-500/20 flex items-center justify-center flex-shrink-0">
+              <SkipForward size={11} className="text-rose-500 dark:text-rose-400" />
+            </div>
+            <span className="text-[11px] sm:text-xs font-bold tracking-wide">Skipped Delivery</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#dbeafe] border border-[#bfdbfe]" />
-            <span>Vacation</span>
+
+          <div className="flex items-center gap-2.5">
+            <div className="w-5 h-5 rounded-md bg-blue-500/10 dark:bg-blue-500/10 border border-blue-500/15 dark:border-blue-500/20 flex items-center justify-center flex-shrink-0">
+              <Palmtree size={12} className="text-blue-550 dark:text-blue-450" />
+            </div>
+            <span className="text-[11px] sm:text-xs font-bold tracking-wide">Vacation Pause</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#fef3c7] border border-[#fde68a]" />
-            <span>Pending</span>
+
+          <div className="flex items-center gap-2.5">
+            <div className="w-5 h-5 rounded-md bg-amber-500/10 dark:bg-amber-500/10 border border-amber-500/15 dark:border-amber-500/20 flex items-center justify-center flex-shrink-0 animate-pulse">
+              <Clock size={11} className="text-amber-600 dark:text-amber-500" />
+            </div>
+            <span className="text-[11px] sm:text-xs font-bold tracking-wide">Pending Allocation</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#2563eb] animate-pulse" />
-            <span>Today</span>
-          </div>
+
         </div>
-      </div>
-
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

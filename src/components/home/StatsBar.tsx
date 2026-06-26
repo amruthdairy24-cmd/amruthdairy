@@ -27,45 +27,20 @@ const stats = [
 
 export function StatsBar() {
   return (
-    <div style={{ background: '#3dbade', padding: '48px 0', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+    <div className="bg-[#3dbade] dark:bg-slate-900 py-12 border-t border-white/10 dark:border-border/30">
       <div className="container-page">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '30px', alignItems: 'center' }} className="stats-grid">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-7 items-center">
           {stats.map((stat, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', color: '#fff' }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '12px',
-                color: '#fff'
-              }} className="stats-icon-wrapper">
+            <div key={i} className="flex flex-col items-center text-center text-white">
+              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-3 text-white">
                 {stat.icon}
               </div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 900, lineHeight: 1.1, fontFamily: 'var(--font-jetbrains-mono)' }}>{stat.value}</div>
-              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.85)', marginTop: '4px', fontWeight: 700, letterSpacing: '0.02em' }}>{stat.label}</div>
+              <div className="text-3xl font-black leading-none font-mono">{stat.value}</div>
+              <div className="text-xs text-white/85 mt-1 font-bold tracking-wider uppercase">{stat.label}</div>
             </div>
           ))}
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 768px) {
-          .stats-grid {
-            grid-template-columns: 1fr 1fr !important;
-            gap: 28px !important;
-          }
-        }
-        @media (max-width: 480px) {
-          .stats-grid {
-            grid-template-columns: 1fr !important;
-            gap: 24px !important;
-          }
-        }
-      `}</style>
     </div>
   )
 }

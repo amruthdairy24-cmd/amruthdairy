@@ -1,5 +1,7 @@
 'use client'
 
+import { cn } from '@/lib/utils'
+
 type StatusType = 
   | 'success' // Active, Completed, Paid, Delivered
   | 'warning' // Pending, Low Stock, Due
@@ -23,30 +25,34 @@ export function StatusBadge({ status, type = 'default' }: StatusBadgeProps) {
     else if (['draft', 'vacation', 'processing', 'scheduled'].includes(s)) determinedType = 'info';
   }
 
-  const styles = {
-    success: { bg: '#dcfce7', text: '#16a34a', border: '#bbf7d0' },
-    warning: { bg: '#fef3c7', text: '#d97706', border: '#fde68a' },
-    danger:  { bg: '#fee2e2', text: '#dc2626', border: '#fecaca' },
-    info:    { bg: '#dbeafe', text: '#2563eb', border: '#bfdbfe' },
-    default: { bg: '#f1f5f9', text: '#64748b', border: '#e2e8f0' },
+  const styleClasses = {
+    success: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-200/60 dark:border-green-800/45',
+    warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/45',
+    danger:  'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200/60 dark:border-red-800/45',
+    info:    'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200/60 dark:border-blue-800/45',
+    default: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-200/60 dark:border-slate-800/45',
   };
 
-  const currentStyle = styles[determinedType];
+  const dotClasses = {
+    success: 'bg-green-500 dark:bg-green-400',
+    warning: 'bg-amber-500 dark:bg-amber-400',
+    danger:  'bg-red-500 dark:bg-red-400',
+    info:    'bg-blue-500 dark:bg-blue-400',
+    default: 'bg-slate-500 dark:bg-slate-400',
+  };
 
   return (
     <span 
-      className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-[0.5px]"
-      style={{
-        background: currentStyle.bg,
-        color: currentStyle.text,
-        border: `1.5px solid ${currentStyle.border}`
-      }}
+      className={cn(
+        "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-[0.5px] border-[1.5px]",
+        styleClasses[determinedType]
+      )}
     >
       <span 
-        className="w-1.5 h-1.5 rounded-full mr-1.5 inline-block"
-        style={{ background: currentStyle.text }}
+        className={cn("w-1.5 h-1.5 rounded-full mr-1.5 inline-block", dotClasses[determinedType])}
       />
       {status}
     </span>
   );
 }
+

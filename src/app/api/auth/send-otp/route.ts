@@ -1,68 +1,150 @@
+// api/auth/send-otp/route.ts
+// Registration endpoint: validate details, store pending OTP in memory, send email.
+// Nothing is written to the database until the OTP is successfully verified.
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
+import * as crypto from 'crypto';
+import { sendOtpEmail } from '@/lib/email';
+import { pendingOtpStore } from '@/lib/otp-store';
 
-// Basic in-memory rate limiting (works in long-running Node processes, resets on serverless cold start)
-const rateLimitMap = new Map<string, { count: number, resetAt: number }>();
+const adminClient = createAdminClient();
+
+// ─── In-memory rate limit: 3 OTP requests per email per 10 min ───────────────
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 export async function POST(request: Request) {
   try {
-    const { phone } = await request.json();
+    const body = await request.json();
+    const { email, username, password } = body as {
+      email?: string;
+      username?: string;
+      password?: string;
+    };
 
-    if (!phone || typeof phone !== 'string') {
-      return NextResponse.json({ success: false, message: 'Phone number is required' }, { status: 400 });
+    // ── Validate inputs ──────────────────────────────────────────────────────
+    if (!email || !username || !password) {
+      return NextResponse.json(
+        { success: false, message: 'Email, username, and password are required.' },
+        { status: 400 }
+      );
     }
 
-    // 1. Validate phone = 10 digits Indian number
-    const cleanPhone = phone.replace(/\D/g, '');
-    let finalPhone = cleanPhone;
-    
-    if (cleanPhone.length === 10) {
-      finalPhone = '+91' + cleanPhone;
-    } else if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) {
-      finalPhone = '+' + cleanPhone;
-    } else {
-      return NextResponse.json({ success: false, message: 'Invalid Indian phone number. Must be 10 digits.' }, { status: 400 });
+    const emailLower = email.toLowerCase().trim();
+    const usernameTrimmed = username.trim();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailLower)) {
+      return NextResponse.json(
+        { success: false, message: 'Please enter a valid email address.' },
+        { status: 400 }
+      );
     }
 
-    // 4. Rate limit: 3 attempts per 10 minutes per phone
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!usernameRegex.test(usernameTrimmed)) {
+      return NextResponse.json(
+        { success: false, message: 'Username must be 3–20 characters (letters, numbers, underscore only).' },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json(
+        { success: false, message: 'Password must be at least 8 characters.' },
+        { status: 400 }
+      );
+    }
+
+    // ── Rate limiting ────────────────────────────────────────────────────────
     const now = Date.now();
-    const rateLimit = rateLimitMap.get(finalPhone);
-    if (rateLimit) {
-      if (now > rateLimit.resetAt) {
-        // Reset
-        rateLimitMap.set(finalPhone, { count: 1, resetAt: now + 10 * 60 * 1000 });
+    const rl = rateLimitMap.get(emailLower);
+    if (rl) {
+      if (now > rl.resetAt) {
+        rateLimitMap.set(emailLower, { count: 1, resetAt: now + 10 * 60 * 1000 });
+      } else if (rl.count >= 3) {
+        return NextResponse.json(
+          { success: false, message: 'Too many attempts. Please try again in 10 minutes.' },
+          { status: 429 }
+        );
       } else {
-        if (rateLimit.count >= 3) {
-          return NextResponse.json({ success: false, message: 'Too many requests. Please try again after 10 minutes.' }, { status: 429 });
-        }
-        rateLimit.count += 1;
+        rl.count += 1;
       }
     } else {
-      rateLimitMap.set(finalPhone, { count: 1, resetAt: now + 10 * 60 * 1000 });
+      rateLimitMap.set(emailLower, { count: 1, resetAt: now + 10 * 60 * 1000 });
     }
 
-    // DEV MODE: skip real OTP — use code 123456 to verify
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV] OTP skipped for ${finalPhone} — use code 123456`);
-      return NextResponse.json({ success: true, message: 'OTP sent (dev mode)' });
+    // ── Check for existing verified account (email or username already taken) ─
+    // Only check Supabase Auth for already-confirmed users
+    const { data: listData } = await adminClient.auth.admin.listUsers();
+    const existingConfirmedUser = listData?.users?.find(
+      (u) => u.email?.toLowerCase() === emailLower && u.email_confirmed_at
+    );
+
+    if (existingConfirmedUser) {
+      return NextResponse.json(
+        { success: false, message: 'This email is already registered. Please sign in.' },
+        { status: 409 }
+      );
     }
 
-    const supabase = await createClient();
+    // Check username uniqueness in profiles
+    const { data: existingUsername } = await adminClient
+      .from('profiles')
+      .select('id')
+      .eq('username', usernameTrimmed)
+      .maybeSingle();
 
-    // 3. Call supabase.auth.signInWithOtp({ phone })
-    const { error } = await supabase.auth.signInWithOtp({
-      phone: finalPhone,
+    if (existingUsername) {
+      return NextResponse.json(
+        { success: false, message: 'This username is already taken. Please choose another.' },
+        { status: 409 }
+      );
+    }
+
+    // ── Generate OTP and store in memory ─────────────────────────────────────
+    const otp = generateOtp();
+    const otpHash = hashOtp(otp);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    pendingOtpStore.set(emailLower, {
+      otpHash,
+      expiresAt,
+      username: usernameTrimmed,
+      password,
     });
 
-    if (error) {
-      console.error('OTP Error:', error.message);
-      return NextResponse.json({ success: false, message: error.message }, { status: 400 });
-    }
+    console.log(`[send-otp] OTP stored in memory for ${emailLower}, expires at ${expiresAt.toISOString()}`);
 
-    return NextResponse.json({ success: true, message: 'OTP sent' });
+    // ── Send OTP via Nodemailer ───────────────────────────────────────────────
+    await sendOtpEmail(emailLower, otp);
 
-  } catch (err: any) {
-    console.error('Send OTP exception:', err);
-    return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ success: true, message: 'OTP sent to your email.' });
+
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[send-otp] Exception:', message);
+    return NextResponse.json(
+      { success: false, message: 'Failed to send OTP. Please try again.' },
+      { status: 500 }
+    );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function generateOtp(): string {
+  return String(crypto.randomInt(100000, 999999));
+}
+
+function hashOtp(otp: string): string {
+  const salt = process.env.SUPABASE_SERVICE_ROLE_KEY!.slice(0, 16);
+  return crypto
+    .createHmac('sha256', salt)
+    .update(otp)
+    .digest('hex');
+}
+
+// Kept for backwards compatibility (verify-otp may import this)
+export const devRegistrationStore = new Map<string, { username: string; password: string }>();

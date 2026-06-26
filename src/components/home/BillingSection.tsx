@@ -51,49 +51,49 @@ export function BillingSection() {
   const carryNext = 248.01 + 248.01 - 82.67 + 82.67
 
   return (
-    <section className="bg-milk-50 section-py" id="billing">
+    <section className="bg-milk-50 dark:bg-slate-950 section-py" id="billing">
       <div className="container-page">
         {/* Header */}
         <div className="text-center max-w-xl mx-auto mb-16">
           <p className="section-label justify-center">Transparent Billing</p>
-          <h2 className="text-heading text-teal-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-black text-teal-900 dark:text-white mb-4">
             Every rupee, clearly explained
           </h2>
-          <p className="text-body text-teal-900/55">
+          <p className="text-sm sm:text-base text-teal-900/55 dark:text-slate-450">
             No more manual calculations. No more disputes. Every customer sees exactly how their bill is computed.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Billing statement card */}
-          <div className="bg-white rounded-[28px] shadow-card overflow-hidden border border-milk-200">
+          <div className="bg-white dark:bg-slate-900 rounded-brand-2xl shadow-card overflow-hidden border border-milk-200 dark:border-border">
             {/* Header */}
-            <div className="bg-teal-700 px-8 py-6">
+            <div className="bg-teal-700 dark:bg-teal-950/40 px-8 py-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-tiny text-white/60 uppercase tracking-widest mb-1">Billing Statement</p>
-                  <p className="text-subhead font-bold text-white">June 2026</p>
+                  <p className="text-xs text-white/60 uppercase tracking-widest mb-1">Billing Statement</p>
+                  <p className="text-lg font-bold text-white">June 2026</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-tiny text-white/60">Ravi Nayak</p>
+                  <p className="text-xs text-white/60">Ravi Nayak</p>
                   <p className="text-xs text-white/80">1 Litre/day</p>
                 </div>
               </div>
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-milk-100">
+            <div className="divide-y divide-milk-100 dark:divide-slate-800">
               {billingRows.map((row) => (
                 <div key={row.label} className="flex items-center justify-between px-8 py-4">
-                  <span className="text-small text-teal-900/60 leading-snug max-w-[60%]">
+                  <span className="text-sm text-teal-900/60 dark:text-slate-300 leading-snug max-w-[60%]">
                     {row.label}
                   </span>
                   <span
                     className={cn(
-                      'text-small font-bold font-mono-num',
-                      row.type === 'credit' && 'text-green-600',
+                      'text-sm font-bold font-mono-num',
+                      row.type === 'credit' && 'text-green-655',
                       row.type === 'extra' && 'text-amber-600',
-                      row.type === 'base' && 'text-teal-900',
+                      row.type === 'base' && 'text-teal-900 dark:text-white',
                     )}
                   >
                     {row.value}
@@ -103,22 +103,22 @@ export function BillingSection() {
             </div>
 
             {/* Total */}
-            <div className="px-8 py-5 border-t-2 border-teal-700/10 flex items-center justify-between bg-milk-50">
+            <div className="px-8 py-5 border-t-2 border-teal-750/10 dark:border-border/40 flex items-center justify-between bg-milk-50 dark:bg-slate-950/50">
               <div>
-                <p className="text-small text-teal-900/55 mb-0.5">Net Payable This Month</p>
-                <p className="text-tiny text-teal-500">Due by June 30, 2026</p>
+                <p className="text-sm text-teal-900/55 dark:text-slate-400 mb-0.5">Net Payable This Month</p>
+                <p className="text-xs text-teal-500 dark:text-teal-400">Due by June 30, 2026</p>
               </div>
-              <p className="text-heading font-extrabold text-teal-700 font-mono-num">
+              <p className="text-2xl md:text-3xl font-extrabold text-teal-700 dark:text-teal-400 font-mono-num">
                 ₹{netPayable.toFixed(2)}
               </p>
             </div>
 
             {/* Carry forward */}
-            <div className="bg-teal-50 border-t border-teal-100 px-8 py-4 flex items-center justify-between">
-              <p className="text-small text-teal-700 font-semibold">
+            <div className="bg-teal-50 dark:bg-teal-950/10 border-t border-teal-100 dark:border-border px-8 py-4 flex items-center justify-between">
+              <p className="text-sm text-teal-700 dark:text-teal-450 font-semibold">
                 Credit carried to July bill
               </p>
-              <p className="text-small font-bold text-teal-700 font-mono-num">
+              <p className="text-sm font-bold text-teal-700 dark:text-teal-450 font-mono-num">
                 ₹{carryNext.toFixed(2)}
               </p>
             </div>
@@ -126,23 +126,23 @@ export function BillingSection() {
 
           {/* Rules */}
           <div className="flex flex-col gap-4">
-            <h3 className="text-subhead font-bold text-teal-900 mb-2">
+            <h3 className="text-lg font-bold text-teal-900 dark:text-white mb-2">
               How billing works
             </h3>
             {rules.map((rule) => (
               <div
                 key={rule.title}
                 className={cn(
-                  'bg-white rounded-[18px] border border-milk-200 border-l-4 p-6',
+                  'bg-white dark:bg-slate-900 rounded-[18px] border border-milk-200 dark:border-border border-l-4 p-6',
                   rule.color,
                   'transition-transform duration-200 hover:translate-x-1'
                 )}
               >
-                <h4 className="text-small font-bold text-teal-900 mb-2 flex items-center gap-2">
+                <h4 className="text-sm font-bold text-teal-900 dark:text-white mb-2 flex items-center gap-2">
                   {getRuleIcon(rule.iconKey)}
                   {rule.title}
                 </h4>
-                <p className="text-small text-teal-900/55 leading-relaxed">{rule.body}</p>
+                <p className="text-sm text-teal-900/55 dark:text-slate-450 leading-relaxed">{rule.body}</p>
               </div>
             ))}
           </div>
