@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CalendarDays, Milk, ChevronLeft, ChevronRight, Truck, SkipForward, Palmtree, CheckCircle2, Clock, Calendar } from 'lucide-react'
+import { CalendarDays, Milk, ChevronLeft, ChevronRight, Truck, SkipForward, Palmtree, CheckCircle2, Clock, Calendar, Eye } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 
 interface DeliveryRecord {
   delivery_date: string
@@ -49,6 +50,7 @@ export default function DeliveryHistoryPage() {
   const [error, setError] = useState('')
   const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([])
   const [subQty, setSubQty] = useState(1.0)
+  const [viewingRecord, setViewingRecord] = useState<DeliveryRecord | null>(null)
 
   const [viewYear, setViewYear] = useState(new Date().getFullYear())
   const [viewMonth, setViewMonth] = useState(new Date().getMonth())
@@ -401,6 +403,57 @@ export default function DeliveryHistoryPage() {
 
         </div>
       </motion.div>
+
+      {/* NEW: Delivery History Table */}
+      <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-850 rounded-2xl p-5 shadow-sm overflow-hidden">
+        <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4">Detailed Records</h3>
+        {deliveries.length === 0 ? (
+          <p className="text-sm text-slate-500">No records available for this period.</p>
+        ) : (
+          <div className="overflow-x-auto hide-scrollbar">
+            <table className="w-full text-left border-collapse min-w-[500px]">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                  <th className="py-3 px-4 text-[11px] uppercase font-black text-slate-400">Date</th>
+                  <th className="py-3 px-4 text-[11px] uppercase font-black text-slate-400 text-center">Status</th>
+                  <th className="py-3 px-4 text-[11px] uppercase font-black text-slate-400 text-center">Volume</th>
+                  <th className="py-3 px-4 text-[11px] uppercase font-black text-slate-400 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100/70 dark:divide-slate-800/60">
+                {deliveries.map(d => (
+                  <tr key={d.delivery_date} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                    <td className="py-3 px-4 text-[13px] font-bold text-slate-700 dark:text-slate-200">
+                      {new Date(d.delivery_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                       <span className="text-xs font-semibold capitalize text-slate-600 dark:text-slate-400">{d.delivery_status || 'Pending'}</span>
+                    </td>
+                    <td className="py-3 px-4 text-center text-sm font-black text-slate-800 dark:text-slate-200 font-mono">
+                      {d.total_litres}L
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button 
+                        onClick={() => setViewingRecord(d)}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
+                      >
+                        <Eye size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </motion.div>
+
+      <RowDetailsModal 
+        isOpen={!!viewingRecord}
+        onClose={() => setViewingRecord(null)}
+        title="Delivery Details"
+        data={viewingRecord}
+      />
     </motion.div>
   )
 }
