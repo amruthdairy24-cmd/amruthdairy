@@ -117,6 +117,11 @@ export default function OnboardingPage() {
             setArea(data.profile.area || 'Padil')
             setLandmark(data.profile.landmark || '')
             setFloorNotes(data.profile.floor_notes || '')
+            
+            // If they already have an address saved, we can safely jump to Step 2
+            if (data.profile.address && data.profile.address.trim() !== '') {
+              setStep(2)
+            }
           }
         }
       }).catch(() => {})

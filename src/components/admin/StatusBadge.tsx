@@ -19,7 +19,7 @@ export function StatusBadge({ status, type = 'default' }: StatusBadgeProps) {
   let determinedType = type;
   if (type === 'default') {
     const s = status.toLowerCase();
-    if (['active', 'completed', 'paid', 'delivered', 'optimal', 'ready'].includes(s)) determinedType = 'success';
+    if (['active', 'completed', 'paid', 'delivered', 'optimal', 'ready', 'converted'].includes(s)) determinedType = 'success';
     else if (['pending', 'low stock', 'due', 'generating', 'waitlist'].includes(s)) determinedType = 'warning';
     else if (['inactive', 'cancelled', 'out of stock', 'failed', 'dropped'].includes(s)) determinedType = 'danger';
     else if (['draft', 'vacation', 'processing', 'scheduled'].includes(s)) determinedType = 'info';
