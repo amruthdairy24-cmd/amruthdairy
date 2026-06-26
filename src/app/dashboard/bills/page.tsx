@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FileText, CreditCard, CheckCircle2, ShieldCheck, AlertCircle, TrendingUp, Info, Milk, SkipForward, Palmtree, PlusCircle, Wallet, ArrowRight, HelpCircle } from 'lucide-react'
+import { FileText, CreditCard, CheckCircle2, ShieldCheck, AlertCircle, TrendingUp, Info, Milk, SkipForward, Palmtree, PlusCircle, Wallet, ArrowRight, HelpCircle, Eye } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 
 interface BillingData {
   id?: string;
@@ -56,6 +57,7 @@ export default function BillsPage() {
   const [paymentStep, setPaymentStep] = useState<'details' | 'processing' | 'success'>('details')
   const [mockPaid, setMockPaid] = useState(false)
   const [isRequestingRefund, setIsRequestingRefund] = useState(false)
+  const [viewingBill, setViewingBill] = useState<BillingData | null>(null)
 
   async function handleRefundRequest() {
     if (!confirm('Are you sure you want to request a cash refund? This will convert your carry-forward credits to cash, and they will no longer reduce your next bill.')) return;
@@ -353,9 +355,9 @@ export default function BillsPage() {
               </div>
             </div>
 
-            {/* Pay Button Action */}
-            {hasPendingBill && (
-              <div className="p-6 bg-slate-50/60 dark:bg-slate-950/40 border-t border-border/50 dark:border-slate-800">
+            {/* Actions */}
+            <div className="p-6 bg-slate-50/60 dark:bg-slate-950/40 border-t border-border/50 dark:border-slate-800 flex flex-col gap-3">
+              {hasPendingBill && (
                 <button
                   onClick={() => { setShowPayModal(true); setPaymentStep('details'); }}
                   className="w-full h-12 rounded-xl bg-[#014DA4] hover:bg-[#014DA4]/95 active:scale-[0.98] text-white font-extrabold text-xs shadow-sm transition-all border-none flex items-center justify-center gap-2 cursor-pointer"
@@ -363,8 +365,15 @@ export default function BillsPage() {
                   <CreditCard size={15} />
                   <span>Pay Balance Due (₹{bill.net_due.toFixed(2)})</span>
                 </button>
-              </div>
-            )}
+              )}
+              <button
+                onClick={() => setViewingBill(bill)}
+                className="w-full h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-[0.98] text-slate-700 dark:text-slate-300 font-extrabold text-xs shadow-sm transition-all border-none flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Eye size={15} />
+                <span>View Full Details</span>
+              </button>
+            </div>
           </div>
 
           {/* Upcoming Adjustments Card */}
@@ -558,6 +567,12 @@ export default function BillsPage() {
         )}
       </AnimatePresence>
 
+      <RowDetailsModal 
+        isOpen={!!viewingBill}
+        onClose={() => setViewingBill(null)}
+        title="Billing Details"
+        data={viewingBill}
+      />
     </motion.div>
   )
 }

@@ -238,16 +238,23 @@ export default function OnboardingPage() {
                     const active = step === num
                     return (
                       <div key={num} className="flex-1 flex flex-col items-center gap-1.5 relative z-10">
-                        <div className={cn(
-                          'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-200',
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (typeof step === 'number') {
+                              if (num < step) setStep(num as OnboardingStep)
+                            }
+                          }}
+                          className={cn(
+                          'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-200 border-none',
                           done
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-[#014DA4] text-white cursor-pointer hover:bg-[#014DA4]/90 shadow-sm'
                             : active
-                              ? 'bg-blue-600 text-white ring-4 ring-blue-100'
+                              ? 'bg-[#014DA4] text-white ring-4 ring-[#014DA4]/20'
                               : 'bg-white text-slate-400 border border-slate-200'
                         )}>
                           {num}
-                        </div>
+                        </button>
                         <div className="hidden sm:flex flex-col items-center text-center min-w-0">
                           <p className={cn('text-xs font-black leading-none', active ? 'text-slate-900' : 'text-slate-400')}>{label}</p>
                           <p className="text-[9px] font-semibold text-slate-400 mt-0.5">{sub}</p>
@@ -581,8 +588,10 @@ export default function OnboardingPage() {
                       <div className="border border-slate-200 rounded-2xl overflow-hidden divide-y divide-slate-100">
                         {[
                           { label: 'Plan Quantity', icon: <Package size={13} />, value: `${quantity} Litre${quantity > 1 ? 's' : ''} / Day` },
+                          { label: 'Unit Price', icon: <Tag size={13} />, value: `₹${dailyRate.toFixed(2)} / day` },
+                          { label: 'Days in Month', icon: <Calendar size={13} />, value: `${getDaysInMonth(new Date(startDate).getFullYear(), new Date(startDate).getMonth() + 1)} Days (${new Date(startDate).toLocaleString('en-IN', { month: 'short' })})` },
                           { label: 'Starting Date', icon: <Calendar size={13} />, value: new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) },
-                          { label: 'Monthly Rate', icon: <Tag size={13} />, value: `₹${monthlyAmount.toFixed(2)}` },
+                          { label: 'Monthly Rate', icon: <CreditCard size={13} />, value: `₹${monthlyAmount.toFixed(2)}` },
                           { label: 'Delivery Area', icon: <MapPin size={13} />, value: area },
                           { label: 'Address', icon: <Home size={13} />, value: address },
                         ].map(({ label, icon, value }) => (
@@ -623,10 +632,10 @@ export default function OnboardingPage() {
                         <button
                           onClick={handlePayment}
                           disabled={loading}
-                          className="flex-1 h-12 bg-blue-600 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all border-none flex items-center justify-center gap-2 disabled:opacity-50"
+                          className="flex-1 h-12 bg-slate-900 dark:bg-slate-50 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all border-none flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                           {loading
-                            ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ? <span className="w-5 h-5 border-2 border-white dark:border-slate-900 border-t-transparent dark:border-t-transparent rounded-full animate-spin" />
                             : <><CreditCard size={15} /><span>Pay ₹{proRataAmount.toFixed(2)} securely</span></>
                           }
                         </button>

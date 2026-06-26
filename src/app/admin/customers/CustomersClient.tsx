@@ -1,9 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { Users, Phone, MapPin } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
+import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { cn } from '@/lib/utils'
 
 interface Customer {
@@ -16,6 +18,7 @@ interface Customer {
 }
 
 export function CustomersClient({ data }: { data: Customer[] }) {
+  const [viewingEntry, setViewingEntry] = useState<Customer | null>(null)
   
   // Format dates cleanly like "24 Jun 2026"
   const formatDate = (dateStr: string) => {
@@ -114,7 +117,14 @@ export function CustomersClient({ data }: { data: Customer[] }) {
         icon={Users} 
         actionLabel="Add Customer"
       />
-      <DataTable data={data} columns={columns} />
+      <DataTable data={data} columns={columns} onView={(row) => setViewingEntry(row)} />
+
+      <RowDetailsModal
+        isOpen={!!viewingEntry}
+        onClose={() => setViewingEntry(null)}
+        title="Customer Details"
+        data={viewingEntry}
+      />
     </div>
   )
 }
