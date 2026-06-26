@@ -5,6 +5,7 @@ import { CreditCard, FileText, Settings2, Receipt, Coins } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
+import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { cn } from '@/lib/utils'
 
 interface Invoice {
@@ -39,6 +40,7 @@ interface Payment {
 export function BillingClient({ invoices, adjustments, payments }: { invoices: Invoice[], adjustments: Adjustment[], payments: Payment[] }) {
   const [activeTab, setActiveTab] = useState<'invoices' | 'adjustments' | 'payments'>('invoices')
   const [isProcessing, setIsProcessing] = useState(false);
+  const [viewingEntry, setViewingEntry] = useState<any | null>(null);
 
   const handleRefundAction = async (id: string, action: 'process' | 'reject') => {
     if (!confirm(`Are you sure you want to ${action} this refund request?`)) return;
@@ -329,11 +331,17 @@ export function BillingClient({ invoices, adjustments, payments }: { invoices: I
 
       {/* RENDER ACTIVE TAB SHEET */}
       <div className="pt-2">
-        {activeTab === 'invoices' && <DataTable data={invoices} columns={invoiceColumns} />}
-        {activeTab === 'adjustments' && <DataTable data={adjustments} columns={adjustmentColumns} />}
-        {activeTab === 'payments' && <DataTable data={payments} columns={paymentColumns} />}
+        {activeTab === 'invoices' && <DataTable data={invoices} columns={invoiceColumns} onView={setViewingEntry} />}
+        {activeTab === 'adjustments' && <DataTable data={adjustments} columns={adjustmentColumns} onView={setViewingEntry} />}
+        {activeTab === 'payments' && <DataTable data={payments} columns={paymentColumns} onView={setViewingEntry} />}
       </div>
 
+      <RowDetailsModal
+        isOpen={!!viewingEntry}
+        onClose={() => setViewingEntry(null)}
+        title="Billing Details"
+        data={viewingEntry}
+      />
     </div>
   )
 }

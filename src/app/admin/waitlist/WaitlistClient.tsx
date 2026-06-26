@@ -5,6 +5,7 @@ import { Users, MessageCircle, X, RefreshCcw } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
+import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { NotifyModal } from './NotifyModal'
 
 interface WaitlistEntry {
@@ -20,6 +21,7 @@ export function WaitlistClient({ data }: { data: WaitlistEntry[] }) {
   const [notifyModalOpen, setNotifyModalOpen] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<WaitlistEntry | null>(null)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [viewingEntry, setViewingEntry] = useState<WaitlistEntry | null>(null)
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     if (!confirm(`Are you sure you want to change status to ${newStatus}?`)) return
@@ -96,6 +98,14 @@ export function WaitlistClient({ data }: { data: WaitlistEntry[] }) {
               <span>Re-open</span>
             </button>
           )}
+
+          <button
+            onClick={() => setViewingEntry(row)}
+            className="inline-flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 border border-transparent hover:border-blue-200 dark:hover:border-blue-900 transition-colors cursor-pointer w-[30px] h-[30px]" 
+            title="View Details"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
         </div>
       )
     }
@@ -114,9 +124,15 @@ export function WaitlistClient({ data }: { data: WaitlistEntry[] }) {
         }}
         waitlistEntry={selectedEntry}
         onSuccess={() => {
-          // In a real app, we might mutate the SWR cache or refresh the router
           window.location.reload()
         }}
+      />
+
+      <RowDetailsModal
+        isOpen={!!viewingEntry}
+        onClose={() => setViewingEntry(null)}
+        title="Waitlist Entry Details"
+        data={viewingEntry}
       />
     </div>
   )
