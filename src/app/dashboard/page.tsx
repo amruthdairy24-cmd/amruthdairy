@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   LayoutDashboard, SkipForward, Palmtree, PlusCircle, FileText,
   Calendar, ArrowRight, AlertTriangle, HelpCircle, Clock, Milk,
-  Wallet, CreditCard, CheckCircle, ArrowUpRight
+  Wallet, CreditCard, CheckCircle, ArrowUpRight, X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
@@ -103,6 +103,31 @@ export default function CustomerDashboard() {
     loadDashboard()
   }, [])
 
+  const [declining, setDeclining] = useState(false)
+
+  const handleDeclineSlot = async (waitlistId: string) => {
+    if (!confirm('Are you sure you want to decline this slot? Your request will be cancelled.')) return
+    
+    setDeclining(true)
+    try {
+      const res = await fetch('/api/customer/waitlist/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ waitlist_id: waitlistId })
+      })
+      const json = await res.json()
+      if (json.success) {
+        window.location.reload()
+      } else {
+        alert(json.message || 'Failed to decline slot')
+      }
+    } catch (err) {
+      alert('Network error')
+    } finally {
+      setDeclining(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -159,20 +184,23 @@ export default function CustomerDashboard() {
       >
         <motion.div variants={itemVariants}>
           <h1 className="text-[22px] sm:text-[28px] font-black text-slate-900 dark:text-white font-display tracking-tight flex items-center gap-2.5">
-            Waitlist Status <Clock size={24} className="text-amber-600 animate-pulse" />
+            {wl.status === 'notified' ? 'Slot Available!' : wl.status === 'cancelled' ? 'Waitlist Cancelled' : 'Waitlist Status'} 
+            {wl.status !== 'cancelled' && <Clock size={24} className={wl.status === 'notified' ? "text-emerald-500 animate-pulse" : "text-amber-600 animate-pulse"} />}
           </h1>
-          <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 mt-1">You are currently in queue for a delivery slot.</p>
+          <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 mt-1">
+            {wl.status === 'notified' ? 'Great news! A delivery slot has opened up for you.' : wl.status === 'cancelled' ? 'You have declined your slot or left the waitlist.' : 'You are currently in queue for a delivery slot.'}
+          </p>
         </motion.div>
 
         <motion.div
           variants={itemVariants}
-          className="rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg border border-white/5 bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950"
+          className={`rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg border border-white/5 ${wl.status === 'notified' ? 'bg-gradient-to-br from-emerald-950 via-slate-900 to-emerald-900' : 'bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950'}`}
         >
-          <div className="absolute -top-5 -right-5 w-48 h-48 rounded-full pointer-events-none filter blur-[40px] opacity-20 bg-blue-400" />
+          <div className={`absolute -top-5 -right-5 w-48 h-48 rounded-full pointer-events-none filter blur-[40px] opacity-20 ${wl.status === 'notified' ? 'bg-emerald-400' : 'bg-blue-400'}`} />
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
             <div>
-              <span className="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-amber-200 mb-4 border border-white/10 backdrop-blur-md">
+              <span className={`inline-flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider mb-4 border border-white/10 backdrop-blur-md ${wl.status === 'notified' ? 'text-emerald-200' : 'text-amber-200'}`}>
                 <Milk size={10} />
                 <span>{requestedPlan} Daily Plan</span>
               </span>
@@ -194,20 +222,80 @@ export default function CustomerDashboard() {
           </div>
         </motion.div>
 
-        <motion.div
-          variants={itemVariants}
-          className="bg-white dark:bg-slate-900 border border-border/40 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-4 text-[13px] font-semibold text-slate-600 dark:text-slate-400 leading-relaxed"
-        >
-          <h3 className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2">
-            <HelpCircle size={15} className="text-brand-secondary" /> How the Waitlist Works
-          </h3>
-          <p>At Amruth Dairy Farm, we limit our daily production to ensure every drop of milk is fresh, raw, and delivered directly within hours of milking.</p>
-          <p>Due to high demand, all local delivery zones are operating at full capacity. As soon as a spot opens up in your delivery zone, your queue status will update.</p>
-          <div className="pt-4 border-t border-border/40 dark:border-slate-800/60 flex justify-between items-center text-[11px] text-slate-400 dark:text-slate-500 font-bold">
-            <span>Registered: {new Date(wl.created_at).toLocaleDateString('en-IN')}</span>
-            <span>Status: <strong className="text-amber-600 uppercase font-black">{wl.status}</strong></span>
-          </div>
-        </motion.div>
+        {wl.status === 'notified' ? (
+          <motion.div
+            variants={itemVariants}
+            className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200/50 dark:border-emerald-800/30 rounded-2xl p-6 shadow-sm space-y-4"
+          >
+            <h3 className="text-[16px] font-black text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+              <CheckCircle size={18} /> Good News! Your Slot is Ready
+            </h3>
+            <p className="text-[13px] font-semibold text-emerald-700/80 dark:text-emerald-300/80 leading-relaxed">
+              A delivery slot has opened up for you. You can now complete your subscription and start receiving farm-fresh milk.
+            </p>
+            <div className="pt-2 flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/onboarding"
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md shadow-emerald-500/20 transition-all"
+              >
+                <span>Complete Subscription</span>
+                <ArrowRight size={14} />
+              </Link>
+              <button
+                onClick={() => handleDeclineSlot(wl.id)}
+                disabled={declining}
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-white/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-emerald-200/50 dark:border-emerald-800/50 text-slate-600 dark:text-slate-400 hover:text-rose-500 font-bold text-xs uppercase tracking-wider rounded-xl transition-all disabled:opacity-50"
+              >
+                <X size={14} />
+                <span>{declining ? 'Declining...' : 'Decline Slot'}</span>
+              </button>
+            </div>
+            <div className="pt-4 border-t border-emerald-200/50 dark:border-emerald-800/30 flex justify-between items-center text-[11px] text-emerald-600/60 dark:text-emerald-400/50 font-bold">
+              <span>Registered: {new Date(wl.created_at).toLocaleDateString('en-IN')}</span>
+              <span>Status: <strong className="text-emerald-600 dark:text-emerald-400 uppercase font-black">{wl.status}</strong></span>
+            </div>
+          </motion.div>
+        ) : wl.status === 'cancelled' ? (
+          <motion.div
+            variants={itemVariants}
+            className="bg-rose-50 dark:bg-rose-900/10 border border-rose-200/50 dark:border-rose-800/30 rounded-2xl p-6 shadow-sm space-y-4"
+          >
+            <h3 className="text-[16px] font-black text-rose-800 dark:text-rose-400 flex items-center gap-2">
+              <X size={18} /> Waitlist Cancelled
+            </h3>
+            <p className="text-[13px] font-semibold text-rose-700/80 dark:text-rose-300/80 leading-relaxed">
+              You have declined the available slot or cancelled your waitlist request. If you change your mind later, you can start a new request.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/onboarding"
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-white/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl transition-all"
+              >
+                <span>Start New Request</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+            <div className="pt-4 border-t border-rose-200/50 dark:border-rose-800/30 flex justify-between items-center text-[11px] text-rose-600/60 dark:text-rose-400/50 font-bold">
+              <span>Registered: {new Date(wl.created_at).toLocaleDateString('en-IN')}</span>
+              <span>Status: <strong className="text-rose-600 dark:text-rose-400 uppercase font-black">{wl.status}</strong></span>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            variants={itemVariants}
+            className="bg-white dark:bg-slate-900 border border-border/40 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-4 text-[13px] font-semibold text-slate-600 dark:text-slate-400 leading-relaxed"
+          >
+            <h3 className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2">
+              <HelpCircle size={15} className="text-brand-secondary" /> How the Waitlist Works
+            </h3>
+            <p>At Amruth Dairy Farm, we limit our daily production to ensure every drop of milk is fresh, raw, and delivered directly within hours of milking.</p>
+            <p>Due to high demand, all local delivery zones are operating at full capacity. As soon as a spot opens up in your delivery zone, your queue status will update.</p>
+            <div className="pt-4 border-t border-border/40 dark:border-slate-800/60 flex justify-between items-center text-[11px] text-slate-400 dark:text-slate-500 font-bold">
+              <span>Registered: {new Date(wl.created_at).toLocaleDateString('en-IN')}</span>
+              <span>Status: <strong className="text-amber-600 uppercase font-black">{wl.status}</strong></span>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     )
   }
