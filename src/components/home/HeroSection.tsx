@@ -51,13 +51,6 @@ export function HeroSection() {
 
           {/* LEFT: TEXT CONTENT */}
           <div className="flex flex-col items-start text-left">
-
-            {/* Badge */}
-            {/* <div className="inline-flex items-center gap-1.5 px-2 py-1 text-yellow-500 bg-white rounded-[5px] text-[10px] shadow-sm tracking-widest mb-4 s">
-              <ShieldCheck size={14} />
-              100% Pure • Farm Fresh
-            </div> */}
-
             {/* Headline */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold  text-[#ffff]  leading-[1.05] tracking-tight mb-4">
               <span className='text-[#FFC72C] drop-shadow-md'>Fresh Milk</span> Delivered <br />
@@ -69,13 +62,11 @@ export function HeroSection() {
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
-                    d="
-      M0 10
-      Q125 -2 250 10
-      L250 11
-      Q125 5 0 16
-      Z
-    "
+                    d="M0 10
+                     Q125 -2 250 10
+                     L250 11
+                     Q125 5 0 16
+                     Z"
                     fill="#FFC72C"
                   />
                 </svg>
@@ -132,54 +123,25 @@ export function HeroSection() {
                 </div>
               </Link>
             </div>
-
-            {/* Slide dots — mobile only */}
-            <div className="flex md:hidden justify-center gap-2 mt-4 w-full">
-              {slides.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentSlide(idx)}
-                  className={cn(
-                    'h-2 rounded-full border-none cursor-pointer transition-all duration-500 p-0',
-                    currentSlide === idx ? 'w-6 bg-sky-600' : 'w-2 bg-sky-600/25'
-                  )}
-                  aria-label={`Go to slide ${idx + 1}`}
-                />
-              ))}
-            </div>
           </div>
-
-          {/* RIGHT COLUMN SPACER */}
-          <div className="hidden md:block" />
         </div>
       </div>
 
       {/* ── Slide dots — desktop only ── */}
-      <div className="hidden md:flex absolute bottom-[160px] left-1/2 -translate-x-1/2 gap-2 z-20">
+      <div className="hidden sm:flex absolute bottom-0 left-1/2 -translate-x-1/2 gap-2 z-20">
         {slides.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentSlide(idx)}
             className={cn(
-              'h-2 rounded-full border-none cursor-pointer transition-all duration-500 p-0',
-              currentSlide === idx ? 'w-6 bg-sky-600' : 'w-2 bg-sky-600/25'
+              'h-2 rounded-full border-none cursor-pointer transition-all duration-500',
+              currentSlide === idx ? 'w-5 bg-sky-600' : 'w-2 bg-sky-600/25'
             )}
             aria-label={`Go to slide ${idx + 1}`}
           />
         ))}
       </div>
 
-      {/* ── Floating delivery card — desktop only ── */}
-      {/* <div className="hidden md:flex absolute bottom-[130px] right-[calc(50%-540px)] z-20 bg-white border border-slate-950/4 rounded-brand-lg py-4 px-6 items-center gap-3.5 shadow-card">
-        <div className="w-11 h-11 rounded-full bg-sky-50 flex items-center justify-center">
-          <Clock size={20} className="text-sky-600" />
-        </div>
-        <div className="flex flex-col text-left">
-          <span className="text-xs font-bold text-slate-600">Tomorrow Delivery</span>
-          <span className="text-xl font-black text-slate-950 leading-tight mt-0.5">6:00 AM</span>
-          <span className="text-[10px] font-extrabold text-sky-600 uppercase tracking-wider mt-0.5">Before Sunrise</span>
-        </div>
-      </div> */}
     </section>
   )
 }
