@@ -51,7 +51,7 @@ export async function PUT(request: Request) {
       .from('profiles')
       .upsert({
         id: user.id,
-        phone: existing?.phone ?? (user.phone ?? ''),
+        phone: existing?.phone || user.phone || null,
         full_name,
         address,
         area,

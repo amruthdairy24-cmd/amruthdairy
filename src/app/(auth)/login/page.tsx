@@ -394,7 +394,7 @@ export default function LoginPage() {
     <>
       <Navbar />
       <div
-        className="min-h-screen  "
+        className="min-h-screen"
         style={{
           backgroundImage: "url('/images/bg/login-bg-image.png')",
           backgroundSize: 'cover',
@@ -434,8 +434,6 @@ export default function LoginPage() {
           {/* ── RIGHT PANEL ────────────────────────────────── */}
           <div className="col-span-1 lg:col-span-5 flex flex-col justify-between p-6 sm:p-12 relative overflow-hidden transition-colors duration-300 min-h-screen">
 
-            {/* Mobile top bar */}
-
             {/* Form card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -459,7 +457,7 @@ export default function LoginPage() {
                     <div className="flex gap-2 p-1.5 bg-slate-100/80 rounded-2xl backdrop-blur-sm">
                       <button
                         type="button"
-                        className="flex-1 h-11 cursor-pointer  rounded-xl bg-[#02429C] text-white font-bold text-sm shadow-lg shadow-slate-900/5 transition-all"
+                        className="flex-1 h-11 cursor-pointer rounded-xl bg-[#02429C] text-white font-bold text-sm shadow-lg shadow-slate-900/5 transition-all"
                         aria-current="page"
                       >
                         Sign In
@@ -467,7 +465,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => { setStep('register'); setError('') }}
-                        className="flex-1 h-11 cursor-pointer  rounded-xl text-slate-600 font-bold text-sm hover:text-slate-900 transition-all"
+                        className="flex-1 h-11 cursor-pointer rounded-xl text-slate-600 font-bold text-sm hover:text-slate-900 transition-all"
                       >
                         Create Account
                       </button>
@@ -481,7 +479,7 @@ export default function LoginPage() {
                             ? 'border-red-400'
                             : 'border-slate-200 focus-within:border-brand-secondary focus-within:shadow-lg focus-within:shadow-brand-secondary/20'
                         )}>
-                          <span className="flex items-center px-5 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
+                          <span className="flex items-center shrink-0 px-4 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
                             <AtSign size={18} strokeWidth={2.5} />
                           </span>
                           <input
@@ -491,7 +489,7 @@ export default function LoginPage() {
                             placeholder="username or email@example.com"
                             value={identifier}
                             onChange={e => { setIdentifier(e.target.value); clearError() }}
-                            className="flex-1 h-full pr-5 bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
+                            className="flex-1 min-w-0 h-full pr-4 bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
                             autoFocus
                           />
                         </div>
@@ -505,7 +503,7 @@ export default function LoginPage() {
                             ? 'border-red-400'
                             : 'border-slate-200 focus-within:border-brand-secondary focus-within:shadow-lg focus-within:shadow-brand-secondary/20'
                         )}>
-                          <span className="flex items-center px-5 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
+                          <span className="flex items-center shrink-0 px-4 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
                             <Lock size={18} strokeWidth={2.5} />
                           </span>
                           <input
@@ -515,12 +513,13 @@ export default function LoginPage() {
                             placeholder="Enter your password"
                             value={password}
                             onChange={e => { setPassword(e.target.value); clearError() }}
-                            className="flex-1 h-full bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
+                            className="flex-1 min-w-0 h-full bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
                           />
+                          {/* ✅ FIX: shrink-0 prevents button from being clipped on mobile */}
                           <button
                             type="button"
                             onClick={() => setShowPassword(v => !v)}
-                            className="flex items-center cursor-pointer  px-5 h-full text-slate-400 hover:text-brand-secondary transition-colors"
+                            className="flex items-center justify-center cursor-pointer shrink-0 w-12 h-full text-slate-400 hover:text-brand-secondary transition-colors"
                             aria-label={showPassword ? 'Hide password' : 'Show password'}
                             tabIndex={-1}
                           >
@@ -540,7 +539,7 @@ export default function LoginPage() {
 
                       <button
                         type="submit"
-                        className="group relative cursor-pointer  w-full h-14 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-2xl hover:shadow-brand-primary/30 active:scale-[0.98] rounded-2xl flex items-center justify-center gap-2.5 text-sm font-bold text-white transition-all overflow-hidden  disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
+                        className="group relative cursor-pointer w-full h-14 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-2xl hover:shadow-brand-primary/30 active:scale-[0.98] rounded-2xl flex items-center justify-center gap-2.5 text-sm font-bold text-white transition-all overflow-hidden disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
                       >
                         <span className="absolute inset-0 bg-gradient-to-r from-brand-secondary to-brand-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                         <span className="relative flex items-center gap-2.5">
@@ -586,13 +585,13 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => { setStep('login'); setError('') }}
-                        className="flex-1 h-11 cursor-pointer  rounded-xl text-slate-600 font-bold text-sm hover:text-slate-900 transition-all"
+                        className="flex-1 h-11 cursor-pointer rounded-xl text-slate-600 font-bold text-sm hover:text-slate-900 transition-all"
                       >
                         Sign In
                       </button>
                       <button
                         type="button"
-                        className="flex-1 h-11 cursor-pointer  rounded-xl bg-[#02429C] text-white font-bold text-sm shadow-lg shadow-slate-900/5 transition-all"
+                        className="flex-1 h-11 cursor-pointer rounded-xl bg-[#02429C] text-white font-bold text-sm shadow-lg shadow-slate-900/5 transition-all"
                         aria-current="page"
                       >
                         Create Account
@@ -604,7 +603,7 @@ export default function LoginPage() {
                       {/* Username */}
                       <div className="flex flex-col gap-2.5">
                         <div className="group flex items-center rounded-2xl border-2 border-slate-200 focus-within:border-brand-secondary focus-within:shadow-lg focus-within:shadow-brand-secondary/20 bg-white transition-all overflow-hidden h-14">
-                          <span className="flex items-center px-5 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
+                          <span className="flex items-center shrink-0 px-4 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
                             <User size={18} strokeWidth={2.5} />
                           </span>
                           <input
@@ -615,7 +614,7 @@ export default function LoginPage() {
                             maxLength={20}
                             value={regUsername}
                             onChange={e => { setRegUsername(e.target.value); clearError() }}
-                            className="flex-1 h-full pr-5 bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
+                            className="flex-1 min-w-0 h-full pr-4 bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
                             autoFocus
                           />
                         </div>
@@ -624,7 +623,7 @@ export default function LoginPage() {
                       {/* Email */}
                       <div className="flex flex-col gap-2.5">
                         <div className="group flex items-center rounded-2xl border-2 border-slate-200 focus-within:border-brand-secondary focus-within:shadow-lg focus-within:shadow-brand-secondary/20 bg-white transition-all overflow-hidden h-14">
-                          <span className="flex items-center px-5 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
+                          <span className="flex items-center shrink-0 px-4 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
                             <Mail size={18} strokeWidth={2.5} />
                           </span>
                           <input
@@ -634,7 +633,7 @@ export default function LoginPage() {
                             placeholder="you@example.com"
                             value={regEmail}
                             onChange={e => { setRegEmail(e.target.value); clearError() }}
-                            className="flex-1 h-full pr-5 bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
+                            className="flex-1 min-w-0 h-full pr-4 bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
                           />
                         </div>
                       </div>
@@ -642,7 +641,7 @@ export default function LoginPage() {
                       {/* Password */}
                       <div className="flex flex-col gap-2.5">
                         <div className="group flex items-center rounded-2xl border-2 border-slate-200 focus-within:border-brand-secondary focus-within:shadow-lg focus-within:shadow-brand-secondary/20 bg-white transition-all overflow-hidden h-14">
-                          <span className="flex items-center px-5 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
+                          <span className="flex items-center shrink-0 px-4 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
                             <Lock size={18} strokeWidth={2.5} />
                           </span>
                           <input
@@ -652,12 +651,13 @@ export default function LoginPage() {
                             placeholder="Minimum 8 characters"
                             value={regPassword}
                             onChange={e => { setRegPassword(e.target.value); clearError() }}
-                            className="flex-1 h-full bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
+                            className="flex-1 min-w-0 h-full bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
                           />
+                          {/* ✅ FIX: shrink-0 + fixed width keeps button always visible */}
                           <button
                             type="button"
                             onClick={() => setShowRegPassword(v => !v)}
-                            className="flex items-center cursor-pointer  px-5 h-full text-slate-500 hover:text-brand-secondary transition-colors"
+                            className="flex items-center justify-center cursor-pointer shrink-0 w-12 h-full text-slate-500 hover:text-brand-secondary transition-colors"
                             aria-label={showRegPassword ? 'Hide password' : 'Show password'}
                             tabIndex={-1}
                           >
@@ -677,7 +677,7 @@ export default function LoginPage() {
 
                       <button
                         type="submit"
-                        className="group cursor-pointer  relative w-full h-14 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-2xl hover:shadow-brand-primary/30 active:scale-[0.98] rounded-2xl flex items-center justify-center gap-2.5 text-sm font-bold text-white transition-all overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
+                        className="group cursor-pointer relative w-full h-14 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-2xl hover:shadow-brand-primary/30 active:scale-[0.98] rounded-2xl flex items-center justify-center gap-2.5 text-sm font-bold text-white transition-all overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
                       >
                         <span className="absolute inset-0 bg-gradient-to-r from-brand-secondary to-brand-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                         <span className="relative flex items-center gap-2.5">
@@ -701,7 +701,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => { setStep('login'); setError('') }}
-                        className="text-brand-secondary cursor-pointer  hover:text-brand-primary underline underline-offset-2 transition-colors"
+                        className="text-brand-secondary cursor-pointer hover:text-brand-primary underline underline-offset-2 transition-colors"
                       >
                         Sign In Here
                       </button>
@@ -720,14 +720,6 @@ export default function LoginPage() {
                     className="flex flex-col gap-2"
                   >
                     <div className="text-center space-y-4">
-                      {/* <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 200 }}
-                    className="w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 text-brand-secondary flex items-center justify-center mx-auto ring-8 ring-brand-secondary/5"
-                  > */}
-                      {/* <Mail size={32} strokeWidth={2.5} />
-                  </motion.div> */}
                       <div>
                         <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 tracking-tight">
                           Check Your Email
@@ -793,7 +785,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => handleOtpVerify(otp.join(''))}
-                      className="group relative cursor-pointer  w-full h-14 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-2xl hover:shadow-brand-primary/30 active:scale-[0.98] rounded-2xl flex items-center justify-center gap-2.5 text-sm font-bold text-white transition-all overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
+                      className="group relative cursor-pointer w-full h-14 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-2xl hover:shadow-brand-primary/30 active:scale-[0.98] rounded-2xl flex items-center justify-center gap-2.5 text-sm font-bold text-white transition-all overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
                     >
                       <span className="absolute inset-0 bg-gradient-to-r from-brand-secondary to-brand-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                       <span className="relative flex items-center gap-2.5">
@@ -875,16 +867,13 @@ export default function LoginPage() {
 
                     <form onSubmit={handleForgotSubmit} className="flex flex-col gap-5">
                       <div className="flex flex-col gap-2.5">
-                        <label htmlFor={`${formId}-forgot-email`} className="text-[11px] font-black tracking-wider text-slate-500 uppercase pl-1">
-
-                        </label>
                         <div className={cn(
                           'group flex items-center rounded-2xl border-2 bg-white transition-all overflow-hidden h-14',
                           error
                             ? 'border-red-400'
                             : 'border-slate-200 focus-within:border-brand-secondary focus-within:shadow-lg focus-within:shadow-brand-secondary/20'
                         )}>
-                          <span className="flex items-center px-5 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
+                          <span className="flex items-center shrink-0 px-4 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
                             <Mail size={18} strokeWidth={2.5} />
                           </span>
                           <input
@@ -894,7 +883,7 @@ export default function LoginPage() {
                             placeholder="you@example.com"
                             value={forgotEmail}
                             onChange={e => { setForgotEmail(e.target.value); clearError() }}
-                            className="flex-1 h-full pr-5 bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
+                            className="flex-1 min-w-0 h-full pr-4 bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
                             autoFocus
                           />
                         </div>
@@ -1064,7 +1053,7 @@ export default function LoginPage() {
                             ? 'border-red-400'
                             : 'border-slate-200 focus-within:border-brand-secondary focus-within:shadow-lg focus-within:shadow-brand-secondary/20'
                         )}>
-                          <span className="flex items-center px-5 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
+                          <span className="flex items-center shrink-0 px-4 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
                             <Lock size={18} strokeWidth={2.5} />
                           </span>
                           <input
@@ -1074,13 +1063,14 @@ export default function LoginPage() {
                             placeholder="Minimum 8 characters"
                             value={newPassword}
                             onChange={e => { setNewPassword(e.target.value); clearError() }}
-                            className="flex-1 h-full bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
+                            className="flex-1 min-w-0 h-full bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
                             autoFocus
                           />
+                          {/* ✅ FIX: shrink-0 + fixed width keeps button always visible */}
                           <button
                             type="button"
                             onClick={() => setShowNewPassword(v => !v)}
-                            className="flex items-center px-5 h-full text-slate-400 hover:text-brand-secondary transition-colors"
+                            className="flex items-center justify-center shrink-0 w-12 h-full text-slate-400 hover:text-brand-secondary transition-colors"
                             aria-label={showNewPassword ? 'Hide password' : 'Show password'}
                             tabIndex={-1}
                           >

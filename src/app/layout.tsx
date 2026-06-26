@@ -59,7 +59,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${plusJakartaSans.variable} ${inter.variable} ${jetbrainsMono.variable} ${playfairDisplay.variable}`}>
-      <body suppressHydrationWarning className="font-body antialiased bg-cream-50 text-brown-800 transition-colors duration-300">
+      <body suppressHydrationWarning className="font-body antialiased bg-cream-50 text-brown-800 transition-colors duration-300 overflow-x-hidden">
         <ThemeProvider>
           {children}
         </ThemeProvider>
