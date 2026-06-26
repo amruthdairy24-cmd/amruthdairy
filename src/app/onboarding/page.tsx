@@ -36,6 +36,7 @@ export default function OnboardingPage() {
   // Step 2
   const [quantity, setQuantity] = useState(1.0)
   const [startDate, setStartDate] = useState('')
+  const [minAllowedDate, setMinAllowedDate] = useState('')
   const [deliveryNotes, setDeliveryNotes] = useState('')
   const [excludedDates, setExcludedDates] = useState<string[]>([])
 
@@ -55,9 +56,24 @@ export default function OnboardingPage() {
   }, [])
 
   useEffect(() => {
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    setStartDate(tomorrow.toISOString().split('T')[0])
+    const params = new URLSearchParams(window.location.search)
+    const minDateParam = params.get('min_date')
+    const quantityParam = params.get('quantity')
+    
+    if (quantityParam) {
+      setQuantity(Number(quantityParam))
+    }
+
+    if (minDateParam) {
+      setMinAllowedDate(minDateParam)
+      setStartDate(minDateParam)
+    } else {
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const tomorrowStr = tomorrow.toISOString().split('T')[0]
+      setMinAllowedDate(tomorrowStr)
+      setStartDate(tomorrowStr)
+    }
   }, [])
 
   // Fetch admin-managed price on mount
@@ -126,8 +142,7 @@ export default function OnboardingPage() {
 
   function handlePlanSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0,0,0,0)
-    if (new Date(startDate) < tomorrow) { setError('Start date must be tomorrow or later.'); return }
+    if (new Date(startDate) < new Date(minAllowedDate)) { setError(`Start date must be ${new Date(minAllowedDate).toLocaleDateString('en-IN')} or later.`); return }
     setError(''); setStep(3)
   }
 
@@ -455,7 +470,7 @@ export default function OnboardingPage() {
                           <input
                             type="date"
                             value={startDate}
-                            min={tomorrowStr}
+                            min={minAllowedDate}
                             onChange={e => setStartDate(e.target.value)}
                             className="w-full h-11 pl-11 pr-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                             required
