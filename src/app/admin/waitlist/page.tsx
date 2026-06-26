@@ -8,7 +8,7 @@ export default async function WaitlistPage() {
 
   const { data, error } = await supabase
     .from('waitlist')
-    .select(`id, quantity_litres, status, created_at, profiles(full_name, area)`)
+    .select(`id, quantity_litres, requested_start_date, status, created_at, profiles(full_name, phone, area)`)
     .order('created_at', { ascending: true })
 
   if (error) return <div className="text-red-500">Error: {error.message}</div>

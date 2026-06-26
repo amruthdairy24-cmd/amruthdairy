@@ -144,6 +144,17 @@ export async function POST(request: Request) {
       // We don't fail the whole request here, but log it
     }
 
+    // 9. Update waitlist to converted if the user was on the waitlist
+    const { error: waitlistUpdateError } = await adminSupabase
+      .from('waitlist')
+      .update({ status: 'converted' })
+      .eq('customer_id', user.id)
+      .in('status', ['waiting', 'notified']);
+
+    if (waitlistUpdateError) {
+      console.error('Waitlist conversion error:', waitlistUpdateError.message);
+    }
+
     // 9. Return Razorpay order details for payment modal
     return NextResponse.json({
       success: true,

@@ -38,6 +38,7 @@ export default function OnboardingPage() {
   // Step 2
   const [quantity, setQuantity] = useState(1.0)
   const [startDate, setStartDate] = useState('')
+  const [minAllowedDate, setMinAllowedDate] = useState('')
   const [deliveryNotes, setDeliveryNotes] = useState('')
   const [excludedDates, setExcludedDates] = useState<string[]>([])
 
@@ -57,9 +58,24 @@ export default function OnboardingPage() {
   }, [])
 
   useEffect(() => {
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    setStartDate(tomorrow.toISOString().split('T')[0])
+    const params = new URLSearchParams(window.location.search)
+    const minDateParam = params.get('min_date')
+    const quantityParam = params.get('quantity')
+    
+    if (quantityParam) {
+      setQuantity(Number(quantityParam))
+    }
+
+    if (minDateParam) {
+      setMinAllowedDate(minDateParam)
+      setStartDate(minDateParam)
+    } else {
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const tomorrowStr = tomorrow.toISOString().split('T')[0]
+      setMinAllowedDate(tomorrowStr)
+      setStartDate(tomorrowStr)
+    }
   }, [])
 
   useEffect(() => {
@@ -104,6 +120,11 @@ export default function OnboardingPage() {
             setArea(data.profile.area || 'Padil')
             setLandmark(data.profile.landmark || '')
             setFloorNotes(data.profile.floor_notes || '')
+            
+            // If they already have an address saved, we can safely jump to Step 2
+            if (data.profile.address && data.profile.address.trim() !== '') {
+              setStep(2)
+            }
           }
         }
       }).catch(() => {})
@@ -130,8 +151,7 @@ export default function OnboardingPage() {
 
   function handlePlanSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0,0,0,0)
-    if (new Date(startDate) < tomorrow) { setError('Start date must be tomorrow or later.'); return }
+    if (new Date(startDate) < new Date(minAllowedDate)) { setError(`Start date must be ${new Date(minAllowedDate).toLocaleDateString('en-IN')} or later.`); return }
     setError(''); setStep(3)
   }
 
@@ -456,22 +476,22 @@ export default function OnboardingPage() {
                         </div>
                       </div>
 
-                      {/* Start date + daily rate */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-xs font-bold text-slate-600">Start Date</label>
-                          <div className="relative flex items-center">
-                            <Calendar size={14} className="absolute left-4 text-slate-400 pointer-events-none" />
-                            <input
-                              type="date"
-                              value={startDate}
-                              min={tomorrowStr}
-                              onChange={e => setStartDate(e.target.value)}
-                              className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
-                              required
-                            />
-                          </div>
+                    {/* Start date + daily rate */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-600 dark:text-slate-300">Start Date</label>
+                        <div className="relative flex items-center">
+                          <Calendar size={14} className="absolute left-4 text-slate-400 dark:text-slate-550 pointer-events-none" />
+                          <input
+                            type="date"
+                            value={startDate}
+                            min={minAllowedDate}
+                            onChange={e => setStartDate(e.target.value)}
+                            className="w-full h-11 pl-11 pr-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                            required
+                          />
                         </div>
+                      </div>
 
                         <div className="flex flex-col gap-1.5">
                           <label className="text-xs font-bold text-slate-600">Daily Rate</label>
