@@ -46,12 +46,11 @@ export default function OnboardingPage() {
   const [milkPrices, setMilkPrices] = useState<Record<string, number>>({})
   const [priceLoading, setPriceLoading] = useState(true)
 
-  // Calculations
-  const [proRataDays, setProRataDays] = useState(0)
-  const [proRataAmount, setProRataAmount] = useState(0)
   const [monthlyAmount, setMonthlyAmount] = useState(0)
   const [dailyRate, setDailyRate] = useState(0)
   const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null)
+  const [deliveryDays, setDeliveryDays] = useState(0)
+  const [isMonthFull, setIsMonthFull] = useState(false)
 
   const handleExcludedDatesChange = useCallback((dates: string[]) => {
     setExcludedDates(dates)
@@ -91,17 +90,12 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (!startDate || Object.keys(milkPrices).length === 0) return
     const dRate = calculateDailyRate(quantity, milkPrices)
-    const start = new Date(startDate)
-    const startYear = start.getFullYear()
-    const startMonth = start.getMonth() + 1
-    const mAmount = calculateMonthlyAmount(dRate, startYear, startMonth)
     setDailyRate(dRate)
-    setMonthlyAmount(mAmount)
-    const daysInMonth = getDaysInMonth(startYear, startMonth)
-    const remaining = daysInMonth - start.getDate() + 1
-    setProRataDays(remaining)
-    setProRataAmount(Math.round(remaining * dRate * 100) / 100)
   }, [quantity, startDate, milkPrices])
+
+  useEffect(() => {
+    setMonthlyAmount(deliveryDays * dailyRate)
+  }, [deliveryDays, dailyRate])
 
   useEffect(() => {
     fetch('/api/customer/dashboard')
@@ -149,9 +143,37 @@ export default function OnboardingPage() {
     finally { setLoading(false) }
   }
 
-  function handlePlanSubmit(e: React.FormEvent) {
+  async function handlePlanSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (new Date(startDate) < new Date(minAllowedDate)) { setError(`Start date must be ${new Date(minAllowedDate).toLocaleDateString('en-IN')} or later.`); return }
+    
+    if (isMonthFull) {
+      // Direct to waitlist
+      setError(''); setLoading(true)
+      try {
+        const res = await fetch('/api/subscription/new', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantity, start_date: startDate, excluded_dates: excludedDates })
+        })
+        const data = await res.json()
+        if (data.waitlisted) {
+          setWaitlistPosition(data.position)
+          setStep('waitlist')
+          setTimeout(() => { window.location.href = '/dashboard' }, 4000)
+        } else if (data.success) {
+          // Fallback if somehow it succeeded
+          setStep('success')
+          setTimeout(() => { window.location.href = '/dashboard' }, 2000)
+        } else {
+          setError(data.message || 'Failed to join waitlist.')
+        }
+      } catch { setError('Network error.') }
+      finally { setLoading(false) }
+      return
+    }
+
+    if (deliveryDays === 0) { setError('Please include at least one delivery day.'); return }
     setError(''); setStep(3)
   }
 
@@ -237,29 +259,32 @@ export default function OnboardingPage() {
                     const done = (step as number) > num
                     const active = step === num
                     return (
-                      <div key={num} className="flex-1 flex flex-col items-center gap-1.5 relative z-10">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (typeof step === 'number') {
-                              if (num < step) setStep(num as OnboardingStep)
-                            }
-                          }}
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => {
+                          if (typeof step === 'number') {
+                            if (num < step) setStep(num as OnboardingStep)
+                          }
+                        }}
+                        className={cn("flex-1 flex flex-col items-center gap-1.5 relative z-10 transition-all cursor-pointer border-none bg-transparent group outline-none", done ? "opacity-100" : "opacity-90")}
+                      >
+                        <div
                           className={cn(
-                          'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-200 border-none',
+                          'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-300 border-none mx-auto',
                           done
-                            ? 'bg-[#014DA4] text-white cursor-pointer hover:bg-[#014DA4]/90 shadow-sm'
+                            ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-sm group-hover:bg-blue-700'
                             : active
-                              ? 'bg-[#014DA4] text-white ring-4 ring-[#014DA4]/20'
-                              : 'bg-white text-slate-400 border border-slate-200'
+                              ? 'bg-blue-600 dark:bg-blue-500 text-white ring-4 ring-blue-600/20 dark:ring-blue-500/20 shadow-md'
+                              : 'bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 group-hover:border-blue-300'
                         )}>
                           {num}
-                        </button>
-                        <div className="hidden sm:flex flex-col items-center text-center min-w-0">
-                          <p className={cn('text-xs font-black leading-none', active ? 'text-slate-900' : 'text-slate-400')}>{label}</p>
-                          <p className="text-[9px] font-semibold text-slate-400 mt-0.5">{sub}</p>
                         </div>
-                      </div>
+                        <div className="hidden sm:flex flex-col items-center text-center min-w-0 mt-1">
+                          <p className={cn('text-xs font-black leading-none transition-colors duration-300', active ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600')}>{label}</p>
+                          <p className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5">{sub}</p>
+                        </div>
+                      </button>
                     )
                   })}
                 </div>
@@ -531,18 +556,29 @@ export default function OnboardingPage() {
                           onExcludedDatesChange={handleExcludedDatesChange}
                           initialExcludedDates={excludedDates}
                           maxMonthsAhead={1}
+                          quantity={quantity}
+                          onMonthAvailabilityChange={setIsMonthFull}
+                          onDeliveryDaysChange={setDeliveryDays}
                         />
+                      )}
+
+                      {isMonthFull && (
+                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-3 items-start">
+                          <Clock className="text-amber-600 shrink-0 mt-0.5" size={18} />
+                          <div>
+                            <p className="text-xs font-black text-amber-900">All slots for this month are full</p>
+                            <p className="text-[11px] font-semibold text-amber-700/80 mt-1 leading-relaxed">
+                              We are currently operating at maximum capacity for the selected quantity this month. You can join our waitlist and we will notify you as soon as a slot opens up.
+                            </p>
+                          </div>
+                        </div>
                       )}
 
                       {/* Monthly preview card */}
                       <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 space-y-2.5">
-                        <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                          <span>Monthly Amount</span>
-                          <span className="font-black text-slate-900 font-mono">₹{monthlyAmount.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                          <span>First payment (pro-rata)</span>
-                          <span className="font-black text-blue-600 font-mono">₹{proRataAmount.toFixed(2)}</span>
+                        <div className="flex justify-between items-center text-sm font-bold text-slate-600">
+                          <span>Total Monthly Amount</span>
+                          <span className="font-black text-blue-600 font-mono text-lg">₹{monthlyAmount.toFixed(2)}</span>
                         </div>
                       </div>
 
@@ -556,8 +592,14 @@ export default function OnboardingPage() {
                         <button type="button" onClick={() => setStep(1)} className="px-5 h-12 border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 text-xs font-bold rounded-xl cursor-pointer transition-all shadow-sm">
                           Back
                         </button>
-                        <button type="submit" className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all border-none flex items-center justify-center gap-2">
-                          Review Plan Details <ArrowRight size={16} />
+                        <button type="submit" disabled={loading} className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all border-none flex items-center justify-center gap-2 disabled:opacity-50">
+                          {loading ? (
+                            <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : isMonthFull ? (
+                            <><span>Join Waitlist</span><Clock size={16} /></>
+                          ) : (
+                            <><span>Review Plan Details</span><ArrowRight size={16} /></>
+                          )}
                         </button>
                       </div>
                     </form>
@@ -589,9 +631,9 @@ export default function OnboardingPage() {
                         {[
                           { label: 'Plan Quantity', icon: <Package size={13} />, value: `${quantity} Litre${quantity > 1 ? 's' : ''} / Day` },
                           { label: 'Unit Price', icon: <Tag size={13} />, value: `₹${dailyRate.toFixed(2)} / day` },
-                          { label: 'Days in Month', icon: <Calendar size={13} />, value: `${getDaysInMonth(new Date(startDate).getFullYear(), new Date(startDate).getMonth() + 1)} Days (${new Date(startDate).toLocaleString('en-IN', { month: 'short' })})` },
+                          { label: 'Delivery Days', icon: <Calendar size={13} />, value: `${deliveryDays} Days (${new Date(startDate).toLocaleString('en-IN', { month: 'short' })})` },
                           { label: 'Starting Date', icon: <Calendar size={13} />, value: new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) },
-                          { label: 'Monthly Rate', icon: <CreditCard size={13} />, value: `₹${monthlyAmount.toFixed(2)}` },
+                          { label: 'Total Amount', icon: <CreditCard size={13} />, value: `₹${monthlyAmount.toFixed(2)}` },
                           { label: 'Delivery Area', icon: <MapPin size={13} />, value: area },
                           { label: 'Address', icon: <Home size={13} />, value: address },
                         ].map(({ label, icon, value }) => (
@@ -602,20 +644,12 @@ export default function OnboardingPage() {
                         ))}
                       </div>
 
-                      {/* Pro-rata invoice */}
-                      <div className="bg-slate-50/85 border border-slate-200 rounded-2xl p-5 space-y-3">
-                        <p className="text-xs font-extrabold text-slate-900 mb-2 pb-2 border-b border-slate-200/50">Pro-Rata Invoice (First Month)</p>
-                        <div className="flex justify-between items-center text-[11px] font-bold text-slate-600">
-                          <span>Days remaining in {new Date(startDate).toLocaleString('en-IN', { month: 'long' })}</span>
-                          <span>{proRataDays} days</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[11px] font-bold text-slate-600">
-                          <span>{proRataDays} days × ₹{dailyRate.toFixed(2)}/day</span>
-                          <span>₹{proRataAmount.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs font-extrabold text-slate-900 pt-2 border-t border-slate-200/60">
-                          <span>Total Due Today</span>
-                          <span className="text-sm font-black text-emerald-600 font-mono">₹{proRataAmount.toFixed(2)}</span>
+                      {/* Total invoice */}
+                      <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-5 space-y-3">
+                        <p className="text-xs font-extrabold text-blue-900 mb-2 pb-2 border-b border-blue-200/50">Subscription Invoice</p>
+                        <div className="flex justify-between items-center text-sm font-extrabold text-blue-950 pt-1">
+                          <span>Total Amount</span>
+                          <span className="text-xl font-black text-blue-700 font-mono">₹{monthlyAmount.toFixed(2)}</span>
                         </div>
                       </div>
 
@@ -632,11 +666,11 @@ export default function OnboardingPage() {
                         <button
                           onClick={handlePayment}
                           disabled={loading}
-                          className="flex-1 h-12 bg-slate-900 dark:bg-slate-50 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all border-none flex items-center justify-center gap-2 disabled:opacity-50"
+                          className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all border-none flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                           {loading
-                            ? <span className="w-5 h-5 border-2 border-white dark:border-slate-900 border-t-transparent dark:border-t-transparent rounded-full animate-spin" />
-                            : <><CreditCard size={15} /><span>Pay ₹{proRataAmount.toFixed(2)} securely</span></>
+                            ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            : <><CreditCard size={15} /><span>Pay ₹{monthlyAmount.toFixed(2)} securely</span></>
                           }
                         </button>
                       </div>
@@ -669,7 +703,7 @@ export default function OnboardingPage() {
                     </motion.div>
                     <h2 className="text-xl font-black text-slate-900 leading-tight mb-2 font-display">Subscription Confirmed!</h2>
                     <p className="text-xs font-semibold text-slate-600 leading-relaxed mb-6 max-w-sm">
-                      Payment of <strong>₹{proRataAmount.toFixed(2)}</strong> confirmed.
+                      Payment of <strong>₹{monthlyAmount.toFixed(2)}</strong> confirmed.
                       <br />Your milk delivery starts soon! <Milk size={14} style={{ display: 'inline-block', verticalAlign: 'middle' }} />
                     </p>
                     <div className="w-full max-w-xs h-1 bg-slate-100 rounded-full overflow-hidden mb-2">
