@@ -45,6 +45,7 @@ export default function SkipDayPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [subscription, setSubscription] = useState<any>(null)
   const [upcomingSkips, setUpcomingSkips] = useState<SkipRequest[]>([])
+  const [latestPaidMonth, setLatestPaidMonth] = useState<string | null>(null)
 
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0)
 
@@ -56,6 +57,7 @@ export default function SkipDayPage() {
       if (json.success) {
         setSubscription(json.subscription)
         setUpcomingSkips(json.upcoming_skips || [])
+        setLatestPaidMonth(json.latest_paid_month || null)
       } else {
         setError(json.message || 'Failed to load details')
       }
@@ -76,6 +78,14 @@ export default function SkipDayPage() {
 
   const maxDate = new Date()
   maxDate.setDate(maxDate.getDate() + 14)
+  
+  if (latestPaidMonth) {
+    const paidMonthDate = new Date(latestPaidMonth);
+    const endOfPaidMonth = new Date(paidMonthDate.getFullYear(), paidMonthDate.getMonth() + 1, 0);
+    if (maxDate > endOfPaidMonth) {
+      maxDate.setTime(endOfPaidMonth.getTime());
+    }
+  }
 
   const isCutoffPassed = new Date().getHours() >= 21
 
@@ -316,7 +326,7 @@ export default function SkipDayPage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">1</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Select Your Date</p>
-                  <p className="text-slate-450 dark:text-slate-400 dark:text-slate-500 mt-1">Identify which day you want to skip. You have the flexibility to schedule skips up to 14 days in advance.</p>
+                  <p className="text-slate-450 dark:text-slate-400 dark:text-slate-500 mt-1">Identify which day you want to skip. You have the flexibility to schedule skips up to 14 days in advance, <strong className="text-emerald-600 dark:text-emerald-500 font-bold">within your paid subscription period</strong>.</p>
                 </div>
               </div>
 
