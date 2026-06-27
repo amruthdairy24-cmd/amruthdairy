@@ -51,6 +51,7 @@ export const metadata: Metadata = {
 }
 
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { Toaster } from 'react-hot-toast'
 
 export default function RootLayout({
   children,
@@ -62,6 +63,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className="font-body antialiased bg-cream-50 text-brown-800 transition-colors duration-300 overflow-x-hidden">
         <ThemeProvider>
           {children}
+          <Toaster position="bottom-center" />
         </ThemeProvider>
       </body>
     </html>

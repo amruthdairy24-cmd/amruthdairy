@@ -31,6 +31,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Active subscription not found' }, { status: 400 });
     }
 
+    // CHECK PAID MONTH
+    const skipMonthDate = new Date(skip_date);
+    const skipBillingMonth = `${skipMonthDate.getFullYear()}-${String(skipMonthDate.getMonth() + 1).padStart(2, '0')}-01`;
+    
+    const { data: paidMonth } = await adminSupabase
+      .from('billing_months')
+      .select('id')
+      .eq('subscription_id', subscription.id)
+      .eq('billing_month', skipBillingMonth)
+      .eq('payment_status', 'paid')
+      .maybeSingle();
+
+    if (!paidMonth) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'You cannot skip dates in a month you have not paid for yet.' 
+      }, { status: 400 });
+    }
+
     // DEADLINE CHECK (server-side, uses DB function — Rule #6)
     const { data: isWithinDeadline } = await adminSupabase.rpc('is_within_skip_deadline', {
       p_skip_date: skip_date

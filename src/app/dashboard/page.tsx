@@ -52,6 +52,7 @@ interface DashboardData {
   next_month_change: { quantity: number; amount: number } | null;
   recent_deliveries: Array<{ delivery_date: string; total_litres: number; delivery_status: string }>;
   upcoming_adjustments?: Array<{ id: string, adjustment_type: string, amount: number, description: string, target_month: string, refund_status?: string }>;
+  latest_paid_month: string | null;
 }
 
 // Framer Motion Animation Configurations (with explicit types locked)
@@ -78,6 +79,103 @@ const itemVariants = {
     }
   },
 } as const
+
+function RenewalBanner({ latest_paid_month }: { latest_paid_month: string | null }) {
+  const [showPopup, setShowPopup] = useState(false);
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1;
+  const currentYear = currentDate.getFullYear();
+  const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+  const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+  
+  const formattedCurrentMonth = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+  const formattedNextMonth = `${nextMonthYear}-${String(nextMonth).padStart(2, '0')}-01`;
+  
+  const isPast25th = currentDate.getDate() >= 25;
+
+  let renewalTargetMonth = formattedCurrentMonth;
+  let isRenewingNextMonth = false;
+
+  // Logic: 
+  // If they have already paid for current month, or if it's past the 25th, they are renewing for next month.
+  if (latest_paid_month === formattedCurrentMonth || isPast25th) {
+    renewalTargetMonth = formattedNextMonth;
+    isRenewingNextMonth = true;
+  }
+  
+  if (latest_paid_month === formattedNextMonth || (latest_paid_month && latest_paid_month > formattedNextMonth)) {
+    // Already paid for next month (or beyond), don't show button
+    return null;
+  }
+
+  const handleRenewClick = () => {
+    if (isRenewingNextMonth && !isPast25th) {
+      setShowPopup(true);
+    } else {
+      window.location.href = `/dashboard/renew?month=${renewalTargetMonth}`;
+    }
+  };
+
+  return (
+    <>
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 dark:from-amber-950/20 dark:to-orange-950/20 dark:border-amber-900/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-3xl group-hover:bg-amber-400/20 transition-all" />
+        <div className="flex items-center gap-4 z-10">
+          <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-amber-100 dark:border-amber-900/30 flex items-center justify-center flex-shrink-0 text-amber-500">
+            <Calendar size={20} />
+          </div>
+          <div>
+            <h3 className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">
+              {isRenewingNextMonth ? "Renew for Next Month" : "Renew Subscription"}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+              {!isRenewingNextMonth 
+                ? "Your subscription for this month is pending. Renew now to resume deliveries." 
+                : isPast25th 
+                  ? "It's time to renew your milk subscription for next month." 
+                  : "Next month's renewals open on the 25th."}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleRenewClick}
+          className={cn(
+            "z-10 px-6 h-11 rounded-xl text-xs font-bold shadow-md transition-all whitespace-nowrap border-none cursor-pointer flex items-center justify-center gap-2 w-full sm:w-auto",
+            (isRenewingNextMonth && !isPast25th)
+              ? "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50"
+              : "bg-amber-500 hover:bg-amber-600 text-white"
+          )}
+        >
+          <span>Renew Now</span>
+          <ArrowRight size={14} />
+        </button>
+      </div>
+
+      {showPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-xl border border-slate-200 dark:border-slate-800 relative">
+            <button onClick={() => setShowPopup(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+              <X size={20} />
+            </button>
+            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/20 text-amber-600 rounded-xl flex items-center justify-center mb-4">
+              <Clock size={24} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Renewals open on the 25th</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              You already have an active subscription for this month. The renewal window for next month will open on the 25th.
+            </p>
+            <button
+              onClick={() => setShowPopup(false)}
+              className="w-full h-11 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border-none cursor-pointer"
+            >
+              Okay, got it
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 export default function CustomerDashboard() {
   const [data, setData] = useState<DashboardData | null>(null)
@@ -420,6 +518,11 @@ export default function CustomerDashboard() {
             </div>
           </div>
         </div>
+      </motion.div>
+
+      {/* ─── RENEWAL BANNER ─── */}
+      <motion.div variants={itemVariants} className="relative z-10">
+        <RenewalBanner latest_paid_month={data.latest_paid_month} />
       </motion.div>
 
       {/* ─── 2. DASHBOARD STATS ROW (4 Gourmet Cream Cards) ─── */}
