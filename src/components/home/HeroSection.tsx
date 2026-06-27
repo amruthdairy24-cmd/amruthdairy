@@ -6,9 +6,9 @@ import { Clock, ShieldCheck, Truck, MapPin, ArrowRight, Play } from 'lucide-reac
 import { cn } from '@/lib/utils'
 
 const slides = [
-  { src: '/images/bg/amruthmilk-og-banner.png', alt: 'Amruth Dairy Premium Farm Fresh Milk Bottles' },
-  { src: '/images/bg/amruthmilk-og-banner.png', alt: 'Amruth Dairy Fresh Cow and Milk' },
-  { src: '/images/bg/amruthmilk-og-banner.png', alt: 'Amruth Dairy Delicious Fresh Butter and Cheese' },
+  { src: '/images/bg/hero-banner.png', mobileSrc: '/images/bg/mobile-banner-1.png', alt: 'Amruth Dairy Premium Farm Fresh Milk Bottles' },
+  { src: '/images/bg/hero-banner-2.png', mobileSrc: '/images/bg/mobile-banner-2.png', alt: 'Amruth Dairy Fresh Cow and Milk' },
+  { src: '/images/bg/hero-banner.png', mobileSrc: '/images/bg/mobile-banner-1.png', alt: 'Amruth Dairy Delicious Fresh Butter and Cheese' },
 ]
 
 export function HeroSection() {
@@ -34,16 +34,42 @@ export function HeroSection() {
           <div
             key={index}
             className={cn(
-              'absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-[1200ms] ',
+              'absolute inset-0 transition-all duration-[1200ms] ',
               isMounted && currentSlide === index
                 ? 'opacity-100 scale-100'
                 : 'opacity-0 scale-105'
             )}
-            style={{ backgroundImage: `url(${slide.src})` }}
             aria-hidden={currentSlide !== index}
-          />
+          >
+            {/* Desktop Background */}
+            <div 
+              className="hidden md:block absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url(${slide.src})` }}
+            />
+            {/* Mobile Background */}
+            <div 
+              className="block md:hidden absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url(${slide.mobileSrc || slide.src})` }}
+            />
+          </div>
         ))}
       </div>
+
+      {/* ── White gradient: left → center (desktop) ── */}
+      <div
+        className="hidden md:block absolute inset-0 z-[1] pointer-events-none"
+        style={{
+          background: 'linear-gradient(to right, #ffffff 0%, rgba(255,255,255,0.85) 35%, rgba(255,255,255,0.3) 60%, transparent 100%)',
+        }}
+      />
+
+      {/* ── White gradient: bottom → center (mobile) ── */}
+      <div
+        className="block md:hidden absolute inset-0 z-[1] pointer-events-none"
+        style={{
+          background: 'linear-gradient(to top, #ffffff 0%, rgba(255,255,255,0.90) 10%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+        }}
+      />
 
       {/* ── Content ── */}
       <div className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-8 md:relative md:bottom-auto md:left-auto md:right-auto md:flex-1 md:flex md:items-center md:max-w-7xl md:mx-auto md:w-full md:px-8 md:pb-0">
@@ -52,9 +78,10 @@ export function HeroSection() {
           {/* LEFT: TEXT CONTENT */}
           <div className="flex flex-col items-start text-left">
             {/* Headline */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold  text-[#ffff]  leading-[1.05] tracking-tight mb-4">
-              <span className='text-[#FFC72C] drop-shadow-md'>Fresh Milk</span> Delivered <br />
-              <span className="relative inline-block text-white font-bold">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold  text-[#013378]   leading-[1.05] tracking-tight mb-4"
+            style={{fontFamily: 'font-geist-sans'}}>
+              Fresh Milk delivered <br />
+              <span className="relative inline-block text-yellow-400  font-bold">
                 Before
                 <svg
                   className="absolute left-0 -bottom-2 w-full"
@@ -72,11 +99,11 @@ export function HeroSection() {
                 </svg>
               </span>
               {' '}
-              <span className="text-yellow-400 font-bold">Sunrise.</span>
+              <span className="font-bold">Sunrise.</span>
             </h1>
 
             {/* Subheading */}
-            <p className="text-[10px] sm:text-[12px] text-gray-700 max-w-[320px] md:max-w-[500px] mb-6 font-normal">
+            <p className="text-[10px] sm:text-[12px] text-gray-500 max-w-[320px] md:max-w-[500px] mb-6 font-normal">
               Pure A2 Cow Milk delivered directly from our farm to your doorstep every morning.{' '}
               No preservatives. No compromise.
             </p>
@@ -118,8 +145,8 @@ export function HeroSection() {
                   <Play size={14} fill="currentColor" className="ml-0.5" />
                 </div>
                 <div className="flex flex-col items-start leading-tight">
-                  <span className="text-[13px] font-extrabold text-white">Watch Our Story</span>
-                  <span className="text-[10px] font-medium text-white/70 normal-case tracking-normal mt-0.5">Watch Reels</span>
+                  <span className="text-[13px] font-extrabold text-[#013378]">Watch Our Story</span>
+                  <span className="text-[10px] font-medium text-[#013378] normal-case tracking-normal mt-0.5">Watch Reels</span>
                 </div>
               </Link>
             </div>
@@ -128,14 +155,14 @@ export function HeroSection() {
       </div>
 
       {/* ── Slide dots — desktop only ── */}
-      <div className="hidden sm:flex absolute bottom-0 left-1/2 -translate-x-1/2 gap-2 z-20">
+      <div className="hidden sm:flex absolute bottom-0 left-1/2 -translate-x-1/2 gap-2 z-20 mb-10">
         {slides.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentSlide(idx)}
             className={cn(
-              'h-2 rounded-full border-none cursor-pointer transition-all duration-500',
-              currentSlide === idx ? 'w-5 bg-sky-600' : 'w-2 bg-sky-600/25'
+              'h-1 rounded-full border-none cursor-pointer transition-all duration-500',
+              currentSlide === idx ? 'w-4 bg-sky-600' : 'w-2 bg-sky-600/25'
             )}
             aria-label={`Go to slide ${idx + 1}`}
           />
