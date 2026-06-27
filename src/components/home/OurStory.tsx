@@ -99,7 +99,7 @@ export function OurStory() {
           <div className="mt-12 flex justify-center">
             <a
               href="/our-story"
-              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white text-[#1230AE] font-semibold px-6 py-3 text-sm shadow-[0_4px_16px_rgba(0,0,0,0.10)] transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_8px_24px_rgba(0,0,0,0.16)]"
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-[#02429C] text-white font-semibold px-6 py-3 text-sm shadow-[0_4px_16px_rgba(0,0,0,0.10)] transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_8px_24px_rgba(0,0,0,0.16)]"
             >
               View All Stories
               <ArrowRight size={15} />
@@ -369,27 +369,31 @@ function ReelPlayerCard({ reel, isActive }: { reel: Reel; isActive?: boolean }) 
         )}
 
         {/* Play/Pause overlay */}
-        <div
-          className={cn(
-            'absolute inset-0 z-10 flex items-center justify-center transition-opacity duration-200 pointer-events-none',
-            isPlaying ? 'bg-transparent opacity-0' : 'bg-black/20 opacity-100'
-          )}
-        >
-          <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.2)] group-hover:scale-105 transition-transform duration-200">
-            <Play size={15} fill="#0F172A" className="text-slate-900 ml-0.5" />
+        {isActive && (
+          <div
+            className={cn(
+              'absolute inset-0 z-10 flex items-center justify-center transition-opacity duration-200 pointer-events-none',
+              isPlaying ? 'bg-transparent opacity-0' : 'bg-black/20 opacity-100'
+            )}
+          >
+            <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.2)] group-hover:scale-105 transition-transform duration-200">
+              <Play size={15} fill="#0F172A" className="text-slate-900 ml-0.5" />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Mute toggle */}
-        <div className="absolute right-2.5 bottom-2.5 z-20">
-          <button
-            onClick={toggleMute}
-            aria-label={isMuted ? 'Unmute video' : 'Mute video'}
-            className="w-7 h-7 rounded-full border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 cursor-pointer transition-all duration-200"
-          >
-            {isMuted ? <VolumeX size={12} /> : <Volume2 size={12} />}
-          </button>
-        </div>
+        {isActive && (
+          <div className="absolute right-2.5 bottom-2.5 z-20">
+            <button
+              onClick={toggleMute}
+              aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+              className="w-7 h-7 rounded-full border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 cursor-pointer transition-all duration-200"
+            >
+              {isMuted ? <VolumeX size={12} /> : <Volume2 size={12} />}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
