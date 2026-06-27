@@ -6,9 +6,9 @@ import { Clock, ShieldCheck, Truck, MapPin, ArrowRight, Play } from 'lucide-reac
 import { cn } from '@/lib/utils'
 
 const slides = [
-  { src: '/images/bg/hero-banner.png', alt: 'Amruth Dairy Premium Farm Fresh Milk Bottles' },
-  { src: '/images/bg/hero-banner.png', alt: 'Amruth Dairy Fresh Cow and Milk' },
-  { src: '/images/bg/hero-banner.png', alt: 'Amruth Dairy Delicious Fresh Butter and Cheese' },
+  { src: '/images/bg/hero-banner.png', mobileSrc: '/images/bg/mobile-banner-1.png', alt: 'Amruth Dairy Premium Farm Fresh Milk Bottles' },
+  { src: '/images/bg/hero-banner-2.png', mobileSrc: '/images/bg/mobile-banner-2.png', alt: 'Amruth Dairy Fresh Cow and Milk' },
+  { src: '/images/bg/hero-banner.png', mobileSrc: '/images/bg/mobile-banner-1.png', alt: 'Amruth Dairy Delicious Fresh Butter and Cheese' },
 ]
 
 export function HeroSection() {
@@ -34,22 +34,40 @@ export function HeroSection() {
           <div
             key={index}
             className={cn(
-              'absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-[1200ms] ',
+              'absolute inset-0 transition-all duration-[1200ms] ',
               isMounted && currentSlide === index
                 ? 'opacity-100 scale-100'
                 : 'opacity-0 scale-105'
             )}
-            style={{ backgroundImage: `url(${slide.src})` }}
             aria-hidden={currentSlide !== index}
-          />
+          >
+            {/* Desktop Background */}
+            <div 
+              className="hidden md:block absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url(${slide.src})` }}
+            />
+            {/* Mobile Background */}
+            <div 
+              className="block md:hidden absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url(${slide.mobileSrc || slide.src})` }}
+            />
+          </div>
         ))}
       </div>
 
-      {/* ── White gradient: left → center ── */}
+      {/* ── White gradient: left → center (desktop) ── */}
       <div
-        className="absolute inset-0 z-[1] pointer-events-none"
+        className="hidden md:block absolute inset-0 z-[1] pointer-events-none"
         style={{
           background: 'linear-gradient(to right, #ffffff 0%, rgba(255,255,255,0.85) 35%, rgba(255,255,255,0.3) 60%, transparent 100%)',
+        }}
+      />
+
+      {/* ── White gradient: bottom → center (mobile) ── */}
+      <div
+        className="block md:hidden absolute inset-0 z-[1] pointer-events-none"
+        style={{
+          background: 'linear-gradient(to top, #ffffff 0%, rgba(255,255,255,0.90) 10%, rgba(255,255,255,0.4) 50%, transparent 100%)',
         }}
       />
 
