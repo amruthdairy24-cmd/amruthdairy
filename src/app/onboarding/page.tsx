@@ -51,6 +51,7 @@ export default function OnboardingPage() {
   const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null)
   const [deliveryDays, setDeliveryDays] = useState(0)
   const [isMonthFull, setIsMonthFull] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
 
   const handleExcludedDatesChange = useCallback((dates: string[]) => {
     setExcludedDates(dates)
@@ -549,17 +550,51 @@ export default function OnboardingPage() {
                         </div>
                       </div>
 
-                      {/* Day Picker Calendar */}
+                      {/* Day Picker Calendar Toggle */}
                       {startDate && (
-                        <SubscriptionCalendar
-                          startDate={startDate}
-                          onExcludedDatesChange={handleExcludedDatesChange}
-                          initialExcludedDates={excludedDates}
-                          maxMonthsAhead={1}
-                          quantity={quantity}
-                          onMonthAvailabilityChange={setIsMonthFull}
-                          onDeliveryDaysChange={setDeliveryDays}
-                        />
+                        <div className="flex flex-col gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowCalendar(!showCalendar)}
+                            className="w-full h-14 px-5 bg-white border-2 border-slate-200 hover:border-blue-300 rounded-2xl flex items-center justify-between transition-all cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <Calendar size={14} />
+                              </div>
+                              <div className="flex flex-col items-start">
+                                <span className="text-xs font-bold text-slate-900">Customize Delivery Days</span>
+                                <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
+                                  {excludedDates.length === 0 ? "Everyday Delivery" : `${excludedDates.length} Days Excluded`}
+                                </span>
+                              </div>
+                            </div>
+                            <ChevronDown className={cn("text-slate-400 transition-transform", showCalendar && "rotate-180")} size={16} />
+                          </button>
+
+                          <AnimatePresence>
+                            {showCalendar && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10, height: 0 }}
+                                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                                exit={{ opacity: 0, y: -10, height: 0 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="py-2">
+                                  <SubscriptionCalendar
+                                    startDate={startDate}
+                                    onExcludedDatesChange={handleExcludedDatesChange}
+                                    initialExcludedDates={excludedDates}
+                                    maxMonthsAhead={1}
+                                    quantity={quantity}
+                                    onMonthAvailabilityChange={setIsMonthFull}
+                                    onDeliveryDaysChange={setDeliveryDays}
+                                  />
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       )}
 
                       {isMonthFull && (
