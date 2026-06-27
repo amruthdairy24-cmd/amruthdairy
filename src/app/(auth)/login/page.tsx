@@ -610,7 +610,7 @@ export default function LoginPage() {
                             id={`${formId}-username`}
                             type="text"
                             autoComplete="username"
-                            placeholder="e.g. amruth_raj"
+                            placeholder="username"
                             maxLength={20}
                             value={regUsername}
                             onChange={e => { setRegUsername(e.target.value); clearError() }}
@@ -630,7 +630,7 @@ export default function LoginPage() {
                             id={`${formId}-email`}
                             type="email"
                             autoComplete="email"
-                            placeholder="you@example.com"
+                            placeholder="email"
                             value={regEmail}
                             onChange={e => { setRegEmail(e.target.value); clearError() }}
                             className="flex-1 min-w-0 h-full pr-4 bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
@@ -648,7 +648,7 @@ export default function LoginPage() {
                             id={`${formId}-reg-password`}
                             type={showRegPassword ? 'text' : 'password'}
                             autoComplete="new-password"
-                            placeholder="Minimum 8 characters"
+                            placeholder="password Minimum 8 characters"
                             value={regPassword}
                             onChange={e => { setRegPassword(e.target.value); clearError() }}
                             className="flex-1 min-w-0 h-full bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none"
