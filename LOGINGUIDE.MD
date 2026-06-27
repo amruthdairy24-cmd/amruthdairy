@@ -31,7 +31,7 @@ The Amruth Dairy platform uses a passwordless **Phone Number + OTP** authenticat
 Since the application is designed to have **only one admin**, and the system automatically creates all new users as `customer` by default, you must manually upgrade your chosen admin phone number using the database.
 
 **Step-by-step Setup:**
-1. Go to the `/login` page and log in normally using your personal mobile number (e.g., `9876543210`).
+1. Go to the `/login` page and log in normally using your personal mobile number (e.g., `+91 9880143808`).
 2. Verify the OTP. This creates your user account and profile in the database.
 3. Open your **Supabase Dashboard** -> Go to the **SQL Editor**.
 4. Run the following SQL command, replacing the phone number with yours (include the `+91` country code):
@@ -39,7 +39,7 @@ Since the application is designed to have **only one admin**, and the system aut
 ```sql
 UPDATE public.profiles 
 SET role = 'admin' 
-WHERE phone = '+919876543210';
+WHERE phone = '+91+91 9880143808';
 ```
 
 5. Log out and log back in on the web application. The system will now recognize you as an admin and instantly route you to the `/admin` control panel.
