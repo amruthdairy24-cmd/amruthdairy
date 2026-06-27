@@ -61,7 +61,7 @@ export default function OnboardingPage() {
     const params = new URLSearchParams(window.location.search)
     const minDateParam = params.get('min_date')
     const quantityParam = params.get('quantity')
-    
+
     if (quantityParam) {
       setQuantity(Number(quantityParam))
     }
@@ -120,14 +120,14 @@ export default function OnboardingPage() {
             setArea(data.profile.area || 'Padil')
             setLandmark(data.profile.landmark || '')
             setFloorNotes(data.profile.floor_notes || '')
-            
+
             // If they already have an address saved, we can safely jump to Step 2
             if (data.profile.address && data.profile.address.trim() !== '') {
               setStep(2)
             }
           }
         }
-      }).catch(() => {})
+      }).catch(() => { })
   }, [])
 
   async function handleProfileSubmit(e: React.FormEvent) {
@@ -246,13 +246,13 @@ export default function OnboardingPage() {
                             }
                           }}
                           className={cn(
-                          'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-200 border-none',
-                          done
-                            ? 'bg-[#014DA4] text-white cursor-pointer hover:bg-[#014DA4]/90 shadow-sm'
-                            : active
-                              ? 'bg-[#014DA4] text-white ring-4 ring-[#014DA4]/20'
-                              : 'bg-white text-slate-400 border border-slate-200'
-                        )}>
+                            'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-200 border-none',
+                            done
+                              ? 'bg-[#014DA4] text-white cursor-pointer hover:bg-[#014DA4]/90 shadow-sm'
+                              : active
+                                ? 'bg-[#014DA4] text-white ring-4 ring-[#014DA4]/20'
+                                : 'bg-white text-slate-400 border border-slate-200'
+                          )}>
                           {num}
                         </button>
                         <div className="hidden sm:flex flex-col items-center text-center min-w-0">
@@ -452,10 +452,10 @@ export default function OnboardingPage() {
                           {QUANTITY_OPTIONS.map(({ litres, label }) => {
                             const qtyMonthly = Object.keys(milkPrices).length > 0
                               ? calculateMonthlyAmount(
-                                  calculateDailyRate(litres, milkPrices),
-                                  startDate ? new Date(startDate).getFullYear() : new Date().getFullYear(),
-                                  startDate ? new Date(startDate).getMonth() + 1 : new Date().getMonth() + 1
-                                )
+                                calculateDailyRate(litres, milkPrices),
+                                startDate ? new Date(startDate).getFullYear() : new Date().getFullYear(),
+                                startDate ? new Date(startDate).getMonth() + 1 : new Date().getMonth() + 1
+                              )
                               : 0
                             const isActive = quantity === litres
                             return (
@@ -483,22 +483,22 @@ export default function OnboardingPage() {
                         </div>
                       </div>
 
-                    {/* Start date + daily rate */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-600 dark:text-slate-300">Start Date</label>
-                        <div className="relative flex items-center">
-                          <Calendar size={14} className="absolute left-4 text-slate-400 dark:text-slate-550 pointer-events-none" />
-                          <input
-                            type="date"
-                            value={startDate}
-                            min={minAllowedDate}
-                            onChange={e => setStartDate(e.target.value)}
-                            className="w-full h-11 pl-11 pr-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
-                            required
-                          />
+                      {/* Start date + daily rate */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-600 dark:text-slate-300">Start Date</label>
+                          <div className="relative flex items-center">
+                            <Calendar size={14} className="absolute left-4 text-slate-400 dark:text-slate-550 pointer-events-none" />
+                            <input
+                              type="date"
+                              value={startDate}
+                              min={minAllowedDate}
+                              onChange={e => setStartDate(e.target.value)}
+                              className="w-full h-11 pl-11 pr-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                              required
+                            />
+                          </div>
                         </div>
-                      </div>
 
                         <div className="flex flex-col gap-1.5">
                           <label className="text-xs font-bold text-slate-600">Daily Rate</label>
@@ -733,7 +733,7 @@ export default function OnboardingPage() {
                 </div>
               </div>
               <a
-                href="tel:+919876543210"
+                href="tel:+91+91 9880143808"
                 className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 h-9 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-[11px] font-extrabold text-blue-600 transition-all shadow-sm"
               >
                 <Phone size={13} />
