@@ -92,7 +92,7 @@ export function Navbar() {
                   onClick={() => setActiveLink(href)}
                   className={`text-sm font-bold transition-all duration-300 ${isActive
                       ? "text-brand-secondary"
-                      : "text-brand-primary/80 hover:text-brand-secondary"
+                      : "text-brand-primary/80 dark:text-slate-300 hover:text-brand-secondary"
                     }`}
                 >
                   {label}
@@ -107,9 +107,9 @@ export function Navbar() {
               <>
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-transparent text-brand-primary font-semibold text-sm border-[1.5px] border-border hover:bg-slate-50/50 hover:border-brand-primary/45 transition-all duration-200"
+                  className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-transparent text-brand-primary dark:text-white font-semibold text-sm border-[1.5px] border-border dark:border-slate-800 hover:bg-slate-50/50 dark:bg-slate-800/50 hover:border-brand-primary/45 transition-all duration-200"
                 >
-                  <User size={14} className="text-brand-primary" />
+                  <User size={14} className="text-brand-primary dark:text-white" />
                   <span>Dashboard</span>
                 </Link>
                 <button
@@ -136,7 +136,7 @@ export function Navbar() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden p-1.5 focus:outline-none text-brand-primary"
+            className="md:hidden p-1.5 focus:outline-none text-brand-primary dark:text-white"
             aria-label="Toggle menu"
           >
             {menuOpen ? <X size={24} /> : <Menu size={24} />}

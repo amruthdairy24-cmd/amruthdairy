@@ -112,13 +112,13 @@ export default function ExtraMilkPage() {
       <div className="max-w-5xl space-y-6 animate-pulse">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <div className="h-6 w-48 bg-slate-200 rounded-lg" />
-            <div className="h-4 w-40 bg-slate-200 rounded-md" />
+            <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+            <div className="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded-md" />
           </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-3 h-[380px] bg-slate-200 rounded-3xl" />
-          <div className="lg:col-span-2 h-[350px] bg-slate-200 rounded-3xl" />
+          <div className="lg:col-span-3 h-[380px] bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+          <div className="lg:col-span-2 h-[350px] bg-slate-200 dark:bg-slate-800 rounded-3xl" />
         </div>
       </div>
     )
@@ -134,14 +134,14 @@ export default function ExtraMilkPage() {
       {/* Header section */}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[26px] sm:text-[32px] font-bold text-slate-900 font-display tracking-tight leading-tight flex items-center gap-3">
+          <h1 className="text-[26px] sm:text-[32px] font-bold text-slate-900 dark:text-white font-display tracking-tight leading-tight flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
               <PlusCircle size={22} className="stroke-[2.2]" />
             </div>
             <span>Order Extra Milk</span>
           </h1>
-          <p className="text-[13px] font-semibold text-slate-500 mt-2 pl-1 flex items-center gap-1.5">
-            <Milk size={14} className="text-slate-400" />
+          <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 pl-1 flex items-center gap-1.5">
+            <Milk size={14} className="text-slate-400 dark:text-slate-500" />
             <span>Need more milk tomorrow? Add a one-time extra order to your delivery</span>
           </p>
         </div>
@@ -171,7 +171,7 @@ export default function ExtraMilkPage() {
             <div className="flex flex-col gap-2">
               <label className="text-[11px] font-extrabold text-slate-450 uppercase tracking-[2px] pl-0.5">Select Delivery Date</label>
               <div className="flex items-center h-12 rounded-xl border border-border dark:border-slate-850 bg-white dark:bg-slate-950 px-3.5 gap-2.5 focus-within:ring-2 focus-within:ring-[#014DA4]/20 focus-within:border-[#014DA4] transition-all">
-                <Calendar size={16} className="text-slate-400" />
+                <Calendar size={16} className="text-slate-400 dark:text-slate-500" />
                 <input
                   type="date"
                   required
@@ -202,7 +202,7 @@ export default function ExtraMilkPage() {
                         'h-24 rounded-2xl border flex flex-col items-center justify-center p-3 gap-1.5 transition-all select-none',
                         isSelected
                           ? 'border-[#014DA4] dark:border-blue-400 bg-[#014DA4]/5 dark:bg-blue-950/15 ring-1 ring-[#014DA4] dark:ring-blue-400 text-[#014DA4] dark:text-blue-400 font-bold shadow-3xs'
-                          : 'border-border dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40 text-slate-500 dark:text-slate-400 cursor-pointer shadow-3xs'
+                          : 'border-border dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40 text-slate-500 dark:text-slate-400 dark:text-slate-500 cursor-pointer shadow-3xs'
                       )}
                     >
                       <span className={cn(
@@ -223,7 +223,7 @@ export default function ExtraMilkPage() {
               <motion.div 
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 space-y-3.5 text-[13.5px] font-bold text-slate-650 dark:text-slate-400 shadow-3xs"
+                className="bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 space-y-3.5 text-[13.5px] font-bold text-slate-650 dark:text-slate-400 dark:text-slate-500 shadow-3xs"
               >
                 <div className="flex justify-between items-center pb-3 border-b border-slate-200/50 dark:border-slate-800">
                   <span className="text-slate-500 dark:text-slate-455">Your Regular Delivery:</span>
@@ -284,15 +284,15 @@ export default function ExtraMilkPage() {
         <motion.div variants={itemVariants} className="lg:col-span-2 space-y-6">
           
           {/* Rules Card */}
-          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5 text-[12.5px] font-semibold text-slate-500 dark:text-slate-400">
-            <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] pl-0.5 select-none">Order Rules</h3>
+          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5 text-[12.5px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
+            <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] pl-0.5 select-none">Order Rules</h3>
             
             <div className="space-y-4 text-left leading-relaxed">
               <div className="flex gap-3">
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-emerald-650 dark:text-emerald-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">1</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">9:00 PM Cut-off Time</p>
-                  <p className="text-slate-450 dark:text-slate-400 mt-1">Extra orders for tomorrow morning must be placed before 9:00 PM tonight. Later orders cannot be processed.</p>
+                  <p className="text-slate-450 dark:text-slate-400 dark:text-slate-500 mt-1">Extra orders for tomorrow morning must be placed before 9:00 PM tonight. Later orders cannot be processed.</p>
                 </div>
               </div>
 
@@ -300,7 +300,7 @@ export default function ExtraMilkPage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-emerald-650 dark:text-emerald-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">2</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Farm Capacity Limit</p>
-                  <p className="text-slate-450 dark:text-slate-400 mt-1">Order confirmations are subject to milk capacity and availability. Early bookings secure allocation.</p>
+                  <p className="text-slate-450 dark:text-slate-400 dark:text-slate-500 mt-1">Order confirmations are subject to milk capacity and availability. Early bookings secure allocation.</p>
                 </div>
               </div>
 
@@ -308,7 +308,7 @@ export default function ExtraMilkPage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-emerald-650 dark:text-emerald-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">One-Time Billing Charge</p>
-                  <p className="text-slate-455 dark:text-slate-400 mt-1">This order will only affect the selected day. The charge will be added directly to your monthly statement balance.</p>
+                  <p className="text-slate-455 dark:text-slate-400 dark:text-slate-500 mt-1">This order will only affect the selected day. The charge will be added directly to your monthly statement balance.</p>
                 </div>
               </div>
             </div>

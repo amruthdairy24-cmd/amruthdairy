@@ -125,7 +125,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto hide-scrollbar">
           {sidebarGroups.map((group) => (
             <div key={group.title} className="space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-500 dark:text-slate-400">
+              <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 {group.title}
               </p>
               <div className="space-y-[3px]">
@@ -149,7 +149,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         size={17}
                         className={cn(
                           "relative z-10 flex-shrink-0 transition-colors",
-                          isActive ? "text-[#014DA4] dark:text-blue-400" : "text-slate-450 dark:text-slate-400 group-hover:text-[#014DA4] dark:group-hover:text-blue-400"
+                          isActive ? "text-[#014DA4] dark:text-blue-400" : "text-slate-450 dark:text-slate-400 dark:text-slate-500 group-hover:text-[#014DA4] dark:group-hover:text-blue-400"
                         )}
                         strokeWidth={isActive ? 2.5 : 2}
                       />
@@ -207,11 +207,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-4 min-w-0">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white bg-transparent border-none cursor-pointer flex items-center justify-center"
+              className="lg:hidden text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white bg-transparent border-none cursor-pointer flex items-center justify-center"
             >
               <Menu size={22} />
             </button>
-            <span className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
+            <span className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase truncate">
               {getBreadcrumbs()}
             </span>
           </div>
@@ -248,9 +248,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
               <div className="hidden sm:block text-left min-w-0 pr-1">
                 <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200 leading-none">{profileName.split(' ')[0]}</p>
-                <p className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5 leading-none">Subscriber</p>
+                <p className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-0.5 leading-none">Subscriber</p>
               </div>
-              <ChevronDown size={13} className="text-slate-400" />
+              <ChevronDown size={13} className="text-slate-400 dark:text-slate-500" />
             </div>
           </div>
         </header>
@@ -272,7 +272,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               href={item.href}
               className={cn(
                 "flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors min-w-0 text-center",
-                isActive ? "text-[#014DA4] dark:text-blue-400 font-bold scale-105" : "text-slate-400 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-blue-400"
+                isActive ? "text-[#014DA4] dark:text-blue-400 font-bold scale-105" : "text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-blue-400"
               )}
             >
               <Icon size={18} />
@@ -314,7 +314,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 bg-transparent border-none cursor-pointer"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 bg-transparent border-none cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -323,7 +323,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
                 {sidebarGroups.map((group) => (
                   <div key={group.title} className="space-y-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-400 dark:text-slate-500">
+                    <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500">
                       {group.title}
                     </p>
                     <div className="space-y-[3px]">
@@ -345,7 +345,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             )}
                             <Icon
                               size={17}
-                              className={isActive ? "text-[#014DA4] dark:text-blue-400" : "text-slate-455 dark:text-slate-400"}
+                              className={isActive ? "text-[#014DA4] dark:text-blue-400" : "text-slate-455 dark:text-slate-400 dark:text-slate-500"}
                               strokeWidth={isActive ? 2.5 : 2}
                             />
                             <span className="text-[13px]">{item.label}</span>
