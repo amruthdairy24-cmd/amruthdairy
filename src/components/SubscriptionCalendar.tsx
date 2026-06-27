@@ -224,7 +224,7 @@ export default function SubscriptionCalendar({
 
 
   return (
-    <div className="p-6 rounded-brand-2xl border border-border/50 dark:border-slate-800/80 bg-warm-white dark:bg-cream-100 shadow-[0_4px_20px_var(--shadow)] flex flex-col gap-6">
+    <div className="p-6 rounded-brand-2xl border border-border/50 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-[0_4px_20px_var(--shadow)] flex flex-col gap-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/30 dark:border-slate-800/40 pb-4">
         <div className="flex flex-col gap-1">

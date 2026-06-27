@@ -65,7 +65,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="fixed w-full z-50 duration-500 h-[65px] flex items-center px-10 bg-white">
+      <header className="fixed w-full z-50 duration-500 h-[65px] flex items-center px-10 bg-white dark:bg-slate-950">
         <div className="max-w-7xl mx-auto flex items-center justify-between w-full">
 
           {/* Logo */}
@@ -86,7 +86,7 @@ export function Navbar() {
                   onClick={() => setActiveLink(href)}
                   className={`text-sm font-bold transition-all duration-300 ${isActive
                       ? "text-brand-secondary"
-                      : "text-brand-primary/80 hover:text-brand-secondary"
+                      : "text-brand-primary/80 dark:text-slate-300 hover:text-brand-secondary"
                     }`}
                 >
                   {label}
@@ -101,9 +101,9 @@ export function Navbar() {
               <>
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-transparent text-brand-primary font-semibold text-sm border-[1.5px] border-border hover:bg-slate-50/50 hover:border-brand-primary/45 transition-all duration-200"
+                  className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-transparent text-brand-primary dark:text-white font-semibold text-sm border-[1.5px] border-border dark:border-slate-800 hover:bg-slate-50/50 dark:bg-slate-800/50 hover:border-brand-primary/45 transition-all duration-200"
                 >
-                  <User size={14} className="text-brand-primary" />
+                  <User size={14} className="text-brand-primary dark:text-white" />
                   <span>Dashboard</span>
                 </Link>
                 <button
@@ -118,9 +118,9 @@ export function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-transparent text-brand-primary font-semibold text-sm border-[1.5px] border-border hover:bg-slate-50/50 hover:border-brand-primary/45 transition-all duration-200"
+                  className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-transparent text-brand-primary dark:text-white font-semibold text-sm border-[1.5px] border-border dark:border-slate-800 hover:bg-slate-50/50 dark:bg-slate-800/50 hover:border-brand-primary/45 transition-all duration-200"
                 >
-                  {/* <User size={14} className="text-brand-primary" /> */}
+                  {/* <User size={14} className="text-brand-primary dark:text-white" /> */}
                   <span>Login</span>
                 </Link>
                 <Link
@@ -136,7 +136,7 @@ export function Navbar() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden p-1.5 focus:outline-none text-brand-primary"
+            className="md:hidden p-1.5 focus:outline-none text-brand-primary dark:text-white"
             aria-label="Toggle menu"
           >
             {menuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -146,7 +146,7 @@ export function Navbar() {
 
       {/* Mobile Menu Overlay */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-white/95 backdrop-blur-lg flex flex-col pt-[100px] px-6">
+        <div className="fixed inset-0 z-40 bg-white dark:bg-slate-950/95 dark:bg-slate-950/95 backdrop-blur-lg flex flex-col pt-[100px] px-6">
           <nav className="flex flex-col gap-4 mb-8">
             {navLinks.map(({ href, label }) => {
               const targetHref = href.startsWith('#') ? `/${href}` : href
@@ -158,7 +158,7 @@ export function Navbar() {
                     setActiveLink(href)
                     setMenuOpen(false)
                   }}
-                  className="text-lg font-bold text-brand-primary hover:text-brand-secondary py-2 border-b border-slate-100"
+                  className="text-lg font-bold text-brand-primary dark:text-white hover:text-brand-secondary py-2 border-b border-slate-100 dark:border-slate-800"
                 >
                   {label}
                 </Link>
@@ -166,13 +166,13 @@ export function Navbar() {
             })}
           </nav>
 
-          <div className="p-4 border-t border-border mt-auto flex flex-col gap-3">
+          <div className="p-4 border-t border-border dark:border-slate-800 mt-auto flex flex-col gap-3">
             {user ? (
               <>
                 <Link
                   href="/dashboard"
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 h-11 rounded-xl bg-transparent text-brand-primary font-semibold text-base border-[1.5px] border-border"
+                  className="flex items-center justify-center gap-2 h-11 rounded-xl bg-transparent text-brand-primary dark:text-white font-semibold text-base border-[1.5px] border-border dark:border-slate-800"
                 >
                   <User size={16} />
                   Dashboard
@@ -193,7 +193,7 @@ export function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 h-11 rounded-xl bg-transparent text-brand-primary font-semibold text-base border-[1.5px] border-border"
+                  className="flex items-center justify-center gap-2 h-11 rounded-xl bg-transparent text-brand-primary dark:text-white font-semibold text-base border-[1.5px] border-border dark:border-slate-800"
                 >
                   <User size={16} />
                   Login

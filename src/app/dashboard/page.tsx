@@ -185,7 +185,7 @@ export default function CustomerDashboard() {
         <motion.div variants={itemVariants}>
           <h1 className="text-[22px] sm:text-[28px] font-black text-slate-900 dark:text-white font-display tracking-tight flex items-center gap-2.5">
             {wl.status === 'notified' ? 'Slot Available!' : wl.status === 'cancelled' ? 'Waitlist Cancelled' : 'Waitlist Status'} 
-            {wl.status !== 'cancelled' && <Clock size={24} className={wl.status === 'notified' ? "text-emerald-500 animate-pulse" : "text-amber-600 animate-pulse"} />}
+            {wl.status !== 'cancelled' && <Clock size={24} className={wl.status === 'notified' ? "text-blue-95000 animate-pulse" : "text-amber-600 animate-pulse"} />}
           </h1>
           <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 mt-1">
             {wl.status === 'notified' ? 'Great news! A delivery slot has opened up for you.' : wl.status === 'cancelled' ? 'You have declined your slot or left the waitlist.' : 'You are currently in queue for a delivery slot.'}
@@ -200,7 +200,7 @@ export default function CustomerDashboard() {
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
             <div>
-              <span className={`inline-flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider mb-4 border border-white/10 backdrop-blur-md ${wl.status === 'notified' ? 'text-emerald-200' : 'text-amber-200'}`}>
+              <span className={`inline-flex items-center gap-1.5 bg-white dark:bg-slate-900/10 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider mb-4 border border-white/10 backdrop-blur-md ${wl.status === 'notified' ? 'text-blue-950/70' : 'text-amber-200'}`}>
                 <Milk size={10} />
                 <span>{requestedPlan} Daily Plan</span>
               </span>
@@ -212,7 +212,7 @@ export default function CustomerDashboard() {
               </p>
             </div>
 
-            <div className="text-left sm:text-right bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-2xl min-w-[120px]">
+            <div className="text-left sm:text-right bg-white dark:bg-slate-900/5 backdrop-blur-md border border-white/10 p-4 rounded-2xl min-w-[120px]">
               <p className="text-[10px] text-blue-200/70 uppercase tracking-widest font-black mb-1">Queue Position</p>
               <p className="text-4xl font-black font-mono tracking-tight leading-none text-white">
                 #{wl.position}
@@ -244,7 +244,7 @@ export default function CustomerDashboard() {
               <button
                 onClick={() => handleDeclineSlot(wl.id)}
                 disabled={declining}
-                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-white/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-emerald-200/50 dark:border-emerald-800/50 text-slate-600 dark:text-slate-400 hover:text-rose-500 font-bold text-xs uppercase tracking-wider rounded-xl transition-all disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-white dark:bg-slate-900/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-emerald-200/50 dark:border-emerald-800/50 text-slate-600 dark:text-slate-400 hover:text-rose-500 font-bold text-xs uppercase tracking-wider rounded-xl transition-all disabled:opacity-50"
               >
                 <X size={14} />
                 <span>{declining ? 'Declining...' : 'Decline Slot'}</span>
@@ -269,7 +269,7 @@ export default function CustomerDashboard() {
             <div className="pt-2">
               <Link
                 href="/onboarding"
-                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-white/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl transition-all"
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-white dark:bg-slate-900/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl transition-all"
               >
                 <span>Start New Request</span>
                 <ArrowRight size={14} />
@@ -290,7 +290,7 @@ export default function CustomerDashboard() {
             </h3>
             <p>At Amruth Dairy Farm, we limit our daily production to ensure every drop of milk is fresh, raw, and delivered directly within hours of milking.</p>
             <p>Due to high demand, all local delivery zones are operating at full capacity. As soon as a spot opens up in your delivery zone, your queue status will update.</p>
-            <div className="pt-4 border-t border-border/40 dark:border-slate-800/60 flex justify-between items-center text-[11px] text-slate-400 dark:text-slate-500 font-bold">
+            <div className="pt-4 border-t border-border/40 dark:border-slate-800/60 flex justify-between items-center text-[11px] text-slate-400 dark:text-slate-500 dark:text-slate-400 font-bold">
               <span>Registered: {new Date(wl.created_at).toLocaleDateString('en-IN')}</span>
               <span>Status: <strong className="text-amber-600 uppercase font-black">{wl.status}</strong></span>
             </div>
@@ -380,7 +380,7 @@ export default function CustomerDashboard() {
         {/* Content Layout */}
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-4 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 bg-white/12 dark:bg-slate-950/40 backdrop-blur-md px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-emerald-5 dark:text-slate-300 border border-white/10 dark:border-slate-800/50">
+            <span className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900/12 dark:bg-slate-950/40 backdrop-blur-md px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-blue-950 dark:text-slate-300 border border-white/10 dark:border-slate-800/50">
               <Milk size={11} className="text-amber-300 animate-pulse" />
               <span>{subscription.quantity_litres} Litre Daily Plan</span>
             </span>
@@ -399,24 +399,24 @@ export default function CustomerDashboard() {
             <div className="pt-2 flex flex-wrap items-center gap-3">
               <Link 
                 href="/dashboard/quantity" 
-                className="inline-flex items-center gap-1.5 px-5 h-10 rounded-xl bg-warm-white dark:bg-slate-950 text-emerald-850 dark:text-emerald-400 hover:bg-cream-100 dark:hover:bg-slate-900 font-bold text-xs shadow-sm transition-all duration-150 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-5 h-10 rounded-xl bg-warm-white dark:bg-slate-950 text-blue-950 dark:text-emerald-400 hover:bg-cream-100 dark:hover:bg-slate-900 font-bold text-xs shadow-sm transition-all duration-150 cursor-pointer"
               >
                 <span>Manage Subscription</span>
                 <ArrowRight size={13} />
               </Link>
-              <span className="text-[11px] font-bold text-emerald-55/80 dark:text-slate-400 bg-emerald-950/20 dark:bg-slate-950/30 backdrop-blur-sm border border-white/5 dark:border-slate-800/50 py-2 px-3.5 rounded-xl select-none">
+              <span className="text-[11px] font-bold text-blue-50 dark:text-slate-400 bg-emerald-950/20 dark:bg-slate-950/30 backdrop-blur-sm border border-white/5 dark:border-slate-800/50 py-2 px-3.5 rounded-xl select-none">
                 Zone: Mangalore Metro
               </span>
             </div>
           </div>
 
           <div className="flex-shrink-0 self-start md:self-center pr-6 flex flex-col items-end">
-            <div className="bg-white/12 dark:bg-slate-950/40 border border-white/10 dark:border-slate-800/50 backdrop-blur-md px-4 py-3.5 rounded-2xl min-w-[170px] text-left md:text-right shadow-sm select-none">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-200 dark:text-slate-400 uppercase tracking-widest">
+            <div className="bg-white dark:bg-slate-900/12 dark:bg-slate-950/40 border border-white/10 dark:border-slate-800/50 backdrop-blur-md px-4 py-3.5 rounded-2xl min-w-[170px] text-left md:text-right shadow-sm select-none">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-blue-950/70 dark:text-slate-400 uppercase tracking-widest">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                 <span>Next Delivery</span>
               </span>
-              <p className="text-sm font-bold text-white font-display mt-1.5">Tomorrow, 7:00 AM</p>
+              <p className="text-sm font-bold text-blue-950 dark:text-white font-display mt-1.5">Tomorrow, 7:00 AM</p>
             </div>
           </div>
         </div>
@@ -430,11 +430,11 @@ export default function CustomerDashboard() {
         {/* Card 1: Account Balance */}
         <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Account Balance</p>
-            <p className={cn("text-xl font-black font-mono tracking-tight mt-1 leading-none", balanceVal >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-600 dark:text-rose-400")}>
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Account Balance</p>
+            <p className={cn("text-xl font-black font-mono tracking-tight mt-1 leading-none", balanceVal >= 0 ? "text-emerald-600 dark:text-blue-95000" : "text-rose-600 dark:text-rose-400")}>
               {balanceVal >= 0 ? `${balanceText} Credit` : `${balanceText} Due`}
             </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1.5 truncate">
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 font-semibold mt-1.5 truncate">
               {balanceVal >= 0 ? 'Adjusted in next bill' : 'Outstanding due amount'}
             </p>
           </div>
@@ -446,11 +446,11 @@ export default function CustomerDashboard() {
         {/* Card 2: Deliveries This Month */}
         <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Days Delivered</p>
-            <p className="text-xl font-black text-slate-900 dark:text-emerald-500 tracking-tight mt-1 leading-none font-sans">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Days Delivered</p>
+            <p className="text-xl font-black text-slate-900 dark:text-blue-95000 tracking-tight mt-1 leading-none font-sans">
               {current_month?.days_delivered || 0} Days
             </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1.5 truncate">
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 font-semibold mt-1.5 truncate">
               Delivered this month
             </p>
           </div>
@@ -462,11 +462,11 @@ export default function CustomerDashboard() {
         {/* Card 3: Skipped Days */}
         <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Days Skipped</p>
-            <p className="text-xl font-black text-slate-900 dark:text-emerald-500 tracking-tight mt-1 leading-none font-sans">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Days Skipped</p>
+            <p className="text-xl font-black text-slate-900 dark:text-blue-95000 tracking-tight mt-1 leading-none font-sans">
               {current_month?.days_skipped || 0} Days
             </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1.5 truncate">
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 font-semibold mt-1.5 truncate">
               Refund applied: ₹{((current_month?.skip_credit || 0)).toFixed(0)}
             </p>
           </div>
@@ -478,11 +478,11 @@ export default function CustomerDashboard() {
         {/* Card 4: Plan Details */}
         <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Plan Capacity</p>
-            <p className="text-xl font-black text-slate-900 dark:text-emerald-500 tracking-tight mt-1 leading-none font-sans">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Plan Capacity</p>
+            <p className="text-xl font-black text-slate-900 dark:text-blue-95000 tracking-tight mt-1 leading-none font-sans">
               {subscription.quantity_litres} Litres
             </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1.5 truncate">
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 font-semibold mt-1.5 truncate">
               Rate: ₹{subscription.daily_rate.toFixed(2)}/L
             </p>
           </div>
@@ -494,7 +494,7 @@ export default function CustomerDashboard() {
 
       {/* ─── 3. QUICK SERVICES SECTION ─── */}
       <motion.div variants={itemVariants} className="space-y-3.5 relative z-10">
-        <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] px-1">Quick Services</h3>
+        <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-[2.5px] px-1">Quick Services</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
           {/* Skip Day */}
@@ -580,15 +580,15 @@ export default function CustomerDashboard() {
 
         {/* Live Billing Calculator (Artisanal Split Card) */}
         <motion.div variants={itemVariants} className="lg:col-span-3 flex flex-col space-y-3.5">
-          <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] px-1">Live Billing Calculator</h3>
+          <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-[2.5px] px-1">Live Billing Calculator</h3>
           <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row flex-1">
             
             {/* Left Breakdown Column */}
             <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-5">
               <div className="space-y-4">
                 <div className="text-left">
-                  <h4 className="text-[14px] font-bold text-slate-800 dark:text-slate-900 uppercase tracking-wider">Statement Breakdown</h4>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">Estimated calculations for current billing cycle</p>
+                  <h4 className="text-[14px] font-bold text-slate-800 dark:text-slate-900 dark:text-white uppercase tracking-wider">Statement Breakdown</h4>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 font-medium mt-0.5">Estimated calculations for current billing cycle</p>
                 </div>
                 
                 <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-100/50 text-[13px]">
@@ -600,7 +600,7 @@ export default function CustomerDashboard() {
                       </div>
                       <span>Base Plan Amount</span>
                     </span>
-                    <span className="font-bold text-slate-800 dark:text-slate-900 font-mono text-sm">₹{subscription.monthly_amount.toFixed(2)}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-900 dark:text-white font-mono text-sm">₹{subscription.monthly_amount.toFixed(2)}</span>
                   </div>
 
                   {/* Skips Credit */}
@@ -639,7 +639,7 @@ export default function CustomerDashboard() {
                   {/* Carry In Balance */}
                   <div className="flex justify-between items-center py-3">
                     <span className="flex items-center gap-2.5 text-slate-600 dark:text-slate-750 font-semibold">
-                      <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 flex items-center justify-center">
+                      <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 flex items-center justify-center">
                         <Wallet size={13} />
                       </div>
                       <span>Previous Carry-over</span>
@@ -660,8 +660,8 @@ export default function CustomerDashboard() {
             <div className="p-6 sm:p-7 bg-slate-50 dark:bg-slate-950/40 border-t md:border-t-0 md:border-l border-border/50 dark:border-slate-800 w-full md:w-[260px] lg:w-[290px] flex flex-col justify-between gap-6">
               <div className="space-y-4">
                 <div className="text-left">
-                  <h4 className="text-[13px] font-bold text-slate-800 dark:text-slate-900 uppercase tracking-wider">Net Outstanding</h4>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">Calculated in real-time</p>
+                  <h4 className="text-[13px] font-bold text-slate-800 dark:text-slate-900 dark:text-white uppercase tracking-wider">Net Outstanding</h4>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 font-medium mt-0.5">Calculated in real-time</p>
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 border border-border/60 dark:border-slate-800 p-5 rounded-2xl shadow-xs text-left relative overflow-hidden group">
@@ -690,10 +690,10 @@ export default function CustomerDashboard() {
                       {data.upcoming_adjustments.map((adj, idx) => (
                         <div key={idx} className="flex justify-between items-center text-[11.5px] bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 p-2.5 rounded-xl shadow-3xs hover:border-slate-700 dark:hover:border-slate-600 transition-colors">
                           <span className="flex flex-col min-w-0 text-left">
-                            <span className="text-slate-800 dark:text-slate-900 font-bold truncate">
+                            <span className="text-slate-800 dark:text-slate-900 dark:text-white font-bold truncate">
                               {adj.adjustment_type.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                             </span>
-                            <span className="text-[9.5px] text-slate-400 font-medium truncate mt-0.5">{adj.description || 'Adjustment'}</span>
+                            <span className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium truncate mt-0.5">{adj.description || 'Adjustment'}</span>
                           </span>
                           <span className={cn("font-mono font-black ml-2.5 text-right flex-shrink-0 text-[12px]", adj.adjustment_type.includes('credit') || adj.amount < 0 ? "text-emerald-600" : "text-rose-550")}>
                             {adj.adjustment_type.includes('credit') || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
@@ -704,12 +704,12 @@ export default function CustomerDashboard() {
                   </div>
                 ) : (
                   <div className="text-center py-5 bg-white dark:bg-slate-900 border border-dashed border-border/70 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2 p-4">
-                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+                    <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-slate-400 dark:text-slate-500">
                       <FileText size={15} />
                     </div>
                     <div>
                       <p className="text-[10.5px] font-bold text-slate-755">No Pending Adjustments</p>
-                      <p className="text-[9.5px] text-slate-400 mt-0.5 leading-normal max-w-[170px] mx-auto">Future credits will be listed here before statement generation.</p>
+                      <p className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-normal max-w-[170px] mx-auto">Future credits will be listed here before statement generation.</p>
                     </div>
                   </div>
                 )}
@@ -722,19 +722,19 @@ export default function CustomerDashboard() {
         {/* Recent Delivery Log (Artisanal Timeline Component) */}
         <motion.div variants={itemVariants} className="lg:col-span-2 flex flex-col space-y-3.5">
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px]">Recent Delivery Log</h3>
-            <span className="text-[9.5px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/50">Last 5 Deliveries</span>
+            <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-[2.5px]">Recent Delivery Log</h3>
+            <span className="text-[9.5px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200/50">Last 5 Deliveries</span>
           </div>
           
           <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm flex-1 flex flex-col justify-between">
             {recent_deliveries.length === 0 ? (
               <div className="py-16 text-center text-[13px] font-medium text-slate-450 flex flex-col items-center justify-center gap-3 flex-grow">
-                <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-355 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-slate-355 shadow-sm">
                   <Milk size={22} />
                 </div>
                 <div>
-                  <p className="font-bold text-slate-700">No Recent Deliveries</p>
-                  <p className="text-xs text-slate-400 mt-1 max-w-[190px] mx-auto">We couldn't find any recorded deliveries for the last 7 days.</p>
+                  <p className="font-bold text-slate-700 dark:text-slate-300">No Recent Deliveries</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[190px] mx-auto">We couldn't find any recorded deliveries for the last 7 days.</p>
                 </div>
               </div>
             ) : (
@@ -762,13 +762,13 @@ export default function CustomerDashboard() {
                         {/* Entry row card on hover */}
                         <div className="flex items-center justify-between gap-3 min-w-0 p-2.5 -mx-3.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all duration-200 group-hover/timeline:translate-x-0.5 cursor-default">
                           <div className="min-w-0 text-left">
-                            <p className="text-[13.5px] font-bold text-slate-800 dark:text-slate-900 leading-none">
+                            <p className="text-[13.5px] font-bold text-slate-800 dark:text-slate-900 dark:text-white leading-none">
                               {dayName}, {dateNum}
                             </p>
-                            <p className="text-xs text-slate-450 dark:text-slate-500 font-semibold mt-1 flex items-center gap-1.5">
+                            <p className="text-xs text-slate-450 dark:text-slate-500 dark:text-slate-400 font-semibold mt-1 flex items-center gap-1.5">
                               <span>{delivery.total_litres} Litres</span>
                               <span className="w-1 h-1 rounded-full bg-slate-300" />
-                              <span className="font-normal text-[11px] text-slate-400">Morning Slot</span>
+                              <span className="font-normal text-[11px] text-slate-400 dark:text-slate-500">Morning Slot</span>
                             </p>
                           </div>
                           
