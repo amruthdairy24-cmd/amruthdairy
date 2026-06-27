@@ -31,7 +31,7 @@ const stats = [
 
 const StatsBar = () => {
   return (
-    <section className="relative z-10 bg-gray-100 px-4 py-20">
+    <section className="relative z-10 bg-[#ffff] px-4 py-20">
       <div className="mx-auto max-w-6xl rounded-[32px] border border-slate-100 bg-white shadow-[0_15px_45px_rgba(15,23,42,0.08)]">
         <div className="grid grid-cols-2 lg:grid-cols-4">
           {stats.map((item, index) => {
