@@ -1,46 +1,77 @@
-'use client'
+"use client";
 
-import { Users, Shield, Award, Clock } from 'lucide-react'
+import { Users, Droplets, Heart, Truck } from "lucide-react";
 
 const stats = [
   {
-    icon: <Users size={24} />,
-    value: '5000+',
-    label: 'Happy Families'
+    icon: Users,
+    value: "5000+",
+    label: "Happy Families",
+    active: true,
   },
   {
-    icon: <Award size={24} />,
-    value: '50+',
-    label: 'Healthy Cows'
+    icon: Droplets,
+    value: "100%",
+    label: "Pure Milk",
+    active: false,
   },
   {
-    icon: <Shield size={24} />,
-    value: '100%',
-    label: 'Pure & Natural'
+    icon: Heart,
+    value: "50+",
+    label: "Healthy Cows",
+    active: true,
   },
   {
-    icon: <Clock size={24} />,
-    value: 'Daily',
-    label: 'On-Time Delivery'
-  }
-]
+    icon: Truck,
+    value: "Daily",
+    label: "On-Time Delivery",
+    active: false,
+  },
+];
 
-export function StatsBar() {
+const StatsBar = () => {
   return (
-    <div className="bg-[#3dbade] dark:bg-slate-900 py-12 border-t border-white/10 dark:border-border/30">
-      <div className="container-page">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-7 items-center">
-          {stats.map((stat, i) => (
-            <div key={i} className="flex flex-col items-center text-center text-white">
-              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-3 text-white">
-                {stat.icon}
+    <section className="relative z-10 bg-gray-100 px-4 py-20">
+      <div className="mx-auto max-w-6xl rounded-[32px] border border-slate-100 bg-white shadow-[0_15px_45px_rgba(15,23,42,0.08)]">
+        <div className="grid grid-cols-2 lg:grid-cols-4">
+          {stats.map((item, index) => {
+            const Icon = item.icon;
+
+            return (
+              <div
+                key={index}
+                className={`flex items-center gap-3 p-5 md:p-6 ${
+                  index !== stats.length - 1
+                    ? "lg:border-r border-slate-100"
+                    : ""
+                }`}
+              >
+                {item.active ? (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0B84D8] text-white shadow-lg">
+                    <Icon size={20} strokeWidth={2.2} />
+                  </div>
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                    <Icon size={20} strokeWidth={2.2} />
+                  </div>
+                )}
+
+                <div>
+                  <h3 className="text-xl font-extrabold leading-none text-slate-900">
+                    {item.value}
+                  </h3>
+
+                  <p className="mt-1 text-xs font-semibold leading-tight text-slate-500">
+                    {item.label}
+                  </p>
+                </div>
               </div>
-              <div className="text-3xl font-black leading-none font-mono">{stat.value}</div>
-              <div className="text-xs text-white/85 mt-1 font-bold tracking-wider uppercase">{stat.label}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
-    </div>
-  )
-}
+    </section>
+  );
+};
+
+export default StatsBar;

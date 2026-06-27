@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import {
   Truck, CheckCircle2, SkipForward, PlusCircle,
   Calendar, RefreshCw, ChevronLeft, ChevronRight, Package,
-  MapPin, Phone, Droplets, AlertTriangle, Clock
+  MapPin, Phone, Droplets, AlertTriangle, Clock, Eye
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 
 interface DeliveryEntry {
   id: string
@@ -53,6 +54,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
   const [markingId, setMarkingId] = useState<string | null>(null)
   const [markingAll, setMarkingAll] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
+  const [viewingEntry, setViewingEntry] = useState<DeliveryEntry | null>(null)
 
   async function fetchDeliveries(date: string) {
     setLoading(true)
@@ -394,6 +396,14 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
 
                       {/* Action trigger */}
                       <td className="px-6 py-2.5 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => setViewingEntry(del)}
+                            className="inline-flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 border border-transparent hover:border-blue-200 dark:hover:border-blue-900 transition-colors cursor-pointer w-8 h-8" 
+                            title="View Details"
+                          >
+                            <Eye size={14}/>
+                          </button>
                         {isPending ? (
                           <button
                             onClick={() => markDelivered(del.id)}
@@ -415,6 +425,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
                         ) : (
                           <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>
                         )}
+                        </div>
                       </td>
                     </tr>
                   )
@@ -424,6 +435,13 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
           </div>
         )}
       </div>
+
+      <RowDetailsModal
+        isOpen={!!viewingEntry}
+        onClose={() => setViewingEntry(null)}
+        title="Delivery Details"
+        data={viewingEntry}
+      />
     </div>
   )
 }

@@ -9,6 +9,7 @@ import {
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
+import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { cn } from '@/lib/utils'
 
 interface SubscriptionData {
@@ -240,6 +241,7 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [qtyFilter, setQtyFilter] = useState('all')
+  const [viewingEntry, setViewingEntry] = useState<SubscriptionData | null>(null)
 
   /* ── derived stats ── */
   const stats = useMemo(() => {
@@ -508,8 +510,15 @@ export function SubscriptionsClient({ data }: { data: SubscriptionData[] }) {
       <DataTable
         data={filtered}
         columns={columns}
+        onView={(row) => setViewingEntry(row)}
       />
 
+      <RowDetailsModal
+        isOpen={!!viewingEntry}
+        onClose={() => setViewingEntry(null)}
+        title="Subscription Details"
+        data={viewingEntry}
+      />
     </div>
   )
 }

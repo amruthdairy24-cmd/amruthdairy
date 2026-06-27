@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { quantity = 1.0, start_date } = body;
+    const { quantity = 1.0, start_date, excluded_dates = [] } = body;
 
     if (!start_date) {
       return NextResponse.json({ success: false, message: 'start_date is required' }, { status: 400 });
@@ -81,8 +81,22 @@ export async function POST(request: Request) {
     const startDateObj = new Date(start_date);
     const startYear = startDateObj.getFullYear();
     const startMonth = startDateObj.getMonth() + 1;
-    const monthly_amount = calculateMonthlyAmount(daily_rate, startYear, startMonth);
     const daysInMonth = getDaysInMonth(startYear, startMonth);
+
+    // Calculate delivery days for this month
+    let deliveryDays = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      const dStr = `${startYear}-${String(startMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      const dObj = new Date(dStr);
+      if (dObj >= startDateObj && dObj >= today && !excluded_dates.includes(dStr)) {
+        deliveryDays++;
+      }
+    }
+
+    const monthly_amount = deliveryDays * daily_rate;
     // 6. Create Razorpay order
     let razorpay_order_id = null;
     
@@ -142,6 +156,17 @@ export async function POST(request: Request) {
     if (billingError) {
       console.error('Billing month insert error:', billingError.message);
       // We don't fail the whole request here, but log it
+    }
+
+    // 9. Update waitlist to converted if the user was on the waitlist
+    const { error: waitlistUpdateError } = await adminSupabase
+      .from('waitlist')
+      .update({ status: 'converted' })
+      .eq('customer_id', user.id)
+      .in('status', ['waiting', 'notified']);
+
+    if (waitlistUpdateError) {
+      console.error('Waitlist conversion error:', waitlistUpdateError.message);
     }
 
     // 9. Return Razorpay order details for payment modal

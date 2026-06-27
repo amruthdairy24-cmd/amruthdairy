@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FileText, CreditCard, CheckCircle2, ShieldCheck, AlertCircle, TrendingUp, Info, Milk, SkipForward, Palmtree, PlusCircle, Wallet, ArrowRight, HelpCircle } from 'lucide-react'
+import { FileText, CreditCard, CheckCircle2, ShieldCheck, AlertCircle, TrendingUp, Info, Milk, SkipForward, Palmtree, PlusCircle, Wallet, ArrowRight, HelpCircle, Eye } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 
 interface BillingData {
   id?: string;
@@ -56,6 +57,7 @@ export default function BillsPage() {
   const [paymentStep, setPaymentStep] = useState<'details' | 'processing' | 'success'>('details')
   const [mockPaid, setMockPaid] = useState(false)
   const [isRequestingRefund, setIsRequestingRefund] = useState(false)
+  const [viewingBill, setViewingBill] = useState<BillingData | null>(null)
 
   async function handleRefundRequest() {
     if (!confirm('Are you sure you want to request a cash refund? This will convert your carry-forward credits to cash, and they will no longer reduce your next bill.')) return;
@@ -199,13 +201,13 @@ export default function BillsPage() {
       <div className="max-w-5xl space-y-6 animate-pulse">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <div className="h-6 w-48 bg-slate-200 rounded-lg" />
-            <div className="h-4 w-40 bg-slate-200 rounded-md" />
+            <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+            <div className="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded-md" />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <div className="md:col-span-3 h-[400px] bg-slate-200 rounded-3xl" />
-          <div className="md:col-span-2 h-[350px] bg-slate-200 rounded-3xl" />
+          <div className="md:col-span-3 h-[400px] bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+          <div className="md:col-span-2 h-[350px] bg-slate-200 dark:bg-slate-800 rounded-3xl" />
         </div>
       </div>
     )
@@ -216,7 +218,7 @@ export default function BillsPage() {
       <div className="max-w-md mx-auto text-center py-16 bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
         <AlertCircle className="text-rose-500 mx-auto mb-4" size={40} />
         <h3 className="text-lg font-black text-slate-800 dark:text-white font-display">Statement Unavailable</h3>
-        <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 mt-2 mb-6">{error || 'No active statements found.'}</p>
+        <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 mb-6">{error || 'No active statements found.'}</p>
         <button onClick={loadData} className="inline-flex items-center justify-center px-6 h-11 bg-brand-secondary hover:bg-[#014DA4] text-white font-extrabold rounded-xl text-[13px] shadow-sm border-none cursor-pointer transition-colors">
           Retry Loading
         </button>
@@ -239,13 +241,13 @@ export default function BillsPage() {
       {/* Header section */}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[26px] sm:text-[32px] font-bold text-slate-900 font-display tracking-tight leading-tight flex items-center gap-3">
+          <h1 className="text-[26px] sm:text-[32px] font-bold text-slate-900 dark:text-white font-display tracking-tight leading-tight flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#014DA4]/10 text-[#014DA4] flex items-center justify-center">
               <FileText size={22} />
             </div>
             <span>My Bills & Statements</span>
           </h1>
-          <p className="text-[13px] font-semibold text-slate-500 mt-2 pl-1 flex items-center gap-1.5">
+          <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 pl-1 flex items-center gap-1.5">
             <Info size={14} className="text-slate-450" />
             <span>Track monthly invoices, credit adjustments, and make secure subscription payments</span>
           </p>
@@ -270,7 +272,7 @@ export default function BillsPage() {
             <div className="p-5 border-b border-border/50 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 flex justify-between items-center select-none">
               <div className="text-left">
                 <h3 className="text-[14px] font-black text-[#014DA4] dark:text-blue-400 uppercase tracking-wider font-display">{monthName} Statement</h3>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5 uppercase tracking-widest">Amruth Dairy Farm Invoice</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 font-semibold mt-0.5 uppercase tracking-widest">Amruth Dairy Farm Invoice</p>
               </div>
               <div>
                 {mockPaid ? (
@@ -304,7 +306,7 @@ export default function BillsPage() {
                     <SkipForward size={13} />
                   </div>
                   <span className="font-bold text-slate-700 dark:text-slate-200">Skip Day Credits</span>
-                  <span className="bg-slate-100 dark:bg-slate-800 text-slate-555 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">{bill.days_skipped} days</span>
+                  <span className="bg-slate-100 dark:bg-slate-800 text-slate-555 dark:text-slate-400 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">{bill.days_skipped} days</span>
                 </span>
                 <span className="font-bold text-emerald-600 dark:text-emerald-500 font-mono text-sm">-₹{bill.skip_credit.toFixed(2)}</span>
               </div>
@@ -316,7 +318,7 @@ export default function BillsPage() {
                     <Palmtree size={13} />
                   </div>
                   <span className="font-bold text-slate-700 dark:text-slate-200">Vacation Pause Credits</span>
-                  <span className="bg-slate-100 dark:bg-slate-800 text-slate-555 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">{bill.days_paused} days</span>
+                  <span className="bg-slate-100 dark:bg-slate-800 text-slate-555 dark:text-slate-400 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">{bill.days_paused} days</span>
                 </span>
                 <span className="font-bold text-emerald-600 dark:text-emerald-500 font-mono text-sm">-₹{bill.pause_credit.toFixed(2)}</span>
               </div>
@@ -328,7 +330,7 @@ export default function BillsPage() {
                     <PlusCircle size={13} />
                   </div>
                   <span className="font-bold text-slate-700 dark:text-slate-200">Extra Milk Charges</span>
-                  <span className="bg-slate-100 dark:bg-slate-800 text-slate-555 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">+{bill.extra_litres_ordered}L</span>
+                  <span className="bg-slate-100 dark:bg-slate-800 text-slate-555 dark:text-slate-400 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">+{bill.extra_litres_ordered}L</span>
                 </span>
                 <span className="font-bold text-rose-500 dark:text-rose-400 font-mono text-sm">+₹{bill.extra_charges.toFixed(2)}</span>
               </div>
@@ -336,7 +338,7 @@ export default function BillsPage() {
               {/* Carry in balance */}
               <div className="flex justify-between items-center py-3.5 border-b border-slate-100 dark:border-slate-800">
                 <span className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 dark:text-slate-500 flex items-center justify-center flex-shrink-0">
                     <Wallet size={13} />
                   </div>
                   <span className="font-bold text-slate-700 dark:text-slate-200">Previous Carry-over</span>
@@ -353,9 +355,9 @@ export default function BillsPage() {
               </div>
             </div>
 
-            {/* Pay Button Action */}
-            {hasPendingBill && (
-              <div className="p-6 bg-slate-50/60 dark:bg-slate-950/40 border-t border-border/50 dark:border-slate-800">
+            {/* Actions */}
+            <div className="p-6 bg-slate-50/60 dark:bg-slate-950/40 border-t border-border/50 dark:border-slate-800 flex flex-col gap-3">
+              {hasPendingBill && (
                 <button
                   onClick={() => { setShowPayModal(true); setPaymentStep('details'); }}
                   className="w-full h-12 rounded-xl bg-[#014DA4] hover:bg-[#014DA4]/95 active:scale-[0.98] text-white font-extrabold text-xs shadow-sm transition-all border-none flex items-center justify-center gap-2 cursor-pointer"
@@ -363,8 +365,15 @@ export default function BillsPage() {
                   <CreditCard size={15} />
                   <span>Pay Balance Due (₹{bill.net_due.toFixed(2)})</span>
                 </button>
-              </div>
-            )}
+              )}
+              <button
+                onClick={() => setViewingBill(bill)}
+                className="w-full h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-[0.98] text-slate-700 dark:text-slate-300 font-extrabold text-xs shadow-sm transition-all border-none flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Eye size={15} />
+                <span>View Full Details</span>
+              </button>
+            </div>
           </div>
 
           {/* Upcoming Adjustments Card */}
@@ -372,7 +381,7 @@ export default function BillsPage() {
             <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden flex flex-col justify-between">
               <div className="p-5 border-b border-border/50 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 text-left select-none">
                 <h3 className="text-[14px] font-black text-[#014DA4] dark:text-blue-400 uppercase tracking-wider font-display">Upcoming Adjustments</h3>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5 uppercase tracking-widest">Calculations pending for next renewal cycle</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 font-semibold mt-0.5 uppercase tracking-widest">Calculations pending for next renewal cycle</p>
               </div>
               
               <div className="p-6 space-y-4">
@@ -385,7 +394,7 @@ export default function BillsPage() {
                           {adj.refund_status === 'requested' && <span className="ml-2 text-[9px] bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded font-black uppercase tracking-wide border border-amber-200/10 dark:border-amber-900/30">Refund Pending</span>}
                           {adj.refund_status === 'processed' && <span className="ml-2 text-[9px] bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-455 px-1.5 py-0.5 rounded font-black uppercase tracking-wide border border-green-200/10 dark:border-green-900/30">Refunded</span>}
                         </span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">{adj.description || 'Adjustment'}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 font-medium mt-0.5">{adj.description || 'Adjustment'}</span>
                       </span>
                       <span className={cn("font-mono font-black ml-2.5 text-right text-sm", adj.adjustment_type.includes('credit') || adj.amount < 0 ? "text-emerald-600" : "text-rose-500")}>
                         {adj.adjustment_type.includes('credit') || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
@@ -419,9 +428,9 @@ export default function BillsPage() {
           )}
                {/* Right column: Pricing Details Card */}
         <motion.div variants={itemVariants} className="lg:col-span-2 space-y-4 h-fit">
-          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl shadow-sm p-6 space-y-5 text-[12.5px] font-semibold text-slate-500">
+          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl shadow-sm p-6 space-y-5 text-[12.5px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
             
-            <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] flex items-center gap-2 pl-0.5 select-none">
+            <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] flex items-center gap-2 pl-0.5 select-none">
               <TrendingUp size={15} className="text-[#014DA4] dark:text-blue-400" />
               <span>Billing Guide</span>
             </h3>
@@ -432,7 +441,7 @@ export default function BillsPage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">1</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Monthly Cycle Rates</p>
-                  <p className="text-slate-450 dark:text-slate-400 mt-1">Calculations are based on the actual number of days in the month. Your customized subscription daily rate applies directly to each successfully delivered day.</p>
+                  <p className="text-slate-450 dark:text-slate-400 dark:text-slate-500 mt-1">Calculations are based on the actual number of days in the month. Your customized subscription daily rate applies directly to each successfully delivered day.</p>
                 </div>
               </div>
 
@@ -440,7 +449,7 @@ export default function BillsPage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">2</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Credits Carry-forward</p>
-                  <p className="text-slate-450 dark:text-slate-400 mt-1">Skipped days and vacation pauses accumulate credits at your daily plan rate. These are carried forward to automatically reduce your subsequent monthly renewal bill.</p>
+                  <p className="text-slate-450 dark:text-slate-400 dark:text-slate-500 mt-1">Skipped days and vacation pauses accumulate credits at your daily plan rate. These are carried forward to automatically reduce your subsequent monthly renewal bill.</p>
                 </div>
               </div>
 
@@ -448,7 +457,7 @@ export default function BillsPage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Cash Refund Policy</p>
-                  <p className="text-slate-450 dark:text-slate-400 mt-1">Accumulated carry-forward credits can be directly refunded to your bank account upon request rather than rolled over, converting your digital balance to cash.</p>
+                  <p className="text-slate-450 dark:text-slate-400 dark:text-slate-500 mt-1">Accumulated carry-forward credits can be directly refunded to your bank account upon request rather than rolled over, converting your digital balance to cash.</p>
                 </div>
               </div>
 
@@ -458,7 +467,7 @@ export default function BillsPage() {
             
             <div className="flex gap-2.5 p-1 bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-850 rounded-xl">
               <Info size={16} className="text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-1 ml-1.5" />
-              <p className="text-[10.5px] text-slate-455 dark:text-slate-400 leading-relaxed font-bold text-left p-1">
+              <p className="text-[10.5px] text-slate-455 dark:text-slate-400 dark:text-slate-500 leading-relaxed font-bold text-left p-1">
                 Online card and UPI payments update your balance immediately. For physical cash or cheque payments, please coordinate directly with the delivery managers.
               </p>
             </div>
@@ -492,10 +501,10 @@ export default function BillsPage() {
                 <div className="space-y-5">
                   <div className="text-left">
                     <h3 className="text-[16px] sm:text-lg font-black font-display text-slate-800 dark:text-white">Secure Checkout</h3>
-                    <p className="text-[12px] font-semibold text-slate-400 dark:text-slate-500 mt-1">Complete your subscription renewal payment securely via Razorpay.</p>
+                    <p className="text-[12px] font-semibold text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-1">Complete your subscription renewal payment securely via Razorpay.</p>
                   </div>
 
-                  <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800 p-4.5 rounded-xl text-[13px] font-semibold text-slate-500 dark:text-slate-400 space-y-2.5">
+                  <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800 p-4.5 rounded-xl text-[13px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500 space-y-2.5">
                     <div className="flex justify-between">
                       <span>Statement Amount</span>
                       <span className="font-bold text-slate-800 dark:text-slate-200">₹{bill.net_due.toFixed(2)}</span>
@@ -509,7 +518,7 @@ export default function BillsPage() {
                   <div className="flex gap-3 pt-1 select-none">
                     <button
                       onClick={() => setShowPayModal(false)}
-                      className="w-1/3 h-10 rounded-xl border border-border dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer bg-transparent"
+                      className="w-1/3 h-10 rounded-xl border border-border dark:border-slate-800 text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer bg-transparent"
                     >
                       Cancel
                     </button>
@@ -528,7 +537,7 @@ export default function BillsPage() {
                   <div className="w-12 h-12 border-3 border-slate-200 dark:border-slate-800 border-t-[#014DA4] rounded-full animate-spin mx-auto" />
                   <div>
                     <p className="text-[14.5px] font-black text-slate-800 dark:text-slate-200">Processing Payment...</p>
-                    <p className="text-[10.5px] font-bold text-slate-400 dark:text-slate-500 mt-1.5 flex items-center justify-center gap-1">
+                    <p className="text-[10.5px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-1.5 flex items-center justify-center gap-1">
                       <ShieldCheck size={14} className="text-emerald-600" /> Secured by SSL encryption
                     </p>
                   </div>
@@ -558,6 +567,12 @@ export default function BillsPage() {
         )}
       </AnimatePresence>
 
+      <RowDetailsModal 
+        isOpen={!!viewingBill}
+        onClose={() => setViewingBill(null)}
+        title="Billing Details"
+        data={viewingBill}
+      />
     </motion.div>
   )
 }
