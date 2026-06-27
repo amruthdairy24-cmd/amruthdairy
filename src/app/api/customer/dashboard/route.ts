@@ -122,6 +122,22 @@ export async function GET(request: Request) {
       .eq('subscription_id', subId)
       .eq('is_applied', false);
 
+    // 10. Latest Paid Month
+    const { data: latest_paid_month } = await supabase
+      .from('billing_months')
+      .select('billing_month')
+      .eq('subscription_id', subId)
+      .eq('payment_status', 'paid')
+      .order('billing_month', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // 11. Excluded Dates
+    const { data: excluded_dates } = await supabase
+      .from('subscription_excluded_dates')
+      .select('excluded_date')
+      .eq('subscription_id', subId);
+
     return NextResponse.json({
       success: true,
       profile,
@@ -138,7 +154,9 @@ export async function GET(request: Request) {
         amount: next_month_change.new_monthly_amount 
       } : null,
       upcoming_adjustments: upcoming_adjustments || [],
-      recent_deliveries: recent_deliveries || []
+      recent_deliveries: recent_deliveries || [],
+      latest_paid_month: latest_paid_month?.billing_month || null,
+      excluded_dates: excluded_dates ? excluded_dates.map(e => e.excluded_date) : []
     });
 
   } catch (err: any) {

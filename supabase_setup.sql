@@ -940,6 +940,12 @@ SELECT cron.schedule(
     AND emo.order_date = CURRENT_DATE + 1
     AND emo.status = 'confirmed'
   WHERE s.status = 'active'
+    AND EXISTS (
+      SELECT 1 FROM billing_months bm 
+      WHERE bm.subscription_id = s.id 
+      AND bm.billing_month = date_trunc('month', CURRENT_DATE + 1)::date
+      AND bm.payment_status = 'paid'
+    )
   ON CONFLICT (delivery_date, subscription_id) DO NOTHING;
   $$
 );
