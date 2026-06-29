@@ -11,6 +11,13 @@ interface SkipRequest {
   status: string;
   credit_amount: number;
 }
+  
+const getLocalISODate = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 // Animation configurations
 const containerVariants = {
@@ -77,14 +84,17 @@ export default function SkipDayPage() {
   tomorrow.setHours(0, 0, 0, 0)
 
   const maxDate = new Date()
-  maxDate.setDate(maxDate.getDate() + 14)
   
   if (latestPaidMonth) {
+    maxDate.setDate(maxDate.getDate() + 14) // default 14 days ahead
     const paidMonthDate = new Date(latestPaidMonth);
     const endOfPaidMonth = new Date(paidMonthDate.getFullYear(), paidMonthDate.getMonth() + 1, 0);
     if (maxDate > endOfPaidMonth) {
       maxDate.setTime(endOfPaidMonth.getTime());
     }
+  } else {
+    // If there is no paid month, they cannot skip any dates
+    maxDate.setDate(maxDate.getDate() - 1);
   }
 
   const isCutoffPassed = new Date().getHours() >= 21
@@ -111,7 +121,7 @@ export default function SkipDayPage() {
       return
     }
 
-    const dateStr = selectedDate.toISOString().split('T')[0]
+    const dateStr = getLocalISODate(selectedDate)
     
     if (skipDatesSet.has(dateStr)) {
       setError('You have already skipped this date')
@@ -228,9 +238,9 @@ export default function SkipDayPage() {
             {/* Date Grid */}
             <div className="grid grid-cols-4 sm:grid-cols-7 gap-2.5">
               {pickerDays.map((date) => {
-                const dateStr = date.toISOString().split('T')[0]
+                const dateStr = getLocalISODate(date)
                 const isAlreadySkipped = skipDatesSet.has(dateStr)
-                const isSelected = selectedDate?.toISOString().split('T')[0] === dateStr
+                const isSelected = selectedDate ? getLocalISODate(selectedDate) === dateStr : false
                 const isTomorrow = date.getTime() === tomorrow.getTime()
                 const isDisabled = isAlreadySkipped || (isTomorrow && isCutoffPassed)
 
