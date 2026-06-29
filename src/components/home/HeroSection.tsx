@@ -96,10 +96,10 @@ export function HeroSection() {
           {/* LEFT: TEXT CONTENT */}
           <div className="flex flex-col items-start text-left">
             {/* Headline */}
-            <h1 className="font-cabinet text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold  text-[#013378]  mb-4"
+            <h1 className="font-cabinet text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold  text-[#013378]  mb-4"
             >
               Fresh Milk delivered <br />
-              <span className="relative inline-block text-yellow-400  font-bold">
+              <span className="relative inline-block text-yellow-400 font-extrabold  font-bold">
                 Before
                 <svg
                   className="absolute left-0 -bottom-2 w-full"
@@ -117,7 +117,7 @@ export function HeroSection() {
                 </svg>
               </span>
               {' '}
-              <span className="font-bold">Sunrise.</span>
+              <span className="font-bold font-extrabold">Sunrise.</span>
             </h1>
 
             {/* Subheading */}
