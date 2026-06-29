@@ -123,9 +123,9 @@ function DesktopReelCoverflow({ reels }: { reels: Reel[] }) {
 
   const maxSideSlots = 3
 
-  const scaleSteps   = [1,    0.84,  0.70,  0.60]
-  const opacitySteps = [1,    0.72,  0.48,  0.28]
-  const spacingSteps = [0,    230,   430,   590]   // px offset from center
+  const scaleSteps = [1, 0.84, 0.70, 0.60]
+  const opacitySteps = [1, 0.72, 0.48, 0.28]
+  const spacingSteps = [0, 230, 430, 590]   // px offset from center
 
   return (
     <div className="relative flex items-center justify-center h-[500px]">
@@ -146,8 +146,8 @@ function DesktopReelCoverflow({ reels }: { reels: Reel[] }) {
 
         if (Math.abs(offset) > maxSideSlots) return null
 
-        const depth     = Math.abs(offset)
-        const isActive  = offset === 0
+        const depth = Math.abs(offset)
+        const isActive = offset === 0
         const direction = offset === 0 ? 0 : offset > 0 ? 1 : -1
 
         return (
@@ -215,7 +215,7 @@ function MobileReelCarousel({ reels }: { reels: Reel[] }) {
   }
 
   // Card width + gap between cards in px
-  const CARD_W   = 185
+  const CARD_W = 185
   const SIDE_GAP = 120  // horizontal distance from center to side card center
 
   return (
@@ -229,11 +229,11 @@ function MobileReelCarousel({ reels }: { reels: Reel[] }) {
       {reels.map((reel, idx) => {
         // Shortest-path offset so wrapping feels natural
         let offset = idx - activeIndex
-        if (offset > reels.length / 2)  offset -= reels.length
+        if (offset > reels.length / 2) offset -= reels.length
         if (offset < -reels.length / 2) offset += reels.length
 
         // Only ±2 are visible; beyond that push far off-screen and hide
-        const visible  = Math.abs(offset) <= 2
+        const visible = Math.abs(offset) <= 2
         const isActive = offset === 0
 
         // Clamp offset for transform so distant cards don't fly wildly
@@ -291,8 +291,8 @@ function MobileReelCarousel({ reels }: { reels: Reel[] }) {
    ───────────────────────────────────────────────────────── */
 function ReelPlayerCard({ reel, isActive }: { reel: Reel; isActive?: boolean }) {
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted]     = useState(true)
-  const [hovered, setHovered]     = useState(false)
+  const [isMuted, setIsMuted] = useState(true)
+  const [hovered, setHovered] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
 
   const togglePlay = () => {
@@ -321,7 +321,7 @@ function ReelPlayerCard({ reel, isActive }: { reel: Reel; isActive?: boolean }) 
     if (hovered) {
       videoRef.current.play()
         .then(() => setIsPlaying(true))
-        .catch(() => {})
+        .catch(() => { })
     } else {
       videoRef.current.pause()
       setIsPlaying(false)

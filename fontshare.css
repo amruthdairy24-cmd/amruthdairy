@@ -1,0 +1,21 @@
+/* Bespoke Stencil */
+@font-face {
+  font-family: 'Bespoke Stencil';
+  src: url('//cdn.fontshare.com/wf/4GXF344C5F4FC76XVGJWCP5OZZQ2L2IY/DIGA3TKJXYOVXTGKB5ASFOEHFTLZE2SB/25FALKXSHRBOV5EKV6RVBE46DMW6TCC6.woff2') format('woff2'),
+       url('//cdn.fontshare.com/wf/4GXF344C5F4FC76XVGJWCP5OZZQ2L2IY/DIGA3TKJXYOVXTGKB5ASFOEHFTLZE2SB/25FALKXSHRBOV5EKV6RVBE46DMW6TCC6.woff') format('woff'),
+       url('//cdn.fontshare.com/wf/4GXF344C5F4FC76XVGJWCP5OZZQ2L2IY/DIGA3TKJXYOVXTGKB5ASFOEHFTLZE2SB/25FALKXSHRBOV5EKV6RVBE46DMW6TCC6.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Bespoke Stencil';
+  src: url('//cdn.fontshare.com/wf/STKNIVBLCHAONBJW3CS4KMML2XQDCCP7/XGOBRRCQANN3KGW3SBO735X76YXOMLJ7/FWAZTX4NTMBFWRMB3QRA6OPAOQS3SOQ6.woff2') format('woff2'),
+       url('//cdn.fontshare.com/wf/STKNIVBLCHAONBJW3CS4KMML2XQDCCP7/XGOBRRCQANN3KGW3SBO735X76YXOMLJ7/FWAZTX4NTMBFWRMB3QRA6OPAOQS3SOQ6.woff') format('woff'),
+       url('//cdn.fontshare.com/wf/STKNIVBLCHAONBJW3CS4KMML2XQDCCP7/XGOBRRCQANN3KGW3SBO735X76YXOMLJ7/FWAZTX4NTMBFWRMB3QRA6OPAOQS3SOQ6.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+

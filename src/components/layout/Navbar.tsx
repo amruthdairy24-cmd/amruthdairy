@@ -2,17 +2,19 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Menu, X, User, LogOut } from 'lucide-react'
+import { Menu, X, User, LogOut, ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react'
+import { useCart } from '@/contexts/CartContext'
 import { createClient } from '@/utils/supabase/client'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 const navLinks = [
-  { href: '#products', label: 'Products' },
+  {href:'/' ,label:'Home'},
+  { href: '/#products', label: 'Products' },
   { href: '/subscribe', label: 'Subscription' },
-  { href: '/shop', label: 'Farm Shop' },
-  { href: '#about-us', label: 'About Us' },
-  { href: '#our-story', label: 'Our Story' },
+  // { href: '/shop', label: 'Farm Shop' },
+  { href: '/#about-us', label: 'About Us' },
+  { href: '/#our-story', label: 'Our Story' },
 ]
 
 export function Navbar() {
@@ -21,6 +23,8 @@ export function Navbar() {
   const [user, setUser] = useState<any>(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
+  const { cartItems, isCartOpen, openCart, closeCart, updateQuantity, removeFromCart, cartTotal } = useCart()
+  const cartItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
 
   const supabase = createClient()
 
@@ -71,7 +75,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className={`fixed w-full z-50 transition-all duration-500 h-[75px] flex items-center px-10 ${isScrolled || forceWhiteBg ? 'bg-white shadow-sm' : 'bg-transparent'}`}>
+      <header className={`fixed w-full z-50 transition-all duration-500 h-[70px] flex items-center px-10 ${isScrolled || forceWhiteBg ? 'bg-white shadow-sm' : 'bg-white shadow-sm md:bg-transparent md:shadow-none'}`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between w-full">
 
           {/* Logo */}
@@ -90,7 +94,7 @@ export function Navbar() {
                   key={href}
                   href={targetHref}
                   onClick={() => setActiveLink(href)}
-                  className={`text-sm font-bold transition-all duration-300 ${isActive
+                  className={`font-cabinet text-sm font-bold transition-all duration-300 ${isActive
                       ? "text-brand-secondary"
                       : "text-brand-primary/80 dark:text-slate-300 hover:text-brand-secondary"
                     }`}
@@ -103,6 +107,17 @@ export function Navbar() {
 
           {/* Desktop Auth Actions */}
           <div className="hidden md:flex items-center gap-4">
+            <button
+              onClick={openCart}
+              className="relative p-2 text-brand-primary dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+            >
+              <ShoppingCart size={20} />
+              {cartItemCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                  {cartItemCount}
+                </span>
+              )}
+            </button>
             {user ? (
               <>
                 <Link
@@ -133,14 +148,27 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden p-1.5 focus:outline-none text-brand-primary dark:text-white"
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile Actions */}
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              onClick={openCart}
+              className="relative p-1.5 focus:outline-none text-brand-primary dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+            >
+              <ShoppingCart size={22} />
+              {cartItemCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                  {cartItemCount}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="p-1.5 focus:outline-none text-brand-primary dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -223,6 +251,111 @@ export function Navbar() {
                   </>
                 )}
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      {/* Cart Drawer */}
+      <AnimatePresence>
+        {isCartOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeCart}
+              className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+              className="fixed inset-y-0 right-0 w-full sm:w-[400px] z-[70] bg-white flex flex-col shadow-2xl"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-slate-100">
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <ShoppingCart size={24} className="text-[#1230AE]" />
+                  Your Cart
+                </h2>
+                <button
+                  onClick={closeCart}
+                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <X size={20} className="text-slate-500" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                {cartItems.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-4">
+                    <ShoppingCart size={64} className="opacity-20" />
+                    <p>Your cart is empty.</p>
+                    <button
+                      onClick={closeCart}
+                      className="mt-4 px-6 py-2 bg-[#1230AE] text-white rounded-full font-semibold hover:bg-[#0f2a96] transition-colors"
+                    >
+                      Continue Shopping
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-6">
+                    {cartItems.map(item => (
+                      <div key={item.name} className="flex gap-4 border-b border-slate-100 pb-6 last:border-0 last:pb-0">
+                        <div className="relative w-20 h-20 rounded-xl bg-[#F8FAFC] overflow-hidden flex-shrink-0">
+                          <Image src={item.image} alt={item.name} fill className="object-cover" />
+                        </div>
+                        <div className="flex flex-col justify-between flex-1">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-bold text-slate-900">{item.name}</h3>
+                              <p className="text-xs text-slate-500">{item.price} / {item.unit}</p>
+                            </div>
+                            <button
+                              onClick={() => removeFromCart(item.name)}
+                              className="text-red-400 hover:text-red-600 p-1"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center border border-slate-200 rounded-full">
+                              <button
+                                onClick={() => updateQuantity(item.name, item.quantity - 1)}
+                                className="p-1.5 hover:bg-slate-50 rounded-l-full text-slate-600"
+                              >
+                                <Minus size={14} />
+                              </button>
+                              <span className="w-8 text-center text-sm font-semibold">{item.quantity}</span>
+                              <button
+                                onClick={() => updateQuantity(item.name, item.quantity + 1)}
+                                className="p-1.5 hover:bg-slate-50 rounded-r-full text-slate-600"
+                              >
+                                <Plus size={14} />
+                              </button>
+                            </div>
+                            <span className="font-extrabold text-slate-900">
+                              ₹{(parseFloat(item.price.replace(/[^\d.]/g, '')) * item.quantity).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {cartItems.length > 0 && (
+                <div className="p-6 border-t border-slate-100 bg-slate-50">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-slate-500 font-medium">Subtotal</span>
+                    <span className="text-xl font-extrabold text-slate-900">₹{cartTotal.toFixed(2)}</span>
+                  </div>
+                  <button className="w-full py-3.5 bg-[#1230AE] text-white rounded-xl font-bold shadow-[0_4px_12px_rgba(18,48,174,0.25)] hover:bg-[#0f2a96] hover:-translate-y-0.5 transition-all active:scale-[0.98]">
+                    Proceed to Checkout
+                  </button>
+                </div>
+              )}
             </motion.div>
           </>
         )}
