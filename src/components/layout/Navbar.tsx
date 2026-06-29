@@ -204,11 +204,10 @@ export function Navbar() {
                         setActiveLink(href)
                         setMenuOpen(false)
                       }}
-                      className={`text-lg font-semibold py-3 px-4 rounded-xl transition-all ${
-                        isActive 
-                          ? 'bg-blue-50 text-[#02429C]' 
+                      className={`text-lg font-semibold py-3 px-4 rounded-xl transition-all ${isActive
+                          ? 'bg-blue-50 text-[#02429C]'
                           : 'text-slate-600 hover:bg-slate-50 hover:text-[#02429C]'
-                      }`}
+                        }`}
                     >
                       {label}
                     </Link>
