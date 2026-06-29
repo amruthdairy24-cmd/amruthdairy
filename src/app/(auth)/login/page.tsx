@@ -434,7 +434,7 @@ export default function LoginPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-[440px] mx-auto my-auto p-6 sm:p-8 rounded-[24px] z-10 bg-white flex flex-col gap-5 shadow-2xl"
+              className="w-full max-w-[440px] mx-auto my-auto p-6 sm:p-8 rounded-[24px] z-10 bg-transparent border-2 border-white backdrop-blur-md flex flex-col gap-5"
             >
               {/* Logo Section */}
               <div className="flex flex-col items-center justify-center -mt-2">
@@ -470,7 +470,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => { setStep('register'); setError('') }}
-                        className="flex-1 h-11 cursor-pointer rounded-xl text-slate-600 font-bold text-sm hover:text-slate-900 transition-all"
+                        className="flex-1 h-11 cursor-pointer rounded-xl text-black font-bold text-sm hover:text-slate-900 transition-all"
                       >
                         Create Account
                       </button>
