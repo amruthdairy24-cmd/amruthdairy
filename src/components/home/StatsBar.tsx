@@ -1,38 +1,34 @@
 "use client";
 
-import { Users, Droplets, Heart, Truck } from "lucide-react";
+import { UsersRound, Milk, ShieldCheck, Truck } from "lucide-react";
 
 const stats = [
   {
-    icon: Users,
+    icon: UsersRound,
     value: "5000+",
     label: "Happy Families",
-    active: true,
   },
   {
-    icon: Droplets,
+    icon: Milk,
     value: "100%",
     label: "Pure Milk",
-    active: false,
   },
   {
-    icon: Heart,
+    icon: ShieldCheck,
     value: "50+",
     label: "Healthy Cows",
-    active: true,
   },
   {
     icon: Truck,
     value: "Daily",
     label: "On-Time Delivery",
-    active: false,
   },
 ];
 
 const StatsBar = () => {
   return (
-    <section className="relative z-10 bg-[#ffff] px-4 py-20">
-      <div className="mx-auto max-w-6xl rounded-[32px] border border-slate-100 bg-white shadow-[0_15px_45px_rgba(15,23,42,0.08)]">
+    <section className="relative z-10 bg-[#ffff] px-4 py-12 md:py-20">
+      <div className="mx-auto max-w-6xl rounded-[32px] border border-sky-100 bg-white shadow-[0_20px_50px_rgba(2,66,156,0.08)] overflow-hidden">
         <div className="grid grid-cols-2 lg:grid-cols-4">
           {stats.map((item, index) => {
             const Icon = item.icon;
@@ -40,28 +36,21 @@ const StatsBar = () => {
             return (
               <div
                 key={index}
-                className={`flex items-center gap-3 p-5 md:p-6 ${
-                  index !== stats.length - 1
-                    ? "lg:border-r border-slate-100"
-                    : ""
-                }`}
+                className={`group flex flex-col sm:flex-row items-center sm:items-start gap-4 p-6 sm:p-8 hover:bg-sky-50/50 transition-all duration-300 border-sky-100
+                  ${index === 0 ? "border-b border-r lg:border-b-0" : ""}
+                  ${index === 1 ? "border-b lg:border-b-0 lg:border-r" : ""}
+                  ${index === 2 ? "border-r" : ""}
+                `}
               >
-                {item.active ? (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0B84D8] text-white shadow-lg">
-                    <Icon size={20} strokeWidth={2.2} />
-                  </div>
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-                    <Icon size={20} strokeWidth={2.2} />
-                  </div>
-                )}
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-sky-100 text-[#02429C] shadow-sm group-hover:scale-110 group-hover:bg-[#02429C] group-hover:text-white transition-all duration-300">
+                  <Icon size={26} strokeWidth={2.2} />
+                </div>
 
-                <div>
-                  <h3 className="text-xl font-extrabold leading-none text-slate-900">
+                <div className="text-center sm:text-left mt-2 sm:mt-0">
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-[#013378] tracking-tight" style={{fontFamily: 'font-geist-sans'}}>
                     {item.value}
                   </h3>
-
-                  <p className="mt-1 text-xs font-semibold leading-tight text-slate-500">
+                  <p className="mt-1 text-xs sm:text-sm font-semibold text-gray-500">
                     {item.label}
                   </p>
                 </div>
