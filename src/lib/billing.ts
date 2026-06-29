@@ -238,6 +238,7 @@ export async function fetchMilkPrices(
     .single()
 
   if (error || !data) {
+    console.error('[billing] fetchMilkPrices failed, using DEFAULT_TIER_PRICES:', error);
     return DEFAULT_TIER_PRICES;
   }
 
