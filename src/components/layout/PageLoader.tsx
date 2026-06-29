@@ -4,12 +4,23 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 
+const SESSION_KEY = 'amruth_intro_seen'
+
 export function PageLoader() {
   const [isLoading, setIsLoading] = useState(true)
+  const [shouldAnimate, setShouldAnimate] = useState(true)
 
   useEffect(() => {
-    // Hide the loader after a short delay
+    const alreadySeen = sessionStorage.getItem(SESSION_KEY)
+    if (alreadySeen) {
+      setShouldAnimate(false)
+      setIsLoading(false)
+      return
+    }
+
+    // First visit
     const timer = setTimeout(() => {
+      sessionStorage.setItem(SESSION_KEY, '1')
       setIsLoading(false)
     }, 1500)
     return () => clearTimeout(timer)
@@ -21,7 +32,7 @@ export function PageLoader() {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: 'easeInOut' }}
+          transition={{ duration: shouldAnimate ? 0.6 : 0, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center"
         >
           <motion.div

@@ -102,7 +102,7 @@ export function HowItWorks() {
                 <span className="text-[10px] font-extrabold text-[#1230AE] uppercase tracking-widest block mb-2">
                   Visit Our Farm
                 </span>
-                <h4 className="font-playfair text-xl md:text-base font-bold text-slate-900 dark:text-white mb-5 md:mb-4 leading-snug">
+                <h4 className="font-cabinet text-xl md:text-base font-bold text-slate-900 dark:text-white mb-5 md:mb-4 leading-snug">
                   See Where Your Milk<br />Comes From.
                 </h4>
 

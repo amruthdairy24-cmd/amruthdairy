@@ -28,7 +28,7 @@ export function SubscriptionPlans() {
             <div className="inline-flex items-center bg-white dark:bg-warm-white border border-sky-500/15 text-sky-600 dark:text-sky-400 rounded-full px-4 py-1.5 text-xs font-extrabold uppercase tracking-widest mb-4.5 shadow-[0_2px_6px_rgba(2,132,199,0.04)]">
               Standard Subscription
             </div>
-            <h2 className="font-playfair text-3xl sm:text-4xl md:text-5xl font-medium text-slate-950 dark:text-white tracking-tight leading-tight mb-4">
+            <h2 className="font-cabinet text-3xl sm:text-4xl md:text-5xl font-medium text-slate-950 dark:text-white tracking-tight leading-tight mb-4">
               One Simple Plan. Full Flexibility.
             </h2>
             <p className="text-sm sm:text-base text-slate-605 dark:text-brown-650 font-medium max-w-[500px] mx-auto">
