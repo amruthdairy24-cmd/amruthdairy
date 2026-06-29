@@ -29,7 +29,6 @@ const sidebarGroups = [
       { href: '/dashboard/skip', icon: SkipForward, label: 'Skip Day' },
       { href: '/dashboard/vacation', icon: Palmtree, label: 'Vacation Pause' },
       { href: '/dashboard/extra', icon: PlusCircle, label: 'Extra Milk' },
-      { href: '/dashboard/quantity', icon: ArrowLeftRight, label: 'Change Plan' },
     ]
   },
   {
