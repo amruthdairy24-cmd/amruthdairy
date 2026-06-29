@@ -36,6 +36,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<Step>('login')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [redirectTo, setRedirectTo] = useState('')
 
   // Login form
   const [identifier, setIdentifier] = useState('')
@@ -68,6 +69,8 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('mode') === 'register' || params.get('mode') === 'signup') setStep('register')
+    const r = params.get('redirect')
+    if (r && r.startsWith('/')) setRedirectTo(r)
 
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [])
@@ -111,7 +114,7 @@ export default function LoginPage() {
 
       if (data.success) {
         setStep('success')
-        setTimeout(() => { window.location.href = getRedirectDestination(data) }, 1400)
+        setTimeout(() => { window.location.href = redirectTo || getRedirectDestination(data) }, 1400)
       } else {
         setError(data.message || 'Login failed. Please try again.')
       }
@@ -238,7 +241,7 @@ export default function LoginPage() {
 
       if (data.success) {
         setStep('success')
-        setTimeout(() => { window.location.href = getRedirectDestination(data) }, 1400)
+        setTimeout(() => { window.location.href = redirectTo || getRedirectDestination(data) }, 1400)
       } else {
         setError(data.message || 'Invalid code. Please try again.')
         setOtp(['', '', '', '', '', ''])
@@ -396,7 +399,7 @@ export default function LoginPage() {
       <div
         className="min-h-screen"
         style={{
-          backgroundImage: "url('/images/bg/login-bg-image.png')",
+          backgroundImage: "url('/images/bg/amruth-login.png')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -407,27 +410,22 @@ export default function LoginPage() {
           <div className="hidden lg:flex lg:col-span-7 flex-col justify-between p-12 relative overflow-hidden text-white bg-cover bg-center bg-no-repeat">
 
             {/* Hero content */}
-            <div className="max-w-xl my-auto z-10 relative">
+            <div className="max-w-xl mt-20 lg:mt-28 mb-auto z-10 relative">
               <motion.div
                 initial={{ opacity: 0, y: 28 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                <h1 className="text-4xl xl:text-5xl font-black font-display tracking-tight leading-tight mb-4">
+                <h1 className="text-4xl xl:text-5xl font-black font-display tracking-tight leading-tight mb-4 text-[#9A7931]">
                   Start Your Morning<br />
-                  With <span className="text-yellow-400">Creamy Goodness</span>
+                  With <span className="text-[#014DA4]">Creamy Goodness</span>
                 </h1>
-                <p className="text-white font-medium text-sm mb-8">
+                <p className="text-[#3B4319] font-semibold text-[15px] mb-8 max-w-md leading-relaxed">
                   Manage your daily milk subscription with ease.
                   Skip days, pause for vacation, order extras, and
                   check your balances with a single tap.
                 </p>
               </motion.div>
-            </div>
-
-            {/* Footer */}
-            <div className="text-xs text-black font-medium z-10 mt-5">
-              © {new Date().getFullYear()} Amruth Dairy Farm. All rights reserved.
             </div>
           </div>
 
@@ -439,8 +437,18 @@ export default function LoginPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-md mx-auto my-auto p-8 sm:p-5 rounded-[10px] z-10 bg-white flex flex-col gap-8"
+              className="w-full max-w-[440px] mx-auto my-auto p-6 sm:p-8 rounded-[24px] z-10 bg-transparent border-2 border-white backdrop-blur-md flex flex-col gap-5"
             >
+              {/* Logo Section */}
+              <div className="flex flex-col items-center justify-center -mt-2">
+                <img 
+                  src="/images/logo/amruth-logo.png" 
+                  alt="Amruth Dairy Farm" 
+                  className="h-[90px] w-auto object-contain mb-1"
+                />
+                <p className="text-[#009A44] text-xs font-extrabold tracking-wide font-sans">Fresh. Pure. Natural.</p>
+              </div>
+
               <AnimatePresence mode="wait">
 
                 {/* ═══ LOGIN STEP ════════════════════════════════════════════════ */}
@@ -465,7 +473,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => { setStep('register'); setError('') }}
-                        className="flex-1 h-11 cursor-pointer rounded-xl text-slate-600 font-bold text-sm hover:text-slate-900 transition-all"
+                        className="flex-1 h-11 cursor-pointer rounded-xl text-black font-bold text-sm hover:text-slate-900 transition-all"
                       >
                         Create Account
                       </button>
@@ -479,8 +487,8 @@ export default function LoginPage() {
                             ? 'border-red-400'
                             : 'border-slate-200 focus-within:border-brand-secondary focus-within:shadow-lg focus-within:shadow-brand-secondary/20'
                         )}>
-                          <span className="flex items-center shrink-0 px-4 h-full text-slate-400 group-focus-within:text-brand-secondary transition-colors">
-                            <AtSign size={18} strokeWidth={2.5} />
+                          <span className="flex items-center shrink-0 px-4 h-full text-slate-400 group-focus-within:text-[#02429C] transition-colors">
+                            <User size={18} strokeWidth={2.5} />
                           </span>
                           <input
                             id={`${formId}-identifier`}
@@ -539,20 +547,23 @@ export default function LoginPage() {
 
                       <button
                         type="submit"
-                        className="group relative cursor-pointer w-full h-14 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-2xl hover:shadow-brand-primary/30 active:scale-[0.98] rounded-2xl flex items-center justify-center gap-2.5 text-sm font-bold text-white transition-all overflow-hidden disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
+                        className="group relative cursor-pointer w-full h-14 bg-[#02429C] hover:bg-[#013378] active:scale-[0.98] rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all overflow-hidden disabled:cursor-not-allowed disabled:active:scale-100"
                       >
-                        <span className="absolute inset-0 bg-gradient-to-r from-brand-secondary to-brand-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <span className="relative flex items-center gap-2.5">
+                        <span className="relative flex items-center justify-between w-full px-5">
+                          <span className="flex-1 text-center pl-5">
                           {loading ? (
-                            <>
+                            <span className="flex items-center justify-center gap-2">
                               <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                               Login...
-                            </>
+                            </span>
                           ) : (
-                            <>
-                              Sign In
-                              <ChevronRight size={18} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
-                            </>
+                            "Sign In"
+                          )}
+                          </span>
+                          {!loading && (
+                            <div className="w-[22px] h-[22px] rounded-full border-[1.5px] border-white flex items-center justify-center shrink-0">
+                              <ChevronRight size={12} strokeWidth={3} className="group-hover:translate-x-[2px] transition-transform ml-0.5" />
+                            </div>
                           )}
                         </span>
                       </button>
@@ -562,7 +573,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => { setForgotEmail(''); setForgotOtp(['', '', '', '', '', '']); setNewPassword(''); setError(''); setStep('forgot') }}
-                        className="text-brand-secondary cursor-pointer hover:text-brand-primary underline underline-offset-2 transition-colors"
+                        className="text-[#02429C] font-bold cursor-pointer hover:text-[#013378] transition-colors"
                       >
                         Forgot Password?
                       </button>
@@ -677,20 +688,23 @@ export default function LoginPage() {
 
                       <button
                         type="submit"
-                        className="group cursor-pointer relative w-full h-14 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-2xl hover:shadow-brand-primary/30 active:scale-[0.98] rounded-2xl flex items-center justify-center gap-2.5 text-sm font-bold text-white transition-all overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
+                        className="group relative cursor-pointer w-full h-14 bg-[#02429C] hover:bg-[#013378] active:scale-[0.98] rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
                       >
-                        <span className="absolute inset-0 bg-gradient-to-r from-brand-secondary to-brand-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <span className="relative flex items-center gap-2.5">
+                        <span className="relative flex items-center justify-between w-full px-5">
+                          <span className="flex-1 text-center pl-5">
                           {loading ? (
-                            <>
+                            <span className="flex items-center justify-center gap-2">
                               <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                               Sending OTP...
-                            </>
+                            </span>
                           ) : (
-                            <>
-                              Send Verification Code
-                              <ChevronRight size={18} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
-                            </>
+                            "Send Verification Code"
+                          )}
+                          </span>
+                          {!loading && (
+                            <div className="w-[22px] h-[22px] rounded-full border-[1.5px] border-white flex items-center justify-center shrink-0">
+                              <ChevronRight size={12} strokeWidth={3} className="group-hover:translate-x-[2px] transition-transform ml-0.5" />
+                            </div>
                           )}
                         </span>
                       </button>
@@ -701,7 +715,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => { setStep('login'); setError('') }}
-                        className="text-brand-secondary cursor-pointer hover:text-brand-primary underline underline-offset-2 transition-colors"
+                        className="text-[#02429C] font-bold cursor-pointer hover:text-[#013378] transition-colors"
                       >
                         Sign In Here
                       </button>

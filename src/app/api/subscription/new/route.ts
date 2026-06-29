@@ -150,7 +150,8 @@ export async function POST(request: Request) {
         quantity_litres: quantity,
         monthly_amount: monthly_amount,
         daily_rate: daily_rate,
-        days_in_month: daysInMonth
+        days_in_month: daysInMonth,
+        payment_status: initialStatus === 'active' ? 'paid' : 'pending'
       });
 
     if (billingError) {

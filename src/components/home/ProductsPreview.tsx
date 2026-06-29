@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { cn } from '@/lib/utils'
+import { useCart } from '@/contexts/CartContext'
 
 function getIcon(name: string) {
   switch (name) {
@@ -120,16 +121,17 @@ const products: ProductItem[] = [
 ]
 
 const badgeClassMap: Record<string, string> = {
-  'Farm Fresh':    'bg-emerald-50 text-emerald-700 border-emerald-200',
-  'Probiotic Rich':'bg-sky-50 text-sky-700 border-sky-200',
-  'Premium Ghee':  'bg-amber-50 text-amber-700 border-amber-200',
-  'Refreshing':    'bg-teal-50 text-teal-700 border-teal-200',
-  'High Protein':  'bg-indigo-50 text-indigo-700 border-indigo-200',
+  'Farm Fresh': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'Probiotic Rich': 'bg-sky-50 text-sky-700 border-sky-200',
+  'Premium Ghee': 'bg-amber-50 text-amber-700 border-amber-200',
+  'Refreshing': 'bg-teal-50 text-teal-700 border-teal-200',
+  'High Protein': 'bg-indigo-50 text-indigo-700 border-indigo-200',
 }
 
 export function ProductsPreview() {
   const [dynamicPrices, setDynamicPrices] = useState<{ [key: string]: { price: number; unit: string } }>({})
   const [milkPrice, setMilkPrice] = useState<number | null>(null)
+  const { addToCart, openCart } = useCart()
 
   useEffect(() => {
     fetch('/api/admin/products')
@@ -143,14 +145,14 @@ export function ProductsPreview() {
           setDynamicPrices(priceMap)
         }
       })
-      .catch(() => {})
+      .catch(() => { })
 
     fetch('/api/admin/settings?key=price_per_litre')
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.value?.amount) setMilkPrice(data.value.amount)
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   return (
@@ -175,7 +177,7 @@ export function ProductsPreview() {
 
         {/* Grid */}
         <ScrollReveal direction="up" delay={150} duration={1000}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {products.map((product) => {
               let displayPrice = product.price
               let displayUnit = product.unit
@@ -191,7 +193,7 @@ export function ProductsPreview() {
               return (
                 <div
                   key={product.name}
-                  className="relative flex flex-col bg-white border border-slate-100 rounded-2xl shadow-[0_2px_16px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_32px_rgba(15,23,42,0.12)] hover:-translate-y-1 transition-all duration-300 overflow-hidden group"
+                  className="relative flex flex-col bg-white border border-slate-100 rounded-2xl shadow-[0_2px_16px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_32px_rgba(15,23,42,0.12)] hover:-translate-y-1 transition-all duration-300 overflow-hidden group col-span-1"
                 >
                   {/* Image — full width */}
                   <div className="relative w-full aspect-square bg-[#F8FAFC] overflow-hidden">
@@ -208,69 +210,57 @@ export function ProductsPreview() {
                       src={product.image}
                       alt={product.name}
                       fill
-                      sizes="(max-width: 768px) 50vw, 25vw"
+                      sizes="(max-width: 768px) 50vw, 20vw"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      priority
                     />
                   </div>
 
                   {/* Info */}
                   <div className="flex flex-col flex-1 px-3 pb-3 pt-2.5">
 
-                    <h3 className="text-[15px] sm:text-[17px] font-bold text-slate-900 leading-tight mb-0.5">
+                    <h3 className="text-[15px] sm:text-[17px] font-bold text-slate-900 leading-tight mb-2">
                       {product.name}
                     </h3>
-                    <p className="text-[10px] text-slate-400 mb-2 leading-snug">
-                      {product.tagline}
-                    </p>
 
-                    {/* Features */}
-                    <div className="hidden sm:flex flex-col gap-1 mb-3">
-                      {product.features.map((feat, idx) => (
-                        <div key={feat} className="flex items-center gap-1">
-                          <span className="text-[#1230AE] flex items-center flex-shrink-0">
-                            {getIcon(product.featuresIcons[idx])}
-                          </span>
-                          <span className="text-[10px] text-slate-500 font-medium">
-                            {feat}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Divider */}
-                    <div className="h-px bg-slate-100 mb-2.5" />
-
-                    {/* Price */}
-                    <div className="mb-2">
-                      <p className="text-[16px] font-extrabold text-slate-900 leading-none">
-                        {displayPrice}
-                      </p>
-                      <p className="text-[9px] text-slate-400 mt-0.5">/ {displayUnit}</p>
-                    </div>
-
-                    {/* CTA */}
-                    {product.isSubscription ? (
-                      <Link href="/subscribe" className="w-full">
-                        <button className="w-full h-8 rounded-full bg-[#1230AE] text-white text-[11px] font-semibold shadow-[0_4px_12px_rgba(18,48,174,0.25)] hover:scale-[1.03] active:scale-95 transition-all duration-200 cursor-pointer border-none">
-                          Subscribe
-                        </button>
-                      </Link>
-                    ) : (
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => {}}
-                          className="h-8 flex-1 rounded-full bg-white border border-[#1230AE]/30 text-[#1230AE] text-[10px] font-semibold hover:bg-[#1230AE]/5 hover:border-[#1230AE] active:scale-95 transition-all duration-200 cursor-pointer whitespace-nowrap"
-                        >
-                          + Cart
-                        </button>
-                        <Link href="/shop" className="flex-1">
-                          <button className="w-full h-8 rounded-full bg-[#1230AE] text-white text-[10px] font-semibold shadow-[0_4px_12px_rgba(18,48,174,0.25)] hover:scale-[1.03] active:scale-95 transition-all duration-200 cursor-pointer border-none">
-                            Buy Now
-                          </button>
-                        </Link>
+                    {/* Footer: Price & CTA stacked */}
+                    <div className="flex flex-col mt-auto">
+                      {/* Price */}
+                      <div className="mb-2">
+                        <p className="font-extrabold text-slate-900 leading-none text-[16px]">
+                          {displayPrice}
+                        </p>
+                        <p className="text-slate-400 mt-0.5 text-[9px]">/ {displayUnit}</p>
                       </div>
-                    )}
+
+                      {/* CTA */}
+                      <div className="w-full">
+                        {product.isSubscription ? (
+                          <Link href="/subscribe" className="w-full">
+                            <button className="w-full h-8 rounded-full bg-[#1230AE] text-white text-[11px] font-semibold shadow-[0_4px_12px_rgba(18,48,174,0.25)] hover:scale-[1.03] active:scale-95 transition-all duration-200 cursor-pointer border-none">
+                              Subscribe
+                            </button>
+                          </Link>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => addToCart({ name: product.name, price: displayPrice, unit: displayUnit, image: product.image })}
+                              className="h-8 flex-1 rounded-full bg-white border border-[#1230AE]/30 text-[#1230AE] text-[10px] font-semibold hover:bg-[#1230AE]/5 hover:border-[#1230AE] active:scale-95 transition-all duration-200 cursor-pointer whitespace-nowrap"
+                            >
+                              + Cart
+                            </button>
+                            <button 
+                              onClick={() => {
+                                addToCart({ name: product.name, price: displayPrice, unit: displayUnit, image: product.image })
+                                openCart()
+                              }}
+                              className="h-8 flex-1 rounded-full bg-[#1230AE] text-white text-[10px] font-semibold shadow-[0_4px_12px_rgba(18,48,174,0.25)] hover:scale-[1.03] active:scale-95 transition-all duration-200 cursor-pointer border-none"
+                            >
+                              Buy Now
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
                   </div>
                 </div>

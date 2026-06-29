@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Clock, ShieldCheck, Truck, MapPin, ArrowRight, Play } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ShieldCheck, Truck, MapPin, ArrowRight, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const slides = [
@@ -12,8 +13,10 @@ const slides = [
 ]
 
 export function HeroSection() {
+  const router = useRouter()
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isMounted, setIsMounted] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
 
   useEffect(() => {
     setIsMounted(true)
@@ -23,10 +26,25 @@ export function HeroSection() {
     return () => clearInterval(interval)
   }, [])
 
+  useEffect(() => {
+    fetch('/api/customer/dashboard')
+      .then(r => r.json())
+      .then(d => setIsLoggedIn(d.success === true))
+      .catch(() => setIsLoggedIn(false))
+  }, [])
+
+  function handleSubscribeClick() {
+    if (isLoggedIn) {
+      router.push('/onboarding')
+    } else {
+      router.push('/login?redirect=/onboarding')
+    }
+  }
+
   return (
     <section
       id="home"
-      className="relative min-h-screen flex flex-col overflow-hidden py-38"
+      className="relative min-h-screen flex flex-col overflow-hidden"
     >
       {/* ── Background carousel ── */}
       <div className="absolute inset-0 z-0">
@@ -78,10 +96,10 @@ export function HeroSection() {
           {/* LEFT: TEXT CONTENT */}
           <div className="flex flex-col items-start text-left">
             {/* Headline */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold  text-[#013378]   leading-[1.05] tracking-tight mb-4"
-            style={{fontFamily: 'font-geist-sans'}}>
-              Fresh Milk delivered <br />
-              <span className="relative inline-block text-yellow-400  font-bold">
+            <h1 className="font-cabinet text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold  text-[#013378]  mb-4"
+            >
+              Fresh Milk Delivered <br />
+              <span className="relative inline-block text-yellow-400 font-extrabold  font-bold">
                 Before
                 <svg
                   className="absolute left-0 -bottom-2 w-full"
@@ -99,17 +117,17 @@ export function HeroSection() {
                 </svg>
               </span>
               {' '}
-              <span className="font-bold">Sunrise.</span>
+              <span className="font-bold font-extrabold">Sunrise.</span>
             </h1>
 
             {/* Subheading */}
-            <p className="text-[10px] sm:text-[12px] text-gray-500 max-w-[320px] md:max-w-[500px] mb-6 font-normal">
-              Pure A2 Cow Milk delivered directly from our farm to your doorstep every morning.{' '}
+            <p className="font-cabinet text-[10px] sm:text-[12px] text-gray-500 max-w-[320px] md:max-w-[500px] mb-6 font-normal">
+              Pure Cow Milk delivered directly from our farm to your doorstep every morning.{' '}
               No preservatives. No compromise.
             </p>
 
             {/* Features */}
-            <div className="flex flex-row gap-4 md:gap-6 mb-7">
+            {/* <div className="flex flex-row gap-4 md:gap-6 mb-7">
               {[
                 { icon: <ShieldCheck size={15} />, line1: 'Pure &', line2: 'Natural' },
                 { icon: <Truck size={15} />, line1: 'Daily Fresh', line2: 'Delivery' },
@@ -125,17 +143,17 @@ export function HeroSection() {
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
 
             {/* Actions */}
             <div className="flex flex-row gap-4 items-center">
-              <Link
-                href="/subscribe"
-                className="inline-flex items-center justify-center gap-2 h-11 px-7 rounded-[10px] bg-[#02429C] text-white font-medium text-[15px]  hover:scale-105 hover:shadow-lg transition-all duration-200"
+              <button
+                onClick={handleSubscribeClick}
+                className="font-cabinet inline-flex items-center justify-center gap-2 h-11 px-7 rounded-[10px] bg-[#02429C] text-white font-medium text-[15px] hover:scale-105 hover:shadow-lg transition-all duration-200 cursor-pointer"
               >
                 Subscribe
                 <ArrowRight size={16} strokeWidth={1.8} />
-              </Link>
+              </button>
 
               <Link
                 href="#our-story"

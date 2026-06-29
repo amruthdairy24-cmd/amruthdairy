@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, CheckCircle, Calendar, ShieldCheck, ChevronDown } from 'lucide-react'
@@ -35,7 +35,15 @@ function RenewContent() {
   const [milkPrices, setMilkPrices] = useState<Record<string, number>>({})
 
   // Parse the target month for display
-  const targetDate = targetMonth ? new Date(targetMonth) : new Date()
+  const targetDate = useMemo(() => {
+    if (targetMonth) return new Date(targetMonth);
+    const d = new Date();
+    if (d.getDate() >= 25) {
+      d.setMonth(d.getMonth() + 1);
+      d.setDate(1);
+    }
+    return d;
+  }, [targetMonth]);
   const monthName = targetDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
 
   useEffect(() => {
