@@ -98,7 +98,7 @@ export function HeroSection() {
             {/* Headline */}
             <h1 className="font-cabinet text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold  text-[#013378]  mb-4"
             >
-              Fresh Milk delivered <br />
+              Fresh Milk Delivered <br />
               <span className="relative inline-block text-yellow-400 font-extrabold  font-bold">
                 Before
                 <svg
