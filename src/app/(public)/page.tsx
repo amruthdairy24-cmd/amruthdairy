@@ -1,5 +1,4 @@
 import { Navbar } from '@/components/layout/Navbar'
-import { PageLoader } from '@/components/layout/PageLoader'
 import { Footer } from '@/components/layout/Footer'
 import { HeroSection } from '@/components/home/HeroSection'
 import { OurStory } from '@/components/home/OurStory'
@@ -10,7 +9,6 @@ import StatsBar from '@/components/home/StatsBar'
 export default function HomePage() {
   return (
     <>
-      <PageLoader />
       <Navbar />
       <main>
         <HeroSection />

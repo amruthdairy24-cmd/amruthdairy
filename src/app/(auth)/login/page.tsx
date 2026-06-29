@@ -36,6 +36,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<Step>('login')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [redirectTo, setRedirectTo] = useState('')
 
   // Login form
   const [identifier, setIdentifier] = useState('')
@@ -68,6 +69,8 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('mode') === 'register' || params.get('mode') === 'signup') setStep('register')
+    const r = params.get('redirect')
+    if (r && r.startsWith('/')) setRedirectTo(r)
 
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [])
@@ -111,7 +114,7 @@ export default function LoginPage() {
 
       if (data.success) {
         setStep('success')
-        setTimeout(() => { window.location.href = getRedirectDestination(data) }, 1400)
+        setTimeout(() => { window.location.href = redirectTo || getRedirectDestination(data) }, 1400)
       } else {
         setError(data.message || 'Login failed. Please try again.')
       }
@@ -238,7 +241,7 @@ export default function LoginPage() {
 
       if (data.success) {
         setStep('success')
-        setTimeout(() => { window.location.href = getRedirectDestination(data) }, 1400)
+        setTimeout(() => { window.location.href = redirectTo || getRedirectDestination(data) }, 1400)
       } else {
         setError(data.message || 'Invalid code. Please try again.')
         setOtp(['', '', '', '', '', ''])

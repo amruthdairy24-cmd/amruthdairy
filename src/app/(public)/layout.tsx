@@ -10,5 +10,5 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     setTheme('light')
   }, [setTheme])
 
-  return <>{children}</>
+  return <div className="font-cabinet">{children}</div>
 }
