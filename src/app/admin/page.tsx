@@ -12,6 +12,9 @@ export default async function AdminDashboardPage() {
   // Get current date in IST (YYYY-MM-DD)
   const d = new Date()
   const todayStr = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+  
+  // Current billing month (1st of the current month)
+  const formattedBillingMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
 
   const adminClient = createAdminClient()
 
@@ -25,16 +28,18 @@ export default async function AdminDashboardPage() {
     { data: paymentsData },
     { data: deliveriesToday },
     { data: skippedToday },
+    { count: newCustomersCount },
     rawMilkPricing
   ] = await Promise.all([
     supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer'),
-    supabase.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+    supabase.from('billing_months').select('id', { count: 'exact', head: true }).eq('billing_month', formattedBillingMonth).in('payment_status', ['paid', 'pending']),
     supabase.from('subscriptions').select('id', { count: 'exact', head: true }),
     supabase.from('waitlist').select('id', { count: 'exact', head: true }).eq('status', 'waiting'),
-    supabase.from('subscriptions').select('quantity_litres, monthly_amount').eq('status', 'active'),
+    supabase.from('billing_months').select('quantity_litres, monthly_amount').eq('billing_month', formattedBillingMonth).in('payment_status', ['paid', 'pending']),
     supabase.from('payments').select('amount').eq('status', 'success'),
     supabase.from('daily_delivery_sheet').select('id, total_litres').eq('delivery_date', todayStr),
     supabase.from('daily_delivery_sheet').select('id', { count: 'exact' }).eq('delivery_date', todayStr).eq('delivery_status', 'skipped'),
+    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
     fetchRawMilkPricing(adminClient)
   ])
 
@@ -67,9 +72,10 @@ export default async function AdminDashboardPage() {
 
   // Fallback to active subscriptions mapped as pending deliveries if sheet is empty
   const { data: dbActiveSubs } = await supabase
-    .from('subscriptions')
-    .select('id, quantity_litres, profiles(full_name, area)')
-    .eq('status', 'active')
+    .from('billing_months')
+    .select('id:subscription_id, quantity_litres, profiles(full_name, area)')
+    .eq('billing_month', formattedBillingMonth)
+    .in('payment_status', ['paid', 'pending'])
     .limit(6)
 
   const deliveriesList = dbDeliveries && dbDeliveries.length > 0
@@ -153,7 +159,8 @@ export default async function AdminDashboardPage() {
         totalLitresToday,
         totalRevenue,
         deliveriesCount,
-        skippedCount
+        skippedCount,
+        newCustomersThisWeek: newCustomersCount || 0
       }}
       deliveriesList={deliveriesList}
       recentActivities={recentActivities}
