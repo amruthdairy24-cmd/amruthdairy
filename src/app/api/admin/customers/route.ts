@@ -29,8 +29,14 @@ export async function DELETE(request: Request) {
     const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(id);
 
     if (deleteAuthError) {
-      console.error('[admin/customers DELETE] Delete auth user error:', deleteAuthError.message);
-      return NextResponse.json({ success: false, message: 'Failed to delete customer authentication' }, { status: 500 });
+      console.warn('[admin/customers DELETE] Auth user not found or error:', deleteAuthError.message, 'falling back to direct profile deletion');
+      
+      const { error: profileDeleteError } = await adminClient.from('profiles').delete().eq('id', id);
+      
+      if (profileDeleteError) {
+        console.error('[admin/customers DELETE] Profile delete error:', profileDeleteError.message);
+        return NextResponse.json({ success: false, message: 'Failed to delete customer profile directly.' }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ success: true, message: 'Customer deleted successfully' });
