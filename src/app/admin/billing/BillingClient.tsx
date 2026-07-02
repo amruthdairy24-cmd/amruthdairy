@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { CreditCard, FileText, Settings2, Receipt, Coins } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { CreditCard, FileText, Settings2, Receipt, Coins, CalendarDays } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
@@ -37,7 +38,8 @@ interface Payment {
   profiles: { full_name: string };
 }
 
-export function BillingClient({ invoices, adjustments, payments }: { invoices: Invoice[], adjustments: Adjustment[], payments: Payment[] }) {
+export function BillingClient({ invoices, adjustments, payments, currentMonth }: { invoices: Invoice[], adjustments: Adjustment[], payments: Payment[], currentMonth: string }) {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<'invoices' | 'adjustments' | 'payments'>('invoices')
   const [isProcessing, setIsProcessing] = useState(false);
   const [viewingEntry, setViewingEntry] = useState<any | null>(null);
@@ -296,11 +298,34 @@ export function BillingClient({ invoices, adjustments, payments }: { invoices: I
     <div className="space-y-6">
       
       {/* PAGE HEADER */}
-      <AdminHeader 
-        title="Billing & Payments" 
-        description="Manage customer invoices, adjustments, refund actions, and records." 
-        icon={CreditCard} 
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <AdminHeader 
+          title="Billing & Payments" 
+          description="Manage customer invoices, adjustments, refund actions, and records." 
+          icon={CreditCard} 
+        />
+        
+        {/* MONTH PICKER */}
+        <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 shadow-sm">
+          <div className="pl-2 pr-1 text-slate-400">
+            <CalendarDays size={16} />
+          </div>
+          <select 
+            value={currentMonth}
+            onChange={(e) => router.push(`/admin/billing?month=${e.target.value}`)}
+            className="bg-transparent border-none text-sm font-bold text-slate-700 dark:text-slate-200 outline-none pr-3 py-1 cursor-pointer appearance-none"
+          >
+            {/* Generate last 12 months as options */}
+            {Array.from({ length: 12 }).map((_, i) => {
+              const d = new Date();
+              d.setMonth(d.getMonth() - i);
+              const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+              const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+              return <option key={val} value={val}>{label}</option>
+            })}
+          </select>
+        </div>
+      </div>
       
       {/* TABS NAVIGATION */}
       <div className="flex border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
