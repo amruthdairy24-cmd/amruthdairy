@@ -34,7 +34,7 @@ export default async function SubscriptionsPage(props: {
   const mappedData = (dbData || []).map((row: any) => ({
     id: row.subscription_id,
     start_date: row.subscriptions?.start_date || 'N/A',
-    status: 'active',
+    status: row.payment_status === 'paid' ? 'active' : 'pending',
     payment_status: row.payment_status || 'pending',
     quantity_litres: row.quantity_litres || 0,
     profiles: row.subscriptions?.profiles || { full_name: 'Unknown' }

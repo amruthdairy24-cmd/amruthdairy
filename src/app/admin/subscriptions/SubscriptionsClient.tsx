@@ -54,8 +54,9 @@ function StatCard({
 
 /* ── QUANTITY BREAKDOWN ── */
 function QuantityBreakdown({ data }: { data: SubscriptionData[] }) {
+  const activeData = data.filter((d) => d.status.toLowerCase() === 'active')
   const qtyMap: Record<number, number> = {}
-  data.forEach((d) => {
+  activeData.forEach((d) => {
     qtyMap[d.quantity_litres] = (qtyMap[d.quantity_litres] || 0) + 1
   })
   const entries = Object.entries(qtyMap).sort((a, b) => Number(a[0]) - Number(b[0]))
@@ -98,7 +99,7 @@ function QuantityBreakdown({ data }: { data: SubscriptionData[] }) {
       <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
         <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Total daily output</span>
         <span className="text-lg font-black text-slate-800 dark:text-white font-display">
-          {data.reduce((s, d) => s + d.quantity_litres, 0).toFixed(1)}
+          {activeData.reduce((s, d) => s + d.quantity_litres, 0).toFixed(1)}
           <span className="text-xs font-semibold text-slate-455 dark:text-slate-555 ml-1">L / day</span>
         </span>
       </div>
@@ -126,24 +127,26 @@ function PaymentBadge({ status }: { status: string }) {
 export function SubscriptionsClient({ data, currentMonth }: { data: SubscriptionData[], currentMonth: string }) {
   const router = useRouter()
   const [search, setSearch] = useState('')
-  const [qtyFilter, setQtyFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('active')
   const [viewingEntry, setViewingEntry] = useState<SubscriptionData | null>(null)
 
   const stats = useMemo(() => {
-    const totalLitres = data.reduce((s, d) => s + d.quantity_litres, 0)
+    const activeData = data.filter(d => d.status.toLowerCase() === 'active')
+    const activeCount = activeData.length
+    const totalLitres = activeData.reduce((s, d) => s + d.quantity_litres, 0)
     const paidCount = data.filter(d => d.payment_status === 'paid').length
-    const avgQty = data.length ? (totalLitres / data.length).toFixed(1) : '0'
-    return { total: data.length, totalLitres, paidCount, avgQty }
+    const avgQty = activeCount ? (totalLitres / activeCount).toFixed(1) : '0'
+    return { total: activeCount, totalLitres, paidCount, avgQty }
   }, [data])
 
   const filtered = useMemo(() => {
     let d = data
     if (search) d = d.filter((r) => r.profiles?.full_name?.toLowerCase().includes(search.toLowerCase()))
-    if (qtyFilter !== 'all') d = d.filter((r) => r.quantity_litres === Number(qtyFilter))
+    if (statusFilter !== 'all') d = d.filter((r) => r.status.toLowerCase() === statusFilter)
     return d
-  }, [data, search, qtyFilter])
+  }, [data, search, statusFilter])
 
-  const uniqueQtys = [...new Set(data.map((d) => d.quantity_litres))].sort((a, b) => a - b)
+  const uniqueStatuses = Array.from(new Set(['active', 'pending', ...data.map(d => d.status.toLowerCase())]))
 
   const columns: ColumnDef<SubscriptionData>[] = [
     {
@@ -234,6 +237,7 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
           description={`${selectedMonthLabel} — ${stats.total} active subscribers`}
           icon={Wallet}
           actionLabel="New Subscription"
+          hideSearchRow={true}
         />
         <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 shadow-sm">
           <div className="pl-2 pr-1 text-slate-400"><CalendarDays size={16} /></div>
@@ -256,8 +260,8 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Active Subscribers" value={stats.total} sub="This month" icon={CheckCircle2} iconBg="#dcfce7" iconColor="#16a34a" />
         <StatCard label="Daily Milk Output" value={`${stats.totalLitres.toFixed(1)}L`} sub={`${stats.avgQty}L avg per subscriber`} icon={Droplets} iconBg="#dbeafe" iconColor="#2563eb" />
-        <StatCard label="Payments Collected" value={`${stats.paidCount}/${stats.total}`} sub={stats.total > 0 ? `${Math.round((stats.paidCount / stats.total) * 100)}% collected` : 'No subscribers'} icon={IndianRupee} iconBg="#f0fdf4" iconColor="#15803d" />
-        <StatCard label="Avg Daily Qty" value={`${stats.avgQty}L`} sub="Per subscriber" icon={TrendingUp} iconBg="#f3e8ff" iconColor="#9333ea" />
+        <StatCard label="Payments Collected" value={`${stats.paidCount}/${data.length}`} sub={data.length > 0 ? `${Math.round((stats.paidCount / data.length) * 100)}% collected` : 'No subscribers'} icon={IndianRupee} iconBg="#f0fdf4" iconColor="#15803d" />
+        <StatCard label="Avg Daily Qty" value={`${stats.avgQty}L`} sub="Per active subscriber" icon={TrendingUp} iconBg="#f3e8ff" iconColor="#9333ea" />
       </div>
 
       {/* QUANTITY BREAKDOWN */}
@@ -276,15 +280,23 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
           />
         </div>
         <div className="relative">
-          <select value={qtyFilter} onChange={(e) => setQtyFilter(e.target.value)}
-            className="h-10 pl-3.5 pr-8 bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-750 dark:text-slate-200 outline-none cursor-pointer appearance-none transition-all focus:ring-2 focus:ring-blue-500/20">
-            <option value="all">All Quantities</option>
-            {uniqueQtys.map((q) => (<option key={q} value={q}>{q}L / day</option>))}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-10 pl-3.5 pr-8 bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-750 dark:text-slate-200 outline-none cursor-pointer appearance-none transition-all focus:ring-2 focus:ring-blue-500/20"
+          >
+            <option value="all">All Statuses</option>
+            {uniqueStatuses.map((s) => (
+              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+            ))}
           </select>
-          <ChevronDown size={13} className="text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <ChevronDown
+            size={13}
+            className="text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+          />
         </div>
-        {(search || qtyFilter !== 'all') && (
-          <button onClick={() => { setSearch(''); setQtyFilter('all') }}
+        {(search || statusFilter !== 'active') && (
+          <button onClick={() => { setSearch(''); setStatusFilter('active'); }}
             className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-450 text-xs font-bold cursor-pointer transition-all hover:bg-rose-100 dark:hover:bg-rose-950/50">
             <XCircle size={13} /> Reset
           </button>
@@ -297,13 +309,19 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
       </div>
 
       {/* TABLE or EMPTY */}
-      {data.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl p-12 flex flex-col items-center justify-center text-center">
           <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4">
             <Users size={28} className="text-slate-300 dark:text-slate-600" />
           </div>
-          <h3 className="text-lg font-black text-slate-700 dark:text-slate-200 mb-1">No subscriptions for {selectedMonthLabel}</h3>
-          <p className="text-sm font-medium text-slate-400 dark:text-slate-500 max-w-sm">Subscribers will appear here once their monthly billing is generated.</p>
+          <h3 className="text-lg font-black text-slate-700 dark:text-slate-200 mb-1">
+            {statusFilter === 'active' ? `No active subscriptions for ${selectedMonthLabel}` : "No results found"}
+          </h3>
+          <p className="text-sm font-medium text-slate-400 dark:text-slate-500 max-w-sm">
+            {statusFilter === 'active' 
+              ? "No one has paid for this month yet. Change the filter to 'Pending' or 'All Statuses' to see awaiting subscriptions." 
+              : "Try adjusting your filters or search terms."}
+          </p>
         </div>
       ) : (
         <DataTable data={filtered} columns={columns} onView={(row) => setViewingEntry(row)} />
