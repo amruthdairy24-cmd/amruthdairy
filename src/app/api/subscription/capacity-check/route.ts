@@ -18,6 +18,21 @@ export async function GET(request: Request) {
     const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
     const litres = parseFloat(searchParams.get('litres') || '1');
 
+    const today = new Date();
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(today);
+
+    if (date <= todayStr) {
+      return NextResponse.json({
+        success: true,
+        can_book: false,
+        is_full: true,
+        total_litres: 0,
+        booked_litres: 0,
+        available_litres: 0,
+        waitlist_count: 0
+      });
+    }
+
     // Call the check_capacity RPC
     const { data: capacityCheck, error } = await adminSupabase.rpc('check_capacity', {
       p_date: date,
