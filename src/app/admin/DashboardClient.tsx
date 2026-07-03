@@ -31,6 +31,7 @@ interface DashboardClientProps {
     totalRevenue: number
     deliveriesCount: number
     skippedCount: number
+    newCustomersThisWeek?: number
   }
   deliveriesList: Array<{
     id: string
@@ -241,7 +242,7 @@ export default function DashboardClient({
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
-                +12%
+                +{stats.newCustomersThisWeek || 0} New
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                 this week
@@ -264,10 +265,10 @@ export default function DashboardClient({
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
-                +8%
+                {subOverview.active + subOverview.pending > 0 ? Math.round((subOverview.active / (subOverview.active + subOverview.pending)) * 100) : 0}% Active
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                of {stats.totalSubscriptions} total
+                of {subOverview.active + subOverview.pending} total
               </span>
             </div>
           </div>
@@ -287,10 +288,10 @@ export default function DashboardClient({
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-amber-700 bg-amber-500/10 border border-amber-200/20">
-                Active
+                {stats.skippedCount} Skipped
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                {stats.skippedCount} skipped
+                out of {stats.deliveriesCount + stats.skippedCount} total
               </span>
             </div>
           </div>
@@ -310,7 +311,7 @@ export default function DashboardClient({
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
-                +15%
+                Real-Time
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                 this cycle
