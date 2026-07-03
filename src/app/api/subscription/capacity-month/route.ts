@@ -43,16 +43,22 @@ export async function GET(request: Request) {
     // Map by date
     const capacityMap: Record<string, { has_capacity: boolean }> = {};
     
+    const today = new Date();
+    // Adjust for IST time zone where the app is used (Asia/Kolkata)
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(today);
+
     // By default, assume all days have capacity unless row exists and says otherwise
     for (let i = 1; i <= endDateObj.getDate(); i++) {
       const dateStr = `${month}-${String(i).padStart(2, '0')}`;
-      capacityMap[dateStr] = { has_capacity: true };
+      // Capacity is only true for tomorrow onwards
+      capacityMap[dateStr] = { has_capacity: dateStr > todayStr };
     }
 
     if (capacityRows) {
       capacityRows.forEach(row => {
-        // A date has capacity if it's not marked full AND (available_litres is null OR >= requested litres)
-        const hasCapacity = !row.is_full && (row.available_litres == null || row.available_litres >= litres);
+        const isFuture = row.date > todayStr;
+        // A date has capacity if it's in the future AND not marked full AND (available_litres is null OR >= requested litres)
+        const hasCapacity = isFuture && !row.is_full && (row.available_litres == null || row.available_litres >= litres);
         capacityMap[row.date] = { has_capacity: hasCapacity };
       });
     }

@@ -299,7 +299,10 @@ export function CapacityClient({ data: initialData, defaultCapacityRules: initia
                 
                 const tempToday = new Date();
                 tempToday.setHours(12,0,0,0);
-                const isToday = tempToday.toISOString().split('T')[0] === dateStr;
+                const todayStr = tempToday.toISOString().split('T')[0];
+                const isToday = todayStr === dateStr;
+                const isPast = dateStr < todayStr;
+                const isClosed = isPast || isToday;
 
                 return (
                   <tr key={idx} className={cn(
@@ -316,14 +319,16 @@ export function CapacityClient({ data: initialData, defaultCapacityRules: initia
                     <td className="p-4">
                       <div className={cn(
                         "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold border",
-                        percent >= 100 
-                          ? "bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-200/20 dark:border-rose-900/30" 
-                          : (percent >= 80 
-                            ? "bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-400 border-amber-200/20 dark:border-amber-900/30" 
-                            : "bg-green-500/10 dark:bg-green-500/20 text-emerald-600 dark:text-emerald-400 border-green-200/20 dark:border-green-900/30")
+                        isClosed
+                          ? "bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700"
+                          : percent >= 100 
+                            ? "bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-200/20 dark:border-rose-900/30" 
+                            : (percent >= 80 
+                              ? "bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-400 border-amber-200/20 dark:border-amber-900/30" 
+                              : "bg-green-500/10 dark:bg-green-500/20 text-emerald-600 dark:text-emerald-400 border-green-200/20 dark:border-green-900/30")
                       )}>
-                        {percent >= 100 ? <AlertTriangle size={13}/> : <CheckCircle2 size={13}/>}
-                        {percent >= 100 ? 'Full' : (percent >= 80 ? 'Filling Fast' : 'Available')}
+                        {isClosed ? <X size={13}/> : percent >= 100 ? <AlertTriangle size={13}/> : <CheckCircle2 size={13}/>}
+                        {isClosed ? 'Closed' : percent >= 100 ? 'Full' : (percent >= 80 ? 'Filling Fast' : 'Available')}
                       </div>
                     </td>
                     <td className="p-4 text-sm font-extrabold text-slate-900 dark:text-white">

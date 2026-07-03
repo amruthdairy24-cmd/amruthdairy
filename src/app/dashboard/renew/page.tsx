@@ -1,5 +1,7 @@
 'use client'
 
+import Script from 'next/script'
+
 import { useState, useEffect, Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -173,32 +175,59 @@ function RenewContent() {
         return
       }
 
-      const options = {
-        key: json.key_id,
-        amount: Math.round(netDue * 100),
-        currency: "INR",
-        name: "Amruth Dairy Farm",
-        description: `Renewal for ${monthName}`,
-        order_id: json.razorpay_order_id,
-        handler: async function (response: any) {
-          toast.success('Payment successful! Subscription renewed.')
-          router.push('/dashboard')
-        },
-        prefill: {
-          name: "Customer",
-        },
-        theme: {
-          color: "#059669" // Emerald 600
-        },
-        modal: {
-          ondismiss: function() {
-            setIsProcessing(false)
+      if (json.razorpay_order_id) {
+        const options = {
+          key: json.key_id,
+          amount: Math.round(netDue * 100),
+          currency: "INR",
+          name: "Amruth Dairy Farm",
+          description: `Renewal for ${monthName}`,
+          order_id: json.razorpay_order_id,
+          handler: async function (response: any) {
+            try {
+              const verifyRes = await fetch('/api/payments/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  billing_month_id: json.billing_month_id
+                })
+              });
+              const verifyData = await verifyRes.json();
+              if (verifyData.success) {
+                toast.success('Payment successful! Subscription renewed.')
+                router.push('/dashboard')
+              } else {
+                toast.error(verifyData.message || 'Payment verification failed.')
+                setIsProcessing(false)
+              }
+            } catch (err) {
+              toast.error('Payment verification error.')
+              setIsProcessing(false)
+            }
+          },
+          prefill: {
+            name: "Customer",
+          },
+          theme: {
+            color: "#059669" // Emerald 600
+          },
+          modal: {
+            ondismiss: function() {
+              setIsProcessing(false)
+            }
           }
-        }
-      };
+        };
 
-      const razorpay = new (window as any).Razorpay(options)
-      razorpay.open()
+        const razorpay = new (window as any).Razorpay(options)
+        razorpay.open()
+      } else {
+        // Development mode bypass
+        toast.success('Subscription renewed (Development Bypass).')
+        router.push('/dashboard')
+      }
       
     } catch (err) {
       toast.error('Network error. Please try again.')
@@ -216,6 +245,7 @@ function RenewContent() {
 
   return (
     <div className="max-w-xl mx-auto space-y-6">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Link href="/dashboard" className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors text-sm font-bold">
         <ArrowLeft size={16} /> Back to Dashboard
       </Link>

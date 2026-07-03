@@ -1,5 +1,7 @@
 'use client'
 
+import Script from 'next/script'
+
 import { useState, useEffect, useCallback } from 'react'
 import {
   Calendar, MapPin, CreditCard, CheckCircle,
@@ -188,23 +190,81 @@ export default function OnboardingPage() {
       })
       const data = await res.json()
       if (data.success) {
-        setStep('success')
-        setTimeout(() => { window.location.href = '/dashboard' }, 2000)
+        if (data.razorpay_order_id) {
+          const options = {
+            key: data.key_id,
+            amount: data.monthly_amount * 100,
+            currency: "INR",
+            name: "Amruth Dairy",
+            description: "Monthly Milk Subscription",
+            order_id: data.razorpay_order_id,
+            handler: async function (response: any) {
+              try {
+                const verifyRes = await fetch('/api/payments/verify', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_signature: response.razorpay_signature,
+                    billing_month_id: data.billing_month_id
+                  })
+                });
+                const verifyData = await verifyRes.json();
+                if (verifyData.success) {
+                  setStep('success')
+                  setTimeout(() => { window.location.href = '/dashboard' }, 2000)
+                } else {
+                  setError(verifyData.message || 'Payment verification failed.')
+                  setLoading(false)
+                }
+              } catch (err) {
+                setError('Payment verification error.')
+                setLoading(false)
+              }
+            },
+            prefill: {
+              name: fullName,
+              contact: phone
+            },
+            theme: {
+              color: "#0f2e5c"
+            },
+            modal: {
+              ondismiss: function() {
+                setLoading(false)
+              }
+            }
+          };
+          const rzp = new (window as any).Razorpay(options);
+          rzp.on('payment.failed', function (response: any) {
+            setError(response.error.description);
+            setLoading(false);
+          });
+          rzp.open();
+        } else {
+          setStep('success')
+          setTimeout(() => { window.location.href = '/dashboard' }, 2000)
+        }
       } else if (data.waitlisted) {
         setWaitlistPosition(data.position)
         setStep('waitlist')
         setTimeout(() => { window.location.href = '/dashboard' }, 4000)
       } else {
         setError(data.message || 'Failed to create subscription.')
+        setLoading(false)
       }
-    } catch { setError('Network error.') }
-    finally { setLoading(false) }
+    } catch { 
+      setError('Network error.') 
+      setLoading(false)
+    }
   }
 
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0]
 
   return (
     <div>
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Navbar />
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 text-slate-900 dark:text-white dark:text-slate-100 flex flex-col transition-colors duration-300 pt-20">
 
