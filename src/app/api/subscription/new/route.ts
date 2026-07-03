@@ -100,8 +100,9 @@ export async function POST(request: Request) {
     // 6. Create Razorpay order
     let razorpay_order_id = null;
     
-    // Only try to create Razorpay order if keys are present (prevents crash in local dev without keys)
-    if (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    // Only try to create Razorpay order if keys are present AND we are not in development mode
+    const isDev = process.env.NODE_ENV === 'development';
+    if (!isDev && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
       const razorpay = new Razorpay({
         key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -152,7 +153,9 @@ export async function POST(request: Request) {
         daily_rate: daily_rate,
         days_in_month: daysInMonth,
         payment_status: initialStatus === 'active' ? 'paid' : 'pending'
-      });
+      })
+      .select()
+      .single();
 
     if (billingError) {
       console.error('Billing month insert error:', billingError.message);
@@ -177,7 +180,8 @@ export async function POST(request: Request) {
       monthly_amount: monthly_amount,
       daily_rate: daily_rate,
       razorpay_order_id: razorpay_order_id,
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      billing_month_id: billingError ? null : (await adminSupabase.from('billing_months').select('id').eq('subscription_id', subscription.id).single()).data?.id // fallback or use the destructured value
     });
 
   } catch (err: any) {

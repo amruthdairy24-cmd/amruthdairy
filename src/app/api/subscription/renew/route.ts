@@ -97,7 +97,8 @@ export async function POST(request: Request) {
     // 4. Create Razorpay order
     let razorpay_order_id = null;
     
-    if (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    const isDev = process.env.NODE_ENV === 'development';
+    if (!isDev && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
       const razorpay = new Razorpay({
         key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -189,13 +190,22 @@ export async function POST(request: Request) {
         .insert(excludedDatesRecords);
     }
 
+    // 8. Fetch the billing_month_id to return to the frontend
+    const { data: bMonthData } = await adminSupabase
+      .from('billing_months')
+      .select('id')
+      .eq('subscription_id', existingSub.id)
+      .eq('billing_month', target_month)
+      .single();
+
     return NextResponse.json({
       success: true,
       subscription_id: existingSub.id,
       monthly_amount: monthly_amount,
       daily_rate: daily_rate,
       razorpay_order_id: razorpay_order_id,
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      billing_month_id: bMonthData?.id
     });
 
   } catch (err: any) {
