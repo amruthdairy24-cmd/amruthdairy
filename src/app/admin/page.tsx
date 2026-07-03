@@ -25,18 +25,18 @@ export default async function AdminDashboardPage() {
     { count: totalSubsCount },
     { count: waitlistCount },
     { data: activeSubsData },
-    { data: paymentsData },
+    { data: allCurrentMonthBilling },
     { data: deliveriesToday },
     { data: skippedToday },
     { count: newCustomersCount },
     rawMilkPricing
   ] = await Promise.all([
     supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer'),
-    supabase.from('billing_months').select('id', { count: 'exact', head: true }).eq('billing_month', formattedBillingMonth).in('payment_status', ['paid', 'pending']),
+    supabase.from('billing_months').select('id', { count: 'exact', head: true }).eq('billing_month', formattedBillingMonth).eq('payment_status', 'paid'),
     supabase.from('subscriptions').select('id', { count: 'exact', head: true }),
     supabase.from('waitlist').select('id', { count: 'exact', head: true }).eq('status', 'waiting'),
-    supabase.from('billing_months').select('quantity_litres, monthly_amount').eq('billing_month', formattedBillingMonth).in('payment_status', ['paid', 'pending']),
-    supabase.from('payments').select('amount').eq('status', 'success'),
+    supabase.from('billing_months').select('quantity_litres, monthly_amount, id:subscription_id, profiles(full_name, area)').eq('billing_month', formattedBillingMonth).eq('payment_status', 'paid'),
+    supabase.from('billing_months').select('payment_status').eq('billing_month', formattedBillingMonth),
     supabase.from('daily_delivery_sheet').select('id, total_litres').eq('delivery_date', todayStr),
     supabase.from('daily_delivery_sheet').select('id', { count: 'exact' }).eq('delivery_date', todayStr).eq('delivery_status', 'skipped'),
     supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
@@ -53,11 +53,9 @@ export default async function AdminDashboardPage() {
     totalLitresToday = activeSubs.reduce((acc, item) => acc + Number(item.quantity_litres || 0), 0)
   }
 
-  // 2. Monthly Revenue (sum payments in current billing cycle, fallback to sum of monthly_amount of active subs)
+  // 2. Monthly Revenue (sum of monthly_amount of active subs for this month)
   const activeSubs = activeSubsData || []
-  const totalRevenue = paymentsData && paymentsData.length > 0
-    ? paymentsData.reduce((acc, p) => acc + Number(p.amount || 0), 0)
-    : activeSubs.reduce((acc, item) => acc + Number(item.monthly_amount || 0), 0)
+  const totalRevenue = activeSubs.reduce((acc, item) => acc + Number(item.monthly_amount || 0), 0)
 
   // 3. Deliveries count
   const deliveriesCount = deliveriesToday?.length || activeSubsCount || 0
@@ -70,14 +68,6 @@ export default async function AdminDashboardPage() {
     .eq('delivery_date', todayStr)
     .limit(6)
 
-  // Fallback to active subscriptions mapped as pending deliveries if sheet is empty
-  const { data: dbActiveSubs } = await supabase
-    .from('billing_months')
-    .select('id:subscription_id, quantity_litres, profiles(full_name, area)')
-    .eq('billing_month', formattedBillingMonth)
-    .in('payment_status', ['paid', 'pending'])
-    .limit(6)
-
   const deliveriesList = dbDeliveries && dbDeliveries.length > 0
     ? dbDeliveries.map(item => ({
         id: item.id,
@@ -86,7 +76,7 @@ export default async function AdminDashboardPage() {
         qty: `${item.total_litres}L`,
         status: item.delivery_status,
       }))
-    : (dbActiveSubs || []).map(item => ({
+    : activeSubs.slice(0, 6).map(item => ({
         id: item.id,
         customerName: (item.profiles as any)?.full_name || 'Customer',
         area: (item.profiles as any)?.area || 'General',
@@ -125,11 +115,6 @@ export default async function AdminDashboardPage() {
       ]
 
   // 6. Subscriptions overview segments
-  // Fetch subscription status counts
-  const { data: subStatusData } = await supabase
-    .from('subscriptions')
-    .select('status')
-
   const subOverview = {
     active: 0,
     paused: 0,
@@ -137,12 +122,10 @@ export default async function AdminDashboardPage() {
     pending: 0
   }
 
-  if (subStatusData) {
-    subStatusData.forEach(item => {
-      if (item.status === 'active') subOverview.active++
-      else if (item.status === 'paused') subOverview.paused++
-      else if (item.status === 'cancelled' || item.status === 'expired') subOverview.cancelled++
-      else subOverview.pending++
+  if (allCurrentMonthBilling) {
+    allCurrentMonthBilling.forEach(item => {
+      if (item.payment_status === 'paid') subOverview.active++
+      else if (item.payment_status === 'pending') subOverview.pending++
     })
   } else {
     subOverview.active = activeSubsCount || 0

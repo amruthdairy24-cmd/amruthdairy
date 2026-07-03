@@ -265,10 +265,10 @@ export default function DashboardClient({
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
-                {stats.totalSubscriptions ? Math.round((stats.activeSubscriptions / stats.totalSubscriptions) * 100) : 0}% Active
+                {subOverview.active + subOverview.pending > 0 ? Math.round((subOverview.active / (subOverview.active + subOverview.pending)) * 100) : 0}% Active
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                of {stats.totalSubscriptions} total
+                of {subOverview.active + subOverview.pending} total
               </span>
             </div>
           </div>
