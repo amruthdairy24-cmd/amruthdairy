@@ -671,8 +671,20 @@ export default function OnboardingPage() {
 
                       {/* Monthly preview card */}
                       <div className="bg-slate-50/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2.5">
-                        <div className="flex justify-between items-center text-sm font-bold text-slate-600 dark:text-slate-300">
-                          <span>Total Monthly Amount</span>
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+                          <span>Days Selected</span>
+                          <span className="text-slate-700 dark:text-slate-300 font-mono">{deliveryDays} Days</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+                          <span>Preferred Plan</span>
+                          <span className="text-slate-700 dark:text-slate-300 font-mono">{quantity} Litre{quantity > 1 ? 's' : ''} / Day</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+                          <span>Amount Per Day</span>
+                          <span className="text-slate-700 dark:text-slate-300 font-mono">₹{dailyRate.toFixed(2)}</span>
+                        </div>
+                        <div className="pt-2.5 mt-2.5 border-t border-slate-200 dark:border-slate-800/80 flex justify-between items-center text-sm font-bold text-slate-600 dark:text-slate-300">
+                          <span>Total Amount</span>
                           <span className="font-black text-blue-600 font-mono text-lg">₹{monthlyAmount.toFixed(2)}</span>
                         </div>
                       </div>
