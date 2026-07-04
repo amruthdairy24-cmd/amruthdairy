@@ -52,7 +52,7 @@ export async function GET(request: Request) {
 
         const { data: current_month } = await supabase
       .from('billing_months')
-      .select('id, billing_month, days_delivered, days_skipped, days_paused, extra_litres_ordered, skip_credit, pause_credit, extra_charges, carry_in_balance, net_due, amount_paid, monthly_amount')
+      .select('id, billing_month, days_delivered, days_skipped, days_paused, extra_litres_ordered, skip_credit, pause_credit, extra_charges, carry_in_balance, net_due, amount_paid, monthly_amount, payment_status')
       .eq('subscription_id', subId)
       .eq('billing_month', formattedBillingMonth)
       .maybeSingle();
