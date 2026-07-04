@@ -521,7 +521,7 @@ export default function CustomerDashboard() {
       </motion.div>
 
       {/* ─── RENEWAL BANNER ─── */}
-      <motion.div variants={itemVariants} className="relative z-10">
+      <motion.div variants={itemVariants} className="relative z-50">
         <RenewalBanner latest_paid_month={data.latest_paid_month} />
       </motion.div>
 
