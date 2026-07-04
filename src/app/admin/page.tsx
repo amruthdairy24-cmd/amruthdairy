@@ -76,13 +76,7 @@ export default async function AdminDashboardPage() {
         qty: `${item.total_litres}L`,
         status: item.delivery_status,
       }))
-    : activeSubs.slice(0, 6).map(item => ({
-        id: item.id,
-        customerName: (item.profiles as any)?.full_name || 'Customer',
-        area: (item.profiles as any)?.area || 'General',
-        qty: `${item.quantity_litres}L`,
-        status: 'pending',
-      }))
+    : []
 
   // 5. Fetch Recent Activities or notifications log
   const { data: dbNotifications } = await supabase
