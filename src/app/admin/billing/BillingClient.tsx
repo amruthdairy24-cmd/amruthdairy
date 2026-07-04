@@ -14,6 +14,10 @@ interface Invoice {
   billing_month: string;
   net_due: number;
   amount_paid: number;
+  payment_status: string;
+  extra_charges: number;
+  skip_credit: number;
+  pause_credit: number;
   profiles: { full_name: string };
 }
 
@@ -133,7 +137,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       header: 'Paid', 
       align: 'right', 
       cell: (row) => {
-        const isPaid = row.amount_paid >= row.net_due
+        const isPaid = row.payment_status === 'paid' || (row.net_due > 0 && row.amount_paid >= row.net_due)
         return (
           <span className={cn(
             "text-[13.5px] font-bold font-mono",
@@ -147,7 +151,10 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
     { 
       header: 'Status', 
       align: 'center', 
-      cell: (row) => <StatusBadge status={row.net_due <= row.amount_paid ? 'Paid' : 'Pending'} /> 
+      cell: (row) => {
+        const isPaid = row.payment_status === 'paid' || (row.net_due > 0 && row.amount_paid >= row.net_due)
+        return <StatusBadge status={isPaid ? 'Paid' : 'Pending'} />
+      } 
     },
   ]
 
@@ -294,6 +301,13 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
     },
   ]
 
+
+  // Compute summaries
+  const totalBilled = invoices.reduce((sum, inv) => sum + (inv.net_due || 0), 0);
+  const totalCollected = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
+  const totalExtraMilk = invoices.reduce((sum, inv) => sum + (inv.extra_charges || 0), 0);
+  const totalCredits = invoices.reduce((sum, inv) => sum + (inv.skip_credit || 0) + (inv.pause_credit || 0), 0);
+
   return (
     <div className="space-y-6">
       
@@ -324,6 +338,26 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
               return <option key={val} value={val}>{label}</option>
             })}
           </select>
+        </div>
+      </div>
+
+      {/* SUMMARY STATS */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2"><FileText size={12}/> Total Billed</p>
+          <p className="text-2xl font-black font-mono tracking-tight text-slate-800 dark:text-slate-200 mt-2">₹{totalBilled.toFixed(2)}</p>
+        </div>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2"><CreditCard size={12}/> Total Collected</p>
+          <p className="text-2xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400 mt-2">₹{totalCollected.toFixed(2)}</p>
+        </div>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2"><Receipt size={12}/> Extra Milk Revenue</p>
+          <p className="text-2xl font-black font-mono tracking-tight text-amber-600 dark:text-amber-400 mt-2">₹{totalExtraMilk.toFixed(2)}</p>
+        </div>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2"><Settings2 size={12}/> Credits Debited</p>
+          <p className="text-2xl font-black font-mono tracking-tight text-purple-600 dark:text-purple-400 mt-2">₹{totalCredits.toFixed(2)}</p>
         </div>
       </div>
       
