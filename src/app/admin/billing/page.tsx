@@ -24,7 +24,7 @@ export default async function BillingPage(props: {
   // 1. Fetch Invoices (billing_months) for selected month
   const { data: invoicesData } = await supabase
     .from('billing_months')
-    .select(`id, billing_month, net_due, amount_paid, profiles!billing_months_customer_id_fkey(full_name)`)
+    .select(`id, billing_month, net_due, amount_paid, payment_status, extra_charges, skip_credit, pause_credit, profiles!billing_months_customer_id_fkey(full_name)`)
     .eq('billing_month', selectedMonth)
     .order('billing_month', { ascending: false })
 
