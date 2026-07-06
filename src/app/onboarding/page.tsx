@@ -625,35 +625,33 @@ export default function OnboardingPage() {
                               <div className="flex flex-col items-start">
                                 <span className="text-xs font-bold text-slate-900 dark:text-white">Customize Delivery Days</span>
                                 <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                  {excludedDates.length === 0 ? "Everyday Delivery" : `${excludedDates.length} Days Excluded`}
+                                  {excludedDates.length === 0 ? "Default: All Days Selected" : `${excludedDates.length} Days Excluded`}
                                 </span>
                               </div>
                             </div>
                             <ChevronDown className={cn("text-slate-400 dark:text-slate-500 transition-transform", showCalendar && "rotate-180")} size={16} />
                           </button>
 
-                          <AnimatePresence>
-                            {showCalendar && (
-                              <motion.div
-                                initial={{ opacity: 0, y: -10, height: 0 }}
-                                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                                exit={{ opacity: 0, y: -10, height: 0 }}
-                                className="overflow-hidden"
-                              >
-                                <div className="py-2">
-                                  <SubscriptionCalendar
-                                    startDate={startDate}
-                                    onExcludedDatesChange={handleExcludedDatesChange}
-                                    initialExcludedDates={excludedDates}
-                                    maxMonthsAhead={1}
-                                    quantity={quantity}
-                                    onMonthAvailabilityChange={setIsMonthFull}
-                                    onDeliveryDaysChange={setDeliveryDays}
-                                  />
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                          <motion.div
+                            initial={false}
+                            animate={{ 
+                              opacity: showCalendar ? 1 : 0, 
+                              height: showCalendar ? 'auto' : 0,
+                            }}
+                            className="overflow-hidden"
+                          >
+                            <div className={cn("py-2", !showCalendar && "invisible pointer-events-none")}>
+                              <SubscriptionCalendar
+                                startDate={startDate}
+                                onExcludedDatesChange={handleExcludedDatesChange}
+                                initialExcludedDates={excludedDates}
+                                maxMonthsAhead={1}
+                                quantity={quantity}
+                                onMonthAvailabilityChange={setIsMonthFull}
+                                onDeliveryDaysChange={setDeliveryDays}
+                              />
+                            </div>
+                          </motion.div>
                         </div>
                       )}
 
