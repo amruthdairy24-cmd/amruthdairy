@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CreditCard, FileText, Settings2, Receipt, Coins, CalendarDays } from 'lucide-react'
+import { CreditCard, FileText, Settings2, Receipt, Coins, CalendarDays, Search } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
@@ -47,6 +47,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
   const [activeTab, setActiveTab] = useState<'invoices' | 'adjustments' | 'payments'>('invoices')
   const [isProcessing, setIsProcessing] = useState(false);
   const [viewingEntry, setViewingEntry] = useState<any | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleRefundAction = async (id: string, action: 'process' | 'reject') => {
     if (!confirm(`Are you sure you want to ${action} this refund request?`)) return;
@@ -308,6 +309,20 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
   const totalExtraMilk = invoices.reduce((sum, inv) => sum + (inv.extra_charges || 0), 0);
   const totalCredits = invoices.reduce((sum, inv) => sum + (inv.skip_credit || 0) + (inv.pause_credit || 0), 0);
 
+  const filterList = (list: any[]) => list.filter(item => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      const matchesName = item.profiles?.full_name?.toLowerCase().includes(q)
+      const matchesId = item.id.toLowerCase().includes(q)
+      if (!matchesName && !matchesId) return false
+    }
+    return true
+  })
+  
+  const filteredInvoices = filterList(invoices)
+  const filteredAdjustments = filterList(adjustments)
+  const filteredPayments = filterList(payments)
+
   return (
     <div className="space-y-6">
       
@@ -361,8 +376,9 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
         </div>
       </div>
       
-      {/* TABS NAVIGATION */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+      {/* TABS NAVIGATION & SEARCH */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+        <div className="flex overflow-x-auto hide-scrollbar w-full sm:w-auto">
         {[
           { id: 'invoices', label: 'Invoices', icon: FileText },
           { id: 'adjustments', label: 'Adjustments', icon: Settings2 },
@@ -386,13 +402,25 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
             </button>
           )
         })}
+        </div>
+
+        <div className="relative w-full sm:w-64 pb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 mb-1.5" size={14} />
+          <input 
+            type="text"
+            placeholder="Search customer or ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-8 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/20 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 transition-colors"
+          />
+        </div>
       </div>
 
       {/* RENDER ACTIVE TAB SHEET */}
       <div className="pt-2">
-        {activeTab === 'invoices' && <DataTable data={invoices} columns={invoiceColumns} onView={setViewingEntry} />}
-        {activeTab === 'adjustments' && <DataTable data={adjustments} columns={adjustmentColumns} onView={setViewingEntry} />}
-        {activeTab === 'payments' && <DataTable data={payments} columns={paymentColumns} onView={setViewingEntry} />}
+        {activeTab === 'invoices' && <DataTable data={filteredInvoices} columns={invoiceColumns} onView={setViewingEntry} />}
+        {activeTab === 'adjustments' && <DataTable data={filteredAdjustments} columns={adjustmentColumns} onView={setViewingEntry} />}
+        {activeTab === 'payments' && <DataTable data={filteredPayments} columns={paymentColumns} onView={setViewingEntry} />}
       </div>
 
       <RowDetailsModal

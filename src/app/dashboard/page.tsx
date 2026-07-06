@@ -773,10 +773,6 @@ export default function CustomerDashboard() {
                   <p className="text-3xl font-black text-[#014DA4] dark:text-[#014DA4] tracking-tight mt-2 leading-none font-mono">
                     ₹{(current_month?.net_due || 0).toFixed(2)}
                   </p>
-                  <div className="mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 text-[9.5px] font-bold uppercase tracking-wide border border-emerald-500/15">
-                    <CheckCircle size={11} className="text-emerald-600" />
-                    <span>Auto-pay active</span>
-                  </div>
                 </div>
               </div>
 

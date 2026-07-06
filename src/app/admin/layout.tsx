@@ -204,17 +204,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Search bar - Center */}
           <div className="hidden md:flex flex-1 justify-center px-4">
-            <div className="relative w-full max-w-[480px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
-              <input 
-                type="text" 
-                placeholder="Search customers, orders, invoices..." 
-                className="w-full pl-9 pr-12 py-2 text-[13px] rounded-xl outline-none focus:ring-2 focus:ring-[#014DA4]/10 dark:focus:ring-blue-500/15 transition-all font-medium placeholder:text-slate-450 bg-slate-50 dark:bg-slate-950/50 border border-slate-150 dark:border-slate-800 text-slate-800 dark:text-slate-200 h-10"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[9px] font-bold text-slate-400 dark:text-slate-500 px-1.5 py-0.5 rounded border border-slate-150 dark:border-slate-850 bg-white dark:bg-slate-900">
-                <span>Ref</span>
-              </div>
-            </div>
+            {/* Global search removed per request */}
           </div>
 
           {/* Right Header Actions */}

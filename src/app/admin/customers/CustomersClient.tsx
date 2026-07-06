@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, Phone, MapPin, AlertTriangle, Trash2 } from 'lucide-react'
+import { Users, Phone, MapPin, AlertTriangle, Trash2, Search } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
@@ -24,6 +24,8 @@ export function CustomersClient({ data }: { data: Customer[] }) {
   const [viewingEntry, setViewingEntry] = useState<Customer | null>(null)
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all')
 
   const confirmDelete = async () => {
     if (!customerToDelete) return
@@ -138,6 +140,20 @@ export function CustomersClient({ data }: { data: Customer[] }) {
     },
   ]
 
+  const filteredData = data.filter(customer => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      const matchesName = customer.full_name?.toLowerCase().includes(q)
+      const matchesPhone = customer.phone?.includes(q)
+      const matchesArea = customer.area?.toLowerCase().includes(q)
+      const matchesId = customer.id.toLowerCase().includes(q)
+      if (!matchesName && !matchesPhone && !matchesArea && !matchesId) return false
+    }
+    if (filterStatus === 'active' && !customer.is_active) return false
+    if (filterStatus === 'inactive' && customer.is_active) return false
+    return true
+  })
+
   return (
     <div className="space-y-6">
       <AdminHeader 
@@ -146,8 +162,40 @@ export function CustomersClient({ data }: { data: Customer[] }) {
         icon={Users} 
         actionLabel="Add Customer"
       />
+
+      {/* SEARCH AND FILTER BAR */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
+          <input 
+            type="text"
+            placeholder="Search by name, phone, area, ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/20 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 transition-colors"
+          />
+        </div>
+        
+        <div className="flex w-full sm:w-auto bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-1 shadow-2xs transition-colors">
+          {(['all', 'active', 'inactive'] as const).map(status => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status)}
+              className={cn(
+                "flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize cursor-pointer",
+                filterStatus === status 
+                  ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" 
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              )}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <DataTable 
-        data={data} 
+        data={filteredData} 
         columns={columns} 
         onView={(row) => setViewingEntry(row)} 
         onDelete={(row) => setCustomerToDelete(row)}

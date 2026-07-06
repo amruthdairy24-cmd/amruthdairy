@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import {
   Truck, CheckCircle2, SkipForward, PlusCircle,
   Calendar, RefreshCw, ChevronLeft, ChevronRight, Package,
-  MapPin, Phone, Droplets, AlertTriangle, Clock, Eye
+  MapPin, Phone, Droplets, AlertTriangle, Clock, Eye, Search
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
@@ -55,6 +55,8 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
   const [markingAll, setMarkingAll] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [viewingEntry, setViewingEntry] = useState<DeliveryEntry | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'delivered'>('all')
 
   async function fetchDeliveries(date: string) {
     setLoading(true)
@@ -154,6 +156,24 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
   const totalLitres = deliveries.reduce((sum, d) => sum + Number(d.total_litres || 0), 0)
 
   const isToday = selectedDate === initialDate
+
+  const filteredDeliveries = deliveries.filter(d => {
+    // text search
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      const matchesName = d.customer_name?.toLowerCase().includes(q)
+      const matchesArea = d.area?.toLowerCase().includes(q)
+      const matchesPhone = d.phone?.includes(q)
+      if (!matchesName && !matchesArea && !matchesPhone) return false
+    }
+    // status filter
+    if (filterStatus === 'pending') {
+      if (d.delivery_status !== 'pending' || d.is_skip || d.is_vacation) return false
+    } else if (filterStatus === 'delivered') {
+      if (d.delivery_status !== 'delivered') return false
+    }
+    return true
+  })
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto">
@@ -258,20 +278,52 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
               Daily Delivery Sheet
             </h2>
             <p className="text-[11px] font-semibold text-slate-455 dark:text-slate-500 mt-1.5">
-              {deliveries.length} entries for {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+              {filteredDeliveries.length} entries for {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
             </p>
           </div>
 
-          {pendingCount > 0 && (
-            <button
-              onClick={markAllDelivered}
-              disabled={markingAll}
-              className="inline-flex items-center justify-center gap-2 px-5 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-600/95 active:scale-98 text-white text-xs font-bold shadow-sm hover:shadow transition-all cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
-            >
-              <CheckCircle2 size={15} />
-              <span>{markingAll ? 'Marking...' : `Mark All Delivered (${pendingCount})`}</span>
-            </button>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* SEARCH */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={14} />
+              <input 
+                type="text" 
+                placeholder="Search customers, area..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 pr-3 py-1.5 h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-[#014DA4]/20 w-full sm:w-48 transition-all text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+              />
+            </div>
+
+            {/* FILTER */}
+            <div className="flex bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-0.5 shadow-2xs">
+              {(['all', 'pending', 'delivered'] as const).map(status => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className={cn(
+                    "px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all capitalize cursor-pointer",
+                    filterStatus === status 
+                      ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white" 
+                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  )}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+
+            {pendingCount > 0 && (
+              <button
+                onClick={markAllDelivered}
+                disabled={markingAll}
+                className="inline-flex items-center justify-center gap-2 px-5 h-9 sm:h-10 rounded-xl bg-emerald-600 hover:bg-emerald-600/95 active:scale-98 text-white text-xs font-bold shadow-sm hover:shadow transition-all cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+              >
+                <CheckCircle2 size={15} />
+                <span>{markingAll ? 'Marking...' : `Mark All Delivered (${pendingCount})`}</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Sheet Content Body */}
@@ -280,7 +332,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
             <div className="w-9 h-9 border-3 border-slate-200 dark:border-slate-800 border-t-[#014DA4] dark:border-t-blue-400 rounded-full animate-spin" />
             <p className="text-xs font-bold text-slate-400 dark:text-slate-500">Loading daily delivery sheet...</p>
           </div>
-        ) : deliveries.length === 0 ? (
+        ) : filteredDeliveries.length === 0 ? (
           <div className="py-20 text-center flex flex-col items-center justify-center gap-4 max-w-sm mx-auto p-6">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shadow-2xs">
               <AlertTriangle size={22} className="stroke-[2.5]" />
@@ -307,7 +359,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                {deliveries.map((del, idx) => {
+                {filteredDeliveries.map((del, idx) => {
                   const isMarkingThis = markingId === del.id
                   const isDelivered = del.delivery_status === 'delivered'
                   const isSkipped = del.is_skip
