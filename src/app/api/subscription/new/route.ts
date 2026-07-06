@@ -108,6 +108,8 @@ export async function POST(request: Request) {
     // Only try to create Razorpay order if keys are present AND we are not in development mode
     const isDev = process.env.NODE_ENV === 'development';
     if (!isDev && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+      console.log("Key ID:", process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
+      console.log("Secret exists:", !!process.env.RAZORPAY_KEY_SECRET);
       const razorpay = new Razorpay({
         key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_KEY_SECRET,
