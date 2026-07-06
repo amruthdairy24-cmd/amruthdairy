@@ -30,14 +30,17 @@ export async function PUT(request: Request) {
 
     const adminSupabase = createAdminClient();
 
-    // 1. Generate array of dates
+    // 1. Generate array of dates using local time parsing to avoid timezone offsets
     const datesToUpdate: string[] = [];
-    const start = new Date(date);
-    const end = endDate ? new Date(endDate) : new Date(date);
+    const [sYear, sMonth, sDay] = date.split('-').map(Number);
+    const start = new Date(sYear, sMonth - 1, sDay);
     
-    // Ensure dates are compared correctly
-    start.setUTCHours(0,0,0,0);
-    end.setUTCHours(0,0,0,0);
+    const endDateStr = endDate || date;
+    const [eYear, eMonth, eDay] = endDateStr.split('-').map(Number);
+    const end = new Date(eYear, eMonth - 1, eDay);
+    
+    start.setHours(0,0,0,0);
+    end.setHours(0,0,0,0);
     
     if (end < start) {
       return NextResponse.json({ success: false, message: 'End date must be after or equal to start date' }, { status: 400 });
@@ -45,8 +48,12 @@ export async function PUT(request: Request) {
 
     const current = new Date(start);
     while (current <= end) {
-      datesToUpdate.push(current.toISOString().split('T')[0]);
-      current.setUTCDate(current.getUTCDate() + 1);
+      const y = current.getFullYear();
+      const m = String(current.getMonth() + 1).padStart(2, '0');
+      const d = String(current.getDate()).padStart(2, '0');
+      datesToUpdate.push(`${y}-${m}-${d}`);
+      
+      current.setDate(current.getDate() + 1);
     }
 
     // 2. Fetch existing records for validation

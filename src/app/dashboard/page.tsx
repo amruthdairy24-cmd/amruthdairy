@@ -415,7 +415,7 @@ export default function CustomerDashboard() {
       initial="hidden"
       animate="show"
       variants={containerVariants}
-      className="space-y-8 max-w-7xl mx-auto relative"
+      className="space-y-8 w-full relative"
     >
       {/* Soft farm background auras to give visual depth */}
       <div className="absolute -top-40 -right-40 w-[380px] h-[380px] bg-gradient-to-br from-emerald-500/5 to-amber-500/5 blur-[100px] rounded-full pointer-events-none" />
