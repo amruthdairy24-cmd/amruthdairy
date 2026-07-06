@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { fetchMilkPrices, calculateDailyRate, calculateMonthlyAmount, calculateProRataAmount, getDaysInMonth } from '@/lib/billing';
+import { getEarliestStartDateStr } from '@/lib/utils';
 import Razorpay from 'razorpay';
 
 // Admin client bypasses RLS for all DB writes
@@ -78,20 +79,24 @@ export async function POST(request: Request) {
     // 5. Calculate amounts using admin-managed pricing
     const prices = await fetchMilkPrices(adminSupabase);
     const daily_rate = calculateDailyRate(quantity, prices);
-    const startDateObj = new Date(start_date);
-    const startYear = startDateObj.getFullYear();
-    const startMonth = startDateObj.getMonth() + 1;
+    
+    // Calculate earliest start date in IST
+    const earliestStartStr = getEarliestStartDateStr();
+
+    // If start_date is somehow before earliest allowed date, fallback to earliest allowed date
+    const actualStartDateStr = start_date < earliestStartStr ? earliestStartStr : start_date;
+    const actualStartDateObj = new Date(actualStartDateStr);
+
+    const startYear = actualStartDateObj.getFullYear();
+    const startMonth = actualStartDateObj.getMonth() + 1;
     const daysInMonth = getDaysInMonth(startYear, startMonth);
 
     // Calculate delivery days for this month
     let deliveryDays = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     for (let i = 1; i <= daysInMonth; i++) {
       const dStr = `${startYear}-${String(startMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      const dObj = new Date(dStr);
-      if (dObj >= startDateObj && dObj >= today && !excluded_dates.includes(dStr)) {
+      if (dStr >= actualStartDateStr && !excluded_dates.includes(dStr)) {
         deliveryDays++;
       }
     }
@@ -127,7 +132,7 @@ export async function POST(request: Request) {
         quantity_litres: quantity,
         monthly_amount: monthly_amount,
         daily_rate: daily_rate,
-        start_date: start_date,
+        start_date: actualStartDateStr,
         status: initialStatus,
         razorpay_subscription_id: razorpay_order_id
       })

@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz'
 
 /**
  * formatRupees — Convert paise (integer) to display string
@@ -32,22 +33,17 @@ export function formatRupeesCompact(paise: number): string {
 }
 
 /**
- * getIndiaTime — Returns current time in Asia/Kolkata timezone
- * ALWAYS use this for time comparisons, NEVER client machine time
+ * getIndiaTimeString — Returns current date-time string in Asia/Kolkata timezone
  */
-export function getIndiaTime(): Date {
-  const now = new Date()
-  const indiaTime = new Date(
-    now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
-  )
-  return indiaTime
+export function getIndiaTimeString(): string {
+  return formatInTimeZone(new Date(), 'Asia/Kolkata', "yyyy-MM-dd'T'HH:mm:ssXXX")
 }
 
 /**
  * getIndiaHour — Returns current hour (0-23) in India timezone
  */
 export function getIndiaHour(): number {
-  return getIndiaTime().getHours()
+  return parseInt(formatInTimeZone(new Date(), 'Asia/Kolkata', 'H'), 10)
 }
 
 /**
@@ -144,4 +140,46 @@ export function getBillingMonth(date: Date): string {
  */
 export function pluralize(count: number, singular: string, plural: string): string {
   return count === 1 ? singular : plural
+}
+
+import { fromZonedTime } from 'date-fns-tz'
+
+/**
+ * getDeadlineForDate — Given a date string (YYYY-MM-DD), returns the UTC Date
+ * representing 9 PM IST on the PREVIOUS day.
+ */
+export function getDeadlineForDate(dateStr: string): Date {
+  const target = new Date(dateStr)
+  target.setDate(target.getDate() - 1)
+  const prevDateStr = target.toISOString().split('T')[0]
+  
+  // Create a string representing 9 PM in IST
+  const localTimeString = `${prevDateStr}T21:00:00`
+  
+  // Convert the IST time string into a valid UTC Date object
+  return fromZonedTime(localTimeString, 'Asia/Kolkata')
+}
+
+/**
+ * getEarliestStartDateStr — Returns the earliest possible start date (YYYY-MM-DD)
+ * for a new subscription. Takes the 9 PM IST cutoff into account.
+ */
+export function getEarliestStartDateStr(): string {
+  const now = new Date()
+  const istTimeStr = formatInTimeZone(now, 'Asia/Kolkata', "yyyy-MM-dd'T'HH:mm:ss")
+  const istDate = new Date(istTimeStr) // This creates a local date object containing the IST values
+  
+  const currentHour = istDate.getHours()
+  
+  if (currentHour >= 21) {
+    istDate.setDate(istDate.getDate() + 2)
+  } else {
+    istDate.setDate(istDate.getDate() + 1)
+  }
+  
+  const year = istDate.getFullYear()
+  const month = String(istDate.getMonth() + 1).padStart(2, '0')
+  const day = String(istDate.getDate()).padStart(2, '0')
+  
+  return `${year}-${month}-${day}`
 }

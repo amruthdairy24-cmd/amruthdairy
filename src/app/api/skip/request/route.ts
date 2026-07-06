@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { getDeadlineForDate } from '@/lib/utils';
 
 const adminSupabase = createAdminClient();
 
@@ -95,10 +96,8 @@ export async function POST(request: Request) {
     skipDateObj.setDate(1);
     const credit_month = skipDateObj.toISOString().split('T')[0];
 
-    // Deadline = previous day at 9 PM IST (15:30 UTC)
-    const deadlineObj = new Date(skip_date);
-    deadlineObj.setDate(deadlineObj.getDate() - 1);
-    deadlineObj.setUTCHours(15, 30, 0, 0);
+    // Deadline = previous day at 9 PM IST
+    const deadlineObj = getDeadlineForDate(skip_date);
 
     // INSERT skip_request (supabase_setup.sql column names)
     const { data: skipRequest, error: insertError } = await adminSupabase
