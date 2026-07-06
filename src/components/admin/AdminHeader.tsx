@@ -52,29 +52,6 @@ export function AdminHeader({
           </button>
         )}
       </div>
-
-      {/* Bottom Row: Search & Filters */}
-      {!hideSearchRow && (
-        <div 
-          className="flex flex-col sm:flex-row justify-between items-center gap-4 p-[14px] rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all"
-        >
-          <div className="relative w-full sm:w-96">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-455 dark:text-slate-500" />
-            <input 
-              type="text" 
-              placeholder={`Search ${title.toLowerCase()}...`}
-              onChange={(e) => onSearch && onSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-[13px] font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/40 transition-all bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-800 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-750 dark:text-slate-200" 
-            />
-          </div>
-          <button 
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-extrabold text-slate-600 dark:text-slate-300 transition-all bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-3xs hover:shadow-2xs cursor-pointer"
-          >
-            <Filter size={16} className="text-slate-400 dark:text-slate-500" /> 
-            <span>Filters</span>
-          </button>
-        </div>
-      )}
     </div>
   )
 }
