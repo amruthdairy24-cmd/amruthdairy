@@ -82,12 +82,18 @@ export async function POST(request: Request) {
     const monthDaysMap: { [monthStr: string]: number } = {};
     const [sYear, sMonth, sDay] = pause_start.split('-').map(Number);
     const [eYear, eMonth, eDay] = pause_end.split('-').map(Number);
-    const currentLoopDate = new Date(Date.UTC(sYear, sMonth - 1, sDay));
-    const finalLoopDate = new Date(Date.UTC(eYear, eMonth - 1, eDay));
+    const currentLoopDate = new Date(sYear, sMonth - 1, sDay);
+    const finalLoopDate = new Date(eYear, eMonth - 1, eDay);
+
+    currentLoopDate.setHours(0, 0, 0, 0);
+    finalLoopDate.setHours(0, 0, 0, 0);
 
     while (currentLoopDate <= finalLoopDate) {
-      const dateStr = currentLoopDate.toISOString().split('T')[0];
-      const monthStr = `${dateStr.substring(0, 7)}-01`;
+      const y = currentLoopDate.getFullYear();
+      const m = String(currentLoopDate.getMonth() + 1).padStart(2, '0');
+      const d = String(currentLoopDate.getDate()).padStart(2, '0');
+      const dateStr = `${y}-${m}-${d}`;
+      const monthStr = `${y}-${m}-01`;
       
       monthDaysMap[monthStr] = (monthDaysMap[monthStr] || 0) + 1;
 
@@ -108,7 +114,7 @@ export async function POST(request: Request) {
           .eq('id', capacity.id);
       }
 
-      currentLoopDate.setUTCDate(currentLoopDate.getUTCDate() + 1);
+      currentLoopDate.setDate(currentLoopDate.getDate() + 1);
     }
 
     // Split billing credits and insert into billing_adjustments (Rule #7)

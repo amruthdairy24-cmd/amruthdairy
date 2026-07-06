@@ -14,6 +14,8 @@ import { cn } from '@/lib/utils'
 import { DELIVERY_AREAS, QUANTITY_OPTIONS, DELIVERY_TIME_PROMISE } from '@/lib/constants'
 import { fetchMilkPricesClient, calculateDailyRate, calculateMonthlyAmount, getDaysInMonth } from '@/lib/billing'
 import SubscriptionCalendar from '@/components/SubscriptionCalendar'
+import { getEarliestStartDateStr } from "@/lib/utils"
+import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 
 type OnboardingStep = 1 | 2 | 3 | 'success' | 'waitlist'
@@ -72,11 +74,9 @@ export default function OnboardingPage() {
       setMinAllowedDate(minDateParam)
       setStartDate(minDateParam)
     } else {
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      const tomorrowStr = tomorrow.toISOString().split('T')[0]
-      setMinAllowedDate(tomorrowStr)
-      setStartDate(tomorrowStr)
+      const earliestStartStr = getEarliestStartDateStr()
+      setMinAllowedDate(earliestStartStr)
+      setStartDate(earliestStartStr)
     }
   }, [])
 

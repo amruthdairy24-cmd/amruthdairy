@@ -145,7 +145,7 @@ export default function VacationPausePage() {
 
   if (pageLoading) {
     return (
-      <div className="max-w-5xl space-y-6 animate-pulse">
+      <div className="w-full space-y-6 animate-pulse">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
@@ -165,7 +165,7 @@ export default function VacationPausePage() {
       initial="hidden"
       animate="show"
       variants={containerVariants}
-      className="max-w-5xl space-y-8 relative"
+      className="w-full space-y-8 relative"
     >
       {/* Header section */}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
