@@ -43,7 +43,7 @@ const TESTIMONIALS = [
 
 // ─── Feature cards ─────────────────────────────────────────────────────────────
 const FEATURES = [
-  { icon: Leaf, title: 'Farm Fresh A2 Milk', desc: 'Sourced daily from our own cows. No middlemen, no storage delays.', color: 'text-green-600', bg: 'bg-green-50 border-green-100' },
+  { icon: Leaf, title: 'Farm Fresh Milk', desc: 'Sourced daily from our own cows. No middlemen, no storage delays.', color: 'text-green-600', bg: 'bg-green-50 border-green-100' },
   { icon: ShieldCheck, title: 'No Preservatives', desc: 'Pure and natural — absolutely nothing added. Just milk as nature intended.', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
   { icon: Truck, title: 'Before 7 AM Delivery', desc: `${DELIVERY_TIME_PROMISE} — every single morning, right at your door.`, color: 'text-[#0284C7]', bg: 'bg-sky-50 border-sky-100' },
   { icon: CalendarDays, title: 'Flexible Skip Days', desc: 'Travelling? Pause or skip individual days from your dashboard, anytime.', color: 'text-purple-600', bg: 'bg-purple-50 border-purple-100' },
@@ -150,7 +150,7 @@ export default function SubscribePage() {
   const stats = [
     { val: '200+', label: 'Happy Families' },
     { val: '7', label: 'Days a Week' },
-    { val: '100%', label: 'Pure A2 Milk' },
+    { val: '100%', label: 'Pure Milk' },
     { val: '< 7 AM', label: 'Delivered By' },
   ]
 
@@ -162,7 +162,7 @@ export default function SubscribePage() {
         {/* ══════════════════════════════════════════════════════════
             HERO
         ══════════════════════════════════════════════════════════ */}
-        <section className="relative overflow-hidden bg-[#0f2e5c] pt-28 pb-24 px-5">
+        <section className="relative overflow-hidden bg-[#02429C] pt-28 pb-24 px-5">
           {/* Decorative blobs */}
           <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-[#0284C7]/20 blur-[100px] pointer-events-none" />
           <div className="absolute -bottom-24 -left-16 w-[360px] h-[360px] rounded-full bg-[#0f2e5c]/60 blur-[80px] pointer-events-none" />
@@ -197,7 +197,7 @@ export default function SubscribePage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-slate-300 font-medium text-base sm:text-lg max-w-xl leading-relaxed"
             >
-              Pure A2 cow milk delivered from our farm directly to your doorstep — before you wake up, every day.
+              Pure cow milk delivered from our farm directly to your doorstep — before you wake up, every day.
             </motion.p>
 
             {/* CTA */}
@@ -253,7 +253,7 @@ export default function SubscribePage() {
         {/* ══════════════════════════════════════════════════════════
             STATS BAR
         ══════════════════════════════════════════════════════════ */}
-        <section className="bg-[#0284C7] py-5">
+        <section className="bg-[#0F2E5C] py-5">
           <div className="max-w-5xl mx-auto px-5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
             {stats.map(({ val, label }) => (
               <div key={label} className="flex flex-col">
@@ -329,7 +329,7 @@ export default function SubscribePage() {
                     className={cn(
                       'relative flex flex-col rounded-2xl border p-6 transition-all duration-200',
                       highlight
-                        ? 'bg-[#0f2e5c] border-[#0f2e5c] shadow-xl shadow-[#0f2e5c]/20'
+                        ? 'bg-[#02429C] border-[#0f2e5c] shadow-xl shadow-[#0f2e5c]/20'
                         : 'bg-white border-slate-200 hover:border-[#0284C7]/50 hover:shadow-md'
                     )}
                   >
@@ -359,7 +359,7 @@ export default function SubscribePage() {
                           'mt-4 w-full h-11 rounded-[10px] text-sm font-bold transition-all duration-200 hover:scale-[1.02]',
                           highlight
                             ? 'bg-white text-[#0f2e5c] hover:bg-yellow-400'
-                            : 'bg-[#0f2e5c] text-white hover:bg-[#0284C7]'
+                            : 'bg-[#02429C] text-white hover:bg-[#0F2E5C]'
                         )}
                       >
                         Get Started
@@ -399,7 +399,7 @@ export default function SubscribePage() {
                   transition={{ duration: 0.4, delay: i * 0.1 }}
                   className="flex flex-col items-center text-center"
                 >
-                  <div className="w-16 h-16 rounded-full bg-[#0f2e5c] text-white flex items-center justify-center font-cabinet font-bold text-xl mb-5 relative z-10 shadow-lg shadow-[#0f2e5c]/20">
+                  <div className="w-16 h-16 rounded-full bg-[#02429C] text-white flex items-center justify-center font-cabinet font-bold text-xl mb-5 relative z-10 shadow-lg shadow-[#0f2e5c]/20">
                     {step}
                   </div>
                   <h3 className="font-cabinet font-bold text-[#0f2e5c] text-base mb-2">{title}</h3>
@@ -411,7 +411,7 @@ export default function SubscribePage() {
               <button
                 onClick={handleSubscribe}
                 disabled={ctaLoading}
-                className="inline-flex items-center gap-2 h-13 px-8 rounded-[12px] bg-[#0f2e5c] text-white font-bold text-[15px] hover:bg-[#0284C7] transition-all duration-200 hover:scale-105 disabled:opacity-60 shadow-lg shadow-[#0f2e5c]/20"
+                className="inline-flex items-center gap-2 h-13 px-8 rounded-[12px] bg-[#02429C] text-white font-bold text-[15px] hover:bg-[#0F2E5C] transition-all duration-200 hover:scale-105 disabled:opacity-60 shadow-lg shadow-[#0f2e5c]/20"
               >
                 {ctaLoading ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>Get Started Now <ArrowRight size={16} /></>}
               </button>
@@ -457,7 +457,7 @@ export default function SubscribePage() {
         {/* ══════════════════════════════════════════════════════════
             TESTIMONIALS
         ══════════════════════════════════════════════════════════ */}
-        <section className="py-20 px-5 bg-[#0f2e5c]">
+        <section className="py-20 px-5 bg-[#02429C]">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <span className="text-[11px] font-extrabold tracking-widest uppercase text-white/50">Testimonials</span>

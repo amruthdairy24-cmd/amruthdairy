@@ -440,7 +440,7 @@ export default function LoginPage() {
               className="w-full max-w-[440px] mx-auto my-auto p-6 sm:p-8 rounded-[24px] z-10 bg-transparent border-2 border-white backdrop-blur-md flex flex-col gap-5"
             >
               {/* Logo Section */}
-              <div className="flex flex-col items-center justify-center -mt-2">
+              <div className="hidden md:flex flex-col items-center justify-center -mt-2">
                 <img 
                   src="/images/logo/amruth-logo.png" 
                   alt="Amruth Dairy Farm" 
