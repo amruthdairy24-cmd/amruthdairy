@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { createClient } from '@/utils/supabase/client'
+import { ConfirmModal } from '@/components/ui'
 
 const navItems = [
   { href: '/dashboard', icon: '📊', label: 'Dashboard' },
@@ -21,6 +23,13 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const [profileName, setProfileName] = useState('Customer')
   const [profilePhone, setProfilePhone] = useState('')
   const [status, setStatus] = useState<string>('active')
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+
+  async function handleLogout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = '/login'
+  }
 
   useEffect(() => {
     async function fetchProfile() {
@@ -109,7 +118,10 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
         {/* Logout */}
         <div className="px-3 pb-6">
-          <button className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-sm font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 transition-colors border-none cursor-pointer bg-transparent text-left">
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-sm font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850 hover:text-slate-950 dark:hover:text-slate-100 transition-colors border-none cursor-pointer bg-transparent text-left"
+          >
             <span>🚪</span> Logout
           </button>
         </div>
@@ -167,6 +179,16 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           })}
         </nav>
       </main>
+
+      <ConfirmModal
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to log out of your session?"
+        confirmLabel="Logout"
+        onConfirm={handleLogout}
+        danger
+      />
     </div>
   )
 }

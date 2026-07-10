@@ -7,6 +7,7 @@ import { useCart } from '@/contexts/CartContext'
 import { createClient } from '@/utils/supabase/client'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { ConfirmModal } from '@/components/ui'
 import { motion, AnimatePresence } from 'framer-motion'
 const navLinks = [
   {href:'/' ,label:'Home'},
@@ -25,6 +26,7 @@ export function Navbar() {
   const pathname = usePathname()
   const { cartItems, isCartOpen, openCart, closeCart, updateQuantity, removeFromCart, cartTotal } = useCart()
   const cartItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   const supabase = createClient()
 
@@ -128,7 +130,7 @@ export function Navbar() {
                   <span>Dashboard</span>
                 </Link>
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setShowLogoutConfirm(true)}
                   className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-gradient-to-b from-red-500 to-red-600 text-white font-semibold text-sm border border-red-600/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(0,0,0,0.15),0_4px_12px_rgba(220,38,38,0.15)] hover:scale-105 hover:shadow-md cursor-pointer transition-all duration-200"
                 >
                   <LogOut size={14} />
@@ -228,8 +230,8 @@ export function Navbar() {
                     </Link>
                     <button
                       onClick={() => {
-                        handleLogout()
                         setMenuOpen(false)
+                        setShowLogoutConfirm(true)
                       }}
                       className="flex items-center justify-center gap-2 h-12 rounded-xl bg-red-50 text-red-600 font-semibold text-base border border-red-100 hover:bg-red-100 transition-colors"
                     >
@@ -359,6 +361,16 @@ export function Navbar() {
           </>
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to log out of your session?"
+        confirmLabel="Logout"
+        onConfirm={handleLogout}
+        danger
+      />
     </>
   )
 }
