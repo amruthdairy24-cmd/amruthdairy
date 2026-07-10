@@ -13,6 +13,7 @@ import {
 import { createClient } from '@/utils/supabase/client'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { ConfirmModal } from '@/components/ui'
 
 const sidebarGroups = [
   {
@@ -58,6 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [dateStr, setDateStr] = useState('')
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -160,7 +162,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     return (
                       <button
                         key={item.label}
-                        onClick={handleLogout}
+                        onClick={() => setShowLogoutConfirm(true)}
                         className="w-full text-left bg-transparent border-none p-0 outline-none cursor-pointer block group"
                       >
                         {linkContent}
@@ -357,7 +359,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                               key={item.label}
                               onClick={() => {
                                 setIsMobileMenuOpen(false)
-                                handleLogout()
+                                setShowLogoutConfirm(true)
                               }}
                               className="w-full text-left bg-transparent border-none p-0 outline-none cursor-pointer block group"
                             >
@@ -384,7 +386,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               <div className="p-4 flex-shrink-0 border-t border-slate-100 dark:border-slate-800">
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setShowLogoutConfirm(true)}
                   className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-bold transition-all border border-red-200/45 bg-red-500/10 text-red-600 hover:bg-red-500/15 cursor-pointer h-9"
                 >
                   <LogOut size={14} />
@@ -395,6 +397,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </>
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to log out of your session?"
+        confirmLabel="Logout"
+        onConfirm={handleLogout}
+        danger
+      />
     </div>
   )
 }
