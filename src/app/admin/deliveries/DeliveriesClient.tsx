@@ -148,10 +148,11 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
     }
   }
 
-  const pendingCount = deliveries.filter(d => d.delivery_status === 'pending').length
+  const pendingCount = deliveries.filter(d => d.delivery_status === 'pending' && !d.is_skip && !d.is_vacation).length
   const deliveredCount = deliveries.filter(d => d.delivery_status === 'delivered').length
   const skippedCount = deliveries.filter(d => d.is_skip).length
   const vacationCount = deliveries.filter(d => d.is_vacation).length
+
   const extraCount = deliveries.filter(d => d.is_extra).length
   const totalLitres = deliveries.reduce((sum, d) => sum + Number(d.total_litres || 0), 0)
 
@@ -418,7 +419,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
 
                       {/* Extra Volume */}
                       <td className="px-4 py-2.5 text-center">
-                        {del.is_extra && Number(del.extra_litres) > 0 ? (
+                        {!isSkipped && !isVacation && del.is_extra && Number(del.extra_litres) > 0 ? (
                           <span className="inline-flex text-[10px] font-extrabold text-purple-700 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/30 px-2 py-0.5 rounded-md border border-purple-200/20 dark:border-purple-900/30 font-mono">
                             +{del.extra_litres}L
                           </span>
