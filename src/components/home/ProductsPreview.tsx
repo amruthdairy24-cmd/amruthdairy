@@ -21,7 +21,7 @@ import {
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { cn } from '@/lib/utils'
 
-function getIcon(name: string) {
+function getIcon(name: string | null | undefined) {
   switch (name) {
     // Badges
     case '🌱': return <Sprout size={14} />
@@ -47,143 +47,87 @@ function getIcon(name: string) {
   }
 }
 
-interface ProductItem {
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface DBProduct {
+  id: string
   name: string
-  volume: string
-  price: string
+  category: string
+  price: number
   unit: string
-  image: string
-  badge: string
-  badgeIcon: string
-  tagline: string
+  image_url: string | null
+  badge: string | null
+  badge_icon: string | null
+  tagline: string | null
   features: string[]
-  featuresIcons: string[]
-  isSubscription: boolean
+  features_icons: string[]
+  is_subscription: boolean
+  is_active: boolean
+  display_order: number | null
+  stock: number
+  stock_available: number
 }
 
-const products: ProductItem[] = [
-  {
-    name: 'A2 Cow Milk',
-    volume: '500ml / 1L / 2L',
-    price: '₹60',
-    unit: 'Litre',
-    image: '/images/amruth_product_milk.png',
-    badge: 'Farm Fresh',
-    badgeIcon: '🌱',
-    tagline: 'Delivered Before Sunrise',
-    features: ['100% Pure', 'No Additives', 'A2 Certified'],
-    featuresIcons: ['🥛', '🧪', '🛡️'],
-    isSubscription: true
-  },
-  {
-    name: 'Fresh Curd',
-    volume: '500ml',
-    price: '₹40',
-    unit: '500ml',
-    image: '/images/amruth_product_curd.png',
-    badge: 'Probiotic Rich',
-    badgeIcon: '🥣',
-    tagline: 'Made from A2 Cow Milk',
-    features: ['Rich & Thick', 'Good for Gut', 'Daily Fresh'],
-    featuresIcons: ['🥄', '✨', '🗓️'],
-    isSubscription: false
-  },
-  {
-    name: 'Pure Cow Ghee',
-    volume: '500ml',
-    price: '₹450',
-    unit: '500ml',
-    image: '/images/amruth_product_ghee.png',
-    badge: 'Premium Quality',
-    badgeIcon: '🍯',
-    tagline: 'Traditional Pure Ghee',
-    features: ['100% Pure', 'Hand Crafted', 'Aromatic'],
-    featuresIcons: ['🔥', '👋', '👃'],
-    isSubscription: false
-  },
-  {
-    name: 'Buttermilk',
-    volume: '500ml',
-    price: '₹30',
-    unit: '500ml',
-    image: '/images/amruth_product_buttermilk.png',
-    badge: 'Refreshing',
-    badgeIcon: '🍃',
-    tagline: 'Traditional & Refreshing',
-    features: ['Cool & Light', 'Good Digest', 'Daily Fresh'],
-    featuresIcons: ['❄️', '🌿', '🗓️'],
-    isSubscription: false
-  },
-  {
-    name: 'Fresh Paneer',
-    volume: '200g',
-    price: '₹90',
-    unit: '200gm',
-    image: '/images/amruth_product_paneer.png',
-    badge: 'High Protein',
-    badgeIcon: '🧀',
-    tagline: 'Soft, Pure & Protein Rich',
-    features: ['100% Pure', 'High Protein', 'Soft & Fresh'],
-    featuresIcons: ['🥛', '💪', '☁️'],
-    isSubscription: false
-  }
-]
+// ─── Style maps (keyed by badge text from DB, with fallback) ─────────────────
 
-// Tailwind class mappings to eliminate dynamic inline styles from the data loop
 const badgeClassMap: Record<string, string> = {
-  'Farm Fresh': 'bg-emerald-50/90 text-emerald-700 border-emerald-200/60 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
+  'Farm Fresh':     'bg-emerald-50/90 text-emerald-700 border-emerald-200/60 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
   'Probiotic Rich': 'bg-sky-50/90 text-sky-700 border-sky-200/60 dark:bg-sky-500/10 dark:text-sky-400 dark:border-sky-500/20',
-  'Premium Quality': 'bg-amber-50/90 text-amber-800 border-amber-200/60 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
-  'Refreshing': 'bg-teal-50/90 text-teal-700 border-teal-200/60 dark:bg-teal-500/10 dark:text-teal-400 dark:border-teal-500/20',
-  'High Protein': 'bg-indigo-50/90 text-indigo-700 border-indigo-200/60 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20',
+  'Premium Quality':'bg-amber-50/90 text-amber-800 border-amber-200/60 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
+  'Refreshing':     'bg-teal-50/90 text-teal-700 border-teal-200/60 dark:bg-teal-500/10 dark:text-teal-400 dark:border-teal-500/20',
+  'High Protein':   'bg-indigo-50/90 text-indigo-700 border-indigo-200/60 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20',
+}
+const FALLBACK_BADGE_CLASS = 'bg-slate-50/90 text-slate-700 border-slate-200/60 dark:bg-slate-500/10 dark:text-slate-400 dark:border-slate-500/20'
+
+const BUTTON_CLASS = 'bg-gradient-to-r from-[#02429C] to-[#013378] hover:from-[#013378] hover:to-[#00255c] shadow-[0_4px_14px_rgba(2,66,156,0.22)] text-white'
+
+// ─── Skeleton card ────────────────────────────────────────────────────────────
+
+function SkeletonCard() {
+  return (
+    <div className="relative flex flex-col w-[290px] min-w-[290px] md:w-[280px] md:min-w-[280px] lg:w-[285px] lg:min-w-[285px] bg-white dark:bg-[#171923]/90 border border-[#F2EDE4]/70 dark:border-slate-800/60 rounded-[32px] overflow-hidden snap-start animate-pulse">
+      <div className="w-full h-[260px] bg-slate-100 dark:bg-slate-800" />
+      <div className="flex flex-col flex-1 px-5 pb-5 pt-4 space-y-3">
+        <div className="h-5 bg-slate-100 dark:bg-slate-800 rounded w-3/4 mx-auto" />
+        <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-1/2 mx-auto" />
+        <div className="flex gap-1.5 justify-center">
+          {[1,2,3].map(i => <div key={i} className="h-5 w-16 bg-slate-100 dark:bg-slate-800 rounded-full" />)}
+        </div>
+        <div className="mt-auto h-11 bg-slate-100 dark:bg-slate-800 rounded-full" />
+      </div>
+    </div>
+  )
 }
 
-// Light theme-colored showcases for product images (consistent in both modes to allow flawless mix-blend-multiply)
-const lightGradientMap: Record<string, string> = {
-  'A2 Cow Milk': 'bg-gradient-to-br from-[#FFFDF9] to-[#FAF5E6] border border-[#F5EAD2]/40',
-  'Fresh Curd': 'bg-gradient-to-br from-[#F8FAFC] to-[#EDF2F7] border border-[#E2E8F0]/40',
-  'Pure Cow Ghee': 'bg-gradient-to-br from-[#FFFDF4] to-[#FEF7DC] border border-[#F5EAD2]/40',
-  'Buttermilk': 'bg-gradient-to-br from-[#F4FBF7] to-[#E6F7ED] border border-[#D1FAE5]/40',
-  'Fresh Paneer': 'bg-gradient-to-br from-[#FAF5FF] to-[#F5EBFF] border border-[#E9D5FF]/40',
-}
-
-const buttonClassMap: Record<string, string> = {
-  'A2 Cow Milk': 'bg-gradient-to-r from-[#02429C] to-[#013378] hover:from-[#013378] hover:to-[#00255c] shadow-[0_4px_14px_rgba(2,66,156,0.22)] text-white',
-  'Fresh Curd': 'bg-gradient-to-r from-[#02429C] to-[#013378] hover:from-[#013378] hover:to-[#00255c] shadow-[0_4px_14px_rgba(2,66,156,0.22)] text-white',
-  'Pure Cow Ghee': 'bg-gradient-to-r from-[#02429C] to-[#013378] hover:from-[#013378] hover:to-[#00255c] shadow-[0_4px_14px_rgba(2,66,156,0.22)] text-white',
-  'Buttermilk': 'bg-gradient-to-r from-[#02429C] to-[#013378] hover:from-[#013378] hover:to-[#00255c] shadow-[0_4px_14px_rgba(2,66,156,0.22)] text-white',
-  'Fresh Paneer': 'bg-gradient-to-r from-[#02429C] to-[#013378] hover:from-[#013378] hover:to-[#00255c] shadow-[0_4px_14px_rgba(2,66,156,0.22)] text-white',
-}
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function ProductsPreview() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [dynamicPrices, setDynamicPrices] = useState<{ [key: string]: { price: number, unit: string } }>({})
+  const [products, setProducts] = useState<DBProduct[]>([])
   const [milkPrice, setMilkPrice] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Fetch extra products
-    fetch('/api/admin/products')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.products) {
-          const priceMap: any = {}
-          data.products.forEach((p: any) => {
-            priceMap[p.name] = { price: p.price, unit: p.unit }
+    Promise.all([
+      fetch('/api/admin/products').then(r => r.json()),
+      fetch('/api/admin/settings?key=price_per_litre').then(r => r.json()).catch(() => null),
+    ]).then(([productData, settingsData]) => {
+      if (productData.success && productData.products) {
+        // Only show active products, sorted by display_order then created_at
+        const active: DBProduct[] = productData.products
+          .filter((p: DBProduct) => p.is_active)
+          .sort((a: DBProduct, b: DBProduct) => {
+            const ao = a.display_order ?? 9999
+            const bo = b.display_order ?? 9999
+            return ao !== bo ? ao - bo : 0
           })
-          setDynamicPrices(priceMap)
-        }
-      })
-      .catch(err => console.error("Failed to fetch products", err))
-
-    // Fetch milk price
-    fetch('/api/admin/settings?key=price_per_litre')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.value?.amount) {
-          setMilkPrice(data.value.amount)
-        }
-      })
-      .catch(err => console.error("Failed to fetch milk price", err))
+        setProducts(active)
+      }
+      if (settingsData?.success && settingsData.value?.amount) {
+        setMilkPrice(settingsData.value.amount)
+      }
+    }).catch(err => console.error('Failed to fetch products', err))
+      .finally(() => setLoading(false))
   }, [])
 
   const scroll = (direction: 'left' | 'right') => {
@@ -195,7 +139,6 @@ export function ProductsPreview() {
       const containerRect = container.getBoundingClientRect()
       const containerLeft = container.scrollLeft
 
-      // Calculate the exact scrollable coordinate for each card in the canvas
       const cardPositions = cards.map(card => {
         const cardRect = card.getBoundingClientRect()
         return {
@@ -205,23 +148,15 @@ export function ProductsPreview() {
       })
 
       if (direction === 'right') {
-        // Find the first card whose position is to the right of the current scroll position
         const target = cardPositions.find(pos => pos.scrollPos > containerLeft + 20)
         if (target) {
-          container.scrollTo({
-            left: target.scrollPos - 8, // align with padding
-            behavior: 'smooth'
-          })
+          container.scrollTo({ left: target.scrollPos - 8, behavior: 'smooth' })
         }
       } else {
-        // Find the card immediately to the left of the current scroll position
         const prevTargets = cardPositions.filter(pos => pos.scrollPos < containerLeft - 20)
         if (prevTargets.length > 0) {
           const target = prevTargets[prevTargets.length - 1]
-          container.scrollTo({
-            left: target.scrollPos - 8, // align with padding
-            behavior: 'smooth'
-          })
+          container.scrollTo({ left: target.scrollPos - 8, behavior: 'smooth' })
         }
       }
     }
@@ -252,7 +187,7 @@ export function ProductsPreview() {
           </div>
         </ScrollReveal>
 
-        {/* Slider Wrapper (Max width of 1308px limits the visible area to exactly 4 cards + gaps on desktop, hiding the 5th card) */}
+        {/* Slider */}
         <ScrollReveal direction="up" delay={150} duration={1000}>
           <div className="relative max-w-[1308px] mx-auto px-10">
             
@@ -265,116 +200,138 @@ export function ProductsPreview() {
               <ChevronLeft size={24} />
             </button>
 
-            {/* Scroll Container (Using gap-6 for compact spacing to fit 4 cards on desktop) */}
+            {/* Scroll Container */}
             <div
               ref={scrollContainerRef}
               className="flex gap-6 overflow-x-auto hide-scrollbar py-6 px-2 scroll-smooth snap-x snap-mandatory w-full"
             >
-              {products.map((product) => {
-                let displayPrice = product.price
-                let displayUnit = product.unit
+              {loading
+                ? Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
+                : products.map((product) => {
+                    // Price: subscription products use the milk price from settings if available
+                    let displayPrice = `₹${product.price}`
+                    let displayUnit = product.unit
 
-                if (product.name === 'A2 Cow Milk' && milkPrice) {
-                  displayPrice = `₹${milkPrice}`
-                  displayUnit = 'Litre'
-                } else if (dynamicPrices[product.name]) {
-                  displayPrice = `₹${dynamicPrices[product.name].price}`
-                  displayUnit = dynamicPrices[product.name].unit
-                }
+                    if (product.is_subscription && milkPrice) {
+                      displayPrice = `₹${milkPrice}`
+                      displayUnit = 'Litre'
+                    }
 
-                return (
-                  <div
-                    key={product.name}
-                    className="relative flex flex-col w-[290px] min-w-[290px] md:w-[280px] md:min-w-[280px] lg:w-[285px] lg:min-w-[285px] p-0 bg-white dark:bg-[#171923]/90 border border-[#F2EDE4]/70 dark:border-slate-800/60 rounded-[32px] snap-start shadow-[0_12px_30px_rgba(180,140,60,0.04)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.2)] hover:shadow-[0_25px_50px_-12px_rgba(180,140,60,0.12)] dark:hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] hover:-translate-y-2 hover:border-amber-300/40 dark:hover:border-amber-500/30 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group overflow-hidden"
-                  >
-                    {/* Hover Glow Accent */}
-                    <div className="absolute -inset-2 bg-gradient-to-r from-amber-500/0 via-amber-500/3 to-amber-500/0 dark:via-amber-500/6 rounded-[34px] opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-700 pointer-events-none z-0" />
-                    
-                    {/* Product Visual Area (Completely Full Bleed with Zero Padding on the Image) */}
-                    <div className="w-full h-[260px] relative rounded-t-[30px] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] z-10">
-                      
-                      {/* Product Image covering the entire area edge-to-edge */}
-                      <div className="absolute inset-0 w-full h-full transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105">
-                        <Image
-                          src={product.image}
-                          alt={product.name}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 290px"
-                          className="object-cover"
-                          priority
-                        />
-                      </div>
+                    const features = Array.isArray(product.features) ? product.features : []
+                    const featuresIcons = Array.isArray(product.features_icons) ? product.features_icons : []
+                    const badgeCls = product.badge
+                      ? (badgeClassMap[product.badge] ?? FALLBACK_BADGE_CLASS)
+                      : FALLBACK_BADGE_CLASS
 
-                      {/* Category Badge - Floating on top-left of the image */}
-                      <div className={cn(
-                        "absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[9px] font-extrabold tracking-wider uppercase z-20 shadow-[0_4px_12px_rgba(0,0,0,0.08)] border backdrop-blur-md",
-                        badgeClassMap[product.badge]
-                      )}>
-                        <span className="flex items-center text-current">{getIcon(product.badgeIcon)}</span>
-                        <span>{product.badge}</span>
-                      </div>
+                    return (
+                      <div
+                        key={product.id}
+                        className="relative flex flex-col w-[290px] min-w-[290px] md:w-[280px] md:min-w-[280px] lg:w-[285px] lg:min-w-[285px] p-0 bg-white dark:bg-[#171923]/90 border border-[#F2EDE4]/70 dark:border-slate-800/60 rounded-[32px] snap-start shadow-[0_12px_30px_rgba(180,140,60,0.04)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.2)] hover:shadow-[0_25px_50px_-12px_rgba(180,140,60,0.12)] dark:hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] hover:-translate-y-2 hover:border-amber-300/40 dark:hover:border-amber-500/30 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group overflow-hidden"
+                      >
+                        {/* Hover Glow Accent */}
+                        <div className="absolute -inset-2 bg-gradient-to-r from-amber-500/0 via-amber-500/3 to-amber-500/0 dark:via-amber-500/6 rounded-[34px] opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-700 pointer-events-none z-0" />
+                        
+                        {/* Product Visual Area */}
+                        <div className="w-full h-[260px] relative rounded-t-[30px] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] z-10">
+                          
+                          {/* Product Image */}
+                          <div className="absolute inset-0 w-full h-full transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105">
+                            {product.image_url ? (
+                              <Image
+                                src={product.image_url}
+                                alt={product.name}
+                                fill
+                                sizes="(max-width: 768px) 100vw, 290px"
+                                className="object-cover"
+                                priority
+                              />
+                            ) : (
+                              // Emoji placeholder when no image has been uploaded yet
+                              <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
+                                <span className="text-7xl select-none opacity-60">
+                                  {product.badge_icon || '🥛'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
 
-                      {/* Soft light reflection overlay */}
-                      <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-t from-black/10 to-transparent pointer-events-none z-20" />
-                    </div>
+                          {/* Badge — only render if product has one */}
+                          {product.badge && (
+                            <div className={cn(
+                              "absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[9px] font-extrabold tracking-wider uppercase z-20 shadow-[0_4px_12px_rgba(0,0,0,0.08)] border backdrop-blur-md",
+                              badgeCls
+                            )}>
+                              <span className="flex items-center text-current">{getIcon(product.badge_icon)}</span>
+                              <span>{product.badge}</span>
+                            </div>
+                          )}
 
-                    {/* Product Info Section (Padded below the visual block) */}
-                    <div className="relative z-10 flex flex-col flex-1 px-5 pb-5 pt-4">
-                      {/* Title & Tagline */}
-                      <div className="mb-4 text-center">
-                        <h3 className="font-playfair text-2xl font-extrabold text-slate-950 dark:text-white mb-1.5 tracking-tight transition-colors duration-300 group-hover:text-amber-650 dark:group-hover:text-amber-400">
-                          {product.name}
-                        </h3>
-                        <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
-                          {product.tagline}
-                        </p>
-                      </div>
-
-                      {/* Minimalist Organic Feature Badges */}
-                      <div className="flex flex-wrap gap-1.5 mb-5 justify-center">
-                        {product.features.map((feat, idx) => (
-                          <span 
-                            key={feat}
-                            className="inline-flex items-center gap-1 bg-[#FAF8F5] dark:bg-[#1f232f] border border-[#ECD8B0]/25 dark:border-slate-800 rounded-full px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition-all duration-300 hover:bg-[#F2ECE0] dark:hover:bg-[#272b38]"
-                          >
-                            <span className="text-amber-650 dark:text-amber-400 flex items-center">{getIcon(product.featuresIcons[idx])}</span>
-                            <span>{feat}</span>
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Subtle thin horizontal separator */}
-                      <div className="h-px bg-slate-100 dark:bg-slate-800/50 w-full mb-4 mt-auto" />
-
-                      {/* Pricing & CTA Button */}
-                      <div className="flex items-center justify-between">
-                        {/* Price Display */}
-                        <div>
-                          <p className="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">
-                            Price
-                          </p>
-                          <p className="text-xl font-extrabold text-slate-950 dark:text-white font-mono-num leading-tight flex items-baseline">
-                            {displayPrice} 
-                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 ml-1">/ {displayUnit}</span>
-                          </p>
+                          {/* Soft light reflection overlay */}
+                          <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-t from-black/10 to-transparent pointer-events-none z-20" />
                         </div>
 
-                        {/* CTA Action Button */}
-                        <Link href={product.isSubscription ? "/subscribe" : "/shop"}>
-                          <button className={cn(
-                            "h-11 px-5 rounded-full text-[13px] font-bold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-1.5 hover:scale-[1.03] active:scale-95 border-none cursor-pointer group/btn",
-                            buttonClassMap[product.name]
-                          )}>
-                            <span>{product.isSubscription ? 'Subscribe' : 'Buy Now'}</span>
-                            <span className="text-[14px] font-normal transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
-                          </button>
-                        </Link>
-                      </div>
-                    </div>
+                        {/* Product Info */}
+                        <div className="relative z-10 flex flex-col flex-1 px-5 pb-5 pt-4">
+                          {/* Title & Tagline */}
+                          <div className="mb-4 text-center">
+                            <h3 className="font-playfair text-2xl font-extrabold text-slate-950 dark:text-white mb-1.5 tracking-tight transition-colors duration-300 group-hover:text-amber-650 dark:group-hover:text-amber-400">
+                              {product.name}
+                            </h3>
+                            {product.tagline && (
+                              <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
+                                {product.tagline}
+                              </p>
+                            )}
+                          </div>
 
-                  </div>
-                )
-              })}
+                          {/* Feature Badges */}
+                          {features.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mb-5 justify-center">
+                              {features.map((feat, idx) => (
+                                <span 
+                                  key={feat}
+                                  className="inline-flex items-center gap-1 bg-[#FAF8F5] dark:bg-[#1f232f] border border-[#ECD8B0]/25 dark:border-slate-800 rounded-full px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition-all duration-300 hover:bg-[#F2ECE0] dark:hover:bg-[#272b38]"
+                                >
+                                  <span className="text-amber-650 dark:text-amber-400 flex items-center">{getIcon(featuresIcons[idx])}</span>
+                                  <span>{feat}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Thin separator */}
+                          <div className="h-px bg-slate-100 dark:bg-slate-800/50 w-full mb-4 mt-auto" />
+
+                          {/* Pricing & CTA */}
+                          <div className="flex items-center justify-between">
+                            {/* Price */}
+                            <div>
+                              <p className="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">
+                                Price
+                              </p>
+                              <p className="text-xl font-extrabold text-slate-950 dark:text-white font-mono-num leading-tight flex items-baseline">
+                                {displayPrice} 
+                                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 ml-1">/ {displayUnit}</span>
+                              </p>
+                            </div>
+
+                            {/* CTA Button */}
+                            <Link href={product.is_subscription ? '/subscribe' : '/shop'}>
+                              <button className={cn(
+                                "h-11 px-5 rounded-full text-[13px] font-bold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-1.5 hover:scale-[1.03] active:scale-95 border-none cursor-pointer group/btn",
+                                BUTTON_CLASS
+                              )}>
+                                <span>{product.is_subscription ? 'Subscribe' : 'Buy Now'}</span>
+                                <span className="text-[14px] font-normal transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
+                              </button>
+                            </Link>
+                          </div>
+                        </div>
+
+                      </div>
+                    )
+                  })
+              }
             </div>
 
             {/* Right Arrow */}
