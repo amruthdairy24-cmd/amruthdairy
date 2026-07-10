@@ -35,7 +35,7 @@ const sidebarGroups = [
   {
     title: 'ACCOUNT',
     items: [
-      { href: '/account', icon: User, label: 'Account' },
+      { href: '/dashboard/account', icon: User, label: 'Account' },
       { href: '#logout', icon: LogOut, label: 'Logout', isLogout: true },
     ]
   }
@@ -47,7 +47,7 @@ const mobileNavItems = [
   { href: '/dashboard/skip', icon: SkipForward, label: 'Skip' },
   { href: '/dashboard/extra', icon: PlusCircle, label: 'Extra' },
   { href: '/dashboard/bills', icon: FileText, label: 'Bills' },
-  { href: '/account', icon: User, label: 'Account' },
+  { href: '/dashboard/account', icon: User, label: 'Account' },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
