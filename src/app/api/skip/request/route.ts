@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { getDeadlineForDate } from '@/lib/utils';
 
 const adminSupabase = createAdminClient();
 
@@ -29,6 +30,25 @@ export async function POST(request: Request) {
 
     if (subError || !subscription) {
       return NextResponse.json({ success: false, message: 'Active subscription not found' }, { status: 400 });
+    }
+
+    // CHECK PAID MONTH
+    const skipMonthDate = new Date(skip_date);
+    const skipBillingMonth = `${skipMonthDate.getFullYear()}-${String(skipMonthDate.getMonth() + 1).padStart(2, '0')}-01`;
+    
+    const { data: paidMonth } = await adminSupabase
+      .from('billing_months')
+      .select('id')
+      .eq('subscription_id', subscription.id)
+      .eq('billing_month', skipBillingMonth)
+      .eq('payment_status', 'paid')
+      .maybeSingle();
+
+    if (!paidMonth) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'You cannot skip dates in a month you have not paid for yet.' 
+      }, { status: 400 });
     }
 
     // DEADLINE CHECK (server-side, uses DB function — Rule #6)
@@ -76,10 +96,8 @@ export async function POST(request: Request) {
     skipDateObj.setDate(1);
     const credit_month = skipDateObj.toISOString().split('T')[0];
 
-    // Deadline = previous day at 9 PM IST (15:30 UTC)
-    const deadlineObj = new Date(skip_date);
-    deadlineObj.setDate(deadlineObj.getDate() - 1);
-    deadlineObj.setUTCHours(15, 30, 0, 0);
+    // Deadline = previous day at 9 PM IST
+    const deadlineObj = getDeadlineForDate(skip_date);
 
     // INSERT skip_request (supabase_setup.sql column names)
     const { data: skipRequest, error: insertError } = await adminSupabase

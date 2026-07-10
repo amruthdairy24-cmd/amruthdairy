@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Playfair_Display } from 'next/font/google'
+import { bespokeStencil, panchangVariable, cabinetGrotesk } from "@/lib/fonts";
 import './globals.css'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -30,6 +31,8 @@ const playfairDisplay = Playfair_Display({
   display: 'swap',
 })
 
+
+
 export const metadata: Metadata = {
   title: 'Amruth Milk — Farm Fresh Milk Subscription · Padil, Mangalore',
   description:
@@ -51,6 +54,9 @@ export const metadata: Metadata = {
 }
 
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { Toaster } from 'react-hot-toast'
+import { PageLoader } from '@/components/layout/PageLoader'
+import { CartProvider } from '@/contexts/CartContext'
 
 export default function RootLayout({
   children,
@@ -58,10 +64,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${plusJakartaSans.variable} ${inter.variable} ${jetbrainsMono.variable} ${playfairDisplay.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${plusJakartaSans.variable} ${inter.variable} ${jetbrainsMono.variable} ${playfairDisplay.variable} ${bespokeStencil.variable} ${panchangVariable.variable} ${cabinetGrotesk.variable}`}>
       <body suppressHydrationWarning className="font-body antialiased bg-cream-50 text-brown-800 transition-colors duration-300 overflow-x-hidden">
         <ThemeProvider>
-          {children}
+          <CartProvider>
+            <PageLoader />
+            {children}
+            <Toaster position="bottom-center" />
+          </CartProvider>
         </ThemeProvider>
       </body>
     </html>

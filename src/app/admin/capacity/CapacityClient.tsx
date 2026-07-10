@@ -18,8 +18,14 @@ interface OverbookedAlert {
   booked: number;
 }
 
-export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
+interface CapacityRule {
+  date_from: string;
+  capacity: number;
+}
+
+export function CapacityClient({ data: initialData, defaultCapacityRules: initialRules }: { data: CapacityLog[], defaultCapacityRules: CapacityRule[] }) {
   const [data, setData] = useState<CapacityLog[]>(initialData);
+  const [defaultRules, setDefaultRules] = useState<CapacityRule[]>(initialRules);
   
   const capacityMap = useMemo(() => {
     const map = new Map<string, CapacityLog>();
@@ -27,11 +33,24 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
     return map;
   }, [data]);
 
+  // Resolve base capacity for a date based on rules
+  const getBaseCapacity = (dateStr: string) => {
+    // Rules should be sorted by date_from descending
+    const sorted = [...defaultRules].sort((a, b) => new Date(b.date_from).getTime() - new Date(a.date_from).getTime());
+    for (const rule of sorted) {
+      if (dateStr >= rule.date_from) {
+        return rule.capacity;
+      }
+    }
+    return 100; // ultimate fallback
+  };
+
   // Main Display Table State
   const [viewDate, setViewDate] = useState<Date>(new Date());
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState<'daily' | 'global'>('daily');
   const [modalViewDate, setModalViewDate] = useState<Date>(new Date());
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -94,6 +113,7 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
     setMessage(null);
     setOverbookedAlerts(null);
     setModalViewDate(new Date(viewDate)); 
+    setModalMode('daily');
     setShowModal(true);
   };
 
@@ -102,6 +122,15 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
     setOverbookedAlerts(null);
     d.setHours(12, 0, 0, 0);
     
+    if (modalMode === 'global') {
+      setStartDate(d);
+      setEndDate(null);
+      
+      const log = capacityMap.get(d.toISOString().split('T')[0]);
+      if (log) setEditTotal(log.total_litres.toString());
+      return;
+    }
+
     if (!startDate || (startDate && endDate)) {
       setStartDate(d);
       setEndDate(null);
@@ -134,6 +163,38 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
       }
       
       const startStr = startDate.toISOString().split('T')[0];
+
+      if (modalMode === 'global') {
+        const res = await fetch('/api/admin/capacity/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date_from: startStr,
+            capacity: newTotal
+          })
+        });
+        const result = await res.json();
+        
+        if (!res.ok) {
+          if (result.overbooked && result.overbooked.length > 0) {
+            setOverbookedAlerts(result.overbooked);
+            throw new Error("Validation Failed: Some future dates exceed the new requested capacity limit.");
+          }
+          throw new Error(result.message || 'Failed to update global capacity');
+        }
+        
+        // Also update local data state so existing records reflect the new global capacity instantly
+        setData(prev => prev.map(log => 
+          log.date >= startStr ? { ...log, total_litres: newTotal } : log
+        ));
+        
+        setDefaultRules(result.data);
+        setMessage({ text: 'Global capacity rule added successfully!', type: 'success' });
+        setTimeout(() => setShowModal(false), 1500);
+        return;
+      }
+
+      // Existing daily mode logic
       const endStr = endDate ? endDate.toISOString().split('T')[0] : startStr;
 
       const res = await fetch('/api/admin/capacity', {
@@ -230,14 +291,18 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
             <tbody>
               {tableDays.map((date, idx) => {
                 const dateStr = date.toISOString().split('T')[0];
-                const log = capacityMap.get(dateStr) || { total_litres: 100, booked_litres: 0 };
+                const baseCap = getBaseCapacity(dateStr);
+                const log = capacityMap.get(dateStr) || { total_litres: baseCap, booked_litres: 0 };
                 
                 const percent = Math.min(100, (log.booked_litres / (log.total_litres || 1)) * 100);
                 const available = Math.max(0, log.total_litres - log.booked_litres);
                 
                 const tempToday = new Date();
                 tempToday.setHours(12,0,0,0);
-                const isToday = tempToday.toISOString().split('T')[0] === dateStr;
+                const todayStr = tempToday.toISOString().split('T')[0];
+                const isToday = todayStr === dateStr;
+                const isPast = dateStr < todayStr;
+                const isClosed = isPast || isToday;
 
                 return (
                   <tr key={idx} className={cn(
@@ -254,14 +319,16 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
                     <td className="p-4">
                       <div className={cn(
                         "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold border",
-                        percent >= 100 
-                          ? "bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-200/20 dark:border-rose-900/30" 
-                          : (percent >= 80 
-                            ? "bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-400 border-amber-200/20 dark:border-amber-900/30" 
-                            : "bg-green-500/10 dark:bg-green-500/20 text-emerald-600 dark:text-emerald-400 border-green-200/20 dark:border-green-900/30")
+                        isClosed
+                          ? "bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700"
+                          : percent >= 100 
+                            ? "bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-200/20 dark:border-rose-900/30" 
+                            : (percent >= 80 
+                              ? "bg-amber-500/10 dark:bg-amber-500/20 text-amber-650 dark:text-amber-400 border-amber-200/20 dark:border-amber-900/30" 
+                              : "bg-green-500/10 dark:bg-green-500/20 text-emerald-600 dark:text-emerald-400 border-green-200/20 dark:border-green-900/30")
                       )}>
-                        {percent >= 100 ? <AlertTriangle size={13}/> : <CheckCircle2 size={13}/>}
-                        {percent >= 100 ? 'Full' : (percent >= 80 ? 'Filling Fast' : 'Available')}
+                        {isClosed ? <X size={13}/> : percent >= 100 ? <AlertTriangle size={13}/> : <CheckCircle2 size={13}/>}
+                        {isClosed ? 'Closed' : percent >= 100 ? 'Full' : (percent >= 80 ? 'Filling Fast' : 'Available')}
                       </div>
                     </td>
                     <td className="p-4 text-sm font-extrabold text-slate-900 dark:text-white">
@@ -306,12 +373,30 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
           <div className="bg-white dark:bg-cream-100 border border-border/50 dark:border-slate-800/80 rounded-3xl w-full max-w-[800px] shadow-2xl flex flex-col md:flex-row overflow-hidden text-slate-900 dark:text-white">
             
             {/* LEFT SIDE: CALENDAR SELECTION */}
-            <div className="flex-1 p-6 md:p-8 bg-slate-50 dark:bg-slate-950/40 border-r border-border/40 dark:border-slate-800/60">
+            <div className="flex-1 p-6 md:p-8 bg-slate-50 dark:bg-slate-950/40 border-r border-border/40 dark:border-slate-800/60 flex flex-col">
+              
+              <div className="flex gap-2 p-1 bg-slate-200/50 dark:bg-slate-900/50 rounded-xl mb-6">
+                <button 
+                  onClick={() => { setModalMode('daily'); setEndDate(null); }}
+                  className={cn("flex-1 py-1.5 text-xs font-bold rounded-lg transition-all", modalMode === 'daily' ? "bg-white dark:bg-slate-800 shadow-sm text-brand-primary dark:text-blue-400" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200")}
+                >
+                  Specific Days
+                </button>
+                <button 
+                  onClick={() => { setModalMode('global'); setEndDate(null); }}
+                  className={cn("flex-1 py-1.5 text-xs font-bold rounded-lg transition-all", modalMode === 'global' ? "bg-white dark:bg-slate-800 shadow-sm text-brand-primary dark:text-blue-400" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200")}
+                >
+                  Global Rule
+                </button>
+              </div>
+
               <h3 className="text-[17px] font-black text-slate-900 dark:text-white mb-1.5 flex items-center gap-2 font-display">
-                <CalendarIcon size={20} /> Select Date(s)
+                <CalendarIcon size={20} /> Select {modalMode === 'global' ? 'Start Date' : 'Date(s)'}
               </h3>
-              <p className="text-[12px] text-slate-400 dark:text-slate-500 mb-6">
-                Click once for a single date, or click a second date to select a range.
+              <p className="text-[12px] text-slate-400 dark:text-slate-500 mb-6 min-h-[36px]">
+                {modalMode === 'global' 
+                  ? 'Select the date from which the new global capacity should apply forever into the future.'
+                  : 'Click once for a single date, or click a second date to select a range.'}
               </p>
 
               <div className="flex items-center justify-between mb-4">
@@ -341,27 +426,43 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
                   
                   const isStart = sDateStr === dateStr;
                   const isEnd = eDateStr === dateStr;
-                  const inRange = isDateInRange(date);
+                  // In global mode, anything after the start date is conceptually "in range" for visualization, but we don't allow selecting an end date.
+                  const inRange = modalMode === 'global' 
+                    ? (sDateStr && dateStr >= sDateStr) 
+                    : isDateInRange(date);
                   
-                  const isSelectedEndpoint = isStart || isEnd;
+                  const isSelectedEndpoint = modalMode === 'global' ? isStart : (isStart || isEnd);
                   
-                  const buttonRoundedClass = (isStart && !endDate) || (isStart && isEnd) ? 'rounded-lg' : 
+                  // Check if the date is in the past (for global mode restriction)
+                  const todayObj = new Date();
+                  todayObj.setHours(0,0,0,0);
+                  const isPast = date < todayObj;
+                  const disableClick = modalMode === 'global' && isPast;
+                  
+                  const buttonRoundedClass = modalMode === 'global' 
+                    ? (isStart ? 'rounded-l-lg rounded-r-none' : inRange ? 'rounded-none' : 'rounded-lg')
+                    : ((isStart && !endDate) || (isStart && isEnd) ? 'rounded-lg' : 
                                       isStart && endDate ? 'rounded-l-lg rounded-r-none' :
                                       isEnd ? 'rounded-r-lg rounded-l-none' :
-                                      inRange ? 'rounded-none' : 'rounded-lg';
+                                      inRange ? 'rounded-none' : 'rounded-lg');
 
                   return (
                     <button
                       key={idx}
-                      onClick={() => handleModalDateClick(date)}
+                      disabled={disableClick}
+                      onClick={() => {
+                        if (disableClick) return;
+                        handleModalDateClick(date);
+                      }}
                       className={cn(
-                        "aspect-square border-none cursor-pointer p-0 transition-colors text-[13px] font-bold margin-y-0.5",
+                        "aspect-square border-none p-0 transition-colors text-[13px] font-bold margin-y-0.5 relative overflow-hidden",
+                        disableClick ? "cursor-not-allowed opacity-40 bg-slate-100 dark:bg-slate-900 text-slate-400 border-none" : "cursor-pointer",
                         buttonRoundedClass,
-                        isSelectedEndpoint 
-                          ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-sm font-extrabold" 
-                          : (inRange 
+                        !disableClick && isSelectedEndpoint 
+                          ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-sm font-extrabold z-10" 
+                          : (!disableClick && inRange 
                             ? "bg-blue-500/15 dark:bg-blue-500/30 text-blue-800 dark:text-blue-300" 
-                            : "bg-white dark:bg-cream-100 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-350 border border-border/35 dark:border-slate-850/50 shadow-sm")
+                            : (!disableClick ? "bg-white dark:bg-cream-100 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-350 border border-border/35 dark:border-slate-850/50 shadow-sm" : ""))
                       )}
                     >
                       {date.getDate()}
@@ -375,7 +476,7 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
             <div className="flex-1 p-6 md:p-8 flex flex-col justify-between">
               <div className="flex justify-between items-start mb-6">
                 <h3 className="text-xl font-black font-display text-slate-900 dark:text-white m-0">
-                  Update Capacity
+                  {modalMode === 'global' ? 'Add Global Rule' : 'Update Specific Days'}
                 </h3>
                 <button onClick={() => setShowModal(false)} className="background-none border-none cursor-pointer p-1">
                   <X size={24} className="text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white" />
@@ -384,10 +485,11 @@ export function CapacityClient({ data: initialData }: { data: CapacityLog[] }) {
 
               <div className="mb-6">
                 <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-2 uppercase tracking-wider">
-                  Selected Dates
+                  {modalMode === 'global' ? 'Applies From Date' : 'Selected Dates'}
                 </label>
                 <div className="text-[15px] font-bold text-slate-900 dark:text-white p-3 px-4 bg-slate-50 dark:bg-slate-950 border border-border/50 dark:border-slate-800/80 rounded-xl">
                   {!startDate ? 'None selected' : 
+                    modalMode === 'global' ? `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} onwards` :
                     !endDate ? startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) :
                     `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
                   }

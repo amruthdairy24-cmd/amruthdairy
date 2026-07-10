@@ -104,16 +104,16 @@ export default function QuantityChangePage() {
 
   if (pageLoading) {
     return (
-      <div className="max-w-5xl space-y-6 animate-pulse">
+      <div className="w-full space-y-6 animate-pulse">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <div className="h-6 w-48 bg-slate-200 rounded-lg" />
-            <div className="h-4 w-40 bg-slate-200 rounded-md" />
+            <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+            <div className="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded-md" />
           </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-3 h-[420px] bg-slate-200 rounded-3xl" />
-          <div className="lg:col-span-2 h-[350px] bg-slate-200 rounded-3xl" />
+          <div className="lg:col-span-3 h-[420px] bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+          <div className="lg:col-span-2 h-[350px] bg-slate-200 dark:bg-slate-800 rounded-3xl" />
         </div>
       </div>
     )
@@ -124,19 +124,19 @@ export default function QuantityChangePage() {
       initial="hidden"
       animate="show"
       variants={containerVariants}
-      className="max-w-5xl space-y-8 relative"
+      className="w-full space-y-8 relative"
     >
       {/* Header section */}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[26px] sm:text-[32px] font-bold text-slate-900 font-display tracking-tight leading-tight flex items-center gap-3">
+          <h1 className="text-[26px] sm:text-[32px] font-bold text-slate-900 dark:text-white font-display tracking-tight leading-tight flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
               <ArrowLeftRight size={22} className="stroke-[2.2]" />
             </div>
             <span>Change Plan Quantity</span>
           </h1>
-          <p className="text-[13px] font-semibold text-slate-500 mt-2 pl-1 flex items-center gap-1.5">
-            <Milk size={14} className="text-slate-400" />
+          <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-2 pl-1 flex items-center gap-1.5">
+            <Milk size={14} className="text-slate-400 dark:text-slate-500" />
             <span>Upgrade or downgrade your daily milk delivery amount</span>
           </p>
         </div>
@@ -201,7 +201,7 @@ export default function QuantityChangePage() {
                         ? 'border-[#014DA4] dark:border-blue-500 bg-[#014DA4]/5 dark:bg-blue-950/35 ring-1 ring-[#014DA4] dark:ring-blue-500 text-[#014DA4] dark:text-blue-400'
                         : isCurrent
                         ? 'border-green-500/30 dark:border-emerald-500/30 bg-green-500/5 dark:bg-emerald-500/5 text-green-700 dark:text-emerald-400 cursor-not-allowed opacity-80'
-                        : 'border-border dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-750 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-550 dark:text-slate-400 cursor-pointer shadow-3xs'
+                        : 'border-border dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-750 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-550 dark:text-slate-400 dark:text-slate-500 cursor-pointer shadow-3xs'
                     )}
                   >
                     {isCurrent && (
@@ -232,7 +232,7 @@ export default function QuantityChangePage() {
               <motion.div 
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 space-y-3.5 text-[13.5px] font-bold text-slate-655 dark:text-slate-400 shadow-3xs"
+                className="bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 space-y-3.5 text-[13.5px] font-bold text-slate-655 dark:text-slate-400 dark:text-slate-500 shadow-3xs"
               >
                 <div className="flex items-center justify-center gap-6 pb-3 border-b border-slate-200/50 dark:border-slate-800 select-none">
                   <div className="text-center">
@@ -298,7 +298,7 @@ export default function QuantityChangePage() {
                 <p className="text-[12px] font-semibold text-slate-655 dark:text-slate-300 mt-1.5 leading-relaxed">
                   Your plan is scheduled to change to <strong className="text-slate-800 dark:text-slate-100">{pendingChange.quantity}L/day</strong> starting <strong className="text-[#014DA4] dark:text-blue-450">{effectiveMonthStr}</strong>.
                 </p>
-                <p className="text-[11.5px] text-slate-500 dark:text-slate-400 font-semibold mt-1">
+                <p className="text-[11.5px] text-slate-500 dark:text-slate-400 dark:text-slate-500 font-semibold mt-1">
                   New Monthly Estimate: <strong className="text-slate-800 dark:text-slate-100">₹{pendingChange.amount?.toFixed(2) || '—'}</strong>.
                 </p>
               </div>
@@ -306,7 +306,7 @@ export default function QuantityChangePage() {
           )}
 
           {/* Policy Card */}
-          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5 text-[12.5px] font-semibold text-slate-500 dark:text-slate-400">
+          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5 text-[12.5px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
             <h3 className="text-[11px] font-extrabold text-slate-450 dark:text-slate-550 uppercase tracking-[2.5px] pl-0.5 select-none">Change Policy</h3>
             
             <div className="space-y-4 text-left leading-relaxed">
@@ -314,7 +314,7 @@ export default function QuantityChangePage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-850 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">1</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Next Month Renewal Policy</p>
-                  <p className="text-slate-450 dark:text-slate-400 mt-1">All subscription changes are scheduled for the 1st day of the next billing month: <strong>1st {effectiveMonthStr}</strong>. The current month is unaffected.</p>
+                  <p className="text-slate-450 dark:text-slate-400 dark:text-slate-500 mt-1">All subscription changes are scheduled for the 1st day of the next billing month: <strong>1st {effectiveMonthStr}</strong>. The current month is unaffected.</p>
                 </div>
               </div>
 
@@ -322,7 +322,7 @@ export default function QuantityChangePage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-850 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">2</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Strict Billing Cut-off</p>
-                  <p className="text-slate-455 dark:text-slate-400 mt-1">Billing and deliveries for the active month are locked to protect current statement calculations.</p>
+                  <p className="text-slate-455 dark:text-slate-400 dark:text-slate-500 mt-1">Billing and deliveries for the active month are locked to protect current statement calculations.</p>
                 </div>
               </div>
 
@@ -330,7 +330,7 @@ export default function QuantityChangePage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-850 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Capacity Allocations</p>
-                  <p className="text-slate-455 dark:text-slate-400 mt-1">If the dairy farm reaches maximum capacity, subscription increases may temporarily be placed on a waiting list.</p>
+                  <p className="text-slate-455 dark:text-slate-400 dark:text-slate-500 mt-1">If the dairy farm reaches maximum capacity, subscription increases may temporarily be placed on a waiting list.</p>
                 </div>
               </div>
             </div>

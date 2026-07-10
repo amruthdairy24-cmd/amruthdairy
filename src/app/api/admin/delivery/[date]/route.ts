@@ -214,7 +214,9 @@ export async function PUT(
       .from('daily_delivery_sheet')
       .select('id, subscription_id, extra_order_id')
       .eq('delivery_date', date)
-      .eq('delivery_status', 'pending');
+      .eq('delivery_status', 'pending')
+      .eq('is_skip', false)
+      .eq('is_vacation', false);
 
     if (fetchError || !pendingDeliveries || pendingDeliveries.length === 0) {
       return NextResponse.json({

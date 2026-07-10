@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { CreditCard, FileText, Settings2, Receipt, Coins } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { CreditCard, FileText, Settings2, Receipt, Coins, CalendarDays, Search } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
@@ -13,6 +14,10 @@ interface Invoice {
   billing_month: string;
   net_due: number;
   amount_paid: number;
+  payment_status: string;
+  extra_charges: number;
+  skip_credit: number;
+  pause_credit: number;
   profiles: { full_name: string };
 }
 
@@ -37,10 +42,12 @@ interface Payment {
   profiles: { full_name: string };
 }
 
-export function BillingClient({ invoices, adjustments, payments }: { invoices: Invoice[], adjustments: Adjustment[], payments: Payment[] }) {
+export function BillingClient({ invoices, adjustments, payments, currentMonth }: { invoices: Invoice[], adjustments: Adjustment[], payments: Payment[], currentMonth: string }) {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<'invoices' | 'adjustments' | 'payments'>('invoices')
   const [isProcessing, setIsProcessing] = useState(false);
   const [viewingEntry, setViewingEntry] = useState<any | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleRefundAction = async (id: string, action: 'process' | 'reject') => {
     if (!confirm(`Are you sure you want to ${action} this refund request?`)) return;
@@ -131,7 +138,7 @@ export function BillingClient({ invoices, adjustments, payments }: { invoices: I
       header: 'Paid', 
       align: 'right', 
       cell: (row) => {
-        const isPaid = row.amount_paid >= row.net_due
+        const isPaid = row.payment_status === 'paid' || (row.net_due > 0 && row.amount_paid >= row.net_due)
         return (
           <span className={cn(
             "text-[13.5px] font-bold font-mono",
@@ -145,7 +152,10 @@ export function BillingClient({ invoices, adjustments, payments }: { invoices: I
     { 
       header: 'Status', 
       align: 'center', 
-      cell: (row) => <StatusBadge status={row.net_due <= row.amount_paid ? 'Paid' : 'Pending'} /> 
+      cell: (row) => {
+        const isPaid = row.payment_status === 'paid' || (row.net_due > 0 && row.amount_paid >= row.net_due)
+        return <StatusBadge status={isPaid ? 'Paid' : 'Pending'} />
+      } 
     },
   ]
 
@@ -292,18 +302,83 @@ export function BillingClient({ invoices, adjustments, payments }: { invoices: I
     },
   ]
 
+
+  // Compute summaries
+  const totalBilled = invoices.reduce((sum, inv) => sum + (inv.net_due || 0), 0);
+  const totalCollected = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
+  const totalExtraMilk = invoices.reduce((sum, inv) => sum + (inv.extra_charges || 0), 0);
+  const totalCredits = invoices.reduce((sum, inv) => sum + (inv.skip_credit || 0) + (inv.pause_credit || 0), 0);
+
+  const filterList = (list: any[]) => list.filter(item => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      const matchesName = item.profiles?.full_name?.toLowerCase().includes(q)
+      const matchesId = item.id.toLowerCase().includes(q)
+      if (!matchesName && !matchesId) return false
+    }
+    return true
+  })
+  
+  const filteredInvoices = filterList(invoices)
+  const filteredAdjustments = filterList(adjustments)
+  const filteredPayments = filterList(payments)
+
   return (
     <div className="space-y-6">
       
       {/* PAGE HEADER */}
-      <AdminHeader 
-        title="Billing & Payments" 
-        description="Manage customer invoices, adjustments, refund actions, and records." 
-        icon={CreditCard} 
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <AdminHeader 
+          title="Billing & Payments" 
+          description="Manage customer invoices, adjustments, refund actions, and records." 
+          icon={CreditCard} 
+        />
+        
+        {/* MONTH PICKER */}
+        <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 shadow-sm">
+          <div className="pl-2 pr-1 text-slate-400">
+            <CalendarDays size={16} />
+          </div>
+          <select 
+            value={currentMonth}
+            onChange={(e) => router.push(`/admin/billing?month=${e.target.value}`)}
+            className="bg-transparent border-none text-sm font-bold text-slate-700 dark:text-slate-200 outline-none pr-3 py-1 cursor-pointer appearance-none"
+          >
+            {/* Generate last 12 months as options */}
+            {Array.from({ length: 12 }).map((_, i) => {
+              const d = new Date();
+              d.setMonth(d.getMonth() - i);
+              const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+              const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+              return <option key={val} value={val}>{label}</option>
+            })}
+          </select>
+        </div>
+      </div>
+
+      {/* SUMMARY STATS */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2"><FileText size={12}/> Total Billed</p>
+          <p className="text-2xl font-black font-mono tracking-tight text-slate-800 dark:text-slate-200 mt-2">₹{totalBilled.toFixed(2)}</p>
+        </div>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2"><CreditCard size={12}/> Total Collected</p>
+          <p className="text-2xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400 mt-2">₹{totalCollected.toFixed(2)}</p>
+        </div>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2"><Receipt size={12}/> Extra Milk Revenue</p>
+          <p className="text-2xl font-black font-mono tracking-tight text-amber-600 dark:text-amber-400 mt-2">₹{totalExtraMilk.toFixed(2)}</p>
+        </div>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2"><Settings2 size={12}/> Credits Debited</p>
+          <p className="text-2xl font-black font-mono tracking-tight text-purple-600 dark:text-purple-400 mt-2">₹{totalCredits.toFixed(2)}</p>
+        </div>
+      </div>
       
-      {/* TABS NAVIGATION */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+      {/* TABS NAVIGATION & SEARCH */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+        <div className="flex overflow-x-auto hide-scrollbar w-full sm:w-auto">
         {[
           { id: 'invoices', label: 'Invoices', icon: FileText },
           { id: 'adjustments', label: 'Adjustments', icon: Settings2 },
@@ -327,13 +402,25 @@ export function BillingClient({ invoices, adjustments, payments }: { invoices: I
             </button>
           )
         })}
+        </div>
+
+        <div className="relative w-full sm:w-64 pb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 mb-1.5" size={14} />
+          <input 
+            type="text"
+            placeholder="Search customer or ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-8 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/20 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 transition-colors"
+          />
+        </div>
       </div>
 
       {/* RENDER ACTIVE TAB SHEET */}
       <div className="pt-2">
-        {activeTab === 'invoices' && <DataTable data={invoices} columns={invoiceColumns} onView={setViewingEntry} />}
-        {activeTab === 'adjustments' && <DataTable data={adjustments} columns={adjustmentColumns} onView={setViewingEntry} />}
-        {activeTab === 'payments' && <DataTable data={payments} columns={paymentColumns} onView={setViewingEntry} />}
+        {activeTab === 'invoices' && <DataTable data={filteredInvoices} columns={invoiceColumns} onView={setViewingEntry} />}
+        {activeTab === 'adjustments' && <DataTable data={filteredAdjustments} columns={adjustmentColumns} onView={setViewingEntry} />}
+        {activeTab === 'payments' && <DataTable data={filteredPayments} columns={paymentColumns} onView={setViewingEntry} />}
       </div>
 
       <RowDetailsModal

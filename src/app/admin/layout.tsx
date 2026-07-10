@@ -26,6 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 import { createClient } from '@/utils/supabase/client'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { ConfirmModal } from '@/components/ui'
 
 // Nav Items Grouped by Section
 const sidebarGroups = [
@@ -62,6 +63,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [dateStr, setDateStr] = useState('')
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -167,13 +169,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <div className="min-w-0">
               <p className="text-[12px] font-bold text-slate-800 dark:text-slate-200 truncate leading-tight">Admin User</p>
-              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-550 truncate mt-0.5 leading-none">Super Admin</p>
+              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-555 truncate mt-0.5 leading-none">Super Admin</p>
             </div>
           </div>
 
           {/* Logout Button */}
           <button
-            onClick={handleSignOut}
+            onClick={() => setShowLogoutConfirm(true)}
             className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-bold transition-all border border-red-200/45 bg-red-500/10 text-red-600 hover:bg-red-500/15 hover:text-red-750 outline-none cursor-pointer h-[34px]"
           >
             <LogOut size={14} />
@@ -204,17 +206,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Search bar - Center */}
           <div className="hidden md:flex flex-1 justify-center px-4">
-            <div className="relative w-full max-w-[480px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
-              <input 
-                type="text" 
-                placeholder="Search customers, orders, invoices..." 
-                className="w-full pl-9 pr-12 py-2 text-[13px] rounded-xl outline-none focus:ring-2 focus:ring-[#014DA4]/10 dark:focus:ring-blue-500/15 transition-all font-medium placeholder:text-slate-450 bg-slate-50 dark:bg-slate-950/50 border border-slate-150 dark:border-slate-800 text-slate-800 dark:text-slate-200 h-10"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[9px] font-bold text-slate-400 dark:text-slate-500 px-1.5 py-0.5 rounded border border-slate-150 dark:border-slate-850 bg-white dark:bg-slate-900">
-                <span>Ref</span>
-              </div>
-            </div>
+            {/* Global search removed per request */}
           </div>
 
           {/* Right Header Actions */}
@@ -338,7 +330,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="p-4 flex-shrink-0 border-t border-slate-100">
                 {/* Mobile Logout */}
                 <button
-                  onClick={handleSignOut}
+                  onClick={() => setShowLogoutConfirm(true)}
                   className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-bold transition-all border border-red-200/45 bg-red-500/10 text-red-600 hover:bg-red-500/15 cursor-pointer h-9"
                 >
                   <LogOut size={14} />
@@ -349,6 +341,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </>
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to log out of your admin session?"
+        confirmLabel="Logout"
+        onConfirm={handleSignOut}
+        danger
+      />
     </div>
   )
 }

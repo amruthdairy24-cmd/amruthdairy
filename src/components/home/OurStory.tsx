@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Volume2, VolumeX, Play, Sparkles, Sun, Beef, Sprout, Milk, Salad, Sunset, ArrowRight } from 'lucide-react'
+import { Volume2, VolumeX, Play, ChevronLeft, ChevronRight, ArrowRight, BookOpen } from 'lucide-react'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { cn } from '@/lib/utils'
 
@@ -10,114 +10,99 @@ interface Reel {
   src: string
   poster: string
   title: string
+  subtitle?: string
   date: string
   duration: string
-  icon: React.ElementType
   isNew?: boolean
 }
 
 export function OurStory() {
-  // Add up to 6 reels here. Extra reels beyond 6 won't show on this section —
-  // link them from the "View All Stories" page instead.
   const reels: Reel[] = [
     {
       id: 1,
       src: '/videos/whatsapp_story_1.mp4',
       poster: '/images/stories/morning-routine.jpg',
-      title: 'Morning Routine',
+      title: 'Morning Milking',
+      subtitle: 'at Amruth Farm',
       date: 'May 20, 2025',
       duration: '02:45',
-      icon: Sun,
       isNew: true,
     },
     {
       id: 2,
       src: '/videos/whatsapp_story_2.mp4',
       poster: '/images/stories/feeding-calves.jpg',
-      title: 'Feeding Our Calves',
+      title: 'Feeding Time',
+      subtitle: 'Our Happy Cows',
       date: 'May 19, 2025',
       duration: '03:12',
-      icon: Beef,
       isNew: true,
     },
     {
       id: 3,
-      src: '/videos/whatsapp_story_3.mp4',
+      src: '/videos/whatsapp_story_1.mp4',
       poster: '/images/stories/farm-walk.jpg',
-      title: 'Farm Walk & Care',
+      title: 'Farm Walk',
+      subtitle: '& Daily Care',
       date: 'May 18, 2025',
       duration: '02:30',
-      icon: Sprout,
     },
     {
       id: 4,
-      src: '/videos/whatsapp_story_4.mp4',
+      src: '/videos/whatsapp_story_1.mp4',
       poster: '/images/stories/milking-process.jpg',
       title: 'Milking Process',
+      subtitle: 'Fresh Every Day',
       date: 'May 17, 2025',
       duration: '03:05',
-      icon: Milk,
     },
     {
       id: 5,
-      src: '/videos/whatsapp_story_5.mp4',
+      src: '/videos/whatsapp_story_1.mp4',
       poster: '/images/stories/preparing-feed.jpg',
       title: 'Preparing Feed',
+      subtitle: 'Natural & Nutritious',
       date: 'May 16, 2025',
       duration: '02:50',
-      icon: Salad,
     },
   ]
 
   return (
-    <section id="our-story" className="relative overflow-hidden bg-[#F8FAFC] py-10">
-      {/* Blue gradient backdrop with milk-splash artwork */}
-      {/* bg-position controls which part of the image shows: */}
-      {/* "center 80%" pushes the visible window DOWN, revealing more of the TOP of the image (sky/background) */}
-      {/* "center 20%" would push the visible window UP, revealing more of the BOTTOM (the milk splash) */}
-      {/* Since the milk splash sits at the bottom of the source image, lower the % to reveal more of it */}
-      <div
-        className="absolute inset-0 bg-cover bg-no-repeat"
-        style={{ backgroundImage: "url('/images/our-story-bg.png')", backgroundPosition: 'center -90px' }}
-        aria-hidden="true"
-      />
-
+    <section id="our-story" className="relative overflow-hidden bg-[#ffff] py-10 bg-white">
       <div className="container-page relative z-10">
-        {/* Header Section */}
-        <ScrollReveal direction="down" duration={1000}>
-          <div className="mb-11 flex flex-col items-center text-center">
-            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/15 border border-white/25 text-white px-4 py-1.5 text-xs font-extrabold uppercase tracking-widest backdrop-blur-sm">
-              <Sparkles size={12} /> Farm Life
-            </span>
-            <h2 className="font-playfair text-3xl sm:text-4xl md:text-5xl font-medium text-white leading-tight mb-3.5">
-              Our Story
-            </h2>
-            <p className="text-sm sm:text-base text-white/80 leading-relaxed max-w-[500px] mx-auto font-normal">
-              Hover to watch our daily routine live from the farm pastures.
-            </p>
-          </div>
-        </ScrollReveal>
+        {/* Header */}
+        <div className="mb-10 flex flex-col items-center text-center">
+          <span className="inline-flex items-center gap-1.5 border border-[#1230AE]/30 rounded-full px-3 py-1 text-[11px] text-[#1230AE] font-semibold uppercase tracking-widest mb-4">
+            <BookOpen size={11} />
+            Our Story
+          </span>
+          <h2 className="text-2xl text-black sm:text-3xl font-bold md:text-4xl mb-2">
+            From Our Farm to Your Family
+          </h2>
+          <p className="text-sm text-gray-400 max-w-[480px] mx-auto">
+            Hover to watch our daily routine live from the farm pastures.
+          </p>
+        </div>
 
-        {/* Reels coverflow — DESKTOP / LAPTOP. Hidden on mobile, shown from sm: up. */}
-        {/* max-w-[1280px] controls overall section width — raise this if cards feel cramped */}
+        {/* Desktop coverflow */}
         <div className="hidden sm:block max-w-[1280px] mx-auto">
           <DesktopReelCoverflow reels={reels.slice(0, 6)} />
         </div>
 
-        {/* Reels carousel — MOBILE ONLY. Hidden from sm: up. */}
+        {/* Mobile carousel */}
         <div className="sm:hidden">
           <MobileReelCarousel reels={reels.slice(0, 6)} />
         </div>
 
-        {/* View All Stories CTA */}
+        {/* CTA */}
         <ScrollReveal direction="up" delay={400} duration={1000}>
           <div className="mt-12 flex justify-center">
             <a
               href="/our-story"
-              className="inline-flex items-center gap-2 rounded-full bg-white text-[#1230AE] font-semibold px-6 py-3 text-sm shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_12px_28px_rgba(0,0,0,0.22)]"
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-[#02429C] text-white font-semibold px-6 py-3 text-sm shadow-[0_4px_16px_rgba(0,0,0,0.10)] transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_8px_24px_rgba(0,0,0,0.16)]"
             >
               View All Stories
-              <ArrowRight size={16} />
+              <ArrowRight size={15} />
             </a>
           </div>
         </ScrollReveal>
@@ -127,38 +112,33 @@ export function OurStory() {
 }
 
 /* ─────────────────────────────────────────────────────────
-   DESKTOP REEL COVERFLOW — LAPTOP / DESKTOP ONLY
-   "video one" / active card stays large and sharp in the center.
-   Up to 3 cards stack behind it on each side, shrinking and
-   fading the further they sit from center — matching the
-   reference depth-stack image. Clicking a side card brings it
-   forward to become the new active card.
-   Only renders from `sm:` and up — see the `hidden sm:block`
-   wrapper in OurStory(). Mobile keeps its own separate carousel.
+   DESKTOP REEL COVERFLOW
    ───────────────────────────────────────────────────────── */
 function DesktopReelCoverflow({ reels }: { reels: Reel[] }) {
   const [activeIndex, setActiveIndex] = useState(0)
 
   const goTo = (index: number) => {
-    const wrapped = (index + reels.length) % reels.length
-    setActiveIndex(wrapped)
+    setActiveIndex((index + reels.length) % reels.length)
   }
 
-  // How many cards to show on EACH side, capped at 3 like the reference image.
-  // If there aren't enough reels to fill 3 on a side, this naturally shows fewer —
-  // so 6 reels show 3 on one side / 2 on the other without looking broken, and
-  // adding a 7th reel (1 active + 3 + 3) fills the look exactly like the image.
   const maxSideSlots = 3
 
-  // Per-step size/spacing/fade values, center (index 0) → outermost (index 3).
-  // spacingSteps is the ONE array that controls horizontal spread — raise these
-  // numbers to push side cards further toward the left/right edges of the section.
-  const scaleSteps = [1, 0.86, 0.74, 0.64]
-  const opacitySteps = [1, 0.7, 0.45, 0.25]
-  const spacingSteps = [0, 225, 420, 570] // px offset from center per depth step
+  const scaleSteps = [1, 0.84, 0.70, 0.60]
+  const opacitySteps = [1, 0.72, 0.48, 0.28]
+  const spacingSteps = [0, 230, 430, 590]   // px offset from center
 
   return (
-    <div className="relative flex items-center justify-center h-[460px]">
+    <div className="relative flex items-center justify-center h-[500px]">
+      {/* Left arrow */}
+      <button
+        onClick={() => goTo(activeIndex - 1)}
+        aria-label="Previous reel"
+        className="absolute left-0 z-50 w-10 h-10 rounded-full bg-white shadow-[0_4px_16px_rgba(0,0,0,0.14)] border border-gray-100 flex items-center justify-center text-gray-500 hover:text-[#1230AE] hover:shadow-[0_6px_20px_rgba(0,0,0,0.18)] transition-all duration-200"
+      >
+        <ChevronLeft size={18} />
+      </button>
+
+      {/* Reel cards */}
       {reels.map((reel, idx) => {
         let offset = idx - activeIndex
         if (offset > reels.length / 2) offset -= reels.length
@@ -188,49 +168,76 @@ function DesktopReelCoverflow({ reels }: { reels: Reel[] }) {
               cursor: isActive ? 'default' : 'pointer',
             }}
           >
-            {/* w-[290px] sets the active/base card size for desktop — independent from mobile's size */}
-            <div className={cn('w-[290px]', !isActive && 'pointer-events-none')}>
-              <ReelPlayerCard reel={reel} />
+            <div className={cn('w-[260px]', !isActive && 'pointer-events-none')}>
+              <ReelPlayerCard reel={reel} isActive={isActive} />
             </div>
           </div>
         )
       })}
+
+      {/* Right arrow */}
+      <button
+        onClick={() => goTo(activeIndex + 1)}
+        aria-label="Next reel"
+        className="absolute right-0 z-50 w-10 h-10 rounded-full bg-white shadow-[0_4px_16px_rgba(0,0,0,0.14)] border border-gray-100 flex items-center justify-center text-gray-500 hover:text-[#1230AE] hover:shadow-[0_6px_20px_rgba(0,0,0,0.18)] transition-all duration-200"
+      >
+        <ChevronRight size={18} />
+      </button>
     </div>
   )
 }
 
 /* ─────────────────────────────────────────────────────────
-   MOBILE REEL CAROUSEL — MOBILE ONLY
-   Center card is large/forward ("active"). The card immediately
-   before and after it peek out from behind on the left/right.
-   Tapping a side card makes it the new active (center) card.
-   This component only renders below the `sm` breakpoint — see
-   the `sm:hidden` wrapper where it's used in OurStory().
-   Untouched by the desktop coverflow changes above.
+   MOBILE REEL CAROUSEL
+   All cards stay mounted so CSS transitions animate smoothly.
+   Touch swipe supported. Cards beyond ±2 are hidden via opacity
+   but never removed from DOM mid-transition.
    ───────────────────────────────────────────────────────── */
 function MobileReelCarousel({ reels }: { reels: Reel[] }) {
   const [activeIndex, setActiveIndex] = useState(0)
+  const touchStartX = useRef<number | null>(null)
 
   const goTo = (index: number) => {
-    // wrap around so swiping/tapping past either end loops
-    const wrapped = (index + reels.length) % reels.length
-    setActiveIndex(wrapped)
+    setActiveIndex((index + reels.length) % reels.length)
   }
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const delta = touchStartX.current - e.changedTouches[0].clientX
+    if (Math.abs(delta) > 40) {
+      goTo(activeIndex + (delta > 0 ? 1 : -1))
+    }
+    touchStartX.current = null
+  }
+
+  // Card width + gap between cards in px
+  const CARD_W = 185
+  const SIDE_GAP = 120  // horizontal distance from center to side card center
+
   return (
-    <div className="relative flex items-center justify-center h-[380px]">
+    <div
+      className="relative flex items-center justify-center h-[420px] overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Arrows intentionally hidden — mobile uses swipe only */}
+
       {reels.map((reel, idx) => {
-        // offset: 0 = active/center, -1 = one to the left, 1 = one to the right, etc.
+        // Shortest-path offset so wrapping feels natural
         let offset = idx - activeIndex
         if (offset > reels.length / 2) offset -= reels.length
         if (offset < -reels.length / 2) offset += reels.length
 
-        // Only render the active card plus its immediate left/right neighbors.
-        // Everything else stays out of view (and out of the DOM flow) so it
-        // doesn't block taps or show up oddly far in the back.
-        if (Math.abs(offset) > 1) return null
-
+        // Only ±2 are visible; beyond that push far off-screen and hide
+        const visible = Math.abs(offset) <= 2
         const isActive = offset === 0
+
+        // Clamp offset for transform so distant cards don't fly wildly
+        const clampedOffset = Math.max(-2, Math.min(2, offset))
 
         return (
           <div
@@ -244,29 +251,45 @@ function MobileReelCarousel({ reels }: { reels: Reel[] }) {
             aria-label={isActive ? undefined : `Show ${reel.title}`}
             className="absolute transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
             style={{
-              transform: `translateX(${offset * 105}px) scale(${isActive ? 1 : 0.78})`,
-              zIndex: isActive ? 20 : 10,
-              opacity: isActive ? 1 : 0.55,
-              filter: isActive ? 'none' : 'blur(0.5px)',
+              transform: `translateX(${clampedOffset * SIDE_GAP}px) scale(${isActive ? 1 : 0.78})`,
+              zIndex: isActive ? 20 : 10 - Math.abs(offset),
+              opacity: isActive ? 1 : visible ? 0.55 : 0,
+              pointerEvents: visible ? 'auto' : 'none',
+              filter: isActive ? 'none' : 'blur(0.4px)',
               cursor: isActive ? 'default' : 'pointer',
             }}
           >
-            {/* w-[200px] sets the size of mobile cards — independent from the laptop/desktop size */}
-            <div className={cn('w-[200px]', !isActive && 'pointer-events-none')}>
-              <ReelPlayerCard reel={reel} />
+            <div className={cn('w-[185px]', !isActive && 'pointer-events-none')}>
+              <ReelPlayerCard reel={reel} isActive={isActive} />
             </div>
           </div>
         )
       })}
+
+      {/* Dot indicators */}
+      <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-1.5 pb-1 z-50">
+        {reels.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            aria-label={`Go to reel ${i + 1}`}
+            className={cn(
+              'rounded-full transition-all duration-300',
+              i === activeIndex
+                ? 'w-4 h-1.5 bg-[#1230AE]'
+                : 'w-1.5 h-1.5 bg-gray-300'
+            )}
+          />
+        ))}
+      </div>
     </div>
   )
 }
 
 /* ─────────────────────────────────────────────────────────
-   REEL PLAYER CARD COMPONENT
-   Click to play/pause, hover to auto-preview, hover/tap mute toggle.
+   REEL PLAYER CARD
    ───────────────────────────────────────────────────────── */
-function ReelPlayerCard({ reel }: { reel: Reel }) {
+function ReelPlayerCard({ reel, isActive }: { reel: Reel; isActive?: boolean }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(true)
   const [hovered, setHovered] = useState(false)
@@ -278,10 +301,8 @@ function ReelPlayerCard({ reel }: { reel: Reel }) {
       videoRef.current.pause()
       setIsPlaying(false)
     } else {
-      // Pause all other videos on the page if they exist
-      const allVideos = document.querySelectorAll('video')
-      allVideos.forEach((vid) => {
-        if (vid !== videoRef.current) vid.pause()
+      document.querySelectorAll('video').forEach((v) => {
+        if (v !== videoRef.current) v.pause()
       })
       videoRef.current.play()
       setIsPlaying(true)
@@ -295,19 +316,12 @@ function ReelPlayerCard({ reel }: { reel: Reel }) {
     setIsMuted(videoRef.current.muted)
   }
 
-  // Handle play/pause on hover
   useEffect(() => {
     if (!videoRef.current) return
-
     if (hovered) {
-      const playPromise = videoRef.current.play()
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => setIsPlaying(true))
-          .catch(() => {
-            // Autoplay blocked by browser policy
-          })
-      }
+      videoRef.current.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => { })
     } else {
       videoRef.current.pause()
       setIsPlaying(false)
@@ -315,16 +329,12 @@ function ReelPlayerCard({ reel }: { reel: Reel }) {
   }, [hovered])
 
   return (
-    // 👇 THIS IS THE LINE THAT CONTROLS THE CARD'S OWN MAX SIZE: max-w-[290px]
-    // The actual rendered size on each screen is set by the wrapper that calls this
-    // component (w-[290px] in DesktopReelCoverflow, w-[200px] in MobileReelCarousel) —
-    // this max-w just needs to be >= the largest of those so neither gets clipped.
-    <div className="flex flex-col w-full max-w-[250px] mx-auto">
+    <div className="flex flex-col w-full max-w-[260px] mx-auto">
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onClick={togglePlay}
-        className="group relative w-full aspect-[3/5.3] rounded-2xl overflow-hidden bg-[#0a0a0c] cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-[0_8px_20px_rgba(15,23,42,0.18)] hover:shadow-[0_16px_32px_rgba(15,23,42,0.3)] hover:scale-[1.03]"
+        className="group relative w-full aspect-[3/5.3] rounded-2xl overflow-hidden bg-[#0a0a0c] cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-[0_12px_32px_rgba(15,23,42,0.22)] hover:shadow-[0_20px_44px_rgba(15,23,42,0.32)] hover:scale-[1.02]"
       >
         {/* NEW badge */}
         {reel.isNew && (
@@ -333,8 +343,7 @@ function ReelPlayerCard({ reel }: { reel: Reel }) {
           </span>
         )}
 
-        {/* HTML5 Video element */}
-        {/* No poster image yet — preload="metadata" makes the browser paint the video's own first frame instead of a black box. Add poster={reel.poster} back once real thumbnail images exist at those paths. */}
+        {/* Video */}
         <video
           ref={videoRef}
           src={reel.src}
@@ -345,28 +354,46 @@ function ReelPlayerCard({ reel }: { reel: Reel }) {
           className="absolute inset-0 z-[1] h-full w-full object-cover"
         />
 
-        {/* Play/Pause Overlay Indicator */}
-        <div
-          className={cn(
-            'absolute inset-0 z-10 flex items-center justify-center transition-opacity duration-200 pointer-events-none',
-            isPlaying ? 'bg-transparent opacity-0' : 'bg-black/25 opacity-100'
-          )}
-        >
-          <div className="w-11 h-11 rounded-full bg-white/90 flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.15)] group-hover:scale-105 transition-transform duration-200">
-            <Play size={15} fill="#0F172A" className="text-slate-900 ml-0.5" />
+        {/* Bottom gradient + title — shown on active card */}
+        {isActive && (reel.title || reel.subtitle) && (
+          <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-3 pb-9 pt-10 pointer-events-none">
+            <p className="text-white font-semibold text-[13px] leading-snug drop-shadow">
+              {reel.title}
+            </p>
+            {reel.subtitle && (
+              <p className="text-white/80 text-[11px] leading-snug drop-shadow">
+                {reel.subtitle}
+              </p>
+            )}
           </div>
-        </div>
+        )}
 
-        {/* Floating Mute/Unmute Action Control */}
-        <div className="absolute right-2.5 bottom-2.5 z-20">
-          <button
-            onClick={toggleMute}
-            aria-label={isMuted ? 'Unmute video' : 'Mute video'}
-            className="w-7 h-7 rounded-full border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 cursor-pointer transition-all duration-200"
+        {/* Play/Pause overlay */}
+        {isActive && (
+          <div
+            className={cn(
+              'absolute inset-0 z-10 flex items-center justify-center transition-opacity duration-200 pointer-events-none',
+              isPlaying ? 'bg-transparent opacity-0' : 'bg-black/20 opacity-100'
+            )}
           >
-            {isMuted ? <VolumeX size={12} /> : <Volume2 size={12} />}
-          </button>
-        </div>
+            <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.2)] group-hover:scale-105 transition-transform duration-200">
+              <Play size={15} fill="#0F172A" className="text-slate-900 ml-0.5" />
+            </div>
+          </div>
+        )}
+
+        {/* Mute toggle */}
+        {isActive && (
+          <div className="absolute right-2.5 bottom-2.5 z-20">
+            <button
+              onClick={toggleMute}
+              aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+              className="w-7 h-7 rounded-full border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 cursor-pointer transition-all duration-200"
+            >
+              {isMuted ? <VolumeX size={12} /> : <Volume2 size={12} />}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

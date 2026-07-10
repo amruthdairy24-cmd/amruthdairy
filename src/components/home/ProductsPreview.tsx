@@ -1,48 +1,47 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { 
-   ChevronLeft, 
-   ChevronRight, 
-   Check,
-   Sprout,
-   Milk,
-   ShieldCheck,
-   Flame,
-   Calendar,
-   Leaf,
-   Award,
-   Activity,
-   Wind,
-   Heart
+import {
+  Check,
+  Sprout,
+  Milk,
+  ShieldCheck,
+  Flame,
+  Calendar,
+  Leaf,
+  Award,
+  Activity,
+  Wind,
+  Heart,
+  ChevronRight,
+  ChevronLeft,
 } from 'lucide-react'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { cn } from '@/lib/utils'
+import { useCart } from '@/contexts/CartContext'
 
 function getIcon(name: string | null | undefined) {
   switch (name) {
-    // Badges
-    case '🌱': return <Sprout size={14} />
-    case '🥣': return <Milk size={14} />
-    case '🍯': return <Award size={14} />
-    case '🍃': return <Leaf size={14} />
-    case '🧀': return <Award size={14} />
-    // Features
-    case '🥛': return <Milk size={12} />
-    case '🧪': return <ShieldCheck size={12} />
-    case '🛡️': return <ShieldCheck size={12} />
-    case '🥄': return <Check size={12} />
-    case '✨': return <Award size={12} />
-    case '🗓️': return <Calendar size={12} />
-    case '🔥': return <Flame size={12} />
-    case '👋': return <Check size={12} />
-    case '👃': return <Heart size={12} />
-    case '❄️': return <Wind size={12} />
-    case '🌿': return <Leaf size={12} />
-    case '💪': return <Activity size={12} />
-    case '☁️': return <Wind size={12} />
+    case '🌱': return <Sprout size={12} />
+    case '🥣': return <Milk size={12} />
+    case '🍯': return <Award size={12} />
+    case '🍃': return <Leaf size={12} />
+    case '🧀': return <Award size={12} />
+    case '🥛': return <Milk size={11} />
+    case '🧪': return <ShieldCheck size={11} />
+    case '🛡️': return <ShieldCheck size={11} />
+    case '🥄': return <Check size={11} />
+    case '✨': return <Award size={11} />
+    case '🗓️': return <Calendar size={11} />
+    case '🔥': return <Flame size={11} />
+    case '👋': return <Check size={11} />
+    case '👃': return <Heart size={11} />
+    case '❄️': return <Wind size={11} />
+    case '🌿': return <Leaf size={11} />
+    case '💪': return <Activity size={11} />
+    case '☁️': return <Wind size={11} />
     default: return null
   }
 }
@@ -163,38 +162,32 @@ export function ProductsPreview() {
   }
 
   return (
-    <section 
-      id="products" 
-      className="bg-gradient-to-b from-[#FFFDF7] via-[#FFFDF9] to-white dark:from-[#0f1115] dark:via-[#171923] dark:to-[#0f1115] py-28 relative overflow-hidden"
-    >
-      {/* Premium subtle background glow */}
-      <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(253,246,227,0.5)_0%,rgba(253,246,227,0)_70%)] dark:bg-[radial-gradient(circle,rgba(30,35,45,0.3)_0%,transparent_70%)] rounded-full blur-[60px] z-0 pointer-events-none" />
+    <section id="products" className="bg-white py-20 relative overflow-hidden">
+      <div className="container-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-      <div className="container-page relative z-10">
-        
         {/* Header */}
         <ScrollReveal direction="up" delay={0}>
-          <div className="text-center mb-10 flex flex-col items-center">
-            <div className="inline-flex items-center gap-1.5 bg-white dark:bg-[#1f232f] border border-amber-500/20 text-[#B45309] dark:text-amber-400 rounded-full px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.12em] mb-5 shadow-[0_4px_12px_rgba(180,83,9,0.03)]">
-              <Award size={12} /> Our Products
+          <div className="text-center mb-12 flex flex-col items-center">
+            <div className="inline-flex items-center gap-1.5 border border-[#1230AE]/20 text-[#1230AE] rounded-full px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-widest mb-4">
+              <Award size={11} /> Our Products
             </div>
-            <h2 className="font-playfair text-3xl sm:text-4xl md:text-5xl font-medium text-slate-950 dark:text-white tracking-tight leading-none mb-5">
-              Pure. Uncompromised. Royal.
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-4">
+              Pure Uncompromised Royal
             </h2>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-medium max-w-[600px] mx-auto">
-              Experience dairy crafted with devotion, certified pure, and delivered to your doorstep fresh before sunrise.
+            <p className="text-sm text-slate-500 max-w-[520px] mx-auto leading-relaxed">
+              Experience dairy crafted with devotion, certified pure
+              and delivered to your doorstep fresh before sunrise.
             </p>
           </div>
         </ScrollReveal>
 
         {/* Slider */}
         <ScrollReveal direction="up" delay={150} duration={1000}>
-          <div className="relative max-w-[1308px] mx-auto px-10">
-            
+          <div className="relative">
             {/* Left Arrow */}
             <button
               onClick={() => scroll('left')}
-              className="absolute left-0 md:-left-2 top-1/2 -translate-y-1/2 w-13 h-13 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-950/8 dark:border-border flex items-center justify-center cursor-pointer z-20 shadow-[0_10px_25px_rgba(15,23,42,0.06)] text-slate-950 dark:text-white hover:scale-110 hover:bg-white hover:shadow-xl active:scale-95 transition-all duration-300"
+              className="absolute left-0 md:-left-2 top-1/2 -translate-y-1/2 w-13 h-13 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-950/8 dark:border-border flex items-center justify-center cursor-pointer z-10 shadow-[0_10px_25px_rgba(15,23,42,0.06)] text-slate-950 dark:text-white hover:scale-110 hover:bg-white hover:shadow-xl active:scale-95 transition-all duration-300"
               aria-label="Scroll left"
             >
               <ChevronLeft size={24} />
@@ -342,9 +335,9 @@ export function ProductsPreview() {
             >
               <ChevronRight size={24} />
             </button>
-
           </div>
         </ScrollReveal>
+
       </div>
     </section>
   )

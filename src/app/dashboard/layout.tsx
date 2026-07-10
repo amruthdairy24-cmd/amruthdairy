@@ -13,6 +13,7 @@ import {
 import { createClient } from '@/utils/supabase/client'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { ConfirmModal } from '@/components/ui'
 
 const sidebarGroups = [
   {
@@ -29,13 +30,12 @@ const sidebarGroups = [
       { href: '/dashboard/skip', icon: SkipForward, label: 'Skip Day' },
       { href: '/dashboard/vacation', icon: Palmtree, label: 'Vacation Pause' },
       { href: '/dashboard/extra', icon: PlusCircle, label: 'Extra Milk' },
-      { href: '/dashboard/quantity', icon: ArrowLeftRight, label: 'Change Plan' },
     ]
   },
   {
     title: 'ACCOUNT',
     items: [
-      { href: '/account', icon: User, label: 'Account' },
+      { href: '/dashboard/account', icon: User, label: 'Account' },
       { href: '#logout', icon: LogOut, label: 'Logout', isLogout: true },
     ]
   }
@@ -47,7 +47,7 @@ const mobileNavItems = [
   { href: '/dashboard/skip', icon: SkipForward, label: 'Skip' },
   { href: '/dashboard/extra', icon: PlusCircle, label: 'Extra' },
   { href: '/dashboard/bills', icon: FileText, label: 'Bills' },
-  { href: '/account', icon: User, label: 'Account' },
+  { href: '/dashboard/account', icon: User, label: 'Account' },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -59,6 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [dateStr, setDateStr] = useState('')
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -125,7 +126,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto hide-scrollbar">
           {sidebarGroups.map((group) => (
             <div key={group.title} className="space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-500 dark:text-slate-400">
+              <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-500 dark:text-slate-400 dark:text-slate-500">
                 {group.title}
               </p>
               <div className="space-y-[3px]">
@@ -149,7 +150,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         size={17}
                         className={cn(
                           "relative z-10 flex-shrink-0 transition-colors",
-                          isActive ? "text-[#014DA4] dark:text-blue-400" : "text-slate-450 dark:text-slate-400 group-hover:text-[#014DA4] dark:group-hover:text-blue-400"
+                          isActive ? "text-[#014DA4] dark:text-blue-400" : "text-slate-450 dark:text-slate-400 dark:text-slate-500 group-hover:text-[#014DA4] dark:group-hover:text-blue-400"
                         )}
                         strokeWidth={isActive ? 2.5 : 2}
                       />
@@ -161,7 +162,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     return (
                       <button
                         key={item.label}
-                        onClick={handleLogout}
+                        onClick={() => setShowLogoutConfirm(true)}
                         className="w-full text-left bg-transparent border-none p-0 outline-none cursor-pointer block group"
                       >
                         {linkContent}
@@ -207,11 +208,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-4 min-w-0">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white bg-transparent border-none cursor-pointer flex items-center justify-center"
+              className="lg:hidden text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-white bg-transparent border-none cursor-pointer flex items-center justify-center"
             >
               <Menu size={22} />
             </button>
-            <span className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase truncate">
+            <span className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase truncate">
               {getBreadcrumbs()}
             </span>
           </div>
@@ -248,9 +249,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
               <div className="hidden sm:block text-left min-w-0 pr-1">
                 <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200 leading-none">{profileName.split(' ')[0]}</p>
-                <p className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5 leading-none">Subscriber</p>
+                <p className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-0.5 leading-none">Subscriber</p>
               </div>
-              <ChevronDown size={13} className="text-slate-400" />
+              <ChevronDown size={13} className="text-slate-400 dark:text-slate-500" />
             </div>
           </div>
         </header>
@@ -272,7 +273,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               href={item.href}
               className={cn(
                 "flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-colors min-w-0 text-center",
-                isActive ? "text-[#014DA4] dark:text-blue-400 font-bold scale-105" : "text-slate-400 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-blue-400"
+                isActive ? "text-[#014DA4] dark:text-blue-400 font-bold scale-105" : "text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-blue-400"
               )}
             >
               <Icon size={18} />
@@ -314,7 +315,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 bg-transparent border-none cursor-pointer"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 bg-transparent border-none cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -323,7 +324,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
                 {sidebarGroups.map((group) => (
                   <div key={group.title} className="space-y-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-400 dark:text-slate-500">
+                    <p className="text-[10px] font-bold uppercase tracking-[1.5px] px-3 text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500">
                       {group.title}
                     </p>
                     <div className="space-y-[3px]">
@@ -345,7 +346,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             )}
                             <Icon
                               size={17}
-                              className={isActive ? "text-[#014DA4] dark:text-blue-400" : "text-slate-455 dark:text-slate-400"}
+                              className={isActive ? "text-[#014DA4] dark:text-blue-400" : "text-slate-455 dark:text-slate-400 dark:text-slate-500"}
                               strokeWidth={isActive ? 2.5 : 2}
                             />
                             <span className="text-[13px]">{item.label}</span>
@@ -358,7 +359,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                               key={item.label}
                               onClick={() => {
                                 setIsMobileMenuOpen(false)
-                                handleLogout()
+                                setShowLogoutConfirm(true)
                               }}
                               className="w-full text-left bg-transparent border-none p-0 outline-none cursor-pointer block group"
                             >
@@ -385,7 +386,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               <div className="p-4 flex-shrink-0 border-t border-slate-100 dark:border-slate-800">
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setShowLogoutConfirm(true)}
                   className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-bold transition-all border border-red-200/45 bg-red-500/10 text-red-600 hover:bg-red-500/15 cursor-pointer h-9"
                 >
                   <LogOut size={14} />
@@ -396,6 +397,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </>
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to log out of your session?"
+        confirmLabel="Logout"
+        onConfirm={handleLogout}
+        danger
+      />
     </div>
   )
 }

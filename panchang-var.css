@@ -1,0 +1,12 @@
+/* Panchang */
+@font-face {
+  font-family: 'Panchang';
+  src: url('//cdn.fontshare.com/wf/NATVPFYC4NJ2MZVSHF5VZYFWGTTPQUYX/MRQWDISFO5EKUB3Q72S4DXWYEOXNEN2I/2DYLXJJ5VPGFHZKCL4LCW4EGVHYDFG4L.woff2') format('woff2'),
+       url('//cdn.fontshare.com/wf/NATVPFYC4NJ2MZVSHF5VZYFWGTTPQUYX/MRQWDISFO5EKUB3Q72S4DXWYEOXNEN2I/2DYLXJJ5VPGFHZKCL4LCW4EGVHYDFG4L.woff') format('woff'),
+       url('//cdn.fontshare.com/wf/NATVPFYC4NJ2MZVSHF5VZYFWGTTPQUYX/MRQWDISFO5EKUB3Q72S4DXWYEOXNEN2I/2DYLXJJ5VPGFHZKCL4LCW4EGVHYDFG4L.ttf') format('truetype');
+  font-weight: 200 800;
+  font-display: swap;
+  font-style: normal;
+}
+
+

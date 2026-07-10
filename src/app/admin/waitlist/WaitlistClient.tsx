@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Users, MessageCircle, X, RefreshCcw } from 'lucide-react'
+import { Users, MessageCircle, X, RefreshCcw, Search } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { NotifyModal } from './NotifyModal'
+import { cn } from '@/lib/utils'
 
 interface WaitlistEntry {
   id: string;
@@ -22,6 +23,8 @@ export function WaitlistClient({ data }: { data: WaitlistEntry[] }) {
   const [selectedEntry, setSelectedEntry] = useState<WaitlistEntry | null>(null)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [viewingEntry, setViewingEntry] = useState<WaitlistEntry | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'waiting' | 'notified' | 'cancelled'>('all')
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     if (!confirm(`Are you sure you want to change status to ${newStatus}?`)) return
@@ -111,10 +114,54 @@ export function WaitlistClient({ data }: { data: WaitlistEntry[] }) {
     }
   ]
 
+  const filteredData = data.filter(entry => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      const matchesName = entry.profiles?.full_name?.toLowerCase().includes(q)
+      const matchesPhone = entry.profiles?.phone?.includes(q)
+      const matchesArea = entry.profiles?.area?.toLowerCase().includes(q)
+      if (!matchesName && !matchesPhone && !matchesArea) return false
+    }
+    if (filterStatus !== 'all' && entry.status !== filterStatus) return false
+    return true
+  })
+
   return (
-    <div>
+    <div className="space-y-6">
       <AdminHeader title="Waitlist" description="Manage potential customers waiting for slot availability." icon={Users} actionLabel="Add to Waitlist" />
-      <DataTable data={data} columns={columns} />
+      
+      {/* SEARCH AND FILTER BAR */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
+          <input 
+            type="text"
+            placeholder="Search by name, phone, area..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/20 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 transition-colors"
+          />
+        </div>
+        
+        <div className="flex w-full sm:w-auto bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-1 shadow-2xs transition-colors overflow-x-auto">
+          {(['all', 'waiting', 'notified', 'cancelled'] as const).map(status => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status)}
+              className={cn(
+                "flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize cursor-pointer whitespace-nowrap",
+                filterStatus === status 
+                  ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" 
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              )}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <DataTable data={filteredData} columns={columns} />
       
       <NotifyModal
         isOpen={notifyModalOpen}

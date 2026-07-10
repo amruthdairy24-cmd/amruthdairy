@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { fetchMilkPrices, calculateDailyRate, calculateMonthlyAmount, calculateProRataAmount, getDaysInMonth } from '@/lib/billing';
+import { getEarliestStartDateStr } from '@/lib/utils';
 import Razorpay from 'razorpay';
 
 // Admin client bypasses RLS for all DB writes
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { quantity = 1.0, start_date } = body;
+    const { quantity = 1.0, start_date, excluded_dates = [] } = body;
 
     if (!start_date) {
       return NextResponse.json({ success: false, message: 'start_date is required' }, { status: 400 });
@@ -78,16 +79,37 @@ export async function POST(request: Request) {
     // 5. Calculate amounts using admin-managed pricing
     const prices = await fetchMilkPrices(adminSupabase);
     const daily_rate = calculateDailyRate(quantity, prices);
-    const startDateObj = new Date(start_date);
-    const startYear = startDateObj.getFullYear();
-    const startMonth = startDateObj.getMonth() + 1;
-    const monthly_amount = calculateMonthlyAmount(daily_rate, startYear, startMonth);
+    
+    // Calculate earliest start date in IST
+    const earliestStartStr = getEarliestStartDateStr();
+
+    // If start_date is somehow before earliest allowed date, fallback to earliest allowed date
+    const actualStartDateStr = start_date < earliestStartStr ? earliestStartStr : start_date;
+    const actualStartDateObj = new Date(actualStartDateStr);
+
+    const startYear = actualStartDateObj.getFullYear();
+    const startMonth = actualStartDateObj.getMonth() + 1;
     const daysInMonth = getDaysInMonth(startYear, startMonth);
+
+    // Calculate delivery days for this month
+    let deliveryDays = 0;
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      const dStr = `${startYear}-${String(startMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      if (dStr >= actualStartDateStr && !excluded_dates.includes(dStr)) {
+        deliveryDays++;
+      }
+    }
+
+    const monthly_amount = deliveryDays * daily_rate;
     // 6. Create Razorpay order
     let razorpay_order_id = null;
     
-    // Only try to create Razorpay order if keys are present (prevents crash in local dev without keys)
-    if (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    // Only try to create Razorpay order if keys are present AND we are not in development mode
+    const isDev = process.env.NODE_ENV === 'development';
+    if (!isDev && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+      console.log("Key ID:", process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
+      console.log("Secret exists:", !!process.env.RAZORPAY_KEY_SECRET);
       const razorpay = new Razorpay({
         key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -112,7 +134,7 @@ export async function POST(request: Request) {
         quantity_litres: quantity,
         monthly_amount: monthly_amount,
         daily_rate: daily_rate,
-        start_date: start_date,
+        start_date: actualStartDateStr,
         status: initialStatus,
         razorpay_subscription_id: razorpay_order_id
       })
@@ -136,8 +158,11 @@ export async function POST(request: Request) {
         quantity_litres: quantity,
         monthly_amount: monthly_amount,
         daily_rate: daily_rate,
-        days_in_month: daysInMonth
-      });
+        days_in_month: daysInMonth,
+        payment_status: initialStatus === 'active' ? 'paid' : 'pending'
+      })
+      .select()
+      .single();
 
     if (billingError) {
       console.error('Billing month insert error:', billingError.message);
@@ -162,7 +187,8 @@ export async function POST(request: Request) {
       monthly_amount: monthly_amount,
       daily_rate: daily_rate,
       razorpay_order_id: razorpay_order_id,
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      billing_month_id: billingError ? null : (await adminSupabase.from('billing_months').select('id').eq('subscription_id', subscription.id).single()).data?.id // fallback or use the destructured value
     });
 
   } catch (err: any) {

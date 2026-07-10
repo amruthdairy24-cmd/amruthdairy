@@ -12,7 +12,7 @@ export default function HomePage() {
       <Navbar />
       <main>
         <HeroSection />
-        <StatsBar/>
+        <StatsBar />
         <OurStory />
         <HowItWorks />
         <ProductsPreview />

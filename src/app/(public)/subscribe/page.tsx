@@ -1,844 +1,572 @@
-// app/subscribe/page.tsx
+// app/(public)/subscribe/page.tsx
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
-  Check, Calendar, MapPin, CreditCard,
-  ChevronRight, ChevronLeft, ArrowRight,
-  User, Phone, FileText, Milk, Clock,
-  Tag, Truck, Leaf, ShieldCheck, Package,
-  Smartphone
+  ArrowRight, Check, Leaf, ShieldCheck, Truck, Clock,
+  MapPin, Star, Milk, RefreshCw, BadgeCheck, CalendarDays,
+  Smartphone, X, ChevronDown
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { DELIVERY_AREAS, DELIVERY_TIME_PROMISE } from '@/lib/constants'
-import { fetchMilkPricesClient, calculateDailyRate, calculateMonthlyAmountWithExclusions, getDaysInMonth } from '@/lib/billing'
-import SubscriptionCalendar from '@/components/SubscriptionCalendar'
+import { fetchMilkPricesClient, calculateDailyRate, getDaysInMonth } from '@/lib/billing'
+import { cn } from '@/lib/utils'
 
-type StepNum = 1 | 2 | 3
+// ─── Testimonials ──────────────────────────────────────────────────────────────
+const TESTIMONIALS = [
+  {
+    name: 'Priya Shetty',
+    area: 'Padil, Mangalore',
+    text: 'Getting fresh milk at 6 AM every day has changed our mornings. No more running to the store!',
+    rating: 5,
+    avatar: 'PS',
+  },
+  {
+    name: 'Ramesh Nayak',
+    area: 'Kadri, Mangalore',
+    text: "The quality is unmatched. You can taste the difference — it's genuinely farm-fresh.",
+    rating: 5,
+    avatar: 'RN',
+  },
+  {
+    name: 'Sunita Rao',
+    area: 'Bejai, Mangalore',
+    text: 'I love being able to skip delivery days when travelling. So convenient!',
+    rating: 5,
+    avatar: 'SR',
+  },
+]
+
+// ─── Feature cards ─────────────────────────────────────────────────────────────
+const FEATURES = [
+  { icon: Leaf, title: 'Farm Fresh Milk', desc: 'Sourced daily from our own cows. No middlemen, no storage delays.', color: 'text-green-600', bg: 'bg-green-50 border-green-100' },
+  { icon: ShieldCheck, title: 'No Preservatives', desc: 'Pure and natural — absolutely nothing added. Just milk as nature intended.', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
+  { icon: Truck, title: 'Before 7 AM Delivery', desc: `${DELIVERY_TIME_PROMISE} — every single morning, right at your door.`, color: 'text-[#0284C7]', bg: 'bg-sky-50 border-sky-100' },
+  { icon: CalendarDays, title: 'Flexible Skip Days', desc: 'Travelling? Pause or skip individual days from your dashboard, anytime.', color: 'text-purple-600', bg: 'bg-purple-50 border-purple-100' },
+  { icon: RefreshCw, title: 'Monthly Billing', desc: 'Simple monthly billing — no surprises, no hidden charges, pay as you go.', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100' },
+  { icon: Smartphone, title: 'Easy Management', desc: 'Control your subscription, track deliveries, and view bills from your phone.', color: 'text-[#0f2e5c]', bg: 'bg-slate-50 border-slate-100' },
+]
+
+// ─── How it works ──────────────────────────────────────────────────────────────
+const HOW_IT_WORKS = [
+  { step: '01', title: 'Create Your Account', desc: 'Sign up in under 2 minutes with just your email. No credit card needed upfront.' },
+  { step: '02', title: 'Set Your Delivery Details', desc: 'Tell us your address, area, and when you\'d like to start. Choose your litre quantity.' },
+  { step: '03', title: 'Milk at Your Doorstep', desc: 'Wake up to fresh farm milk every morning. Manage everything from the app.' },
+]
+
+// ─── Quantity plans ────────────────────────────────────────────────────────────
+const PLANS = [
+  { litres: 0.5, label: '½ Litre / Day', tag: 'Solo', desc: 'Perfect for a single person' },
+  { litres: 1.0, label: '1 Litre / Day', tag: 'Popular', desc: 'Ideal for a small family', highlight: true },
+  { litres: 1.5, label: '1½ Litres / Day', tag: 'Family', desc: 'Great for 3–4 members' },
+  { litres: 2.0, label: '2 Litres / Day', tag: 'Large', desc: 'For larger households' },
+]
 
 export default function SubscribePage() {
-  const [step, setStep] = useState<StepNum>(1)
-  const [startDate, setStartDate] = useState(() => {
-    const d = new Date()
-    d.setDate(d.getDate() + 1)
-    return d.toISOString().split('T')[0]
-  })
-  const [fullname, setFullname] = useState('')
-  const [phone, setPhone] = useState('')
-  const [address, setAddress] = useState('')
-  const [area, setArea] = useState('Padil')
-  const [notes, setNotes] = useState('')
-  const [formError, setFormError] = useState('')
-  const [isPaying, setIsPaying] = useState(false)
-  const [paymentSuccess, setPaymentSuccess] = useState(false)
-  const [orderId] = useState(`AMR-${Math.floor(10000 + Math.random() * 90000)}`)
-
-  // Admin-managed pricing
+  const router = useRouter()
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
+  const [ctaLoading, setCtaLoading] = useState(false)
   const [milkPrices, setMilkPrices] = useState<Record<string, number>>({})
   const [priceLoading, setPriceLoading] = useState(true)
+  const [faqOpen, setFaqOpen] = useState<number | null>(null)
 
-  // Day-picker state
-  const [excludedDates, setExcludedDates] = useState<string[]>([])
-
-  // Session & Auth state variables
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [showOtp, setShowOtp] = useState(false)
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
-  const [otpLoading, setOtpLoading] = useState(false)
-  const [otpError, setOtpError] = useState('')
-  const [resendCountdown, setResendCountdown] = useState(0)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Calculate pricing dynamically based on admin price + selected days
-  const dailyRate = calculateDailyRate(1.0, milkPrices) // 1L subscription
-  const startDateObj = new Date(startDate)
-  const startYear = startDateObj.getFullYear()
-  const startMonth = startDateObj.getMonth() + 1
-  const daysInMonth = getDaysInMonth(startYear, startMonth)
-  const excludedSet = new Set(excludedDates)
-  const monthlyPrice = Object.keys(milkPrices).length > 0 ? calculateMonthlyAmountWithExclusions(dailyRate, startYear, startMonth, excludedSet) : 0
-  const deliveryDays = daysInMonth - excludedDates.filter(d => d.startsWith(`${startYear}-${String(startMonth).padStart(2, '0')}`)).length
-
-  const handleExcludedDatesChange = useCallback((dates: string[]) => {
-    setExcludedDates(dates)
-  }, [])
-
+  // ── Check auth ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    async function checkUser() {
+    async function checkAuth() {
       try {
         const res = await fetch('/api/customer/dashboard')
         const data = await res.json()
-        if (data.success) {
-          setIsLoggedIn(true)
-          if (data.profile) {
-            setFullname(data.profile.full_name || '')
-            const cleanPhone = (data.profile.phone || '').replace(/\D/g, '')
-            setPhone(cleanPhone.length === 12 && cleanPhone.startsWith('91') ? cleanPhone.slice(2) : cleanPhone)
-            setAddress(data.profile.address || '')
-          }
-        }
-      } catch (err) {
-        console.error(err)
+        setIsLoggedIn(data.success === true)
+      } catch {
+        setIsLoggedIn(false)
       }
     }
-    checkUser()
+    checkAuth()
   }, [])
 
-  // Fetch admin-managed price
+  // ── Load prices ────────────────────────────────────────────────────────────
   useEffect(() => {
-    async function loadPrice() {
+    async function loadPrices() {
       setPriceLoading(true)
       const prices = await fetchMilkPricesClient()
       setMilkPrices(prices)
       setPriceLoading(false)
     }
-    loadPrice()
+    loadPrices()
   }, [])
 
-  useEffect(() => {
-    if (resendCountdown > 0) {
-      intervalRef.current = setInterval(() => {
-        setResendCountdown(prev => {
-          if (prev <= 1) { clearInterval(intervalRef.current!); return 0 }
-          return prev - 1
-        })
-      }, 1000)
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [resendCountdown])
-
-  useEffect(() => {
-    if (showOtp) {
-      setTimeout(() => {
-        (document.getElementById('sub-otp-0') as HTMLInputElement)?.focus()
-      }, 100)
-    }
-  }, [showOtp])
-
-  async function sendOtpCode() {
-    setFormError('')
-    setOtpLoading(true)
-    try {
-      const res = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
-      })
-      const data = await res.json()
-      if (data.success) {
-        setShowOtp(true)
-        setResendCountdown(30)
-      } else {
-        setFormError(data.message || 'Failed to send OTP')
-      }
-    } catch {
-      setFormError('Network error sending OTP.')
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  async function verifyOtpCode(code: string) {
-    if (code.length !== 6) return
-    setOtpLoading(true)
-    setOtpError('')
-    try {
-      const res = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, token: code })
-      })
-      const data = await res.json()
-      if (data.success) {
-        const profileRes = await fetch('/api/customer/profile', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            full_name: fullname,
-            address: address,
-            area: area,
-          })
-        })
-        const profileData = await profileRes.json()
-        if (profileData.success) {
-          setIsLoggedIn(true)
-          setShowOtp(false)
-          setStep(2)
+  // ── CTA handler ────────────────────────────────────────────────────────────
+  async function handleSubscribe() {
+    setCtaLoading(true)
+    if (isLoggedIn === null) {
+      // Re-check auth if we don't have a result yet
+      try {
+        const res = await fetch('/api/customer/dashboard')
+        const data = await res.json()
+        if (data.success) {
+          router.push('/onboarding')
         } else {
-          setOtpError(profileData.message || 'Failed to initialize profile details.')
+          router.push('/login?redirect=/onboarding')
         }
-      } else {
-        setOtpError(data.message || 'Verification failed. Try again.')
-        setOtp(['', '', '', '', '', ''])
-        setTimeout(() => { (document.getElementById('sub-otp-0') as HTMLInputElement)?.focus() }, 50)
+      } catch {
+        router.push('/login?redirect=/onboarding')
       }
-    } catch {
-      setOtpError('Network error verifying OTP.')
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  function handleOtpChange(value: string, index: number) {
-    if (!/^\d*$/.test(value)) return
-    const newOtp = [...otp]
-    newOtp[index] = value.slice(-1)
-    setOtp(newOtp)
-    if (value && index < 5) {
-      const next = document.getElementById(`sub-otp-${index + 1}`) as HTMLInputElement
-      next?.focus()
-    }
-    if (newOtp.every(d => d !== '') && value) {
-      verifyOtpCode(newOtp.join(''))
-    }
-  }
-
-  function handleOtpKeyDown(e: React.KeyboardEvent<HTMLInputElement>, index: number) {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      const prev = document.getElementById(`sub-otp-${index - 1}`) as HTMLInputElement
-      prev?.focus()
-    }
-  }
-
-  async function handleNextFromStep1() {
-    if (!fullname.trim()) { setFormError('Please enter your full name'); return }
-    if (phone.length !== 10) { setFormError('Please enter a valid 10-digit mobile number'); return }
-    if (!address.trim()) { setFormError('Please enter your delivery address'); return }
-    setFormError('')
-    
-    if (isLoggedIn) {
-      setStep(2)
+    } else if (isLoggedIn) {
+      router.push('/onboarding')
     } else {
-      await sendOtpCode()
+      router.push('/login?redirect=/onboarding')
     }
+    setCtaLoading(false)
   }
 
-  async function handlePayment() {
-    setIsPaying(true)
-    setFormError('')
-    try {
-      const res = await fetch('/api/subscription/new', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quantity: 1.0,
-          start_date: startDate,
-          excluded_dates: excludedDates
-        })
-      })
-      if (res.status === 401) {
-        setFormError('You must be logged in to subscribe.')
-        setIsPaying(false)
-        return
-      }
-      const data = await res.json()
-      if (data.success) { setPaymentSuccess(true) }
-      else { setFormError(data.message || 'Failed to create subscription') }
-    } catch { setFormError('Network error. Please try again.') }
-    finally { setIsPaying(false) }
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const getMonthlyEstimate = (litres: number) => {
+    if (priceLoading || !Object.keys(milkPrices).length) return null
+    const daily = calculateDailyRate(litres, milkPrices)
+    const now = new Date()
+    const days = getDaysInMonth(now.getFullYear(), now.getMonth() + 1)
+    return Math.round(daily * days)
   }
 
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-      .split('/').join('-')
+  const getDaily = (litres: number) => {
+    if (priceLoading || !Object.keys(milkPrices).length) return null
+    return calculateDailyRate(litres, milkPrices)
+  }
+
+  const faqs = [
+    { q: 'When does delivery happen?', a: `We deliver fresh milk ${DELIVERY_TIME_PROMISE} every morning, 7 days a week including Sundays and public holidays.` },
+    { q: 'Can I skip a delivery day?', a: 'Yes! You can skip individual days or pause your subscription entirely from your dashboard. Just make the change before 9 PM the previous night.' },
+    { q: 'Which areas do you deliver to?', a: `We currently deliver to ${DELIVERY_AREAS.slice(0, 5).join(', ')}, and more areas across Mangalore.` },
+    { q: 'How is billing calculated?', a: 'Billing is calculated on a per-day basis. If you skip a day, you are not charged for it. Your bill is generated monthly based on actual delivery days.' },
+    { q: 'Can I cancel anytime?', a: 'Yes, you can cancel your subscription at any time from your dashboard. No lock-in period, no cancellation fees.' },
+    { q: 'What quantity should I choose?', a: 'For a single person, ½ litre is usually enough. A family of 3–4 typically needs 1–1.5 litres. You can always change your quantity from the dashboard.' },
+  ]
+
+  // ── Animated number counter ────────────────────────────────────────────────
+  const stats = [
+    { val: '200+', label: 'Happy Families' },
+    { val: '7', label: 'Days a Week' },
+    { val: '100%', label: 'Pure Milk' },
+    { val: '< 7 AM', label: 'Delivered By' },
+  ]
 
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-cream-50 dark:bg-warm-white text-slate-800 dark:text-slate-100 pb-20 transition-colors duration-300">
+      <main className="min-h-screen bg-white text-slate-800 overflow-x-hidden">
 
-        {/* ── HERO HEADER SECTION ─────────────────── */}
-        <div className="relative overflow-hidden bg-brand-primary text-white p-8 sm:p-12 lg:p-16 flex flex-col lg:flex-row items-center justify-between gap-12 milk-drop-pattern rounded-b-[40px] shadow-lg mb-12">
-          
-          {/* Left hero text */}
-          <div className="flex-1 max-w-2xl flex flex-col gap-6 z-10">
-            <div className="flex items-center gap-2 self-start px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10px] font-extrabold tracking-wider uppercase text-cream-50 select-none">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-secondary animate-ping" />
-              100% PURE • FARM FRESH
-            </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black font-display tracking-tight leading-tight">
-              Start Your Milk Subscription
-            </h1>
-            <p className="text-slate-300 font-medium text-sm sm:text-base leading-relaxed">
-              Pure, farm-fresh milk delivered to your doorstep daily.<br />
-              Standard 1 Litre/Day subscription.
-            </p>
+        {/* ══════════════════════════════════════════════════════════
+            HERO
+        ══════════════════════════════════════════════════════════ */}
+        <section className="relative overflow-hidden bg-[#02429C] pt-28 pb-24 px-5">
+          {/* Decorative blobs */}
+          <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-[#0284C7]/20 blur-[100px] pointer-events-none" />
+          <div className="absolute -bottom-24 -left-16 w-[360px] h-[360px] rounded-full bg-[#0f2e5c]/60 blur-[80px] pointer-events-none" />
 
-            {/* Stepper */}
-            <div className="flex items-center gap-4 mt-4 overflow-x-auto py-2 no-scrollbar">
+          <div className="max-w-5xl mx-auto relative z-10 flex flex-col items-center text-center gap-6">
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/15 text-[11px] font-extrabold tracking-widest uppercase text-white/80"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              100% Pure · Farm Fresh · Mangalore
+            </motion.div>
+
+            {/* Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="font-cabinet text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.08] tracking-tight max-w-3xl"
+            >
+              Fresh Milk at Your Door,{' '}
+              <span className="text-yellow-400">Every Morning</span>
+            </motion.h1>
+
+            {/* Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-slate-300 font-medium text-base sm:text-lg max-w-xl leading-relaxed"
+            >
+              Pure cow milk delivered from our farm directly to your doorstep — before you wake up, every day.
+            </motion.p>
+
+            {/* CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-col sm:flex-row items-center gap-3 mt-2"
+            >
+              <button
+                onClick={handleSubscribe}
+                disabled={ctaLoading}
+                className="inline-flex items-center justify-center gap-2 h-13 px-8 rounded-[12px] bg-white text-[#0f2e5c] font-bold text-[15px] hover:bg-yellow-400 hover:text-[#0f2e5c] transition-all duration-200 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-black/20"
+              >
+                {ctaLoading ? (
+                  <span className="w-5 h-5 border-2 border-[#0f2e5c]/30 border-t-[#0f2e5c] rounded-full animate-spin" />
+                ) : (
+                  <>
+                    Start My Subscription
+                    <ArrowRight size={16} strokeWidth={2.5} />
+                  </>
+                )}
+              </button>
+              <Link
+                href="#how-it-works"
+                className="text-white/70 hover:text-white text-sm font-semibold underline underline-offset-4 transition-colors"
+              >
+                See how it works
+              </Link>
+            </motion.div>
+
+            {/* Trust badges */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.45 }}
+              className="flex flex-wrap items-center justify-center gap-4 mt-4"
+            >
               {[
-                { num: 1, label: 'DETAILS' },
-                { num: 2, label: 'REVIEW' },
-                { num: 3, label: 'PAY' },
-              ].map(({ num, label }, i) => {
-                const done = step > num
-                const active = step === num
-                return (
-                  <div key={num} className="flex items-center gap-2 flex-shrink-0">
-                    {i > 0 && (
-                      <div className={cn('w-8 sm:w-12 h-0.5 bg-white/20 rounded', step > num ? 'bg-brand-secondary' : '')} />
-                    )}
-                    <button
-                      onClick={() => num < step && setStep(num as StepNum)}
-                      className={cn(
-                        'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 cursor-pointer',
-                        done ? 'bg-brand-secondary text-white shadow-[0_0_12px_rgba(2,132,199,0.4)]' : active ? 'bg-white text-brand-primary font-black shadow-lg scale-110 ring-4 ring-white/10' : 'bg-white/10 text-white border border-white/15'
-                      )}
-                    >
-                      {done ? <Check size={13} strokeWidth={3} /> : num}
-                    </button>
-                    <span className={cn('text-[10px] font-extrabold tracking-wider text-slate-300 select-none uppercase', active ? 'text-white font-black' : '')}>
-                      {label}
-                    </span>
+                { icon: BadgeCheck, label: 'No lock-in' },
+                { icon: CalendarDays, label: 'Skip any day' },
+                { icon: X, label: 'Cancel anytime' },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-center gap-1.5 text-white/60 text-xs font-semibold">
+                  <Icon size={14} className="text-green-400" />
+                  {label}
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════
+            STATS BAR
+        ══════════════════════════════════════════════════════════ */}
+        <section className="bg-[#0F2E5C] py-5">
+          <div className="max-w-5xl mx-auto px-5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            {stats.map(({ val, label }) => (
+              <div key={label} className="flex flex-col">
+                <span className="font-cabinet text-2xl font-bold text-white">{val}</span>
+                <span className="text-xs font-semibold text-white/70 mt-0.5">{label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════
+            FEATURES GRID
+        ══════════════════════════════════════════════════════════ */}
+        <section className="py-20 px-5 bg-slate-50">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <span className="text-[11px] font-extrabold tracking-widest uppercase text-[#0284C7]">Why Amruth Dairy</span>
+              <h2 className="font-cabinet text-3xl sm:text-4xl font-bold text-[#0f2e5c] mt-2">
+                Milk the way it should be
+              </h2>
+              <p className="text-slate-500 text-sm sm:text-base mt-3 max-w-lg mx-auto leading-relaxed">
+                We are not just delivering milk — we are bringing you a healthier, simpler morning routine.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {FEATURES.map(({ icon: Icon, title, desc, color, bg }) => (
+                <motion.div
+                  key={title}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4 }}
+                  className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center border mb-4', bg)}>
+                    <Icon size={20} className={color} />
                   </div>
+                  <h3 className="font-cabinet font-bold text-slate-900 text-[15px] mb-1.5">{title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════
+            PRICING / PLANS
+        ══════════════════════════════════════════════════════════ */}
+        <section className="py-20 px-5 bg-white" id="plans">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <span className="text-[11px] font-extrabold tracking-widest uppercase text-[#0284C7]">Pricing</span>
+              <h2 className="font-cabinet text-3xl sm:text-4xl font-bold text-[#0f2e5c] mt-2">
+                Simple, transparent pricing
+              </h2>
+              <p className="text-slate-500 text-sm sm:text-base mt-3 max-w-lg mx-auto">
+                Pay only for what you receive. Skip a day, don&apos;t pay for it.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {PLANS.map(({ litres, label, tag, desc, highlight }) => {
+                const monthly = getMonthlyEstimate(litres)
+                const daily = getDaily(litres)
+                return (
+                  <motion.div
+                    key={litres}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.35 }}
+                    className={cn(
+                      'relative flex flex-col rounded-2xl border p-6 transition-all duration-200',
+                      highlight
+                        ? 'bg-[#02429C] border-[#0f2e5c] shadow-xl shadow-[#0f2e5c]/20'
+                        : 'bg-white border-slate-200 hover:border-[#0284C7]/50 hover:shadow-md'
+                    )}
+                  >
+                    {highlight && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-yellow-400 text-[#0f2e5c] text-[10px] font-extrabold tracking-wider uppercase">
+                        Most Popular
+                      </div>
+                    )}
+                    <div className={cn('text-[10px] font-extrabold uppercase tracking-widest mb-2', highlight ? 'text-white/50' : 'text-slate-400')}>{tag}</div>
+                    <div className={cn('font-cabinet font-bold text-lg leading-tight mb-1', highlight ? 'text-white' : 'text-[#0f2e5c]')}>{label}</div>
+                    <div className={cn('text-xs mb-5 leading-relaxed', highlight ? 'text-white/60' : 'text-slate-400')}>{desc}</div>
+
+                    <div className="mt-auto">
+                      <div className={cn('text-[11px] font-semibold mb-1', highlight ? 'text-white/50' : 'text-slate-400')}>
+                        {priceLoading ? 'Loading price...' : `₹${daily?.toFixed(2) ?? '—'} / day`}
+                      </div>
+                      <div className={cn('font-cabinet text-2xl font-bold', highlight ? 'text-white' : 'text-[#0f2e5c]')}>
+                        {priceLoading ? (
+                          <span className="text-base font-medium opacity-50">Calculating...</span>
+                        ) : (
+                          <>₹{monthly?.toLocaleString() ?? '—'}<span className={cn('text-sm font-medium ml-1', highlight ? 'text-white/50' : 'text-slate-400')}>/mo</span></>
+                        )}
+                      </div>
+                      <button
+                        onClick={handleSubscribe}
+                        className={cn(
+                          'mt-4 w-full h-11 rounded-[10px] text-sm font-bold transition-all duration-200 hover:scale-[1.02]',
+                          highlight
+                            ? 'bg-white text-[#0f2e5c] hover:bg-yellow-400'
+                            : 'bg-[#02429C] text-white hover:bg-[#0F2E5C]'
+                        )}
+                      >
+                        Get Started
+                      </button>
+                    </div>
+                  </motion.div>
                 )
               })}
             </div>
-          </div>
 
-          {/* Right hero - bottle + splash */}
-          <div className="hidden lg:flex items-center justify-center relative w-72 h-80 opacity-90 pointer-events-none z-10" aria-hidden>
-            {/* Milk splash bg */}
-            <div className="absolute w-72 h-72 rounded-full bg-brand-secondary/20 blur-[60px] animate-pulse" />
-            
-            {/* Tailwind Vector Bottle */}
-            <div className="w-32 h-64 border border-white/20 rounded-[28px] bg-white/5 backdrop-blur-md p-3 flex flex-col items-center justify-center relative shadow-2xl z-20">
-              <div className="w-10 h-6 border border-white/20 rounded-t-xl bg-white/10 absolute -top-6" />
-              <div className="w-1 h-full bg-white/10 absolute left-1/2 -translate-x-1/2 top-0" />
-              <div className="text-center flex flex-col items-center justify-center">
-                <div className="text-3xl mb-2">🐄</div>
-                <div className="text-xs font-black tracking-widest text-white leading-none">AMRUTH</div>
-                <div className="text-[6px] font-bold text-slate-300 tracking-wider mt-1">PURE A2 MILK</div>
-                <div className="w-8 h-0.5 bg-brand-secondary my-2" />
-                <div className="text-[5px] text-slate-300 font-medium">100% Pure & Natural<br />Farm Fresh</div>
+            <p className="text-center text-xs text-slate-400 font-medium mt-6">
+              Estimated for a 30-day month. Actual billing varies based on delivery days and skips. No taxes applied.
+            </p>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════
+            HOW IT WORKS
+        ══════════════════════════════════════════════════════════ */}
+        <section className="py-20 px-5 bg-slate-50" id="how-it-works">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <span className="text-[11px] font-extrabold tracking-widest uppercase text-[#0284C7]">Process</span>
+              <h2 className="font-cabinet text-3xl sm:text-4xl font-bold text-[#0f2e5c] mt-2">
+                Start in 3 simple steps
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+              {/* Connector line (desktop) */}
+              <div className="hidden md:block absolute top-8 left-[calc(16.67%+20px)] right-[calc(16.67%+20px)] h-px bg-slate-200" />
+              {HOW_IT_WORKS.map(({ step, title, desc }, i) => (
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.1 }}
+                  className="flex flex-col items-center text-center"
+                >
+                  <div className="w-16 h-16 rounded-full bg-[#02429C] text-white flex items-center justify-center font-cabinet font-bold text-xl mb-5 relative z-10 shadow-lg shadow-[#0f2e5c]/20">
+                    {step}
+                  </div>
+                  <h3 className="font-cabinet font-bold text-[#0f2e5c] text-base mb-2">{title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed max-w-[240px] mx-auto">{desc}</p>
+                </motion.div>
+              ))}
+            </div>
+            <div className="flex justify-center mt-12">
+              <button
+                onClick={handleSubscribe}
+                disabled={ctaLoading}
+                className="inline-flex items-center gap-2 h-13 px-8 rounded-[12px] bg-[#02429C] text-white font-bold text-[15px] hover:bg-[#0F2E5C] transition-all duration-200 hover:scale-105 disabled:opacity-60 shadow-lg shadow-[#0f2e5c]/20"
+              >
+                {ctaLoading ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>Get Started Now <ArrowRight size={16} /></>}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════
+            DELIVERY AREAS
+        ══════════════════════════════════════════════════════════ */}
+        <section className="py-16 px-5 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-10">
+              <div className="flex-1 text-center md:text-left">
+                <span className="text-[11px] font-extrabold tracking-widest uppercase text-[#0284C7]">Coverage</span>
+                <h2 className="font-cabinet text-2xl sm:text-3xl font-bold text-[#0f2e5c] mt-2 mb-3">
+                  We deliver across Mangalore
+                </h2>
+                <p className="text-slate-500 text-sm leading-relaxed mb-6 max-w-sm">
+                  Our delivery network covers major localities in Mangalore. More areas are being added soon!
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                  {DELIVERY_AREAS.map((area) => (
+                    <span
+                      key={area}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200"
+                    >
+                      <MapPin size={11} className="text-[#0284C7]" />
+                      {area}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {/* Map placeholder */}
+              <div className="flex-shrink-0 w-full md:w-64 h-52 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center gap-3 border border-slate-200">
+                <MapPin size={36} className="text-[#0284C7]" />
+                <span className="text-slate-500 text-sm font-medium text-center px-4">Padil, Mangalore<br />&amp; surrounding areas</span>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* ── MAIN CONTENT ────────────────────────── */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimatePresence mode="wait">
-            {!paymentSuccess ? (
-              <motion.div
-                key="wizard"
-                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-
-                {/* LEFT: Form Card */}
-                <div className="lg:col-span-8 p-6 sm:p-8 rounded-brand-2xl border border-border/40 dark:border-slate-800/80 bg-white dark:bg-cream-100 shadow-[0_4px_24px_var(--shadow)] flex flex-col gap-6">
-                  <AnimatePresence mode="wait">
-
-                    {/* STEP 1 */}
-                    {step === 1 && (
-                      showOtp ? (
-                        <motion.div
-                          key="otp-verification"
-                          initial={{ opacity: 0, y: 14 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -14 }}
-                          transition={{ duration: 0.25 }}
-                        >
-                          {/* Card header */}
-                          <div className="flex items-start gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-5">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-500/10 border border-amber-200/50 dark:border-amber-900/30 text-amber-500 flex-shrink-0">
-                              <Smartphone size={20} />
-                            </div>
-                            <div>
-                              <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-tight">Verify Your Mobile</h2>
-                              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-                                We sent a 6-digit OTP code to <strong className="text-slate-900 dark:text-white">+91 {phone}</strong>
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* OTP Boxes */}
-                          <div className="grid grid-cols-6 gap-2 sm:gap-3 py-1 my-6 max-w-[380px] mx-auto">
-                            {otp.map((digit, i) => (
-                              <input
-                                key={i}
-                                id={`sub-otp-${i}`}
-                                type="text"
-                                inputMode="numeric"
-                                maxLength={1}
-                                value={digit}
-                                onChange={e => handleOtpChange(e.target.value, i)}
-                                onKeyDown={e => handleOtpKeyDown(e, i)}
-                                className={cn(
-                                  'w-full aspect-square text-center text-lg font-bold text-slate-800 dark:text-white rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-brand-secondary/30 focus:border-brand-secondary transition-all',
-                                  otpError ? 'border-red-500 ring-2 ring-red-500/10' : digit ? 'border-brand-secondary ring-2 ring-brand-secondary/10 bg-white dark:bg-slate-900' : ''
-                                )}
-                              />
-                            ))}
-                          </div>
-
-                          {otpError && (
-                            <p className="text-xs font-bold text-red-500 flex items-center justify-center gap-1.5 mt-2 mb-4">⚠️ {otpError}</p>
-                          )}
-
-                          <div className="text-center text-xs py-1 mb-6">
-                            {resendCountdown > 0 ? (
-                              <span className="text-slate-400 dark:text-slate-500 font-semibold">
-                                Resend code in <strong className="text-slate-700 dark:text-slate-300">{resendCountdown}s</strong>
-                              </span>
-                            ) : (
-                              <button onClick={sendOtpCode} className="font-bold text-brand-secondary hover:underline cursor-pointer bg-transparent border-none">
-                                Resend OTP Code
-                              </button>
-                            )}
-                          </div>
-
-                          {/* CTA Row */}
-                          <div className="border-t border-slate-100 dark:border-slate-800/60 pt-5 mt-4 flex items-center justify-between gap-4">
-                            <button
-                              onClick={() => {
-                                setShowOtp(false)
-                                setOtp(['', '', '', '', '', ''])
-                                setOtpError('')
-                              }}
-                              className="px-5 h-12 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all cursor-pointer flex-1"
-                            >
-                              <ChevronLeft size={14} /> Back
-                            </button>
-                            <button
-                              onClick={() => verifyOtpCode(otp.join(''))}
-                              disabled={otpLoading || otp.some(d => d === '')}
-                              className="px-6 h-12 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-[0_4px_16px_rgba(2,132,199,0.3)] active:translate-y-0 hover:-translate-y-0.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:translate-y-0 flex-[2]"
-                            >
-                              {otpLoading ? (
-                                <><span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> Verifying...</>
-                              ) : (
-                                <>Verify & Continue <ChevronRight size={14} /></>
-                              )}
-                            </button>
-                          </div>
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="s1"
-                          initial={{ opacity: 0, y: 14 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -14 }}
-                          transition={{ duration: 0.25 }}
-                          className="flex flex-col gap-6"
-                        >
-                          {/* Card header */}
-                          <div className="flex items-start gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-5">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/10 border border-blue-200/50 dark:border-blue-900/30 text-brand-secondary flex-shrink-0">
-                              <MapPin size={20} />
-                            </div>
-                            <div>
-                              <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-tight">Delivery Details</h2>
-                              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Where should we deliver your fresh milk?</p>
-                            </div>
-                          </div>
-
-                          {/* Fields grid */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 py-2">
-                            {/* Full Name */}
-                            <div className="flex flex-col gap-2">
-                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
-                                <User size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Full Name
-                              </label>
-                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-12 relative">
-                                <User size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 flex-shrink-0 pointer-events-none" />
-                                <input
-                                  type="text"
-                                  placeholder="Ravi Nayak"
-                                  value={fullname}
-                                  onChange={e => { setFullname(e.target.value); setFormError('') }}
-                                  className="w-full pl-11 pr-4 h-full text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Mobile */}
-                            <div className="flex flex-col gap-2">
-                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
-                                <Phone size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Mobile Number (10-Digit)
-                              </label>
-                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-12">
-                                <span className="flex items-center gap-1 px-4 h-full border-r border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100/50 dark:bg-slate-900 select-none">
-                                  <Phone size={12} /> +91
-                                </span>
-                                <input
-                                  type="tel"
-                                  inputMode="numeric"
-                                  maxLength={10}
-                                  placeholder="98765 43210"
-                                  value={phone}
-                                  onChange={e => { setPhone(e.target.value.replace(/\D/g, '').slice(0, 10)); setFormError('') }}
-                                  className="w-full px-4 h-full text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400 disabled:opacity-60"
-                                  disabled={isLoggedIn}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Full Delivery Address */}
-                            <div className="flex flex-col gap-2 sm:col-span-2">
-                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
-                                <MapPin size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Full Delivery Address
-                              </label>
-                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-24 relative">
-                                <MapPin size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 flex-shrink-0 pointer-events-none top-4" />
-                                <textarea
-                                  placeholder="Flat/House No, Building, Street, Landmark"
-                                  value={address}
-                                  onChange={e => { setAddress(e.target.value); setFormError('') }}
-                                  rows={2}
-                                  className="w-full pl-11 pr-4 py-3 text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400 min-h-[72px] resize-none"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Start Date */}
-                            <div className="flex flex-col gap-2">
-                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
-                                <Calendar size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Subscription Start Date
-                              </label>
-                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-12 relative">
-                                <Calendar size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 flex-shrink-0 pointer-events-none" />
-                                <input
-                                  type="date"
-                                  value={startDate}
-                                  min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
-                                  onChange={e => setStartDate(e.target.value)}
-                                  className="w-full pl-11 pr-4 h-full text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Area */}
-                            <div className="flex flex-col gap-2">
-                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
-                                <MapPin size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Select Area / Locality
-                              </label>
-                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-12 relative">
-                                <MapPin size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 flex-shrink-0 pointer-events-none" />
-                                <select
-                                  value={area}
-                                  onChange={e => setArea(e.target.value)}
-                                  className="w-full pl-11 pr-10 h-full text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400 cursor-pointer appearance-none"
-                                >
-                                  {DELIVERY_AREAS.map((a: string) => (
-                                    <option key={a} value={a} className="dark:bg-slate-900">{a} (Mangalore)</option>
-                                  ))}
-                                </select>
-                              </div>
-                            </div>
-
-                            {/* Notes */}
-                            <div className="flex flex-col gap-2 sm:col-span-2">
-                              <label className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5">
-                                <FileText size={12} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> Delivery Notes (Optional)
-                              </label>
-                              <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus-within:border-brand-secondary focus-within:ring-2 focus-within:ring-brand-secondary/10 transition-all overflow-hidden h-12 relative">
-                                <FileText size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 flex-shrink-0 pointer-events-none" />
-                                <input
-                                  type="text"
-                                  placeholder="Ring bell or leave bag at the door"
-                                  value={notes}
-                                  onChange={e => setNotes(e.target.value)}
-                                  className="w-full pl-11 pr-4 h-full text-sm font-bold text-slate-800 dark:text-white bg-transparent focus:outline-none placeholder:text-slate-400"
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Error */}
-                          {formError && (
-                            <p className="text-xs font-bold text-red-500 flex items-center gap-1.5 mt-2">⚠️ {formError}</p>
-                          )}
-
-                          {/* Delivery banner */}
-                          <div className="sm:col-span-2 mb-2 p-5 rounded-brand-md border border-blue-200/50 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/25 flex gap-4 text-slate-700 dark:text-slate-300 text-xs font-semibold relative overflow-hidden shadow-sm">
-                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-brand-secondary flex items-center justify-center flex-shrink-0 shadow-sm">
-                              <Truck size={20} />
-                            </div>
-                            <div>
-                              <p className="font-extrabold text-slate-800 dark:text-slate-200 text-sm">Quick & Reliable Delivery</p>
-                              <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">
-                                We ensure your milk reaches you fresh, on time, every morning. Delivered before 7:00 AM.
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* CTA */}
-                          <div className="border-t border-slate-100 dark:border-slate-800/60 pt-5 mt-4">
-                            <button onClick={handleNextFromStep1} className="w-full px-6 h-12 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-[0_4px_16px_rgba(2,132,199,0.3)] active:translate-y-0 hover:-translate-y-0.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all cursor-pointer">
-                              Continue to Review <ChevronRight size={16} />
-                            </button>
-                          </div>
-                        </motion.div>
-                      )
-                    )}
-
-                    {/* STEP 2 */}
-                    {step === 2 && (
-                      <motion.div
-                        key="s2"
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -14 }}
-                        transition={{ duration: 0.25 }}
-                        className="flex flex-col gap-6"
-                      >
-                        <div className="flex items-start gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-5">
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/10 border border-blue-200/50 dark:border-blue-900/30 text-brand-secondary flex-shrink-0">
-                            <Package size={20} />
-                          </div>
-                          <div>
-                            <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-tight">Review Subscription</h2>
-                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Confirm your details before proceeding to payment</p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col gap-3 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 my-1">
-                          <p className="text-xs font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase pb-2 border-b border-slate-100 dark:border-slate-800/40">Subscription Outline</p>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                            {[
-                              { label: 'Plan', val: 'Standard Monthly' },
-                              { label: 'Volume', val: '1 Litre / Day', blue: true },
-                              { label: 'Delivery Days', val: `${deliveryDays} days this month` },
-                              { label: 'Start Date', val: formatDate(startDate) },
-                            ].map(r => (
-                              <div key={r.label}>
-                                <p className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase">{r.label}</p>
-                                <p className={cn('text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-1', r.blue ? 'text-brand-secondary font-black' : '')}>{r.val}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Day Picker Calendar */}
-                        <SubscriptionCalendar
-                          startDate={startDate}
-                          onExcludedDatesChange={handleExcludedDatesChange}
-                          initialExcludedDates={excludedDates}
-                          maxMonthsAhead={1}
-                        />
-
-                        <div className="flex flex-col gap-3 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 my-1">
-                          <p className="text-xs font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase pb-2 border-b border-slate-100 dark:border-slate-800/40">Delivery Address</p>
-                          <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200">{fullname}</p>
-                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5">+91 {phone}</p>
-                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed mt-1">{address}, {area}, Mangalore</p>
-                          {notes && (
-                            <div className="text-xs font-bold text-amber-600 dark:text-amber-400 mt-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-200/20 dark:border-amber-900/20">📝 {notes}</div>
-                          )}
-                        </div>
-
-                        <div className="border-t border-slate-100 dark:border-slate-800/60 pt-5 mt-4 flex items-center justify-between gap-4">
-                          <button onClick={() => setStep(1)} className="px-5 h-12 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all cursor-pointer">
-                            <ChevronLeft size={14} /> Back
-                          </button>
-                          <button onClick={() => setStep(3)} className="px-6 h-12 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-[0_4px_16px_rgba(2,132,199,0.3)] active:translate-y-0 hover:-translate-y-0.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all cursor-pointer">
-                            Proceed to Payment <ChevronRight size={14} />
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* STEP 3 */}
-                    {step === 3 && (
-                      <motion.div
-                        key="s3"
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -14 }}
-                        transition={{ duration: 0.25 }}
-                        className="flex flex-col gap-6"
-                      >
-                        <div className="flex items-start gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-5">
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/10 border border-blue-200/50 dark:border-blue-900/30 text-brand-secondary flex-shrink-0">
-                            <CreditCard size={20} />
-                          </div>
-                          <div>
-                            <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-tight">Confirm & Pay</h2>
-                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Review your subscription invoice details</p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col gap-4 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 my-1">
-                          <p className="text-xs font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase pb-2 border-b border-slate-100 dark:border-slate-800/40">Order Invoice</p>
-                          <div className="flex flex-col gap-3 text-xs font-bold text-slate-600 dark:text-slate-400">
-                            <div className="flex justify-between items-center">
-                              <span>Milk (1L/Day × {deliveryDays} days)</span>
-                              <span>₹{priceLoading ? '...' : monthlyPrice.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span>Daily rate</span>
-                              <span>₹{priceLoading ? '...' : dailyRate.toFixed(2)}/day</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span>Delivery charge</span>
-                              <span className="text-green-500 font-extrabold">FREE</span>
-                            </div>
-                          </div>
-                          <div className="flex justify-between items-center border-t border-slate-200/60 dark:border-slate-800/80 pt-4 text-sm font-extrabold text-slate-800 dark:text-slate-200">
-                            <span>Amount Due</span>
-                            <span className="text-lg font-black text-brand-primary dark:text-white">₹{priceLoading ? '...' : monthlyPrice.toFixed(0)}</span>
-                          </div>
-                        </div>
-
-                        {formError && <p className="text-xs font-bold text-red-500 flex items-center gap-1.5 mt-2">⚠️ {formError}</p>}
-
-                        <button
-                          onClick={handlePayment}
-                          disabled={isPaying}
-                          className="w-full h-12 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-[0_4px_16px_rgba(2,132,199,0.3)] active:translate-y-0 hover:-translate-y-0.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:translate-y-0 mt-2"
-                        >
-                          {isPaying ? (
-                            <><span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> Securing Connection...</>
-                          ) : (
-                            <><CreditCard size={15} /> Pay ₹{priceLoading ? '...' : monthlyPrice.toFixed(0)} securely</>
-                          )}
-                        </button>
-
-                        <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-3 select-none">
-                          <Check size={12} className="text-green-500" />
-                          <span>256-bit SSL Encrypted · Powered by Razorpay</span>
-                        </div>
-
-                        <div className="border-t border-slate-100 dark:border-slate-800/60 pt-5 mt-4 flex items-center justify-between gap-4">
-                          <button onClick={() => setStep(2)} className="px-5 h-12 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all cursor-pointer">
-                            <ChevronLeft size={14} /> Back
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* RIGHT: Subscription Summary Card */}
-                <div className="lg:col-span-4 p-6 rounded-brand-2xl border border-border/40 dark:border-slate-800/80 bg-white dark:bg-cream-100 shadow-[0_4px_24px_var(--shadow)] flex flex-col gap-6">
-                  <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-4">
-                    <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-brand-secondary flex items-center justify-center flex-shrink-0">
-                      <Milk size={20} />
-                    </div>
-                    <h3 className="font-extrabold font-display text-slate-900 dark:text-white text-base tracking-tight">Your Subscription</h3>
-                  </div>
-
-                  {/* Mini bottle + plan info */}
-                  <div className="flex gap-4 items-center p-4 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60">
-                    {/* Mini bottle */}
-                    <div className="w-12 h-20 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 p-1 flex flex-col items-center justify-center relative shadow-sm flex-shrink-0 select-none">
-                      <div className="w-4 h-2.5 border border-slate-200 dark:border-slate-800 rounded-t bg-slate-200/50 dark:bg-slate-800 absolute -top-2.5" />
-                      <div className="text-center flex flex-col items-center justify-center">
-                        <span className="text-[10px]">🐄</span>
-                        <span className="text-[5px] font-black tracking-tighter text-slate-500 leading-none mt-0.5">AMRUTH</span>
-                      </div>
-                    </div>
-                    <div className="flex-1 flex flex-col">
-                      <p className="text-xs font-extrabold text-slate-800 dark:text-slate-200">Standard Plan</p>
-                      <p className="text-sm font-black text-brand-secondary mt-0.5">1 Litre / Day</p>
-                      <div className="flex items-center gap-2 mt-1.5 text-[9px] font-bold uppercase tracking-wider">
-                        <span className="text-slate-400 dark:text-slate-500">Daily Delivery</span>
-                        <span className="px-1.5 py-0.5 rounded bg-green-500/10 text-green-600 dark:text-green-400 font-extrabold">Active</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Details list */}
-                  <div className="flex flex-col gap-3 border-t border-slate-100 dark:border-slate-800/60 pt-4">
-                    {[
-                      { icon: Package, label: 'Quantity', val: '1 Litre / Day' },
-                      { icon: Clock, label: 'Delivery Time', val: 'Before 7:00 AM' },
-                      { icon: Tag, label: 'Plan Type', val: 'Daily Subscription' },
-                      { icon: MapPin, label: 'Price', val: priceLoading ? 'Loading...' : `₹${dailyRate.toFixed(2)} / Day` },
-                    ].map(({ icon: Icon, label, val }) => (
-                      <div key={label} className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                          <Icon size={13} className="text-slate-300 dark:text-slate-600 flex-shrink-0" /> {label}
-                        </span>
-                        <span className="font-extrabold text-slate-800 dark:text-slate-200">{val}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Monthly estimate */}
-                  <div className="p-4 rounded-xl border border-border/30 dark:border-slate-800/60 bg-cream-50 dark:bg-slate-900/60 mt-2">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-[10px] font-extrabold tracking-wider text-slate-400 dark:text-slate-500 uppercase leading-none">Estimated Monthly</p>
-                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">({daysInMonth} Days)</p>
-                        <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 mt-0.5">No additional taxes</p>
-                      </div>
-                      <div className="flex items-baseline font-black text-slate-800 dark:text-white">
-                        <span className="text-sm mr-0.5 text-slate-400 dark:text-slate-500">₹</span>
-                        <span className="text-2xl font-black font-display tracking-tight text-brand-primary dark:text-white">{priceLoading ? '...' : monthlyPrice.toLocaleString()}</span>
-                        <span className="text-xs text-amber-500 ml-1">✦</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Feature pills */}
-                  <div className="grid grid-cols-3 gap-3 border-t border-slate-100 dark:border-slate-800/60 pt-4">
-                    {[
-                      { icon: Leaf, label: 'Farm Fresh', desc: 'Direct from our farm' },
-                      { icon: ShieldCheck, label: 'Pure A2', desc: '100% Natural' },
-                      { icon: Truck, label: 'Morning', desc: 'Before 7 AM daily' },
-                    ].map(({ icon: Icon, label, desc }) => (
-                      <div key={label} className="flex flex-col items-center text-center p-2.5 rounded-xl border border-slate-100/40 dark:border-slate-800/40 bg-slate-50/40 dark:bg-slate-900/20">
-                        <div className="w-8 h-8 rounded-full bg-blue-500/10 text-brand-secondary flex items-center justify-center mb-1.5">
-                          <Icon size={16} />
-                        </div>
-                        <p className="text-[9px] font-extrabold text-slate-700 dark:text-slate-300 uppercase leading-snug">{label}</p>
-                        <p className="text-[8px] font-medium text-slate-400 dark:text-slate-500 mt-0.5 leading-none">{desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </motion.div>
-            ) : (
-              // SUCCESS
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="max-w-md mx-auto p-6 sm:p-8 rounded-brand-2xl border border-border/40 dark:border-slate-800/80 bg-white dark:bg-cream-100 shadow-[0_4px_24px_var(--shadow)] flex flex-col items-center text-center gap-6 my-10"
-              >
-                <div className="w-16 h-16 rounded-full bg-green-500/10 text-green-500 dark:text-green-400 flex items-center justify-center relative">
-                  <div className="w-20 h-20 rounded-full bg-green-500/5 animate-ping absolute" />
-                  <Check size={40} />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-white tracking-tight leading-tight">Subscription Confirmed!</h2>
-                <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Thank you! Your standard 1L/day delivery starts from{' '}
-                  {new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}.
-                </p>
-                <div className="w-full flex flex-col gap-3 p-4 rounded-xl bg-slate-50/60 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/60 text-xs font-bold text-slate-600 dark:text-slate-400">
-                  <div className="flex justify-between items-center">
-                    <span>Order ID</span>
-                    <span className="font-mono text-slate-800 dark:text-slate-200">#{orderId}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>Amount Paid</span>
-                    <span className="font-mono text-slate-800 dark:text-slate-200">₹{monthlyPrice.toFixed(0)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>Starts From</span>
-                    <span className="font-mono text-slate-800 dark:text-slate-200">{formatDate(startDate)}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => window.location.href = '/dashboard'}
-                  className="w-full px-6 h-12 bg-gradient-to-r from-brand-primary to-brand-secondary hover:shadow-[0_4px_16px_rgba(2,132,199,0.3)] active:translate-y-0 hover:-translate-y-0.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all cursor-pointer mt-2"
+        {/* ══════════════════════════════════════════════════════════
+            TESTIMONIALS
+        ══════════════════════════════════════════════════════════ */}
+        <section className="py-20 px-5 bg-[#02429C]">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <span className="text-[11px] font-extrabold tracking-widest uppercase text-white/50">Testimonials</span>
+              <h2 className="font-cabinet text-3xl sm:text-4xl font-bold text-white mt-2">
+                What our customers say
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {TESTIMONIALS.map(({ name, area, text, rating, avatar }, i) => (
+                <motion.div
+                  key={name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.1 }}
+                  className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 backdrop-blur-sm"
                 >
-                  Go to Dashboard <ArrowRight size={16} />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: rating }).map((_, j) => (
+                      <Star key={j} size={14} fill="#facc15" className="text-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-white/80 text-sm leading-relaxed flex-1">&ldquo;{text}&rdquo;</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-[#0284C7]/30 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      {avatar}
+                    </div>
+                    <div>
+                      <p className="text-white text-sm font-bold">{name}</p>
+                      <p className="text-white/40 text-xs">{area}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════
+            FAQ
+        ══════════════════════════════════════════════════════════ */}
+        <section className="py-20 px-5 bg-white">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-12">
+              <span className="text-[11px] font-extrabold tracking-widest uppercase text-[#0284C7]">FAQ</span>
+              <h2 className="font-cabinet text-3xl sm:text-4xl font-bold text-[#0f2e5c] mt-2">
+                Got questions?
+              </h2>
+            </div>
+            <div className="flex flex-col gap-3">
+              {faqs.map(({ q, a }, i) => (
+                <div
+                  key={i}
+                  className="border border-slate-200 rounded-xl overflow-hidden"
+                >
+                  <button
+                    onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                    className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left bg-white hover:bg-slate-50 transition-colors"
+                  >
+                    <span className="font-cabinet font-bold text-slate-900 text-sm">{q}</span>
+                    <ChevronDown
+                      size={16}
+                      className={cn('text-slate-400 flex-shrink-0 transition-transform duration-200', faqOpen === i ? 'rotate-180' : '')}
+                    />
+                  </button>
+                  {faqOpen === i && (
+                    <div className="px-5 pb-5 text-sm text-slate-500 leading-relaxed bg-white border-t border-slate-100">
+                      {a}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════
+            FINAL CTA
+        ══════════════════════════════════════════════════════════ */}
+        <section className="py-20 px-5 bg-gradient-to-br from-[#0284C7] to-[#0f2e5c]">
+          <div className="max-w-2xl mx-auto text-center flex flex-col items-center gap-6">
+            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center">
+              <Milk size={32} className="text-white" />
+            </div>
+            <h2 className="font-cabinet text-3xl sm:text-4xl font-bold text-white leading-tight">
+              Ready to start your mornings right?
+            </h2>
+            <p className="text-white/70 text-sm sm:text-base max-w-md leading-relaxed">
+              Join hundreds of Mangalore families who trust Amruth Dairy for their daily milk. Fresh, pure, and on time — every day.
+            </p>
+            <button
+              onClick={handleSubscribe}
+              disabled={ctaLoading}
+              className="inline-flex items-center gap-2 h-13 px-10 rounded-[12px] bg-white text-[#0f2e5c] font-bold text-[15px] hover:bg-yellow-400 transition-all duration-200 hover:scale-105 disabled:opacity-60 shadow-xl"
+            >
+              {ctaLoading
+                ? <span className="w-5 h-5 border-2 border-[#0f2e5c]/30 border-t-[#0f2e5c] rounded-full animate-spin" />
+                : <><Check size={16} strokeWidth={2.5} /> Start My Subscription</>}
+            </button>
+            <div className="flex flex-wrap items-center justify-center gap-4 text-white/50 text-xs font-medium">
+              <span className="flex items-center gap-1"><Check size={12} className="text-green-400" /> No lock-in period</span>
+              <span className="flex items-center gap-1"><Check size={12} className="text-green-400" /> Skip any day</span>
+              <span className="flex items-center gap-1"><Check size={12} className="text-green-400" /> Cancel anytime</span>
+            </div>
+          </div>
+        </section>
+
       </main>
       <Footer />
     </>
   )
-}
+}

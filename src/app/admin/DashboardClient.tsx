@@ -31,6 +31,7 @@ interface DashboardClientProps {
     totalRevenue: number
     deliveriesCount: number
     skippedCount: number
+    newCustomersThisWeek?: number
   }
   deliveriesList: Array<{
     id: string
@@ -241,7 +242,7 @@ export default function DashboardClient({
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
-                +12%
+                +{stats.newCustomersThisWeek || 0} New
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                 this week
@@ -264,10 +265,10 @@ export default function DashboardClient({
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
-                +8%
+                {subOverview.active + subOverview.pending > 0 ? Math.round((subOverview.active / (subOverview.active + subOverview.pending)) * 100) : 0}% Active
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                of {stats.totalSubscriptions} total
+                of {subOverview.active + subOverview.pending} total
               </span>
             </div>
           </div>
@@ -287,10 +288,10 @@ export default function DashboardClient({
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-amber-700 bg-amber-500/10 border border-amber-200/20">
-                Active
+                {stats.skippedCount} Skipped
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                {stats.skippedCount} skipped
+                out of {stats.deliveriesCount + stats.skippedCount} total
               </span>
             </div>
           </div>
@@ -310,7 +311,7 @@ export default function DashboardClient({
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
-                +15%
+                Real-Time
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                 this cycle
@@ -369,55 +370,65 @@ export default function DashboardClient({
                 </tr>
               </thead>
               <tbody>
-                {deliveriesList.slice(0, 6).map((del, idx) => {
-                  // Cycle through nice, bright, premium gradients for avatars
-                  const gradients = [
-                    "from-blue-500 to-indigo-600",
-                    "from-violet-500 to-fuchsia-600",
-                    "from-emerald-500 to-teal-600",
-                    "from-amber-500 to-orange-600",
-                    "from-rose-500 to-pink-600",
-                    "from-sky-500 to-blue-600"
-                  ];
-                  const avatarBg = gradients[idx % gradients.length];
-                  
-                  return (
-                    <tr 
-                      key={del.id || idx} 
-                      className="border-b border-slate-100/70 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors h-[60px]"
-                    >
-                      <td className="py-2.5">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs text-white bg-gradient-to-br shadow-3xs",
-                            avatarBg
-                          )}>
-                            {del.customerName ? del.customerName.charAt(0) : 'C'}
+                {deliveriesList.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center">
+                      <p className="text-[12.5px] font-bold text-slate-400 dark:text-slate-500">
+                        No live deliveries generated for today yet.
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  deliveriesList.slice(0, 6).map((del, idx) => {
+                    // Cycle through nice, bright, premium gradients for avatars
+                    const gradients = [
+                      "from-blue-500 to-indigo-600",
+                      "from-violet-500 to-fuchsia-600",
+                      "from-emerald-500 to-teal-600",
+                      "from-amber-500 to-orange-600",
+                      "from-rose-500 to-pink-600",
+                      "from-sky-500 to-blue-600"
+                    ];
+                    const avatarBg = gradients[idx % gradients.length];
+                    
+                    return (
+                      <tr 
+                        key={del.id || idx} 
+                        className="border-b border-slate-100/70 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors h-[60px]"
+                      >
+                        <td className="py-2.5">
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs text-white bg-gradient-to-br shadow-3xs",
+                              avatarBg
+                            )}>
+                              {del.customerName ? del.customerName.charAt(0) : 'C'}
+                            </div>
+                            <div>
+                              <p className="text-[13.5px] font-extrabold text-slate-800 dark:text-slate-100 leading-none">
+                                {del.customerName}
+                              </p>
+                              <p className="text-[10.5px] font-bold text-slate-400 dark:text-slate-550 mt-1">
+                                ID: #{String(del.id).slice(-4)}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-[13.5px] font-extrabold text-slate-800 dark:text-slate-100 leading-none">
-                              {del.customerName}
-                            </p>
-                            <p className="text-[10.5px] font-bold text-slate-400 dark:text-slate-550 mt-1">
-                              ID: #{String(del.id).slice(-4)}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-2.5 text-[12.5px] font-extrabold text-slate-600 dark:text-slate-300">
-                        {del.area}
-                      </td>
-                      <td className="py-2.5 text-center">
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40">
-                          {del.qty}
-                        </span>
-                      </td>
-                      <td className="py-2.5 text-right">
-                        <StatusBadge status={del.status || 'pending'} />
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+                        <td className="py-2.5 text-[12.5px] font-extrabold text-slate-600 dark:text-slate-300">
+                          {del.area}
+                        </td>
+                        <td className="py-2.5 text-center">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40">
+                            {del.qty}
+                          </span>
+                        </td>
+                        <td className="py-2.5 text-right">
+                          <StatusBadge status={del.status || 'pending'} />
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>

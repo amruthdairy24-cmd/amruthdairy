@@ -57,7 +57,7 @@ export const SKIP_DEADLINE_HOUR_IST = 21 // 9:00 PM IST
  * Support phone number.
  */
 export const SUPPORT_PHONE = '+91 98765 43210'
-export const SUPPORT_PHONE_RAW = '+919876543210'
+export const SUPPORT_PHONE_RAW = '+91+91 9880143808'
 
 /**
  * Default app_settings key for price per litre.

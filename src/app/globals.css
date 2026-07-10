@@ -11,6 +11,9 @@
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), monospace;
   --font-playfair: var(--font-playfair), Georgia, serif;
+  --font-bespoke: var(--font-bespoke), system-ui, sans-serif;
+  --font-panchang: var(--font-panchang), system-ui, sans-serif;
+  --font-cabinet: var(--font-cabinet), system-ui, sans-serif;
 
   /* Brand Color Tokens */
   --color-brand-primary: #0f2e5c;
@@ -79,30 +82,81 @@
 
 /* Keyframes */
 @keyframes fadeUp {
-  0% { opacity: 0; transform: translateY(16px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
+
 @keyframes slideRight {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
 }
+
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
+
 @keyframes wave {
-  0% { transform: rotate(0.0deg) }
-  10% { transform: rotate(14.0deg) }
-  20% { transform: rotate(-8.0deg) }
-  30% { transform: rotate(14.0deg) }
-  40% { transform: rotate(-4.0deg) }
-  50% { transform: rotate(10.0deg) }
-  60% { transform: rotate(0.0deg) }
-  100% { transform: rotate(0.0deg) }
+  0% {
+    transform: rotate(0.0deg)
+  }
+
+  10% {
+    transform: rotate(14.0deg)
+  }
+
+  20% {
+    transform: rotate(-8.0deg)
+  }
+
+  30% {
+    transform: rotate(14.0deg)
+  }
+
+  40% {
+    transform: rotate(-4.0deg)
+  }
+
+  50% {
+    transform: rotate(10.0deg)
+  }
+
+  60% {
+    transform: rotate(0.0deg)
+  }
+
+  100% {
+    transform: rotate(0.0deg)
+  }
 }
 
 /* Light Theme Variables */
@@ -179,13 +233,17 @@
 
 /* ── Base Resets & Defaults ──────────────────────────────── */
 @layer base {
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
   }
 
-  html, body {
+  html,
+  body {
     max-width: 100%;
     overflow-x: hidden;
   }
@@ -215,13 +273,16 @@
     width: 8px;
     height: 8px;
   }
+
   ::-webkit-scrollbar-track {
     background: var(--cream-50);
   }
+
   ::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: 999px;
   }
+
   ::-webkit-scrollbar-thumb:hover {
     background: var(--amber-600);
   }
@@ -238,6 +299,7 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -246,20 +308,23 @@
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
+
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 4px;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
 
   .milk-drop-pattern {
     background-color: #1a3a2a;
-    background-image: 
+    background-image:
       radial-gradient(rgba(255, 255, 255, 0.08) 2px, transparent 2px),
       radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 32px 32px;
@@ -309,6 +374,7 @@
   cursor: pointer;
   transition: color 0.15s;
 }
+
 .input-icon-right:hover {
   color: #4b5563;
 }
