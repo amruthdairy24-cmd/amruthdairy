@@ -159,6 +159,8 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
   const isToday = selectedDate === initialDate
 
   const filteredDeliveries = deliveries.filter(d => {
+    if (d.is_skip || d.is_vacation) return false;
+
     // text search
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
@@ -169,7 +171,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
     }
     // status filter
     if (filterStatus === 'pending') {
-      if (d.delivery_status !== 'pending' || d.is_skip || d.is_vacation) return false
+      if (d.delivery_status !== 'pending') return false
     } else if (filterStatus === 'delivered') {
       if (d.delivery_status !== 'delivered') return false
     }
