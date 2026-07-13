@@ -38,7 +38,7 @@ export default function NotFound() {
         
         {/* My Account button */}
         <Link
-          href="/account"
+          href="/dashboard/account"
           className="inline-flex items-center justify-center h-[46px] px-8 rounded-xl bg-transparent hover:bg-slate-100 dark:hover:bg-slate-900 border-1.5 border-slate-900/15 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-[0.95rem] no-underline hover:scale-105 active:scale-98 transition-all duration-200"
         >
           My Account
