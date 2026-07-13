@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -110,16 +111,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ===== DESKTOP SIDEBAR ===== */}
       <aside className="hidden lg:flex flex-col w-[260px] z-30 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-150 dark:border-slate-800 transition-colors duration-300">
         {/* Logo */}
-        <div className="px-6 h-[72px] flex items-center gap-3 flex-shrink-0 border-b border-slate-100 dark:border-slate-800">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-[#014DA4] to-brand-secondary shadow-md shadow-brand-primary/10">
-            <span className="text-lg">🥛</span>
-          </div>
-          <div>
-            <p className="text-[18px] font-black text-slate-900 dark:text-white leading-none tracking-tight font-display">Amruth</p>
-            <p className="text-[9px] font-bold uppercase tracking-widest mt-1.5 text-brand-secondary">
-              Organic Dairy
-            </p>
-          </div>
+        <div className="px-6 py-5 flex items-center justify-center flex-shrink-0">
+          <Link href="/" className="flex items-center justify-center w-full">
+            <Image 
+              src="/images/logo/amruth-logo.png" 
+              alt="Amruth Dairy Logo" 
+              width={260} 
+              height={64} 
+              className="w-52 h-16 object-contain dark:brightness-110" 
+              priority
+            />
+          </Link>
         </div>
 
         {/* Navigation */}
@@ -301,17 +303,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed top-0 bottom-0 left-0 w-[280px] z-[70] lg:hidden shadow-2xl flex flex-col bg-white dark:bg-slate-900 border-r border-slate-150 dark:border-slate-800 transition-colors duration-300"
             >
-              <div className="px-6 h-[72px] flex items-center justify-between flex-shrink-0 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-[#014DA4] to-brand-secondary shadow-sm">
-                    <span className="text-lg">🥛</span>
-                  </div>
-                  <div>
-                    <p className="text-[18px] font-black text-slate-900 dark:text-white leading-none tracking-tight font-display">Amruth</p>
-                    <p className="text-[9px] font-bold uppercase tracking-widest mt-1 text-brand-secondary">
-                      Organic Dairy
-                    </p>
-                  </div>
+              <div className="px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <div className="flex-1 flex justify-center py-1">
+                  <Link href="/" className="flex items-center justify-center">
+                    <Image 
+                      src="/images/logo/amruth-logo.png" 
+                      alt="Amruth Dairy Logo" 
+                      width={260} 
+                      height={64} 
+                      className="w-52 h-16 object-contain dark:brightness-110" 
+                      priority
+                    />
+                  </Link>
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
