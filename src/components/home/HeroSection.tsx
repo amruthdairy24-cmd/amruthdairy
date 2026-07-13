@@ -217,9 +217,9 @@ export function HeroSection() {
         ))}
       </div>
 
-      {/* ── Wavy bottom divider (absolute bottom) ── */}
-      <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-white z-10 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none">
+      {/* ── Mobile Wavy bottom divider (visible on mobile only) ── */}
+      <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-white z-10 pointer-events-none md:hidden" />
+      <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none md:hidden">
         <svg
           viewBox="0 0 1440 120"
           fill="none"
@@ -230,6 +230,25 @@ export function HeroSection() {
           <path
             d="M0,40 C150,90 350,90 500,40 C650,-10 850,-10 1000,40 C1150,90 1350,90 1440,40 L1440,120 L0,120 Z"
             fill="#ffffff"
+          />
+        </svg>
+      </div>
+
+      {/* ── Desktop Wavy bottom divider (visible on desktop only) ── */}
+      <div className="absolute bottom-[-2px] left-0 right-0 h-[3px] bg-white z-10 pointer-events-none hidden md:block" />
+      <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none hidden md:block">
+        <svg
+          viewBox="0 0 1440 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-[50px] lg:h-[70px] block"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,80 C150,110 350,110 500,85 C650,60 850,65 1000,90 C1150,110 1350,110 1440,95 L1440,120 L0,120 Z"
+            fill="#ffffff"
+            stroke="#ffffff"
+            strokeWidth="1"
           />
         </svg>
       </div>
