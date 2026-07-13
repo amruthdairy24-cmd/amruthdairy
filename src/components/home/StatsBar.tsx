@@ -27,21 +27,21 @@ const stats = [
 
 const StatsBar = () => {
   return (
-    <section id="stats-bar" className="relative z-10 bg-white px-3 pt-4 pb-6 md:px-4 md:pt-10">
+    <section id="stats-bar" className="relative z-10 bg-white px-3 pt-1 pb-4 md:px-4 md:pt-10">
       <div className="mx-auto max-w-6xl">
 
         {/* ── Mobile: horizontal 4-column row ── */}
-        <div className="grid grid-cols-4 gap-2 md:hidden">
+        <div className="grid grid-cols-4 gap-1.5 md:hidden">
           {stats.map((item, index) => {
             const Icon = item.icon;
             return (
               <div
                 key={index}
-                className="flex flex-col items-center text-center gap-1.5 p-2.5 rounded-2xl bg-white border border-sky-100 shadow-sm"
+                className="flex flex-col items-center text-center gap-1 p-2 rounded-2xl bg-white border border-sky-100 shadow-sm"
               >
                 {/* Icon circle */}
-                <div className="w-10 h-10 rounded-full bg-sky-50 border border-sky-100 flex items-center justify-center text-[#02429C] flex-shrink-0">
-                  <Icon size={18} strokeWidth={1.6} />
+                <div className="w-9 h-9 rounded-full bg-sky-50 border border-sky-100 flex items-center justify-center text-[#02429C] flex-shrink-0">
+                  <Icon size={16} strokeWidth={1.6} />
                 </div>
                 {/* Title */}
                 <p className="text-[10px] font-extrabold text-[#013378] leading-tight">

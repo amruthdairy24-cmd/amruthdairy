@@ -44,7 +44,7 @@ export function HeroSection() {
   return (
     <section
       id="home"
-      className="relative min-h-[85vh] md:min-h-screen flex flex-col overflow-hidden"
+      className="relative min-h-[66vh] md:min-h-screen flex flex-col overflow-hidden"
     >
       {/* ── Background carousel (mobile & desktop) ── */}
       <div className="absolute inset-0 z-0">
@@ -90,16 +90,16 @@ export function HeroSection() {
       />
 
       {/* ── Mobile Content (visible only on mobile) ── */}
-      <div className="md:hidden relative z-10 flex flex-col justify-center min-h-[85vh] pt-24 pb-16 px-6">
+      <div className="md:hidden relative z-10 flex flex-col justify-center min-h-[66vh] pt-20 pb-10 px-5">
         <div className="flex flex-col items-start text-left max-w-[280px]">
           {/* Headline */}
-          <h1 className="font-cabinet text-[32px] font-extrabold text-[#013378] mb-3 leading-[1.18]">
+          <h1 className="font-cabinet text-[28px] font-extrabold text-[#013378] mb-2 leading-[1.18]">
             Fresh Milk<br />
             Delivered<br />
             <span className="relative inline-block text-yellow-400 font-extrabold whitespace-nowrap">
               Before
               <svg
-                className="absolute left-0 -bottom-1 w-full h-2"
+                className="absolute left-0 -bottom-1 w-full h-1.5"
                 viewBox="0 0 100 8"
                 xmlns="http://www.w3.org/2000/svg"
                 preserveAspectRatio="none"
@@ -112,7 +112,7 @@ export function HeroSection() {
           </h1>
 
           {/* Tagline */}
-          <p className="font-cabinet text-[11px] text-gray-500 leading-relaxed mb-6 max-w-[210px] font-normal">
+          <p className="font-cabinet text-[10.5px] text-gray-500 leading-relaxed mb-4 max-w-[210px] font-normal">
             Pure cow milk delivered directly from our farm to your doorstep every morning.
             No preservatives. No compromise.
           </p>
@@ -121,24 +121,24 @@ export function HeroSection() {
           <button
             onClick={handleSubscribeClick}
             id="mobile-hero-subscribe"
-            className="font-cabinet inline-flex items-center justify-center gap-1.5 h-11 px-6 rounded-[10px] bg-[#02429C] text-white font-semibold text-[14px] transition-all duration-200 cursor-pointer mb-5 shadow-md hover:shadow-lg hover:scale-105"
+            className="font-cabinet inline-flex items-center justify-center gap-1.5 h-10 px-5 rounded-[10px] bg-[#02429C] text-white font-semibold text-[13px] transition-all duration-200 cursor-pointer mb-3.5 shadow-md hover:shadow-lg hover:scale-105"
           >
             Subscribe Today
-            <ArrowRight size={15} strokeWidth={2.2} />
+            <ArrowRight size={14} strokeWidth={2.2} />
           </button>
 
           {/* Watch Our Story */}
           <Link
             href="#our-story"
             id="mobile-hero-watch-story"
-            className="inline-flex items-center gap-2.5 group"
+            className="inline-flex items-center gap-2 group"
           >
-            <div className="w-9 h-9 rounded-full border-[1.5px] border-sky-400 bg-white flex items-center justify-center text-sky-500 shadow-sm group-hover:bg-sky-50 transition-all flex-shrink-0">
-              <Play size={11} fill="currentColor" className="ml-0.5" />
+            <div className="w-8 h-8 rounded-full border-[1.5px] border-sky-400 bg-white flex items-center justify-center text-sky-500 shadow-sm group-hover:bg-sky-50 transition-all flex-shrink-0">
+              <Play size={10} fill="currentColor" className="ml-0.5" />
             </div>
             <div className="flex flex-col items-start leading-tight">
-              <span className="text-[12.5px] font-extrabold text-[#013378]">Watch Our Story</span>
-              <span className="text-[9.5px] font-medium text-gray-400 mt-0.5">30 sec reel</span>
+              <span className="text-[11.5px] font-extrabold text-[#013378]">Watch Our Story</span>
+              <span className="text-[9px] font-medium text-gray-400 mt-0.5">30 sec reel</span>
             </div>
           </Link>
         </div>
