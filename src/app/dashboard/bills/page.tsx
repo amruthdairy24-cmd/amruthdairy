@@ -40,9 +40,12 @@ interface SubscriptionData {
 }
 
 interface ExtraMilkOrder {
+  id?: string;
   order_date: string;
   extra_litres: number;
   charge_amount: number;
+  skip_credit_applied?: number;
+  net_charge_amount?: number;
   status: string;
 }
 
@@ -291,10 +294,14 @@ export default function BillsPage() {
     .reduce((sum, a) => sum + Math.abs(a.amount), 0)
 
   // Extra milk upcoming
-  const totalExtraMilkCharges = upcomingExtras.reduce((sum, e) => sum + (e.charge_amount || 0), 0)
+  const totalGrossExtraMilk = upcomingExtras.reduce((sum, e) => sum + (e.charge_amount || 0), 0)
+  const totalExtraMilkCharges = upcomingExtras.reduce((sum, e) => sum + Number(e.net_charge_amount !== undefined ? e.net_charge_amount : e.charge_amount || 0), 0)
+  const totalSkipCreditsAppliedToExtra = upcomingExtras.reduce((sum, e) => sum + Number(e.skip_credit_applied || 0), 0)
+
+  
   const totalSkipCredits = upcomingSkips.reduce((sum: number, s: any) => sum + (s.credit_amount || 0), 0)
-  const extraMilkAfterCredits = Math.max(0, totalExtraMilkCharges - totalSkipCredits)
-  const creditsUsedForExtra = Math.min(totalSkipCredits, totalExtraMilkCharges)
+  const extraMilkAfterCredits = totalExtraMilkCharges
+  const creditsUsedForExtra = totalSkipCreditsAppliedToExtra
 
   // Plan info
   const planLabel = subscription
@@ -714,10 +721,10 @@ export default function BillsPage() {
                 <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800 rounded-xl p-4 space-y-2.5 text-[12px]">
                   <div className="flex justify-between items-center font-semibold text-slate-600 dark:text-slate-300">
                     <span>Total Extra Milk</span>
-                    <span className="font-mono font-bold text-amber-600 dark:text-amber-400">₹{totalExtraMilkCharges.toFixed(2)}</span>
+                    <span className="font-mono font-bold text-amber-600 dark:text-amber-400">₹{totalGrossExtraMilk.toFixed(2)}</span>
                   </div>
 
-                  {totalSkipCredits > 0 && (
+                  {creditsUsedForExtra > 0 && (
                     <div className="flex justify-between items-center font-semibold text-slate-600 dark:text-slate-300">
                       <span className="flex items-center gap-1.5">
                         <SkipForward size={11} className="text-emerald-500" />
