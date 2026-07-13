@@ -10,7 +10,7 @@ import { usePathname } from 'next/navigation'
 import { ConfirmModal } from '@/components/ui'
 import { motion, AnimatePresence } from 'framer-motion'
 const navLinks = [
-  {href:'/' ,label:'Home'},
+  { href: '/', label: 'Home' },
   { href: '/#products', label: 'Products' },
   { href: '/subscribe', label: 'Subscription' },
   // { href: '/shop', label: 'Farm Shop' },
@@ -77,7 +77,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className={`fixed w-full z-50 transition-all duration-500 h-[70px] flex items-center px-10 ${isScrolled || forceWhiteBg ? 'bg-white shadow-sm' : 'bg-white shadow-sm md:bg-transparent md:shadow-none'}`}>
+      <header className={`fixed w-full z-50 transition-all duration-500 h-[70px] flex items-center px-0 md:px-10 ${isScrolled || forceWhiteBg ? 'bg-white shadow-sm' : 'bg-white shadow-sm md:bg-transparent md:shadow-none'}`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between w-full">
 
           {/* Logo */}
@@ -97,8 +97,8 @@ export function Navbar() {
                   href={targetHref}
                   onClick={() => setActiveLink(href)}
                   className={`font-cabinet text-sm font-bold transition-all duration-300 ${isActive
-                      ? "text-brand-secondary"
-                      : "text-brand-primary/80 dark:text-slate-300 hover:text-brand-secondary"
+                    ? "text-brand-secondary"
+                    : "text-brand-primary/80 dark:text-slate-300 hover:text-brand-secondary"
                     }`}
                 >
                   {label}
@@ -207,8 +207,8 @@ export function Navbar() {
                         setMenuOpen(false)
                       }}
                       className={`text-lg font-semibold py-3 px-4 rounded-xl transition-all ${isActive
-                          ? 'bg-blue-50 text-[#02429C]'
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-[#02429C]'
+                        ? 'bg-blue-50 text-[#02429C]'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-[#02429C]'
                         }`}
                     >
                       {label}
