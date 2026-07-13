@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { 
   Package, 
   Plus, 
@@ -14,7 +14,10 @@ import {
   TrendingUp, 
   Check, 
   Info, 
-  Layers 
+  Layers,
+  Upload,
+  Image as ImageIcon,
+  Sparkles
 } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
@@ -30,6 +33,14 @@ interface Product {
   unit: string;
   stock_available: number;
   is_active: boolean;
+  image_url?: string | null;
+  badge?: string | null;
+  badge_icon?: string | null;
+  tagline?: string | null;
+  features?: string[];
+  features_icons?: string[];
+  is_subscription?: boolean;
+  display_order?: number | null;
 }
 
 interface SubscriptionPlan {
@@ -53,10 +64,14 @@ export function ProductsClient({
   rawMilkPricing?: any 
 }) {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [showModal, setShowModal] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [editProductId, setEditProductId] = useState<string | null>(null)
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>('')
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('')
@@ -69,7 +84,15 @@ export function ProductsClient({
     price: '',
     unit: '',
     stock_available: '0',
-    is_active: true
+    is_active: true,
+    image_url: '',
+    badge: '',
+    badge_icon: '',
+    tagline: '',
+    features: '',
+    features_icons: '',
+    is_subscription: false,
+    display_order: '',
   })
 
   // Milk Pricing Modal State
@@ -188,12 +211,44 @@ export function ProductsClient({
     }
   }
 
+  const handleFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPendingFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const EMPTY_FORM = {
+    name: '', category: '', price: '', unit: '',
+    stock_available: '0', is_active: true,
+    image_url: '', badge: '', badge_icon: '', tagline: '',
+    features: '', features_icons: '', is_subscription: false, display_order: '',
+  }
+
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setErrorMsg(null)
 
     try {
+      // 1. Upload image first if a new file was picked
+      let finalImageUrl = formData.image_url
+      if (pendingFile) {
+        setIsUploadingImage(true)
+        const fd = new FormData()
+        fd.append('file', pendingFile)
+        const uploadRes = await fetch('/api/admin/products/upload-image', { method: 'POST', body: fd })
+        const uploadData = await uploadRes.json()
+        if (!uploadRes.ok || !uploadData.success) throw new Error(uploadData.message || 'Image upload failed')
+        finalImageUrl = uploadData.url
+        setIsUploadingImage(false)
+      }
+
+      // 2. Parse comma-separated feature/icon arrays
+      const featuresArr = formData.features.split(',').map((s: string) => s.trim()).filter(Boolean)
+      const iconsArr = formData.features_icons.split(',').map((s: string) => s.trim()).filter(Boolean)
+
+      // 3. Submit product
       const method = editProductId ? 'PUT' : 'POST'
       const body = {
         name: formData.name,
@@ -202,6 +257,14 @@ export function ProductsClient({
         unit: formData.unit,
         stock_available: Number(formData.stock_available),
         is_active: formData.is_active,
+        image_url: finalImageUrl || null,
+        badge: formData.badge || null,
+        badge_icon: formData.badge_icon || null,
+        tagline: formData.tagline || null,
+        features: featuresArr,
+        features_icons: iconsArr,
+        is_subscription: formData.is_subscription,
+        display_order: formData.display_order ? Number(formData.display_order) : null,
         ...(editProductId && { id: editProductId })
       }
 
@@ -215,11 +278,14 @@ export function ProductsClient({
       if (!res.ok) throw new Error(result.message || `Failed to ${editProductId ? 'update' : 'add'} product`)
 
       setShowModal(false)
-      setFormData({ name: '', category: '', price: '', unit: '', stock_available: '0', is_active: true })
+      setFormData(EMPTY_FORM)
       setEditProductId(null)
+      setPendingFile(null)
+      setImagePreview('')
       router.refresh()
     } catch (err: any) {
       setErrorMsg(err.message)
+      setIsUploadingImage(false)
     } finally {
       setIsSubmitting(false)
     }
@@ -232,15 +298,29 @@ export function ProductsClient({
       price: product.price.toString(),
       unit: product.unit,
       stock_available: product.stock_available.toString(),
-      is_active: product.is_active
+      is_active: product.is_active,
+      image_url: product.image_url || '',
+      badge: product.badge || '',
+      badge_icon: product.badge_icon || '',
+      tagline: product.tagline || '',
+      features: (product.features || []).join(', '),
+      features_icons: (product.features_icons || []).join(', '),
+      is_subscription: product.is_subscription || false,
+      display_order: product.display_order?.toString() || '',
     })
+    setImagePreview(product.image_url || '')
+    setPendingFile(null)
     setEditProductId(product.id)
+    setErrorMsg(null)
     setShowModal(true)
   }
 
   const openAddModal = () => {
-    setFormData({ name: '', category: '', price: '', unit: '', stock_available: '0', is_active: true })
+    setFormData({ name: '', category: '', price: '', unit: '', stock_available: '0', is_active: true, image_url: '', badge: '', badge_icon: '', tagline: '', features: '', features_icons: '', is_subscription: false, display_order: '' })
+    setImagePreview('')
+    setPendingFile(null)
     setEditProductId(null)
+    setErrorMsg(null)
     setShowModal(true)
   }
 
@@ -639,57 +719,63 @@ export function ProductsClient({
 
       {/* ADD / EDIT PRODUCT MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-950/45 dark:bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-8 w-full max-w-[500px] shadow-2xl relative text-slate-900 dark:text-slate-100">
+        <div className="fixed inset-0 bg-slate-950/45 dark:bg-slate-950/70 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-8 w-full max-w-[540px] shadow-2xl relative text-slate-900 dark:text-slate-100 my-6">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3 text-slate-900 dark:text-white">
                 <Package size={24} className="text-[#014DA4] dark:text-blue-400" />
                 <h3 className="text-xl font-black font-display m-0">
-                  {editProductId ? 'Edit Product Catalog' : 'Add New Product'}
+                  {editProductId ? 'Edit Product' : 'Add New Product'}
                 </h3>
               </div>
               <button 
-                onClick={() => setShowModal(false)} 
+                onClick={() => { setShowModal(false); setPendingFile(null); setImagePreview('') }} 
                 className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none cursor-pointer flex items-center justify-center transition-colors"
               >
-                <X size={16} className="text-slate-450 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white" />
+                <X size={16} className="text-slate-450 dark:text-slate-400" />
               </button>
             </div>
             
-            <form onSubmit={handleAddProduct} className="space-y-5">
+            <form onSubmit={handleAddProduct} className="space-y-4">
+
+              {/* ── Core Info ── */}
               <div className="text-left">
                 <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Product Name</label>
                 <input 
-                  required 
-                  type="text" 
-                  value={formData.name} 
-                  onChange={e => setFormData({...formData, name: e.target.value})} 
-                  className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all" 
-                  placeholder="e.g. Premium Farm Paneer" 
+                  required type="text" value={formData.name}
+                  onChange={e => setFormData({...formData, name: e.target.value})}
+                  className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all"
+                  placeholder="e.g. Premium Farm Paneer"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-left">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Category</label>
-                  <input 
-                    required 
-                    type="text" 
-                    value={formData.category} 
-                    onChange={e => setFormData({...formData, category: e.target.value})} 
-                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all" 
-                    placeholder="e.g. dairy" 
-                  />
+                  <select
+                    required value={formData.category}
+                    onChange={e => setFormData({...formData, category: e.target.value})}
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all"
+                  >
+                    <option value="">Select…</option>
+                    <option value="milk">Milk</option>
+                    <option value="curd">Curd</option>
+                    <option value="ghee">Ghee</option>
+                    <option value="buttermilk">Buttermilk</option>
+                    <option value="paneer">Paneer</option>
+                    <option value="butter">Butter</option>
+                    <option value="honey">Honey</option>
+                    <option value="dairy">Dairy</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Package Unit</label>
-                  <input 
-                    required 
-                    type="text" 
-                    value={formData.unit} 
-                    onChange={e => setFormData({...formData, unit: e.target.value})} 
-                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all" 
-                    placeholder="e.g. 500g, 1L" 
+                  <input
+                    required type="text" value={formData.unit}
+                    onChange={e => setFormData({...formData, unit: e.target.value})}
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all"
+                    placeholder="e.g. 500g, 1L"
                   />
                 </div>
               </div>
@@ -697,37 +783,142 @@ export function ProductsClient({
               <div className="grid grid-cols-2 gap-4 text-left">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Price (₹)</label>
-                  <input 
-                    required 
-                    type="number" 
-                    step="0.01" 
-                    value={formData.price} 
-                    onChange={e => setFormData({...formData, price: e.target.value})} 
-                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-black font-mono transition-all" 
-                    placeholder="0.00" 
+                  <input
+                    required type="number" step="0.01" value={formData.price}
+                    onChange={e => setFormData({...formData, price: e.target.value})}
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-black font-mono transition-all"
+                    placeholder="0.00"
                   />
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Inventory Stock</label>
-                  <input 
-                    required 
-                    type="number" 
-                    value={formData.stock_available} 
-                    onChange={e => setFormData({...formData, stock_available: e.target.value})} 
-                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-black font-mono transition-all" 
-                    placeholder="0" 
+                  <input
+                    required type="number" value={formData.stock_available}
+                    onChange={e => setFormData({...formData, stock_available: e.target.value})}
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-black font-mono transition-all"
+                    placeholder="0"
                   />
                 </div>
               </div>
 
+              {/* ── Storefront Display Metadata ── */}
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={13} className="text-[#014DA4] dark:text-blue-400" />
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Storefront Display</span>
+                </div>
+
+                {/* Image Upload */}
+                <div className="flex gap-4 items-start text-left">
+                  <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {imagePreview
+                      ? <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                      : <ImageIcon size={24} className="text-slate-300 dark:text-slate-700" />
+                    }
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleFilePick} className="hidden" />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full py-2.5 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-[12px] font-bold text-slate-500 dark:text-slate-400 hover:border-[#014DA4] hover:text-[#014DA4] transition-all flex items-center justify-center gap-2 cursor-pointer bg-transparent"
+                    >
+                      <Upload size={13} />
+                      {pendingFile ? pendingFile.name.substring(0, 26) : 'Choose image…'}
+                    </button>
+                    {formData.image_url && !pendingFile && (
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] text-slate-400 truncate flex-1">Current: {formData.image_url.split('/').pop()}</p>
+                        <button type="button" onClick={() => { setFormData({...formData, image_url: ''}); setImagePreview('') }} className="text-[10px] text-red-400 hover:text-red-600 font-bold border-none bg-transparent cursor-pointer">Remove</button>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-slate-400">JPEG, PNG, WEBP up to 5 MB. Uploaded on save.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-left">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Badge Text</label>
+                    <input
+                      type="text" value={formData.badge}
+                      onChange={e => setFormData({...formData, badge: e.target.value})}
+                      className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all"
+                      placeholder="e.g. Farm Fresh"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Badge Icon (emoji)</label>
+                    <input
+                      type="text" value={formData.badge_icon}
+                      onChange={e => setFormData({...formData, badge_icon: e.target.value})}
+                      className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all"
+                      placeholder="e.g. 🌱"
+                    />
+                  </div>
+                </div>
+
+                <div className="text-left">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Tagline</label>
+                  <input
+                    type="text" value={formData.tagline}
+                    onChange={e => setFormData({...formData, tagline: e.target.value})}
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all"
+                    placeholder="e.g. Delivered Before Sunrise"
+                  />
+                </div>
+
+                <div className="text-left">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Features (comma-separated)</label>
+                  <input
+                    type="text" value={formData.features}
+                    onChange={e => setFormData({...formData, features: e.target.value})}
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all"
+                    placeholder="e.g. 100% Pure, No Additives, A2 Certified"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1 ml-1">Each comma-separated item becomes a feature pill on the storefront</p>
+                </div>
+
+                <div className="text-left">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Feature Icons (comma-separated, same order)</label>
+                  <input
+                    type="text" value={formData.features_icons}
+                    onChange={e => setFormData({...formData, features_icons: e.target.value})}
+                    className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all"
+                    placeholder="e.g. 🥛, 🧪, 🛡️"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-left">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-widest">Display Order</label>
+                    <input
+                      type="number" value={formData.display_order}
+                      onChange={e => setFormData({...formData, display_order: e.target.value})}
+                      className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-mono font-black transition-all"
+                      placeholder="1, 2, 3…"
+                    />
+                  </div>
+                  <div className="flex items-end pb-1">
+                    <label className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                      <input
+                        type="checkbox" checked={formData.is_subscription}
+                        onChange={e => setFormData({...formData, is_subscription: e.target.checked})}
+                        className="w-4 h-4 rounded accent-[#014DA4] border-slate-300 dark:border-slate-800"
+                      />
+                      <span>Subscription<br/><span className="text-[10px] font-semibold text-slate-400">Shows Subscribe CTA</span></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Status (edit only) ── */}
               {editProductId && (
-                <div className="pt-2 text-left">
+                <div className="pt-1 text-left">
                   <label className="flex items-center gap-3 text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
-                    <input 
-                      type="checkbox" 
-                      checked={formData.is_active} 
-                      onChange={e => setFormData({...formData, is_active: e.target.checked})} 
-                      className="w-4 h-4 rounded text-[#014DA4] focus:ring-[#014DA4]/20 border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 accent-[#014DA4]" 
+                    <input
+                      type="checkbox" checked={formData.is_active}
+                      onChange={e => setFormData({...formData, is_active: e.target.checked})}
+                      className="w-4 h-4 rounded text-[#014DA4] focus:ring-[#014DA4]/20 border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 accent-[#014DA4]"
                     />
                     <span>This product is active in store</span>
                   </label>
@@ -735,17 +926,20 @@ export function ProductsClient({
               )}
 
               {errorMsg && (
-                <div className="p-3.5 bg-red-50 dark:bg-red-955/30 text-red-700 dark:text-red-400 rounded-xl text-xs font-bold border border-red-100 dark:border-red-900/50">
-                  {errorMsg}
+                <div className="p-3.5 bg-red-50 dark:bg-red-955/30 text-red-700 dark:text-red-400 rounded-xl text-xs font-bold border border-red-100 dark:border-red-900/50 flex items-start gap-2">
+                  <Info size={14} className="flex-shrink-0 mt-0.5" />
+                  <span>{errorMsg}</span>
                 </div>
               )}
 
-              <button 
+              <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 bg-[#014DA4] hover:bg-[#014da4]/95 text-white border-none rounded-xl text-sm font-extrabold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-blue-500/10 mt-4 active:scale-98"
+                className="w-full py-3.5 bg-[#014DA4] hover:bg-[#014da4]/95 text-white border-none rounded-xl text-sm font-extrabold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-blue-500/10 mt-2 active:scale-98 flex items-center justify-center gap-2"
               >
-                {isSubmitting ? 'Saving Product Records...' : (editProductId ? 'Update Product Details' : 'Save Product Record')}
+                {isSubmitting
+                  ? (isUploadingImage ? 'Uploading image…' : 'Saving…')
+                  : (editProductId ? 'Update Product' : 'Save Product')}
               </button>
             </form>
           </div>
