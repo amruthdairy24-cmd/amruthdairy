@@ -5,6 +5,7 @@ import { OurStory } from '@/components/home/OurStory'
 import { HowItWorks } from '@/components/home/HowItWorks'
 import { ProductsPreview } from '@/components/home/ProductsPreview'
 import StatsBar from '@/components/home/StatsBar'
+import { SubscriptionCTABanner } from '@/components/home/SubscriptionCTABanner'
 
 export default function HomePage() {
   return (
@@ -13,6 +14,7 @@ export default function HomePage() {
       <main>
         <HeroSection />
         <StatsBar />
+        <SubscriptionCTABanner />
         <OurStory />
         <HowItWorks />
         <ProductsPreview />
