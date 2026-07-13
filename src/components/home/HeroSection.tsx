@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ShieldCheck, Truck, MapPin, ArrowRight, Play } from 'lucide-react'
+import { ArrowRight, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const slides = [
@@ -44,15 +44,15 @@ export function HeroSection() {
   return (
     <section
       id="home"
-      className="relative min-h-screen flex flex-col overflow-hidden"
+      className="relative min-h-[85vh] md:min-h-screen flex flex-col overflow-hidden"
     >
-      {/* ── Background carousel ── */}
+      {/* ── Background carousel (mobile & desktop) ── */}
       <div className="absolute inset-0 z-0">
         {slides.map((slide, index) => (
           <div
             key={index}
             className={cn(
-              'absolute inset-0 transition-all duration-[1200ms] ',
+              'absolute inset-0 transition-all duration-[1200ms]',
               isMounted && currentSlide === index
                 ? 'opacity-100 scale-100'
                 : 'opacity-0 scale-105'
@@ -60,12 +60,12 @@ export function HeroSection() {
             aria-hidden={currentSlide !== index}
           >
             {/* Desktop Background */}
-            <div 
+            <div
               className="hidden md:block absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{ backgroundImage: `url(${slide.src})` }}
             />
             {/* Mobile Background */}
-            <div 
+            <div
               className="block md:hidden absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{ backgroundImage: `url(${slide.mobileSrc || slide.src})` }}
             />
@@ -81,25 +81,78 @@ export function HeroSection() {
         }}
       />
 
-      {/* ── White gradient: bottom → center (mobile) ── */}
+      {/* ── White gradient: left → center (mobile) ── */}
       <div
         className="block md:hidden absolute inset-0 z-[1] pointer-events-none"
         style={{
-          background: 'linear-gradient(to top, #ffffff 0%, rgba(255,255,255,0.90) 10%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+          background: 'linear-gradient(to right, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 45%, rgba(255,255,255,0.15) 75%, transparent 100%)',
         }}
       />
 
-      {/* ── Content ── */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-8 md:relative md:bottom-auto md:left-auto md:right-auto md:flex-1 md:flex md:items-center md:max-w-7xl md:mx-auto md:w-full md:px-8 md:pb-0">
-        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] gap-10 items-center w-full">
+      {/* ── Mobile Content (visible only on mobile) ── */}
+      <div className="md:hidden relative z-10 flex flex-col justify-center min-h-[85vh] pt-24 pb-16 px-6">
+        <div className="flex flex-col items-start text-left max-w-[280px]">
+          {/* Headline */}
+          <h1 className="font-cabinet text-[32px] font-extrabold text-[#013378] mb-3 leading-[1.18]">
+            Fresh Milk<br />
+            Delivered<br />
+            <span className="relative inline-block text-yellow-400 font-extrabold whitespace-nowrap">
+              Before
+              <svg
+                className="absolute left-0 -bottom-1 w-full h-2"
+                viewBox="0 0 100 8"
+                xmlns="http://www.w3.org/2000/svg"
+                preserveAspectRatio="none"
+              >
+                <path d="M0 4 Q50 0 100 4 L100 5 Q50 2 0 6 Z" fill="#FFC72C" />
+              </svg>
+            </span>
+            <br />
+            <span className="font-extrabold text-[#013378]">Sunrise.</span>
+          </h1>
 
-          {/* LEFT: TEXT CONTENT */}
+          {/* Tagline */}
+          <p className="font-cabinet text-[11px] text-gray-500 leading-relaxed mb-6 max-w-[210px] font-normal">
+            Pure cow milk delivered directly from our farm to your doorstep every morning.
+            No preservatives. No compromise.
+          </p>
+
+          {/* Subscribe Today button */}
+          <button
+            onClick={handleSubscribeClick}
+            id="mobile-hero-subscribe"
+            className="font-cabinet inline-flex items-center justify-center gap-1.5 h-11 px-6 rounded-[10px] bg-[#02429C] text-white font-semibold text-[14px] transition-all duration-200 cursor-pointer mb-5 shadow-md hover:shadow-lg hover:scale-105"
+          >
+            Subscribe Today
+            <ArrowRight size={15} strokeWidth={2.2} />
+          </button>
+
+          {/* Watch Our Story */}
+          <Link
+            href="#our-story"
+            id="mobile-hero-watch-story"
+            className="inline-flex items-center gap-2.5 group"
+          >
+            <div className="w-9 h-9 rounded-full border-[1.5px] border-sky-400 bg-white flex items-center justify-center text-sky-500 shadow-sm group-hover:bg-sky-50 transition-all flex-shrink-0">
+              <Play size={11} fill="currentColor" className="ml-0.5" />
+            </div>
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-[12.5px] font-extrabold text-[#013378]">Watch Our Story</span>
+              <span className="text-[9.5px] font-medium text-gray-400 mt-0.5">30 sec reel</span>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── Desktop Content (visible only on desktop) ── */}
+      <div className="hidden md:flex absolute bottom-0 left-0 right-0 z-10 relative flex-1 items-center max-w-7xl mx-auto w-full px-8">
+        <div className="grid grid-cols-[1.2fr_0.8fr] gap-10 items-center w-full">
+
+          {/* LEFT: text */}
           <div className="flex flex-col items-start text-left">
-            {/* Headline */}
-            <h1 className="font-cabinet text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold  text-[#013378]  mb-4"
-            >
+            <h1 className="font-cabinet text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#013378] mb-4">
               Fresh Milk Delivered <br />
-              <span className="relative inline-block text-yellow-400 font-extrabold  font-bold">
+              <span className="relative inline-block text-yellow-400 font-extrabold">
                 Before
                 <svg
                   className="absolute left-0 -bottom-2 w-full"
@@ -107,11 +160,7 @@ export function HeroSection() {
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
-                    d="M0 10
-                     Q125 -2 250 10
-                     L250 11
-                     Q125 5 0 16
-                     Z"
+                    d="M0 10 Q125 -2 250 10 L250 11 Q125 5 0 16 Z"
                     fill="#FFC72C"
                   />
                 </svg>
@@ -120,51 +169,32 @@ export function HeroSection() {
               <span className="font-bold font-extrabold">Sunrise.</span>
             </h1>
 
-            {/* Subheading */}
-            <p className="font-cabinet text-[10px] sm:text-[12px] text-gray-500 max-w-[320px] md:max-w-[500px] mb-6 font-normal">
+            <p className="font-cabinet text-[12px] text-gray-500 max-w-[500px] mb-6 font-normal">
               Pure Cow Milk delivered directly from our farm to your doorstep every morning.{' '}
               No preservatives. No compromise.
             </p>
 
-            {/* Features */}
-            {/* <div className="flex flex-row gap-4 md:gap-6 mb-7">
-              {[
-                { icon: <ShieldCheck size={15} />, line1: 'Pure &', line2: 'Natural' },
-                { icon: <Truck size={15} />, line1: 'Daily Fresh', line2: 'Delivery' },
-                { icon: <MapPin size={15} />, line1: 'Direct', line2: 'From Farm' },
-              ].map(({ icon, line1, line2 }) => (
-                <div key={line1} className="flex items-center gap-2 md:gap-2.5">
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-sky-200 flex items-center justify-center border border-sky-100/50 text-[#02429C] flex-shrink-0">
-                    {icon}
-                  </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-[11px] md:text-[13px] font-extrabold text-black leading-none">{line1}</span>
-                    <span className="text-[11px] md:text-[13px] font-extrabold text-black leading-none mt-0.5">{line2}</span>
-                  </div>
-                </div>
-              ))}
-            </div> */}
-
-            {/* Actions */}
             <div className="flex flex-row gap-4 items-center">
               <button
                 onClick={handleSubscribeClick}
+                id="desktop-hero-subscribe"
                 className="font-cabinet inline-flex items-center justify-center gap-2 h-11 px-7 rounded-[10px] bg-[#02429C] text-white font-medium text-[15px] hover:scale-105 hover:shadow-lg transition-all duration-200 cursor-pointer"
               >
-                Subscribe
+                Subscribe Today
                 <ArrowRight size={16} strokeWidth={1.8} />
               </button>
 
               <Link
                 href="#our-story"
-                className="hidden sm:inline-flex items-center gap-3 bg-transparent font-bold text-xs tracking-wider uppercase group hover:scale-105 transition-all duration-200"
+                id="desktop-hero-watch-story"
+                className="inline-flex items-center gap-3 bg-transparent font-bold text-xs tracking-wider uppercase group hover:scale-105 transition-all duration-200"
               >
                 <div className="w-11 h-11 rounded-full border-[1.5px] border-sky-500 bg-white flex items-center justify-center text-sky-600 shadow-[0_2px_8px_rgba(2,132,199,0.05)] group-hover:bg-sky-50 transition-all flex-shrink-0">
                   <Play size={14} fill="currentColor" className="ml-0.5" />
                 </div>
                 <div className="flex flex-col items-start leading-tight">
                   <span className="text-[13px] font-extrabold text-[#013378]">Watch Our Story</span>
-                  <span className="text-[10px] font-medium text-[#013378] normal-case tracking-normal mt-0.5">Watch Reels</span>
+                  <span className="text-[10px] font-medium text-[#013378] normal-case tracking-normal mt-0.5">30 sec reel</span>
                 </div>
               </Link>
             </div>
@@ -173,7 +203,7 @@ export function HeroSection() {
       </div>
 
       {/* ── Slide dots — desktop only ── */}
-      <div className="hidden sm:flex absolute bottom-0 left-1/2 -translate-x-1/2 gap-2 z-20 mb-10">
+      <div className="hidden md:flex absolute bottom-0 left-1/2 -translate-x-1/2 gap-2 z-20 mb-10">
         {slides.map((_, idx) => (
           <button
             key={idx}
@@ -185,6 +215,23 @@ export function HeroSection() {
             aria-label={`Go to slide ${idx + 1}`}
           />
         ))}
+      </div>
+
+      {/* ── Wavy bottom divider (absolute bottom) ── */}
+      <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-white z-10 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none">
+        <svg
+          viewBox="0 0 1440 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-auto block"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,40 C150,90 350,90 500,40 C650,-10 850,-10 1000,40 C1150,90 1350,90 1440,40 L1440,120 L0,120 Z"
+            fill="#ffffff"
+          />
+        </svg>
       </div>
 
     </section>
