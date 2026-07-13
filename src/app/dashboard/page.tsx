@@ -763,15 +763,15 @@ export default function CustomerDashboard() {
             <div className="p-6 sm:p-7 bg-slate-50 dark:bg-slate-950/40 border-t md:border-t-0 md:border-l border-border/50 dark:border-slate-800 w-full md:w-[260px] lg:w-[290px] flex flex-col justify-between gap-6">
               <div className="space-y-4">
                 <div className="text-left">
-                  <h4 className="text-[13px] font-bold text-slate-800 dark:text-slate-900 dark:text-white uppercase tracking-wider">Net Outstanding</h4>
+                  <h4 className="text-[13px] font-bold text-slate-800 dark:text-slate-900 dark:text-white uppercase tracking-wider">Extra Charges Due</h4>
                   <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 font-medium mt-0.5">Calculated in real-time</p>
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 border border-border/60 dark:border-slate-800 p-5 rounded-2xl shadow-xs text-left relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#014DA4]/3 rounded-full translate-x-8 -translate-y-8 pointer-events-none transition-transform group-hover:scale-110" />
-                  <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest leading-none">Amount Due</span>
+                  <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest leading-none">Net Extra Due</span>
                   <p className="text-3xl font-black text-[#014DA4] dark:text-[#014DA4] tracking-tight mt-2 leading-none font-mono">
-                    ₹{(current_month?.net_due || 0).toFixed(2)}
+                    ₹{Math.max(0, (current_month?.extra_charges || 0) - (current_month?.skip_credit || 0) - (current_month?.pause_credit || 0)).toFixed(2)}
                   </p>
                 </div>
               </div>
