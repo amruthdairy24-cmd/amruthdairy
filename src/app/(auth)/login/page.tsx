@@ -222,6 +222,25 @@ export default function LoginPage() {
     }
   }
 
+  function handleOtpPaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (!pastedData) return
+    const newOtp = [...otp]
+    for (let i = 0; i < 6; i++) {
+      if (i < pastedData.length) {
+        newOtp[i] = pastedData[i]
+      }
+    }
+    setOtp(newOtp)
+    const focusIndex = Math.min(pastedData.length, 5)
+    const nextInput = document.getElementById(`${formId}-otp-${focusIndex}`) as HTMLInputElement
+    nextInput?.focus()
+    if (pastedData.length === 6) {
+      handleOtpVerify(newOtp.join(''))
+    }
+  }
+
   // ── OTP verify ───────────────────────────────────────────────────────────────
   async function handleOtpVerify(code: string) {
     if (code.length !== 6) return
@@ -336,6 +355,49 @@ export default function LoginPage() {
     if (e.key === 'Backspace' && !forgotOtp[index] && index > 0) {
       const el = document.getElementById(`${formId}-fotp-${index - 1}`) as HTMLInputElement
       el?.focus()
+    }
+  }
+
+  async function handleForgotOtpPaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (!pastedData) return
+    const next = [...forgotOtp]
+    for (let i = 0; i < 6; i++) {
+      if (i < pastedData.length) {
+        next[i] = pastedData[i]
+      }
+    }
+    setForgotOtp(next)
+    const focusIndex = Math.min(pastedData.length, 5)
+    const nextInput = document.getElementById(`${formId}-fotp-${focusIndex}`) as HTMLInputElement
+    nextInput?.focus()
+    if (pastedData.length === 6) {
+      setForgotToken(pastedData)
+      setLoading(true)
+      setError('')
+      try {
+        const res = await fetch('/api/auth/verify-forgot-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: forgotEmail.trim().toLowerCase(), token: pastedData }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          setStep('reset')
+        } else {
+          setError(data.message || 'Invalid code. Please try again.')
+          setForgotOtp(['', '', '', '', '', ''])
+          setTimeout(() => {
+            const el = document.getElementById(`${formId}-fotp-0`) as HTMLInputElement
+            el?.focus()
+          }, 50)
+        }
+      } catch {
+        setError('Network error. Please check your connection.')
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -756,6 +818,7 @@ export default function LoginPage() {
                           value={digit}
                           onChange={e => handleOtpChange(e.target.value, i)}
                           onKeyDown={e => handleOtpKeyDown(e, i)}
+                          onPaste={handleOtpPaste}
                           className={cn(
                             'w-full aspect-square text-center text-xl font-black text-slate-800 rounded-2xl border-2 bg-white focus:outline-none transition-all',
                             error
@@ -987,6 +1050,7 @@ export default function LoginPage() {
                           value={digit}
                           onChange={e => handleForgotOtpChange(e.target.value, i)}
                           onKeyDown={e => handleForgotOtpKeyDown(e, i)}
+                          onPaste={handleForgotOtpPaste}
                           className={cn(
                             'w-full aspect-square text-center text-xl font-black text-slate-800 rounded-2xl border-2 bg-white focus:outline-none transition-all',
                             error

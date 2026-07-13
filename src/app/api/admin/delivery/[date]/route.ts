@@ -29,7 +29,7 @@ export async function GET(
     // Get daily summary
     const { data: summary } = await supabase.rpc('get_daily_summary', { p_date: date });
 
-    // Get full delivery sheet with customer profiles
+    // Get full delivery sheet with customer profiles and extra order details
     const { data: deliveries, error } = await supabase
       .from('daily_delivery_sheet')
       .select(`
@@ -41,6 +41,10 @@ export async function GET(
           area,
           landmark,
           floor_notes
+        ),
+        extra_milk_orders:extra_order_id (
+          skip_credit_applied,
+          net_charge_amount
         )
       `)
       .eq('delivery_date', date);
@@ -69,6 +73,8 @@ export async function GET(
       is_vacation: d.is_vacation,
       is_extra: d.is_extra,
       extra_order_id: d.extra_order_id,
+      skip_credit_applied: d.extra_milk_orders?.skip_credit_applied,
+      net_charge_amount: d.extra_milk_orders?.net_charge_amount,
       delivered_at: d.delivered_at,
       notes: d.notes
     }));
