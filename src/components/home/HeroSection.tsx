@@ -60,12 +60,12 @@ export function HeroSection() {
             aria-hidden={currentSlide !== index}
           >
             {/* Desktop Background */}
-            <div 
+            <div
               className="hidden md:block absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{ backgroundImage: `url(${slide.src})` }}
             />
             {/* Mobile Background */}
-            <div 
+            <div
               className="block md:hidden absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{ backgroundImage: `url(${slide.mobileSrc || slide.src})` }}
             />
