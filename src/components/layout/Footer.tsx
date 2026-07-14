@@ -87,7 +87,7 @@ const footerLinks = {
   ],
   Company: [
     { label: 'About Us', href: '/#about-us' },
-    { label: 'Our Story', href: '/#our-story' },
+    { label: 'Our Story', href: '/our-story' },
     { label: 'How It Works', href: '/#about-us' },
     { label: 'Admin Panel', href: '/admin' },
   ],

@@ -162,19 +162,23 @@ export function ProductsPreview() {
   }
 
   return (
-    <section id="products" className="bg-white py-20 relative overflow-hidden">
+    <section id="products" className="bg-white py-16 md:py-24 relative overflow-hidden">
       <div className="container-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
         {/* Header */}
         <ScrollReveal direction="up" delay={0}>
           <div className="text-center mb-12 flex flex-col items-center">
-            <div className="inline-flex items-center gap-1.5 border border-[#1230AE]/20 text-[#1230AE] rounded-full px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-widest mb-4">
-              <Award size={11} /> Our Products
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="w-8 h-[1px] bg-sky-200"></div>
+              <span className="text-[11px] md:text-xs font-bold text-[#02429C] uppercase tracking-widest flex items-center gap-1.5">
+                OUR PRODUCTS
+              </span>
+              <div className="w-8 h-[1px] bg-sky-200"></div>
             </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-4">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-black font-cabinet leading-tight tracking-tight mb-4">
               Pure Uncompromised Royal
             </h2>
-            <p className="text-sm text-slate-500 max-w-[520px] mx-auto leading-relaxed">
+            <p className="text-slate-500 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
               Experience dairy crafted with devotion, certified pure
               and delivered to your doorstep fresh before sunrise.
             </p>

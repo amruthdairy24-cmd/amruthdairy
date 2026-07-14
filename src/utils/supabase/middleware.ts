@@ -34,10 +34,35 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // 1. Backward compatibility: redirect /account/* to /dashboard/*
-  if (pathname.startsWith('/account')) {
+  // 1. Backward compatibility redirects
+  if (pathname === '/account' || pathname.startsWith('/account/')) {
     const url = request.nextUrl.clone();
-    url.pathname = pathname.replace('/account', '/dashboard');
+    url.pathname = pathname.replace('/account', '/dashboard/account');
+    return NextResponse.redirect(url);
+  }
+  if (pathname === '/delivery-history' || pathname.startsWith('/delivery-history/')) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace('/delivery-history', '/dashboard/history');
+    return NextResponse.redirect(url);
+  }
+  if (pathname === '/bills' || pathname.startsWith('/bills/')) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace('/bills', '/dashboard/bills');
+    return NextResponse.redirect(url);
+  }
+  if (pathname === '/skip-day' || pathname.startsWith('/skip-day/')) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace('/skip-day', '/dashboard/skip');
+    return NextResponse.redirect(url);
+  }
+  if (pathname === '/vacation' || pathname.startsWith('/vacation/')) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace('/vacation', '/dashboard/vacation');
+    return NextResponse.redirect(url);
+  }
+  if (pathname === '/extra-milk' || pathname.startsWith('/extra-milk/')) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace('/extra-milk', '/dashboard/extra');
     return NextResponse.redirect(url);
   }
 
@@ -79,8 +104,8 @@ export async function updateSession(request: NextRequest) {
 
     const hasDashboardAccess = hasSubscription || hasWaitlist;
 
-    // Redirect logged-in users away from /login
-    if (pathname === '/login') {
+    // Redirect logged-in users away from /login and /
+    if (pathname === '/' || pathname === '/login') {
       const url = request.nextUrl.clone();
       if (role === 'admin') {
         url.pathname = '/admin';
