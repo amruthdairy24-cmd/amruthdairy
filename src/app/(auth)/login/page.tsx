@@ -114,7 +114,7 @@ export default function LoginPage() {
 
       if (data.success) {
         setStep('success')
-        setTimeout(() => { window.location.href = redirectTo || getRedirectDestination(data) }, 1400)
+        setTimeout(() => { window.location.replace(redirectTo || getRedirectDestination(data)) }, 1400)
       } else {
         setError(data.message || 'Login failed. Please try again.')
       }
@@ -260,7 +260,7 @@ export default function LoginPage() {
 
       if (data.success) {
         setStep('success')
-        setTimeout(() => { window.location.href = redirectTo || getRedirectDestination(data) }, 1400)
+        setTimeout(() => { window.location.replace(redirectTo || getRedirectDestination(data)) }, 1400)
       } else {
         setError(data.message || 'Invalid code. Please try again.')
         setOtp(['', '', '', '', '', ''])

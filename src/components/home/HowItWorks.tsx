@@ -15,12 +15,15 @@ export function HowItWorks() {
             <div className="flex flex-col items-start text-left">
 
               {/* Eyebrow */}
-              <span className="inline-flex items-center gap-1.5 border border-[#1230AE]/30 rounded-full px-3 py-1 text-[11px] text-[#1230AE] font-semibold uppercase tracking-widest mb-4">
-                Why Choose Amruth Dairy
-              </span>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-[1px] bg-sky-200"></div>
+                <span className="text-[11px] md:text-xs font-bold text-[#02429C] uppercase tracking-widest">
+                  WHY CHOOSE AMRUTH
+                </span>
+              </div>
 
               {/* Heading */}
-              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white leading-tight tracking-tight mb-8">
+              <h2 className="text-2xl sm:text-4xl md:text-[40px] font-bold text-black font-cabinet leading-tight tracking-tight mb-8">
                 Purity You Can Trust,<br />Care You Can Taste.
               </h2>
 
