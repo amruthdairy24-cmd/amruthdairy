@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { SkipForward, CalendarDays, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Clock, Info, Calendar } from 'lucide-react'
+import { SkipForward, CalendarDays, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Clock, Info, Calendar, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { Modal } from '@/components/ui'
 
 interface SkipRequest {
   skip_date: string;
@@ -17,6 +18,17 @@ const getLocalISODate = (d: Date) => {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+const isSkipCancellable = (skipDateStr: string) => {
+  const skipDate = new Date(skipDateStr)
+  skipDate.setHours(0, 0, 0, 0)
+  
+  const deadline = new Date(skipDate)
+  deadline.setDate(deadline.getDate() - 1)
+  deadline.setHours(21, 0, 0, 0) // 9:00 PM preceding night
+  
+  return new Date() < deadline
 }
 
 // Animation configurations
@@ -55,6 +67,8 @@ export default function SkipDayPage() {
   const [latestPaidMonth, setLatestPaidMonth] = useState<string | null>(null)
 
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [cancelDate, setCancelDate] = useState<string | null>(null)
 
   async function loadData() {
     try {
@@ -128,6 +142,16 @@ export default function SkipDayPage() {
       return
     }
 
+    setError('')
+    setSuccessMsg('')
+    setIsConfirmOpen(true)
+  }
+
+  async function executeSkip() {
+    if (!selectedDate) return
+
+    const dateStr = getLocalISODate(selectedDate)
+    
     setLoading(true)
     setError('')
     setSuccessMsg('')
@@ -143,12 +167,46 @@ export default function SkipDayPage() {
       if (json.success) {
         setSuccessMsg(`Successfully skipped delivery for ${selectedDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}`)
         setSelectedDate(null)
+        setIsConfirmOpen(false)
         await loadData()
       } else {
         setError(json.message || 'Failed to process skip request')
+        setIsConfirmOpen(false)
       }
     } catch (err) {
       setError('Network error processing request')
+      setIsConfirmOpen(false)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function executeCancelSkip() {
+    if (!cancelDate) return
+
+    setLoading(true)
+    setError('')
+    setSuccessMsg('')
+
+    try {
+      const res = await fetch('/api/skip/request', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skip_date: cancelDate })
+      })
+      const json = await res.json()
+
+      if (json.success) {
+        setSuccessMsg(`Successfully restored delivery for ${new Date(cancelDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}`)
+        setCancelDate(null)
+        await loadData()
+      } else {
+        setError(json.message || 'Failed to cancel skip request')
+        setCancelDate(null)
+      }
+    } catch (err) {
+      setError('Network error processing request')
+      setCancelDate(null)
     } finally {
       setLoading(false)
     }
@@ -249,7 +307,11 @@ export default function SkipDayPage() {
                     key={dateStr}
                     type="button"
                     disabled={isDisabled}
-                    onClick={() => setSelectedDate(date)}
+                    onClick={() => {
+                      setSelectedDate(date)
+                      setError('')
+                      setSuccessMsg('')
+                    }}
                     className={cn(
                       'h-20 sm:h-[84px] rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all relative overflow-hidden select-none',
                       isSelected
@@ -389,28 +451,46 @@ export default function SkipDayPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[400px] overflow-y-auto pr-1">
-                  {upcomingSkips.map((skip, idx) => (
-                    <div key={idx} className="p-4 flex items-center justify-between hover:bg-slate-50/40 dark:hover:bg-slate-800/30 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8.5 h-8.5 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center flex-shrink-0">
-                          <CalendarDays size={15} />
+                  {upcomingSkips.map((skip, idx) => {
+                    const cancellable = isSkipCancellable(skip.skip_date)
+                    return (
+                      <div key={idx} className="p-4 flex items-center justify-between hover:bg-slate-50/40 dark:hover:bg-slate-800/30 transition-colors gap-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-8.5 h-8.5 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center flex-shrink-0">
+                            <CalendarDays size={15} />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <p className="text-[13.5px] font-bold text-slate-800 dark:text-slate-200 leading-none truncate">
+                              {new Date(skip.skip_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                            </p>
+                            <p className="text-[10.5px] font-medium text-slate-400 dark:text-slate-500 mt-1 truncate">Credit applied to next bill</p>
+                          </div>
                         </div>
-                        <div className="text-left">
-                          <p className="text-[13.5px] font-bold text-slate-800 dark:text-slate-200 leading-none">
-                            {new Date(skip.skip_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        
+                        {cancellable && (
+                          <div className="flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => setCancelDate(skip.skip_date)}
+                              className="px-3.5 py-1.5 text-[11px] font-black rounded-full bg-rose-600 hover:bg-rose-500 active:scale-[0.98] text-white transition-all cursor-pointer shadow-3xs"
+                              title="Cancel Skip & Restore Delivery"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+                        
+                        <div className="text-right flex-shrink-0 flex flex-col items-end gap-1">
+                          <span className="inline-flex text-[9px] font-extrabold text-green-700 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-200/15">
+                            Confirmed
+                          </span>
+                          <p className="text-[11.5px] font-extrabold text-emerald-650 dark:text-emerald-500 font-mono leading-none">
+                            +₹{skip.credit_amount.toFixed(2)}
                           </p>
-                          <p className="text-[10.5px] font-medium text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-1">Credit applied to next bill</p>
                         </div>
                       </div>
-                      
-                      <div className="text-right">
-                        <span className="inline-flex text-[9px] font-extrabold text-green-700 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-200/15">
-                          Confirmed
-                        </span>
-                        <p className="text-sm font-black text-emerald-650 dark:text-emerald-500 font-mono mt-1">+₹{skip.credit_amount.toFixed(2)}</p>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -419,6 +499,128 @@ export default function SkipDayPage() {
         </motion.div>
 
       </div>
+
+      <Modal
+        open={isConfirmOpen}
+        onOpenChange={setIsConfirmOpen}
+        title="Confirm Skip Delivery"
+        size="md"
+      >
+        <div className="space-y-6 pt-2">
+          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80">
+            <div className="w-12 h-12 rounded-xl bg-[#014DA4]/10 dark:bg-blue-500/10 text-[#014DA4] dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+              <Calendar size={24} className="stroke-[2.5]" />
+            </div>
+            <div className="text-left">
+              <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1.5">
+                Skip Date
+              </p>
+              <p className="text-base font-black text-slate-800 dark:text-slate-200">
+                {selectedDate?.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/20 rounded-2xl">
+            <div className="text-left">
+              <p className="text-[11px] font-bold text-emerald-600/85 dark:text-emerald-400/85 uppercase tracking-widest leading-none mb-1.5">
+                Statement Credit
+              </p>
+              <p className="text-xs text-slate-450 dark:text-slate-400 font-semibold leading-none">
+                Credited to your next bill
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-black text-emerald-650 dark:text-emerald-500 font-mono">
+                +₹{subscription?.daily_rate.toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold text-center leading-relaxed max-w-sm mx-auto">
+            Please note: Submitting this skip request will pause your milk delivery for this day. You can skip up to 14 days in advance.
+          </p>
+
+          <div className="flex gap-3 justify-end pt-4 border-t border-slate-100 dark:border-slate-800/80">
+            <button
+              type="button"
+              onClick={() => setIsConfirmOpen(false)}
+              className="px-5 h-11 rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-xs shadow-sm transition-all cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={executeSkip}
+              disabled={loading}
+              className="px-6 h-11 rounded-xl bg-[#014DA4] hover:bg-[#014DA4]/95 active:scale-[0.98] text-white font-extrabold text-xs shadow-sm transition-all border-none flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <SkipForward size={14} className="stroke-[2.5]" />
+                  <span>Confirm Skip</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!cancelDate}
+        onOpenChange={(open) => !open && setCancelDate(null)}
+        title="Cancel Skip Delivery"
+        size="md"
+      >
+        <div className="space-y-6 pt-2">
+          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80">
+            <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center flex-shrink-0">
+              <CalendarDays size={24} className="stroke-[2.5]" />
+            </div>
+            <div className="text-left">
+              <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1.5">
+                Restore Delivery For
+              </p>
+              <p className="text-base font-black text-slate-800 dark:text-slate-200">
+                {cancelDate && new Date(cancelDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            </div>
+          </div>
+
+          <div className="p-4 bg-rose-50/10 dark:bg-rose-950/20 border border-rose-100/30 dark:border-rose-900/35 rounded-2xl">
+            <p className="text-xs text-rose-800 dark:text-rose-350 font-semibold leading-relaxed">
+              <strong>Warning:</strong> This will cancel your skip request and resume normal milk delivery for this date.
+            </p>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-4 border-t border-slate-100 dark:border-slate-800/80">
+            <button
+              type="button"
+              onClick={() => setCancelDate(null)}
+              className="px-5 h-11 rounded-xl border border-border dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-xs shadow-sm transition-all cursor-pointer"
+            >
+              Keep Skipped
+            </button>
+            <button
+              type="button"
+              onClick={executeCancelSkip}
+              disabled={loading}
+              className="px-6 h-11 rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-[0.98] text-white font-extrabold text-xs shadow-sm transition-all border-none flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <CheckCircle2 size={14} className="stroke-[2.5]" />
+                  <span>Restore Delivery</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </motion.div>
   )
 }
