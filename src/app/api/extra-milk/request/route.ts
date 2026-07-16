@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'order_date and extra_litres are required' }, { status: 400 });
     }
 
-    if (extra_litres !== 0 && ![0.5, 1.0, 1.5].includes(extra_litres)) {
+    if (extra_litres !== 0 && ![0.5, 1.0, 1.5, 2.0].includes(extra_litres)) {
       return NextResponse.json({ success: false, message: 'Invalid extra_litres amount' }, { status: 400 });
     }
 
