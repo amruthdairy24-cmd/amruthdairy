@@ -74,6 +74,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     async function fetchProfile() {
       try {
         const res = await fetch('/api/customer/dashboard')
+        if (!res.ok) {
+          console.error('Profile fetch failed. Status:', res.status)
+          const text = await res.text()
+          console.error('Profile fetch response body:', text.substring(0, 300))
+        }
         const data = await res.json()
         if (data.success && data.profile) {
           setProfileName(data.profile.full_name || 'Customer')
@@ -83,7 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           }
         }
       } catch (err) {
-        console.error('Failed to load layout profile details')
+        console.error('Failed to load layout profile details', err)
       }
     }
     fetchProfile()
