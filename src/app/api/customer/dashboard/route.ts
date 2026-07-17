@@ -97,7 +97,7 @@ export async function GET(request: Request) {
       .lt('order_date', nextMonthDate.toISOString().split('T')[0]);
       
     const live_extra_litres = current_month_extras?.reduce((sum, e) => sum + (e.extra_litres || 0), 0) || 0;
-    const live_extra_charges = current_month_extras?.reduce((sum, e) => sum + Number(e.net_charge_amount !== undefined && e.net_charge_amount !== null ? e.net_charge_amount : e.charge_amount || 0), 0) || 0;
+    const live_extra_charges = current_month_extras?.reduce((sum, e) => sum + Number(e.charge_amount || 0), 0) || 0;
     
     // Live Pauses
     const { data: current_month_pauses } = await supabase
