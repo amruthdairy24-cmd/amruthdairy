@@ -81,7 +81,7 @@ const itemVariants = {
   },
 } as const
 
-function RenewalBanner({ latest_paid_month }: { latest_paid_month: string | null }) {
+function RenewalBanner({ latest_paid_month, status }: { latest_paid_month: string | null, status?: string }) {
   const [showPopup, setShowPopup] = useState(false);
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
@@ -106,6 +106,11 @@ function RenewalBanner({ latest_paid_month }: { latest_paid_month: string | null
   
   if (latest_paid_month === formattedNextMonth || (latest_paid_month && latest_paid_month > formattedNextMonth)) {
     // Already paid for next month (or beyond), don't show button
+    return null;
+  }
+
+  // If customer is in active subscription and it's not past the 25th, hide the badge.
+  if (status === 'active' && !isPast25th) {
     return null;
   }
 
@@ -383,12 +388,21 @@ export default function CustomerDashboard() {
     return null;
   }
 
-  const { subscription, current_month, recent_deliveries, profile } = data
+  const { subscription, current_month, recent_deliveries, profile, upcoming_adjustments } = data
   const todayStr = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
-  const balanceVal = subscription.balance || 0
-  const balanceText = balanceVal >= 0 ? `₹${balanceVal.toFixed(2)}` : `₹${Math.abs(balanceVal).toFixed(2)}`
+  const accountBalance = subscription.balance || 0
+
+  // Calculate total carry-forward skip credits from upcoming adjustments
+  const carryForwardCredits = (upcoming_adjustments || []).reduce((sum, adj) => {
+    if (adj.amount < 0) return sum + Math.abs(adj.amount);
+    return sum;
+  }, 0);
+
+  // Combined total credits: account balance + carry-forward skip credits
+  const totalCredits = accountBalance + carryForwardCredits;
+  const totalCreditsText = `₹${Math.abs(totalCredits).toFixed(0)}`;
 
   return (
     <motion.div
@@ -502,7 +516,7 @@ export default function CustomerDashboard() {
 
       {/* ─── RENEWAL BANNER ─── */}
       <motion.div variants={itemVariants} className="relative z-50">
-        <RenewalBanner latest_paid_month={data.latest_paid_month} />
+        <RenewalBanner latest_paid_month={data.latest_paid_month} status={data.subscription.status} />
       </motion.div>
 
       {/* ─── 2. DASHBOARD STATS ROW (4 Gourmet Cream Cards) ─── */}
@@ -510,18 +524,20 @@ export default function CustomerDashboard() {
         variants={itemVariants} 
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10"
       >
-        {/* Card 1: Account Balance */}
+        {/* Card 1: Total Credits */}
         <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Account Balance</p>
-            <p className={cn("text-xl font-black font-mono tracking-tight mt-1 leading-none", balanceVal >= 0 ? "text-emerald-600 dark:text-blue-95000" : "text-rose-600 dark:text-rose-400")}>
-              {balanceVal >= 0 ? `${balanceText} Credit` : `${balanceText} Due`}
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Total Credits</p>
+            <p className={cn("text-xl font-black font-mono tracking-tight mt-1 leading-none", totalCredits >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+              {totalCredits >= 0 ? `${totalCreditsText} Credit` : `${totalCreditsText} Due`}
             </p>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 font-semibold mt-1.5 truncate">
-              {balanceVal >= 0 ? 'Adjusted in next bill' : 'Outstanding due amount'}
+              {carryForwardCredits > 0
+                ? `Incl. ₹${carryForwardCredits.toFixed(0)} skip credits`
+                : 'Adjusted in next bill'}
             </p>
           </div>
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105", balanceVal >= 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/10 text-rose-500")}>
+          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105", totalCredits >= 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/10 text-rose-500")}>
             <Wallet size={18} />
           </div>
         </div>
