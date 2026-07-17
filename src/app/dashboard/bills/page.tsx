@@ -663,7 +663,16 @@ export default function BillsPage() {
               </button>
             )}
             <button
-              onClick={() => setViewingBill(bill)}
+              onClick={() => {
+                const billDetails = { ...bill };
+                if (isPaid) {
+                  billDetails.payment_status = 'paid';
+                  if (billDetails.amount_paid < billDetails.net_due) {
+                    billDetails.amount_paid = billDetails.net_due;
+                  }
+                }
+                setViewingBill(billDetails);
+              }}
               className={cn(
                 "h-12 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-[0.98] text-slate-700 dark:text-slate-300 font-extrabold text-xs shadow-sm transition-all border-none flex items-center justify-center gap-2 cursor-pointer",
                 hasPendingBill ? "flex-1" : "w-full"

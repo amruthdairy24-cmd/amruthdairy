@@ -197,7 +197,7 @@ export async function GET(request: Request) {
     const live_days_delivered = current_month_deliveries?.length || 0;
     
     const live_extra_litres = current_month_extras?.reduce((sum, e) => sum + (e.extra_litres || 0), 0) || 0;
-    const live_extra_charges = current_month_extras?.reduce((sum, e) => sum + Number(e.net_charge_amount !== undefined && e.net_charge_amount !== null ? e.net_charge_amount : e.charge_amount || 0), 0) || 0;
+    const live_extra_charges = current_month_extras?.reduce((sum, e) => sum + Number(e.charge_amount || 0), 0) || 0;
     
     const live_days_paused = current_month_pauses?.length || 0;
     const live_pause_credit = live_days_paused * (subscription.daily_rate || 0);
