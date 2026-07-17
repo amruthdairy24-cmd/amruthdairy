@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 interface BillingData {
   id?: string;
@@ -75,6 +76,8 @@ const itemVariants = {
 } as const
 
 export default function BillsPage() {
+  const { data, loading: contextLoading, refetch } = useDashboardData()
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [bill, setBill] = useState<BillingData | null>(null)
@@ -111,41 +114,35 @@ export default function BillsPage() {
     }
   }
 
-  async function loadData() {
-    try {
-      setLoading(true)
-      const res = await fetch('/api/customer/dashboard')
-      const json = await res.json()
-      if (json.success) {
-        if (json.profile) setProfile(json.profile)
-        if (json.subscription) setSubscription(json.subscription)
-        if (json.upcoming_adjustments) setUpcomingAdjustments(json.upcoming_adjustments)
-        if (json.upcoming_skips) setUpcomingSkips(json.upcoming_skips)
-        if (json.upcoming_extras) setUpcomingExtras(json.upcoming_extras)
-        if (json.active_vacation) setActiveVacation(json.active_vacation)
-        if (json.next_month_change) setNextMonthChange(json.next_month_change)
-        if (json.current_month) {
-          setBill(json.current_month)
-        } else {
-          const monthly = json.subscription ? json.subscription.monthly_amount : 0
-          setBill({
-            billing_month: new Date().toISOString().split('T')[0],
-            days_delivered: 0, days_skipped: 0, days_paused: 0, extra_litres_ordered: 0,
-            skip_credit: 0, pause_credit: 0, extra_charges: 0, carry_in_balance: 0,
-            net_due: monthly, amount_paid: 0, payment_status: 'pending'
-          })
-        }
+  useEffect(() => {
+    if (data) {
+      if (data.profile) setProfile(data.profile)
+      if (data.subscription) setSubscription(data.subscription)
+      if (data.upcoming_adjustments) setUpcomingAdjustments(data.upcoming_adjustments)
+      if (data.upcoming_skips) setUpcomingSkips(data.upcoming_skips)
+      if (data.upcoming_extras) setUpcomingExtras(data.upcoming_extras)
+      if (data.active_vacation) setActiveVacation(data.active_vacation)
+      if (data.next_month_change) setNextMonthChange(data.next_month_change)
+      if (data.current_month) {
+        setBill(data.current_month)
       } else {
-        setError(json.message || 'Failed to retrieve billing statements')
+        const monthly = data.subscription ? data.subscription.monthly_amount : 0
+        setBill({
+          billing_month: new Date().toISOString().split('T')[0],
+          days_delivered: 0, days_skipped: 0, days_paused: 0, extra_litres_ordered: 0,
+          skip_credit: 0, pause_credit: 0, extra_charges: 0, carry_in_balance: 0,
+          net_due: monthly, amount_paid: 0, payment_status: 'pending'
+        })
       }
-    } catch (err) {
-      setError('Network error loading statements')
-    } finally {
+      setLoading(false)
+    } else if (!contextLoading) {
       setLoading(false)
     }
-  }
+  }, [data, contextLoading])
 
-  useEffect(() => { loadData() }, [])
+  async function loadData() {
+    await refetch()
+  }
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {

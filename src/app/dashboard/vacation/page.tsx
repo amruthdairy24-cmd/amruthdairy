@@ -5,14 +5,15 @@ import { Palmtree, Calendar, AlertTriangle, CheckCircle, ArrowLeftRight, Chevron
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 interface VacationPause {
   pause_start: string;
   pause_end: string;
-  total_days: number;
+  total_days?: number;
   total_credit: number;
-  resume_date: string;
-  status: string;
+  resume_date?: string;
+  status?: string;
 }
 
 const containerVariants = {
@@ -39,6 +40,8 @@ const itemVariants = {
 } as const
 
 export default function VacationPausePage() {
+  const { data, loading: contextLoading, refetch } = useDashboardData()
+
   const [loading, setLoading] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
   const [error, setError] = useState('')
@@ -54,32 +57,27 @@ export default function VacationPausePage() {
   const [creditPreview, setCreditPreview] = useState(0)
   const [resumeDate, setResumeDate] = useState('')
 
-  async function loadData() {
-    try {
-      setPageLoading(true)
-      const res = await fetch('/api/customer/dashboard')
-      const json = await res.json()
-      if (json.success) {
-        if (json.subscription) {
-          setDailyRate(json.subscription.daily_rate)
-        }
-        if (json.active_vacation) {
-          setVacationList([json.active_vacation])
-        } else {
-          setVacationList([])
-        }
-      } else {
-        setError(json.message || 'Failed to retrieve subscription details')
+  useEffect(() => {
+    if (data) {
+      if (data.subscription) {
+        setDailyRate(data.subscription.daily_rate)
       }
-    } catch (err) {
-      setError('Network error loading page data')
-    } finally {
+      if (data.active_vacation) {
+        setVacationList([data.active_vacation])
+      } else {
+        setVacationList([])
+      }
+      setPageLoading(false)
+    } else if (!contextLoading) {
       setPageLoading(false)
     }
+  }, [data, contextLoading])
+
+  async function loadData() {
+    await refetch()
   }
 
   useEffect(() => {
-    loadData()
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
     setStartDate(tomorrow.toISOString().split('T')[0])

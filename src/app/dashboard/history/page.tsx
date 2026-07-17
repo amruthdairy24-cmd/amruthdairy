@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 interface DeliveryRecord {
   delivery_date: string
@@ -46,6 +47,8 @@ const itemVariants = {
 } as const
 
 export default function DeliveryHistoryPage() {
+  const { data, loading: contextLoading, refetch } = useDashboardData()
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([])
@@ -55,25 +58,19 @@ export default function DeliveryHistoryPage() {
   const [viewYear, setViewYear] = useState(new Date().getFullYear())
   const [viewMonth, setViewMonth] = useState(new Date().getMonth())
 
-  async function loadData() {
-    try {
-      setLoading(true)
-      const res = await fetch('/api/customer/dashboard')
-      const json = await res.json()
-      if (json.success) {
-        if (json.subscription) setSubQty(json.subscription.quantity_litres)
-        setDeliveries(json.recent_deliveries || [])
-      } else {
-        setError(json.message || 'Failed to load delivery history')
-      }
-    } catch (err) {
-      setError('Network error loading data')
-    } finally {
+  useEffect(() => {
+    if (data) {
+      if (data.subscription) setSubQty(data.subscription.quantity_litres)
+      setDeliveries(data.recent_deliveries || [])
+      setLoading(false)
+    } else if (!contextLoading) {
       setLoading(false)
     }
-  }
+  }, [data, contextLoading])
 
-  useEffect(() => { loadData() }, [])
+  async function loadData() {
+    await refetch()
+  }
 
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
   const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay()
@@ -303,17 +300,17 @@ export default function DeliveryHistoryPage() {
               cardBg = 'bg-rose-500/3 dark:bg-rose-950/10 hover:bg-rose-500/5 dark:hover:bg-rose-950/20'
               statusIcon = <SkipForward size={13} className="text-rose-500 dark:text-rose-400 flex-shrink-0" />
               statusLabel = 'Skipped'
-              statusColorClass = 'text-rose-650 dark:text-rose-400'
+              statusColorClass = 'text-rose-600 dark:text-rose-400'
             } else if (status === 'paused' || status === 'vacation') {
               cardBg = 'bg-blue-500/3 dark:bg-blue-950/10 hover:bg-blue-500/5 dark:hover:bg-blue-950/20'
-              statusIcon = <Palmtree size={13} className="text-blue-550 dark:text-blue-400 flex-shrink-0" />
+              statusIcon = <Palmtree size={13} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
               statusLabel = 'Vacation'
               statusColorClass = 'text-blue-700 dark:text-blue-400'
             } else if (status === 'pending') {
               cardBg = 'bg-amber-500/3 dark:bg-amber-950/10 hover:bg-amber-500/5 dark:hover:bg-amber-950/20 animate-pulse'
               statusIcon = <Clock size={13} className="text-amber-600 dark:text-amber-500 flex-shrink-0" />
               statusLabel = 'Pending'
-              statusColorClass = 'text-amber-705 dark:text-amber-450'
+              statusColorClass = 'text-amber-600 dark:text-amber-450'
             }
 
             return (

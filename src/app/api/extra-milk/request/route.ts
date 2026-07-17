@@ -177,9 +177,7 @@ export async function POST(request: Request) {
     if (extra_litres === 0) {
       // Cancellation logic
       if (order_id) {
-        await adminSupabase.from('extra_milk_orders').delete().eq('id', order_id);
-        
-        // Revert daily_delivery_sheet
+        // Revert daily_delivery_sheet first to release foreign key reference
         await adminSupabase
           .from('daily_delivery_sheet')
           .update({
@@ -189,6 +187,9 @@ export async function POST(request: Request) {
             total_litres: subscription.quantity_litres
           })
           .eq('extra_order_id', order_id);
+
+        // Delete the extra milk order now that it is no longer referenced
+        await adminSupabase.from('extra_milk_orders').delete().eq('id', order_id);
       }
       return NextResponse.json({
         success: true,
