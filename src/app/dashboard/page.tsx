@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 interface DashboardData {
   success: boolean;
@@ -178,28 +179,7 @@ function RenewalBanner({ latest_paid_month }: { latest_paid_month: string | null
 }
 
 export default function CustomerDashboard() {
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    async function loadDashboard() {
-      try {
-        const res = await fetch('/api/customer/dashboard')
-        const json = await res.json()
-        if (json.success) {
-          setData(json)
-        } else {
-          setError(json.message || 'Failed to retrieve dashboard data')
-        }
-      } catch (err) {
-        setError('Network error loading dashboard')
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadDashboard()
-  }, [])
+  const { data, loading, error } = useDashboardData()
 
   const [declining, setDeclining] = useState(false)
 
@@ -880,7 +860,7 @@ export default function CustomerDashboard() {
                             )}
                             {delivery.delivery_status === 'skipped' && (
                               <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-rose-700 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-200/20">
-                                <span className="w-1 h-1 rounded-full bg-rose-650" />
+                                <span className="w-1 h-1 rounded-full bg-rose-600" />
                                 <span>Skipped</span>
                               </span>
                             )}

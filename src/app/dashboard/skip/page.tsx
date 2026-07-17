@@ -6,10 +6,11 @@ import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Modal } from '@/components/ui'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 interface SkipRequest {
   skip_date: string;
-  status: string;
+  status?: string;
   credit_amount: number;
 }
   
@@ -56,8 +57,9 @@ const itemVariants = {
 } as const
 
 export default function SkipDayPage() {
+  const { data, loading: contextLoading, refetch } = useDashboardData()
+  
   const [loading, setLoading] = useState(false)
-  const [pageLoading, setPageLoading] = useState(true)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   
@@ -70,28 +72,19 @@ export default function SkipDayPage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [cancelDate, setCancelDate] = useState<string | null>(null)
 
-  async function loadData() {
-    try {
-      setPageLoading(true)
-      const res = await fetch('/api/customer/dashboard')
-      const json = await res.json()
-      if (json.success) {
-        setSubscription(json.subscription)
-        setUpcomingSkips(json.upcoming_skips || [])
-        setLatestPaidMonth(json.latest_paid_month || null)
-      } else {
-        setError(json.message || 'Failed to load details')
-      }
-    } catch (err) {
-      setError('Network error')
-    } finally {
-      setPageLoading(false)
-    }
-  }
-
   useEffect(() => {
-    loadData()
-  }, [])
+    if (data) {
+      setSubscription(data.subscription)
+      setUpcomingSkips(data.upcoming_skips || [])
+      setLatestPaidMonth(data.latest_paid_month || null)
+    }
+  }, [data])
+
+  const pageLoading = contextLoading && !data
+
+  async function loadData() {
+    await refetch()
+  }
 
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
