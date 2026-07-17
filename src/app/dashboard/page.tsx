@@ -81,7 +81,7 @@ const itemVariants = {
   },
 } as const
 
-function RenewalBanner({ latest_paid_month }: { latest_paid_month: string | null }) {
+function RenewalBanner({ latest_paid_month, status }: { latest_paid_month: string | null, status?: string }) {
   const [showPopup, setShowPopup] = useState(false);
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
@@ -106,6 +106,11 @@ function RenewalBanner({ latest_paid_month }: { latest_paid_month: string | null
   
   if (latest_paid_month === formattedNextMonth || (latest_paid_month && latest_paid_month > formattedNextMonth)) {
     // Already paid for next month (or beyond), don't show button
+    return null;
+  }
+
+  // If customer is in active subscription and it's not past the 25th, hide the badge.
+  if (status === 'active' && !isPast25th) {
     return null;
   }
 
@@ -502,7 +507,7 @@ export default function CustomerDashboard() {
 
       {/* ─── RENEWAL BANNER ─── */}
       <motion.div variants={itemVariants} className="relative z-50">
-        <RenewalBanner latest_paid_month={data.latest_paid_month} />
+        <RenewalBanner latest_paid_month={data.latest_paid_month} status={data.subscription.status} />
       </motion.div>
 
       {/* ─── 2. DASHBOARD STATS ROW (4 Gourmet Cream Cards) ─── */}
