@@ -158,7 +158,7 @@ export function ProductsPreview() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
             {loading
               ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
-              : (showAll ? products : products.slice(0, 8)).map((product) => {
+              : (showAll ? products : products.slice(0, 8)).map((product, index) => {
                   // Price: subscription products use the milk price from settings if available
                   let displayPrice = `₹${product.price}`
                   let displayUnit = product.unit
@@ -177,13 +177,16 @@ export function ProductsPreview() {
                   return (
                     <div
                       key={product.id}
-                      className="relative flex flex-col w-full p-0 bg-white dark:bg-[#171923]/90 border border-[#F2EDE4]/70 dark:border-slate-800/60 rounded-[32px] shadow-[0_12px_30px_rgba(180,140,60,0.04)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.2)] hover:shadow-[0_25px_50px_-12px_rgba(180,140,60,0.12)] dark:hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] hover:-translate-y-2 hover:border-amber-300/40 dark:hover:border-amber-500/30 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group overflow-hidden"
+                      className={cn(
+                        "relative w-full max-w-[340px] mx-auto sm:max-w-none p-0 bg-white dark:bg-[#171923]/90 border border-[#F2EDE4]/70 dark:border-slate-800/60 rounded-[32px] shadow-[0_12px_30px_rgba(180,140,60,0.04)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.2)] hover:shadow-[0_25px_50px_-12px_rgba(180,140,60,0.12)] dark:hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] hover:-translate-y-2 hover:border-amber-300/40 dark:hover:border-amber-500/30 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group overflow-hidden",
+                        !showAll && index >= 4 ? "hidden sm:flex flex-col" : "flex flex-col"
+                      )}
                     >
                       {/* Hover Glow Accent */}
                       <div className="absolute -inset-2 bg-gradient-to-r from-amber-500/0 via-amber-500/3 to-amber-500/0 dark:via-amber-500/6 rounded-[34px] opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-700 pointer-events-none z-0" />
                       
                       {/* Product Visual Area */}
-                      <div className="w-full h-[260px] relative rounded-t-[30px] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] z-10">
+                      <div className="w-full h-[200px] sm:h-[260px] relative rounded-t-[30px] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] z-10">
                         
                         {/* Product Image */}
                         <div className="absolute inset-0 w-full h-full transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105">
@@ -225,7 +228,7 @@ export function ProductsPreview() {
                       <div className="relative z-10 flex flex-col flex-1 px-5 pb-5 pt-4">
                         {/* Title & Tagline */}
                         <div className="mb-4 text-center">
-                          <h3 className="font-playfair text-2xl font-extrabold text-slate-950 dark:text-white mb-1.5 tracking-tight transition-colors duration-300 group-hover:text-amber-650 dark:group-hover:text-amber-400">
+                          <h3 className="font-playfair text-xl sm:text-2xl font-extrabold text-slate-950 dark:text-white mb-1.5 tracking-tight transition-colors duration-300 group-hover:text-amber-650 dark:group-hover:text-amber-400">
                             {product.name}
                           </h3>
                           {product.tagline && (
@@ -269,7 +272,7 @@ export function ProductsPreview() {
                           {/* CTA Button */}
                           <Link href={product.is_subscription ? '/subscribe' : '/shop'}>
                             <button className={cn(
-                              "h-11 px-5 rounded-full text-[13px] font-bold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-1.5 hover:scale-[1.03] active:scale-95 border-none cursor-pointer group/btn",
+                              "h-10 sm:h-11 px-4 sm:px-5 rounded-full text-xs sm:text-[13px] font-bold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-1.5 hover:scale-[1.03] active:scale-95 border-none cursor-pointer group/btn",
                               BUTTON_CLASS
                             )}>
                               <span>{product.is_subscription ? 'Subscribe' : 'Buy Now'}</span>
@@ -285,13 +288,16 @@ export function ProductsPreview() {
             }
           </div>
 
-          {!loading && products.length > 8 && (
-            <div className="mt-12 flex justify-center">
+          {!loading && products.length > 4 && (
+            <div className={cn(
+              "mt-12 justify-center",
+              products.length > 8 ? "flex" : "flex sm:hidden"
+            )}>
               <button 
                 onClick={() => setShowAll(!showAll)}
                 className="px-8 py-3 rounded-full border-2 border-[#1230AE] text-[#1230AE] hover:bg-[#1230AE] hover:text-white font-bold transition-colors duration-300"
               >
-                {showAll ? 'Show Less' : 'View All Products'}
+                {showAll ? 'Show Less' : 'View More'}
               </button>
             </div>
           )}
