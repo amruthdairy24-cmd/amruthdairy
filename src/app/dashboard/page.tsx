@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 interface DashboardData {
   success: boolean;
@@ -25,6 +26,8 @@ interface DashboardData {
     daily_rate: number;
     start_date: string;
     balance: number;
+    plan_type?: string;
+    end_date?: string | null;
   } | null;
   waitlist?: {
     id: string;
@@ -80,7 +83,7 @@ const itemVariants = {
   },
 } as const
 
-function RenewalBanner({ latest_paid_month }: { latest_paid_month: string | null }) {
+function RenewalBanner({ latest_paid_month, status }: { latest_paid_month: string | null, status?: string }) {
   const [showPopup, setShowPopup] = useState(false);
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
@@ -105,6 +108,11 @@ function RenewalBanner({ latest_paid_month }: { latest_paid_month: string | null
   
   if (latest_paid_month === formattedNextMonth || (latest_paid_month && latest_paid_month > formattedNextMonth)) {
     // Already paid for next month (or beyond), don't show button
+    return null;
+  }
+
+  // If customer is in active subscription and it's not past the 25th, hide the badge.
+  if (status === 'active' && !isPast25th) {
     return null;
   }
 
@@ -178,28 +186,7 @@ function RenewalBanner({ latest_paid_month }: { latest_paid_month: string | null
 }
 
 export default function CustomerDashboard() {
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    async function loadDashboard() {
-      try {
-        const res = await fetch('/api/customer/dashboard')
-        const json = await res.json()
-        if (json.success) {
-          setData(json)
-        } else {
-          setError(json.message || 'Failed to retrieve dashboard data')
-        }
-      } catch (err) {
-        setError('Network error loading dashboard')
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadDashboard()
-  }, [])
+  const { data, loading, error } = useDashboardData()
 
   const [declining, setDeclining] = useState(false)
 
@@ -403,12 +390,21 @@ export default function CustomerDashboard() {
     return null;
   }
 
-  const { subscription, current_month, recent_deliveries, profile } = data
+  const { subscription, current_month, recent_deliveries, profile, upcoming_adjustments } = data
   const todayStr = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
-  const balanceVal = subscription.balance || 0
-  const balanceText = balanceVal >= 0 ? `₹${balanceVal.toFixed(2)}` : `₹${Math.abs(balanceVal).toFixed(2)}`
+  const accountBalance = subscription.balance || 0
+
+  // Calculate total carry-forward skip credits from upcoming adjustments
+  const carryForwardCredits = (upcoming_adjustments || []).reduce((sum, adj) => {
+    if (adj.amount < 0) return sum + Math.abs(adj.amount);
+    return sum;
+  }, 0);
+
+  // Combined total credits: account balance + carry-forward skip credits
+  const totalCredits = accountBalance + carryForwardCredits;
+  const totalCreditsText = `₹${Math.abs(totalCredits).toFixed(0)}`;
 
   return (
     <motion.div
@@ -433,6 +429,35 @@ export default function CustomerDashboard() {
           </p>
         </div>
       </motion.div>
+
+      {/* ─── TRIAL BANNER ─── */}
+      {subscription.plan_type === 'trial' && (
+        <motion.div variants={itemVariants} className="relative z-50">
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/50 dark:from-purple-950/20 dark:to-pink-950/20 dark:border-purple-900/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400/10 rounded-full blur-3xl group-hover:bg-purple-400/20 transition-all" />
+            <div className="flex items-center gap-4 z-10">
+              <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-purple-100 dark:border-purple-900/30 flex items-center justify-center flex-shrink-0 text-purple-500">
+                <Milk size={20} />
+              </div>
+              <div>
+                <h3 className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">
+                  3-Day Trial Active
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                  You are currently enjoying a trial. Your trial expires on {subscription.end_date ? new Date(subscription.end_date).toLocaleDateString('en-IN') : 'soon'}. Upgrade to a monthly plan to keep the milk coming!
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/renew?upgrade=true"
+              className="z-10 px-6 h-11 rounded-xl text-xs font-bold shadow-md transition-all whitespace-nowrap border-none cursor-pointer flex items-center justify-center gap-2 w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <span>Upgrade to Monthly</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </motion.div>
+      )}
 
       {/* ─── 1. HERO BENTO SECTION (Pasture Green welcome card) ─── */}
       <motion.div
@@ -522,7 +547,7 @@ export default function CustomerDashboard() {
 
       {/* ─── RENEWAL BANNER ─── */}
       <motion.div variants={itemVariants} className="relative z-50">
-        <RenewalBanner latest_paid_month={data.latest_paid_month} />
+        <RenewalBanner latest_paid_month={data.latest_paid_month} status={data.subscription.status} />
       </motion.div>
 
       {/* ─── 2. DASHBOARD STATS ROW (4 Gourmet Cream Cards) ─── */}
@@ -530,18 +555,20 @@ export default function CustomerDashboard() {
         variants={itemVariants} 
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10"
       >
-        {/* Card 1: Account Balance */}
+        {/* Card 1: Total Credits */}
         <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Account Balance</p>
-            <p className={cn("text-xl font-black font-mono tracking-tight mt-1 leading-none", balanceVal >= 0 ? "text-emerald-600 dark:text-blue-95000" : "text-rose-600 dark:text-rose-400")}>
-              {balanceVal >= 0 ? `${balanceText} Credit` : `${balanceText} Due`}
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Total Credits</p>
+            <p className={cn("text-xl font-black font-mono tracking-tight mt-1 leading-none", totalCredits >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+              {totalCredits >= 0 ? `${totalCreditsText} Credit` : `${totalCreditsText} Due`}
             </p>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 font-semibold mt-1.5 truncate">
-              {balanceVal >= 0 ? 'Adjusted in next bill' : 'Outstanding due amount'}
+              {carryForwardCredits > 0
+                ? `Incl. ₹${carryForwardCredits.toFixed(0)} skip credits`
+                : 'Adjusted in next bill'}
             </p>
           </div>
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105", balanceVal >= 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/10 text-rose-500")}>
+          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105", totalCredits >= 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/10 text-rose-500")}>
             <Wallet size={18} />
           </div>
         </div>
@@ -880,7 +907,7 @@ export default function CustomerDashboard() {
                             )}
                             {delivery.delivery_status === 'skipped' && (
                               <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-rose-700 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-200/20">
-                                <span className="w-1 h-1 rounded-full bg-rose-650" />
+                                <span className="w-1 h-1 rounded-full bg-rose-600" />
                                 <span>Skipped</span>
                               </span>
                             )}

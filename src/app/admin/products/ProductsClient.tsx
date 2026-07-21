@@ -17,13 +17,15 @@ import {
   Layers,
   Upload,
   Image as ImageIcon,
-  Sparkles
+  Sparkles,
+  Trash2
 } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { ConfirmModal } from '@/components/ui/Modal'
 
 interface Product {
   id: string;
@@ -70,6 +72,7 @@ export function ProductsClient({
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [editProductId, setEditProductId] = useState<string | null>(null)
+  const [deleteProductId, setDeleteProductId] = useState<string | null>(null)
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
 
@@ -291,6 +294,27 @@ export function ProductsClient({
     }
   }
 
+  const handleDeleteProduct = async () => {
+    if (!deleteProductId) return
+    
+    setIsSubmitting(true)
+    setErrorMsg(null)
+    try {
+      const res = await fetch(`/api/admin/products?id=${deleteProductId}`, {
+        method: 'DELETE',
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.message || 'Failed to delete product')
+      
+      setDeleteProductId(null)
+      router.refresh()
+    } catch (err: any) {
+      setErrorMsg(err.message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const openEditModal = (product: Product) => {
     setFormData({
       name: product.name,
@@ -442,12 +466,21 @@ export function ProductsClient({
       header: 'Actions', 
       align: 'center', 
       cell: (row) => (
-        <button 
-          onClick={() => openEditModal(row)} 
-          className="px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-750 text-[#014DA4] dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-blue-800 dark:hover:text-blue-300 text-xs font-black rounded-xl transition-all shadow-3xs cursor-pointer active:scale-95 flex items-center gap-1.5"
-        >
-          <span>Edit</span>
-        </button>
+        <div className="flex items-center justify-center gap-2">
+          <button 
+            onClick={() => openEditModal(row)} 
+            className="px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-750 text-[#014DA4] dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-blue-800 dark:hover:text-blue-300 text-xs font-black rounded-xl transition-all shadow-3xs cursor-pointer active:scale-95 flex items-center gap-1.5"
+          >
+            <span>Edit</span>
+          </button>
+          <button 
+            onClick={() => setDeleteProductId(row.id)} 
+            className="p-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-750 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800 transition-all shadow-3xs cursor-pointer active:scale-95 rounded-xl"
+            title="Delete Product"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       ) 
     },
   ]
@@ -1082,6 +1115,21 @@ export function ProductsClient({
             </form>
           </div>
         </div>
+      )}
+
+      {deleteProductId && (
+        <ConfirmModal
+          open={!!deleteProductId}
+          onOpenChange={(open) => {
+            if (!open) setDeleteProductId(null)
+          }}
+          title="Delete Product"
+          message="Are you sure you want to delete this product? This action cannot be undone."
+          confirmLabel="Delete"
+          onConfirm={handleDeleteProduct}
+          loading={isSubmitting}
+          danger={true}
+        />
       )}
     </div>
   )

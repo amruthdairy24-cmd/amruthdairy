@@ -15,6 +15,7 @@ import { createClient } from '@/utils/supabase/client'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConfirmModal } from '@/components/ui'
+import { DashboardDataProvider, useDashboardData } from '@/contexts/DashboardDataContext'
 
 const sidebarGroups = [
   {
@@ -51,12 +52,10 @@ const mobileNavItems = [
   { href: '/dashboard/account', icon: User, label: 'Account' },
 ]
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { setTheme } = useTheme()
-  const [profileName, setProfileName] = useState('Customer')
-  const [profilePhone, setProfilePhone] = useState('')
-  const [status, setStatus] = useState<string>('active')
+  const { data } = useDashboardData()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [dateStr, setDateStr] = useState('')
@@ -70,24 +69,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setDateStr(`${days[d.getDay()]} , ${d.getDate()} ${months[d.getMonth()]}`)
   }, [])
 
-  useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const res = await fetch('/api/customer/dashboard')
-        const data = await res.json()
-        if (data.success && data.profile) {
-          setProfileName(data.profile.full_name || 'Customer')
-          setProfilePhone(data.profile.phone || '')
-          if (data.subscription) {
-            setStatus(data.subscription.status)
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load layout profile details')
-      }
-    }
-    fetchProfile()
-  }, [])
+  const profileName = data?.profile?.full_name || 'Customer'
+  const profilePhone = data?.profile?.phone || ''
+  const status = data?.subscription?.status || 'active'
 
   async function handleLogout() {
     const supabase = createClient()
@@ -112,7 +96,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className="hidden lg:flex flex-col w-[260px] z-30 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-150 dark:border-slate-800 transition-colors duration-300">
         {/* Logo */}
         <div className="px-6 py-5 flex items-center justify-center flex-shrink-0">
-          <Link href="/" className="flex items-center justify-center w-full">
+          <Link href="/dashboard" className="flex items-center justify-center w-full">
             <Image 
               src="/images/logo/amruth-logo.png" 
               alt="Amruth Dairy Logo" 
@@ -305,7 +289,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             >
               <div className="px-6 py-4 flex items-center justify-between flex-shrink-0">
                 <div className="flex-1 flex justify-center py-1">
-                  <Link href="/" className="flex items-center justify-center">
+                  <Link href="/dashboard" className="flex items-center justify-center">
                     <Image 
                       src="/images/logo/amruth-logo.png" 
                       alt="Amruth Dairy Logo" 
@@ -411,6 +395,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         danger
       />
     </div>
+  )
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <DashboardDataProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </DashboardDataProvider>
   )
 }
 

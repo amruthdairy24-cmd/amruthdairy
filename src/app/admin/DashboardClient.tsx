@@ -39,6 +39,7 @@ interface DashboardClientProps {
     area: string
     qty: string
     status: string
+    isTrial?: boolean
   }>
   recentActivities: Array<{
     id: string
@@ -407,6 +408,7 @@ export default function DashboardClient({
                             <div>
                               <p className="text-[13.5px] font-extrabold text-slate-800 dark:text-slate-100 leading-none">
                                 {del.customerName}
+                                {del.isTrial && <span className="ml-2 text-[8px] uppercase tracking-widest bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded-md font-black">TRIAL</span>}
                               </p>
                               <p className="text-[10.5px] font-bold text-slate-400 dark:text-slate-550 mt-1">
                                 ID: #{String(del.id).slice(-4)}

@@ -11,6 +11,7 @@ import SubscriptionCalendar from '@/components/SubscriptionCalendar'
 import { calculateDailyRate, fetchMilkPricesClient } from '@/lib/billing'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 interface RenewData {
   success: boolean;
@@ -28,6 +29,8 @@ function RenewContent() {
   const searchParams = useSearchParams()
   const targetMonth = searchParams.get('month')
   
+  const { data: dashboardData, loading: contextLoading } = useDashboardData()
+
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<RenewData | null>(null)
   const [quantity, setQuantity] = useState<number>(1)
@@ -57,64 +60,52 @@ function RenewContent() {
   }, [])
   
   useEffect(() => {
-    async function loadData() {
-      try {
-        // Fetch the previous settings (we can just use the dashboard data for this)
-        const res = await fetch('/api/customer/dashboard')
-        const json = await res.json()
-        if (json.success && json.subscription) {
-          setData({
-            success: true,
-            previousMonth: {
-              quantity_litres: json.subscription.quantity_litres,
-              daily_rate: json.subscription.daily_rate,
-              excluded_dates: json.excluded_dates || []
-            },
-            upcoming_adjustments: json.upcoming_adjustments || []
-          })
-          setQuantity(json.subscription.quantity_litres)
+    if (dashboardData) {
+      if (dashboardData.subscription) {
+        setData({
+          success: true,
+          previousMonth: {
+            quantity_litres: dashboardData.subscription.quantity_litres,
+            daily_rate: dashboardData.subscription.daily_rate,
+            excluded_dates: dashboardData.excluded_dates || []
+          },
+          upcoming_adjustments: dashboardData.upcoming_adjustments || []
+        })
+        setQuantity(dashboardData.subscription.quantity_litres)
+        
+        const pastExcluded: string[] = dashboardData.excluded_dates || [];
+        const initialDates: string[] = [];
+        
+        if (pastExcluded.length > 0) {
+          const excludedDaysOfWeek = new Set(
+            pastExcluded.map(dStr => new Date(dStr).getDay())
+          );
           
-          // `json.excluded_dates` is now an array of string dates (e.g. '2026-06-07')
-          // We want to map the days of the week of these dates to the targetMonth
-          const pastExcluded: string[] = json.excluded_dates || [];
-          const initialDates: string[] = [];
-          
-          if (pastExcluded.length > 0) {
-            // Find unique days of the week from past excluded dates
-            const excludedDaysOfWeek = new Set(
-              pastExcluded.map(dStr => new Date(dStr).getDay())
-            );
-            
-            // Map those days of the week to the target month
-            const start = new Date(targetMonth || new Date());
-            const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
-            let current = new Date(start);
-            while (current <= end) {
-              if (excludedDaysOfWeek.has(current.getDay())) {
-                initialDates.push(current.toISOString().split('T')[0]);
-              }
-              current.setDate(current.getDate() + 1);
+          const start = new Date(targetMonth || new Date());
+          const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+          let current = new Date(start);
+          while (current <= end) {
+            if (excludedDaysOfWeek.has(current.getDay())) {
+              initialDates.push(current.toISOString().split('T')[0]);
             }
+            current.setDate(current.getDate() + 1);
           }
-          
-          setExcludedDates(initialDates)
-          
-          // Toast reminder
-          toast('We have pre-filled your plan from last month. You can adjust it below if needed.', {
-            icon: 'ℹ️',
-            duration: 5000
-          })
-        } else {
-          router.push('/dashboard')
         }
-      } catch (err) {
-        console.error(err)
-      } finally {
+        
+        setExcludedDates(initialDates)
+        
+        toast('We have pre-filled your plan from last month. You can adjust it below if needed.', {
+          icon: 'ℹ️',
+          duration: 5000
+        })
         setLoading(false)
+      } else {
+        router.push('/dashboard')
       }
+    } else if (!contextLoading) {
+      setLoading(false)
     }
-    loadData()
-  }, [router, targetMonth])
+  }, [dashboardData, contextLoading, router, targetMonth])
 
   const calculateRemainingDays = () => {
     if (!targetMonth) return 30; // fallback
@@ -256,7 +247,7 @@ function RenewContent() {
         </div>
         
         <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
-          Renew for {monthName}
+          {searchParams.get('upgrade') === 'true' ? 'Upgrade to Standard Monthly Plan' : `Renew for ${monthName}`}
         </h1>
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8">
           Review your plan details for the upcoming month. You can adjust your daily quantity below.

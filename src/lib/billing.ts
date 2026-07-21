@@ -299,3 +299,37 @@ export async function fetchMilkPricesClient(): Promise<Record<string, number>> {
   return DEFAULT_TIER_PRICES;
 }
 
+export interface TrialPricingValue {
+  enabled: boolean;
+  prices: Record<string, number>;
+}
+
+export async function fetchTrialPricing(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adminClient: { from: (table: string) => any }
+): Promise<TrialPricingValue> {
+  const { data, error } = await adminClient
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'trial_pricing')
+    .single()
+
+  if (error || !data || !data.value) {
+    return { enabled: false, prices: DEFAULT_TIER_PRICES };
+  }
+
+  return data.value as TrialPricingValue;
+}
+
+export async function fetchTrialPricingClient(): Promise<TrialPricingValue> {
+  try {
+    const res = await fetch('/api/admin/settings?key=trial_pricing')
+    const data = await res.json()
+    if (data.success && data.value) {
+      return data.value as TrialPricingValue;
+    }
+  } catch (err) {
+    console.warn('[billing] Failed to fetch trial price from API, using default')
+  }
+  return { enabled: false, prices: DEFAULT_TIER_PRICES };
+}

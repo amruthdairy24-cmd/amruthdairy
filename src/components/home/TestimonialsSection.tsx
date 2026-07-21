@@ -8,13 +8,6 @@ export function TestimonialsSection() {
       avatar: 'RN'
     },
     {
-      name: 'Priya Shenoy',
-      location: 'Urwa, Mangalore',
-      quote: 'Fresh, pure milk delivered every morning. We paused deliveries for 10 days while visiting relatives in Bangalore. The vacation feature worked perfectly — not a single drop was delivered, and the exact credit was adjusted in the next bill.',
-      rating: 5,
-      avatar: 'PS'
-    },
-    {
       name: 'Anand Kumar',
       location: 'Padil, Mangalore',
       quote: 'We need extra milk on weekends for making tea/sweets. Ordering through the website is so much easier than messaging or calling. The extra pack arrives morning, and is added to our monthly ledger automatically.',
@@ -40,7 +33,7 @@ export function TestimonialsSection() {
         </div>
 
         {/* Reviews Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-7 max-w-4xl mx-auto">
           {reviews.map((r, i) => (
             <div
               key={i}

@@ -45,9 +45,11 @@ export default function OnboardingPage() {
   const [minAllowedDate, setMinAllowedDate] = useState('')
   const [deliveryNotes, setDeliveryNotes] = useState('')
   const [excludedDates, setExcludedDates] = useState<string[]>([])
+  const [isTrial, setIsTrial] = useState(false)
 
   // Admin-managed pricing
   const [milkPrices, setMilkPrices] = useState<Record<string, number>>({})
+  const [trialPricing, setTrialPricing] = useState<{enabled: boolean, prices: Record<string, number>}>({enabled: false, prices: {}})
   const [priceLoading, setPriceLoading] = useState(true)
 
   const [monthlyAmount, setMonthlyAmount] = useState(0)
@@ -56,6 +58,7 @@ export default function OnboardingPage() {
   const [deliveryDays, setDeliveryDays] = useState(0)
   const [isMonthFull, setIsMonthFull] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
+  const [hasUsedTrial, setHasUsedTrial] = useState(false)
 
   const handleExcludedDatesChange = useCallback((dates: string[]) => {
     setExcludedDates(dates)
@@ -83,8 +86,12 @@ export default function OnboardingPage() {
   useEffect(() => {
     async function loadPrice() {
       setPriceLoading(true)
-      const prices = await fetchMilkPricesClient()
+      const [prices, trialData] = await Promise.all([
+        fetchMilkPricesClient(),
+        import('@/lib/billing').then(m => m.fetchTrialPricingClient())
+      ]);
       setMilkPrices(prices)
+      setTrialPricing(trialData)
       setPriceLoading(false)
     }
     loadPrice()
@@ -92,9 +99,10 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     if (!startDate || Object.keys(milkPrices).length === 0) return
-    const dRate = calculateDailyRate(quantity, milkPrices)
+    const activePrices = (isTrial && trialPricing.enabled) ? trialPricing.prices : milkPrices;
+    const dRate = calculateDailyRate(quantity, activePrices)
     setDailyRate(dRate)
-  }, [quantity, startDate, milkPrices])
+  }, [quantity, startDate, milkPrices, isTrial, trialPricing])
 
   useEffect(() => {
     setMonthlyAmount(deliveryDays * dailyRate)
@@ -110,6 +118,7 @@ export default function OnboardingPage() {
             return
           }
           if (data.profile) {
+            setHasUsedTrial(data.profile.has_used_trial || false)
             setFullName(data.profile.full_name || '')
             const cleanPhone = (data.profile.phone || '').replace(/\D/g, '')
             setPhone(cleanPhone.length === 12 && cleanPhone.startsWith('91') ? cleanPhone.slice(2) : cleanPhone)
@@ -157,7 +166,7 @@ export default function OnboardingPage() {
         const res = await fetch('/api/subscription/new', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quantity, start_date: startDate, excluded_dates: excludedDates })
+          body: JSON.stringify({ quantity, start_date: startDate, excluded_dates: excludedDates, is_trial: isTrial })
         })
         const data = await res.json()
         if (data.waitlisted) {
@@ -186,7 +195,7 @@ export default function OnboardingPage() {
       const res = await fetch('/api/subscription/new', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity, start_date: startDate, excluded_dates: excludedDates })
+        body: JSON.stringify({ quantity, start_date: startDate, excluded_dates: excludedDates, is_trial: isTrial })
       })
       const data = await res.json()
       if (data.success) {
@@ -531,6 +540,46 @@ export default function OnboardingPage() {
                     </div>
 
                     <form onSubmit={handlePlanSubmit} className="space-y-4">
+                      
+                      {/* Plan Type Selector */}
+                      {!hasUsedTrial && (
+                        <div className="flex flex-col gap-1.5 mb-2">
+                          <label className="text-xs font-bold text-slate-600 dark:text-slate-300">Select Plan Type</label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => { setIsTrial(false); setDeliveryDays(getDaysInMonth(new Date(startDate || new Date()).getFullYear(), new Date(startDate || new Date()).getMonth() + 1)) }}
+                              className={cn(
+                                'relative flex flex-col items-center justify-center p-3.5 bg-slate-50 dark:bg-slate-950 border-2 rounded-2xl cursor-pointer transition-all hover:bg-slate-100 dark:bg-slate-800',
+                                !isTrial
+                                  ? 'border-blue-600 bg-blue-50/40 hover:bg-blue-50 dark:bg-blue-900/20'
+                                  : 'border-slate-200 dark:border-slate-800'
+                              )}
+                            >
+                              {!isTrial && <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center">✓</div>}
+                              <span className="text-sm font-black text-slate-900 dark:text-white">Standard Monthly</span>
+                              <span className="text-[10px] font-semibold text-slate-500 mt-1">Pay for the whole month</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => { setIsTrial(true); setDeliveryDays(3); setExcludedDates([]); }}
+                              className={cn(
+                                'relative flex flex-col items-center justify-center p-3.5 bg-slate-50 dark:bg-slate-950 border-2 rounded-2xl cursor-pointer transition-all hover:bg-slate-100 dark:bg-slate-800 overflow-hidden',
+                                isTrial
+                                  ? 'border-purple-600 bg-purple-50/40 hover:bg-purple-50 dark:bg-purple-900/20'
+                                  : 'border-slate-200 dark:border-slate-800'
+                              )}
+                            >
+                              <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-pink-500 text-white text-[8px] font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-wider">Popular</div>
+                              {isTrial && <div className="absolute top-2 left-2 w-4 h-4 rounded-full bg-purple-600 text-white text-[10px] font-black flex items-center justify-center">✓</div>}
+                              <span className="text-sm font-black text-slate-900 dark:text-white mt-2">3-Day Trial</span>
+                              <span className="text-[10px] font-semibold text-slate-500 mt-1">Try before you commit</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Quantity selector */}
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-600 dark:text-slate-300">Daily Milk Quantity</label>

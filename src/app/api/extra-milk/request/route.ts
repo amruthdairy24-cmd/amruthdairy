@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'order_date and extra_litres are required' }, { status: 400 });
     }
 
-    if (extra_litres !== 0 && ![0.5, 1.0, 1.5].includes(extra_litres)) {
+    if (extra_litres !== 0 && ![0.5, 1.0, 1.5, 2.0].includes(extra_litres)) {
       return NextResponse.json({ success: false, message: 'Invalid extra_litres amount' }, { status: 400 });
     }
 
@@ -177,9 +177,7 @@ export async function POST(request: Request) {
     if (extra_litres === 0) {
       // Cancellation logic
       if (order_id) {
-        await adminSupabase.from('extra_milk_orders').delete().eq('id', order_id);
-        
-        // Revert daily_delivery_sheet
+        // Revert daily_delivery_sheet first to release foreign key reference
         await adminSupabase
           .from('daily_delivery_sheet')
           .update({
@@ -189,6 +187,9 @@ export async function POST(request: Request) {
             total_litres: subscription.quantity_litres
           })
           .eq('extra_order_id', order_id);
+
+        // Delete the extra milk order now that it is no longer referenced
+        await adminSupabase.from('extra_milk_orders').delete().eq('id', order_id);
       }
       return NextResponse.json({
         success: true,
