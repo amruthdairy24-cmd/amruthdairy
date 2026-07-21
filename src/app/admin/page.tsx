@@ -64,7 +64,7 @@ export default async function AdminDashboardPage() {
   // 4. Fetch Deliveries list (top 6 today)
   const { data: dbDeliveries } = await supabase
     .from('daily_delivery_sheet')
-    .select('id, delivery_status, total_litres, profiles(full_name, area)')
+    .select('id, delivery_status, total_litres, profiles(full_name, area), subscriptions(plan_type)')
     .eq('delivery_date', todayStr)
     .limit(6)
 
@@ -75,6 +75,7 @@ export default async function AdminDashboardPage() {
         area: (item.profiles as any)?.area || 'General',
         qty: `${item.total_litres}L`,
         status: item.delivery_status,
+        isTrial: (item.subscriptions as any)?.plan_type === 'trial'
       }))
     : []
 

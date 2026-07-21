@@ -17,6 +17,8 @@ export interface DashboardData {
     daily_rate: number;
     start_date: string;
     balance: number;
+    plan_type?: string;
+    end_date?: string | null;
   } | null;
   waitlist?: {
     id: string;
