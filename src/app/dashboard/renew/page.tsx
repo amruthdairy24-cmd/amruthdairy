@@ -247,7 +247,7 @@ function RenewContent() {
         </div>
         
         <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
-          Renew for {monthName}
+          {searchParams.get('upgrade') === 'true' ? 'Upgrade to Standard Monthly Plan' : `Renew for ${monthName}`}
         </h1>
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8">
           Review your plan details for the upcoming month. You can adjust your daily quantity below.

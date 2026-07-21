@@ -14,12 +14,12 @@ export async function GET(request: Request) {
     const [profileRes, subscriptionRes] = await Promise.all([
       supabase
         .from('profiles')
-        .select('full_name, phone, address')
+        .select('full_name, phone, address, has_used_trial')
         .eq('id', user.id)
         .single(),
       supabase
         .from('subscriptions')
-        .select('id, status, quantity_litres, monthly_amount, daily_rate, start_date, balance')
+        .select('id, status, quantity_litres, monthly_amount, daily_rate, start_date, balance, plan_type, end_date')
         .eq('customer_id', user.id)
         .in('status', ['active', 'paused', 'pending_payment'])
         .maybeSingle()

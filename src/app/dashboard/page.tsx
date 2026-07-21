@@ -26,6 +26,8 @@ interface DashboardData {
     daily_rate: number;
     start_date: string;
     balance: number;
+    plan_type?: string;
+    end_date?: string | null;
   } | null;
   waitlist?: {
     id: string;
@@ -427,6 +429,35 @@ export default function CustomerDashboard() {
           </p>
         </div>
       </motion.div>
+
+      {/* ─── TRIAL BANNER ─── */}
+      {subscription.plan_type === 'trial' && (
+        <motion.div variants={itemVariants} className="relative z-50">
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/50 dark:from-purple-950/20 dark:to-pink-950/20 dark:border-purple-900/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400/10 rounded-full blur-3xl group-hover:bg-purple-400/20 transition-all" />
+            <div className="flex items-center gap-4 z-10">
+              <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-purple-100 dark:border-purple-900/30 flex items-center justify-center flex-shrink-0 text-purple-500">
+                <Milk size={20} />
+              </div>
+              <div>
+                <h3 className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">
+                  3-Day Trial Active
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                  You are currently enjoying a trial. Your trial expires on {subscription.end_date ? new Date(subscription.end_date).toLocaleDateString('en-IN') : 'soon'}. Upgrade to a monthly plan to keep the milk coming!
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/renew?upgrade=true"
+              className="z-10 px-6 h-11 rounded-xl text-xs font-bold shadow-md transition-all whitespace-nowrap border-none cursor-pointer flex items-center justify-center gap-2 w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <span>Upgrade to Monthly</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </motion.div>
+      )}
 
       {/* ─── 1. HERO BENTO SECTION (Pasture Green welcome card) ─── */}
       <motion.div

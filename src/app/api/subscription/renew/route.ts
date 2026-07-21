@@ -132,6 +132,8 @@ export async function POST(request: Request) {
         quantity_litres: quantity,
         daily_rate: daily_rate,
         status: 'active', // ensure it's active
+        plan_type: 'standard',
+        end_date: null,
         updated_at: new Date().toISOString()
       })
       .eq('id', existingSub.id);
