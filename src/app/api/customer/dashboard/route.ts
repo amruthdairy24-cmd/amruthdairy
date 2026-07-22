@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { getTodayIST } from '@/lib/utils';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export async function GET(request: Request) {
   try {
@@ -48,16 +50,16 @@ export async function GET(request: Request) {
 
     const subId = (subscription as any).id;
 
-    // 3. Get Current Month Billing dates & references
-    const currentDate = new Date();
-    const billingMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const formattedBillingMonth = billingMonthDate.toISOString().split('T')[0];
-    const nextMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-    const formattedNextMonth = nextMonthDate.toISOString().split('T')[0];
-    const todayStr = currentDate.toISOString().split('T')[0];
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+    // 3. Get Current Month Billing dates & references (IST-aware)
+    const todayStr = getTodayIST();
+    const now = new Date();
+    const istYear = parseInt(formatInTimeZone(now, 'Asia/Kolkata', 'yyyy'));
+    const istMonth = parseInt(formatInTimeZone(now, 'Asia/Kolkata', 'MM'));
+    const formattedBillingMonth = `${istYear}-${String(istMonth).padStart(2, '0')}-01`;
+    const nextMonth = istMonth === 12 ? 1 : istMonth + 1;
+    const nextYear = istMonth === 12 ? istYear + 1 : istYear;
+    const formattedNextMonth = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+    const sevenDaysAgoStr = formatInTimeZone(new Date(Date.now() - 7 * 86400000), 'Asia/Kolkata', 'yyyy-MM-dd');
 
     // Fetch all subscription details in parallel
     const [
