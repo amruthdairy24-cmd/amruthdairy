@@ -8,7 +8,7 @@ import {
   ArrowUpRight, RefreshCw, Banknote, ChevronRight, Zap
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { cn } from '@/lib/utils'
+import { cn, getTodayIST } from '@/lib/utils'
 import Link from 'next/link'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
@@ -128,7 +128,7 @@ export default function BillsPage() {
       } else {
         const monthly = data.subscription ? data.subscription.monthly_amount : 0
         setBill({
-          billing_month: new Date().toISOString().split('T')[0],
+          billing_month: getTodayIST(),
           days_delivered: 0, days_skipped: 0, days_paused: 0, extra_litres_ordered: 0,
           skip_credit: 0, pause_credit: 0, extra_charges: 0, carry_in_balance: 0,
           net_due: monthly, amount_paid: 0, payment_status: 'pending'
