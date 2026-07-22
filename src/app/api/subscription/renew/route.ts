@@ -117,16 +117,10 @@ export async function POST(request: Request) {
       razorpay_order_id = order.id;
     }
 
-    // Mark adjustments as applied
-    if (adjustments && adjustments.length > 0) {
-      await adminSupabase
-        .from('billing_adjustments')
-        .update({
-          is_applied: true,
-          target_month: target_month
-        })
-        .in('id', adjustments.map((a: any) => a.id));
-    }
+    // NOTE: Do NOT mark adjustments as is_applied here.
+    // They are only marked after Razorpay confirms payment in /api/payments/verify.
+    // This prevents credit burn on abandoned checkout.
+    const adjustment_ids = (adjustments || []).map((a: any) => a.id);
 
     // 5. Update Subscription (just in case they changed the quantity)
     const updatePayload: any = {
@@ -219,7 +213,10 @@ export async function POST(request: Request) {
       daily_rate: daily_rate,
       razorpay_order_id: razorpay_order_id,
       key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      billing_month_id: bMonthData?.id
+      billing_month_id: bMonthData?.id,
+      adjustment_ids: adjustment_ids,
+      carry_in_balance: carryInBalance,
+      net_due: net_due
     });
 
   } catch (err: any) {
