@@ -13,6 +13,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'customer') {
+      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+    }
+
     const { pause_start, pause_end } = await request.json();
 
     if (!pause_start || !pause_end) {
@@ -129,7 +134,7 @@ export async function POST(request: Request) {
           adjustment_type: 'vacation_credit',
           amount: creditAmount,
           target_month: monthStr,
-          notes: `Vacation credit for ${pausedDays} days`
+          description: `Vacation credit for ${pausedDays} days`
         });
 
       if (adjustmentError) {
