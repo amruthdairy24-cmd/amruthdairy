@@ -13,6 +13,10 @@ import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
 
+function getLocalYYYYMMDD(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 interface RenewData {
   success: boolean;
   message?: string;
@@ -86,7 +90,7 @@ function RenewContent() {
           let current = new Date(start);
           while (current <= end) {
             if (excludedDaysOfWeek.has(current.getDay())) {
-              initialDates.push(current.toISOString().split('T')[0]);
+              initialDates.push(getLocalYYYYMMDD(current));
             }
             current.setDate(current.getDate() + 1);
           }
@@ -107,15 +111,8 @@ function RenewContent() {
     }
   }, [dashboardData, contextLoading, router, targetMonth])
 
-  const calculateRemainingDays = () => {
-    if (!targetMonth) return 30; // fallback
-    const start = new Date(targetMonth);
-    const end = new Date(start.getFullYear(), start.getMonth() + 1, 0); // last day of month
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    let days = end.getDate();
+  const calendarStartDate = useMemo(() => {
+    const start = new Date(targetDate);
     let startDateForCalculation = new Date(start.getFullYear(), start.getMonth(), 1);
     
     if (dashboardData?.subscription?.plan_type === 'trial' && dashboardData?.subscription?.end_date) {
@@ -123,9 +120,23 @@ function RenewContent() {
       startDateForCalculation = new Date(trialEnd);
       startDateForCalculation.setDate(startDateForCalculation.getDate() + 1);
       startDateForCalculation.setHours(0, 0, 0, 0);
-    } else if (today >= start && today <= end) {
-      startDateForCalculation = today;
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+      if (today >= start && today <= end) {
+        startDateForCalculation = today;
+      }
     }
+    return startDateForCalculation;
+  }, [targetDate, dashboardData]);
+
+  const calculateRemainingDays = () => {
+    const start = new Date(targetDate);
+    const end = new Date(start.getFullYear(), start.getMonth() + 1, 0); // last day of month
+    
+    let days = end.getDate();
+    const startDateForCalculation = calendarStartDate;
 
     if (startDateForCalculation >= start && startDateForCalculation <= end) {
       const diffTime = Math.abs(end.getTime() - startDateForCalculation.getTime());
@@ -139,7 +150,7 @@ function RenewContent() {
     if (excludedDates.length > 0) {
       let current = new Date(startDateForCalculation);
       while (current <= end) {
-        const dStr = current.toISOString().split('T')[0];
+        const dStr = getLocalYYYYMMDD(current);
         if (excludedDates.includes(dStr)) {
           finalDays--;
         }
@@ -159,11 +170,12 @@ function RenewContent() {
   const handlePayment = async () => {
     setIsProcessing(true)
     try {
+      const formattedTargetMonth = getLocalYYYYMMDD(targetDate);
       const res = await fetch('/api/subscription/renew', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          target_month: targetMonth,
+          target_month: formattedTargetMonth,
           quantity: quantity,
           excluded_dates: excludedDates
         })
@@ -322,7 +334,7 @@ function RenewContent() {
                 >
                   <div className="py-2">
                     <SubscriptionCalendar
-                      startDate={targetDate.toISOString().split('T')[0]}
+                      startDate={getLocalYYYYMMDD(calendarStartDate)}
                       onExcludedDatesChange={setExcludedDates}
                       initialExcludedDates={excludedDates}
                       maxMonthsAhead={1}
@@ -341,7 +353,7 @@ function RenewContent() {
         <div className="bg-slate-50 dark:bg-slate-950 rounded-xl p-5 space-y-4 mb-8">
           <div className="flex justify-between items-center text-sm font-semibold text-slate-600 dark:text-slate-400">
             <span>Daily Rate ({quantity}L)</span>
-            <span>₹{(quantity * dailyRate).toFixed(2)} / day</span>
+            <span>₹{dailyRate.toFixed(2)} / day</span>
           </div>
           <div className="flex justify-between items-center text-sm font-semibold text-slate-600 dark:text-slate-400">
             <span>Billing Days</span>
