@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConfirmModal } from '@/components/ui'
 import { DashboardDataProvider, useDashboardData } from '@/contexts/DashboardDataContext'
+import { Logo } from '@/components/layout/Logo'
 
 const sidebarGroups = [
   {
@@ -97,16 +98,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       <aside className="hidden lg:flex flex-col w-[260px] z-30 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-150 dark:border-slate-800 transition-colors duration-300">
         {/* Logo */}
         <div className="px-6 py-5 flex items-center justify-center flex-shrink-0">
-          <Link href="/dashboard" className="flex items-center justify-center w-full">
-            <Image 
-              src="/images/logo/amruth-logo.png" 
-              alt="Amruth Dairy Logo" 
-              width={260} 
-              height={64} 
-              className="w-52 h-16 object-contain dark:brightness-110" 
-              priority
-            />
-          </Link>
+          <Logo href="/dashboard" className="w-52 h-16 object-contain" />
         </div>
 
         {/* Navigation */}
@@ -290,16 +282,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             >
               <div className="px-6 py-4 flex items-center justify-between flex-shrink-0">
                 <div className="flex-1 flex justify-center py-1">
-                  <Link href="/dashboard" className="flex items-center justify-center">
-                    <Image 
-                      src="/images/logo/amruth-logo.png" 
-                      alt="Amruth Dairy Logo" 
-                      width={260} 
-                      height={64} 
-                      className="w-52 h-16 object-contain dark:brightness-110" 
-                      priority
-                    />
-                  </Link>
+                  <Logo href="/dashboard" className="w-52 h-16 object-contain" />
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}

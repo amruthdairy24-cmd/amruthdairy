@@ -9,6 +9,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ConfirmModal } from '@/components/ui'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Logo } from '@/components/layout/Logo'
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -101,9 +102,7 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto flex items-center justify-between w-full">
 
           {/* Logo */}
-          <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-3">
-            <Image src="/images/logo/amruth-logo.png" alt="logo" width={100} height={100} className="w-25 h-15" />
-          </Link>
+          <Logo href={user ? "/dashboard" : "/"} className="w-24 h-auto object-contain" />
 
           {/* Desktop Nav Links (Guests Only) */}
           {!user && (

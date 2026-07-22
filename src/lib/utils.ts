@@ -40,6 +40,13 @@ export function getIndiaTimeString(): string {
 }
 
 /**
+ * getTodayIST — Returns current date string (YYYY-MM-DD) in Asia/Kolkata timezone
+ */
+export function getTodayIST(): string {
+  return formatInTimeZone(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd')
+}
+
+/**
  * getIndiaHour — Returns current hour (0-23) in India timezone
  */
 export function getIndiaHour(): number {

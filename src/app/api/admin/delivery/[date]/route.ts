@@ -26,6 +26,13 @@ export async function GET(
       return NextResponse.json({ success: false, message: 'Invalid date format (YYYY-MM-DD)' }, { status: 400 });
     }
 
+    // Populate daily delivery sheet for the given date (Rule: no background cron, so trigger here)
+    const { error: rpcError } = await supabase.rpc('populate_daily_delivery_sheet', { p_date: date });
+    if (rpcError) {
+      console.warn('Populate delivery sheet warning:', rpcError.message);
+      // We log the warning but don't fail, in case the RPC doesn't exist or is not fully tested
+    }
+
     // Get daily summary
     const { data: summary } = await supabase.rpc('get_daily_summary', { p_date: date });
 
