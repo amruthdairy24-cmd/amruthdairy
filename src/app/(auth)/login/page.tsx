@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Navbar } from '@/components/layout/Navbar'
+import { Logo } from '@/components/layout/Logo'
 // import { ThemeToggle } from '@/components/ThemeToggle'
 
 
@@ -503,11 +504,7 @@ export default function LoginPage() {
             >
               {/* Logo Section */}
               <div className="hidden md:flex flex-col items-center justify-center -mt-2">
-                <img 
-                  src="/images/logo/amruth-logo.png" 
-                  alt="Amruth Dairy Farm" 
-                  className="h-[90px] w-auto object-contain mb-1"
-                />
+                <Logo href="/" className="h-[90px] w-auto object-contain mb-1" />
                 <p className="text-[#009A44] text-xs font-extrabold tracking-wide font-sans">Fresh. Pure. Natural.</p>
               </div>
 
