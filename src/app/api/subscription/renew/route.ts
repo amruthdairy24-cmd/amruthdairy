@@ -138,16 +138,25 @@ export async function POST(request: Request) {
     }
 
     // 5. Update Subscription (just in case they changed the quantity)
+    const updatePayload: any = {
+      quantity_litres: quantity,
+      daily_rate: daily_rate,
+      status: 'active', // ensure it's active
+      plan_type: 'standard',
+      end_date: null,
+      updated_at: new Date().toISOString()
+    };
+
+    if (existingSub.plan_type === 'trial' && existingSub.end_date) {
+      const trialEnd = new Date(existingSub.end_date);
+      const standardStart = new Date(trialEnd);
+      standardStart.setDate(standardStart.getDate() + 1);
+      updatePayload.start_date = standardStart.toISOString().split('T')[0];
+    }
+
     await adminSupabase
       .from('subscriptions')
-      .update({
-        quantity_litres: quantity,
-        daily_rate: daily_rate,
-        status: 'active', // ensure it's active
-        plan_type: 'standard',
-        end_date: null,
-        updated_at: new Date().toISOString()
-      })
+      .update(updatePayload)
       .eq('id', existingSub.id);
 
     // 6. UPSERT billing_month (it will be pending_payment until webhook/frontend confirms)
