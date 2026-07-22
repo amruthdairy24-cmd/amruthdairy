@@ -22,6 +22,7 @@ const sidebarGroups = [
     title: 'MAIN',
     items: [
       { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { href: '/dashboard/products', icon: ShoppingBag, label: 'Our Products' },
       { href: '/dashboard/history', icon: CalendarDays, label: 'Delivery History' },
       { href: '/dashboard/bills', icon: FileText, label: 'My Bills' },
     ]

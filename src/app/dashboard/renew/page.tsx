@@ -112,22 +112,32 @@ function RenewContent() {
     const start = new Date(targetMonth);
     const end = new Date(start.getFullYear(), start.getMonth() + 1, 0); // last day of month
     
-    // If target month is current month, and today is past the 1st, pro-rate it
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     let days = end.getDate();
+    let startDateForCalculation = new Date(start.getFullYear(), start.getMonth(), 1);
     
-    if (today >= start && today <= end) {
-      // Pro-rate: remaining days including today
-      const diffTime = Math.abs(end.getTime() - today.getTime());
+    if (dashboardData?.subscription?.plan_type === 'trial' && dashboardData?.subscription?.end_date) {
+      const trialEnd = new Date(dashboardData.subscription.end_date);
+      startDateForCalculation = new Date(trialEnd);
+      startDateForCalculation.setDate(startDateForCalculation.getDate() + 1);
+      startDateForCalculation.setHours(0, 0, 0, 0);
+    } else if (today >= start && today <= end) {
+      startDateForCalculation = today;
+    }
+
+    if (startDateForCalculation >= start && startDateForCalculation <= end) {
+      const diffTime = Math.abs(end.getTime() - startDateForCalculation.getTime());
       days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    } else if (startDateForCalculation > end) {
+      days = 0;
     }
     
     // Now subtract the excluded dates that fall within the remaining period
     let finalDays = days;
     if (excludedDates.length > 0) {
-      let current = new Date(Math.max(today.getTime(), start.getTime()));
+      let current = new Date(startDateForCalculation);
       while (current <= end) {
         const dStr = current.toISOString().split('T')[0];
         if (excludedDates.includes(dStr)) {
