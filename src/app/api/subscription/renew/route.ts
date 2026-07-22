@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     // 1. Get existing subscription
     const { data: existingSub } = await adminSupabase
       .from('subscriptions')
-      .select('id, status')
+      .select('id, status, plan_type, end_date')
       .eq('customer_id', user.id)
       .single();
 
@@ -62,17 +62,29 @@ export async function POST(request: Request) {
     today.setHours(0, 0, 0, 0);
     
     let daysToCharge = endOfMonth.getDate();
-    
-    // Pro-rate if renewing mid-month for the current month
-    if (today > targetDate && today <= endOfMonth) {
-      const diffTime = Math.abs(endOfMonth.getTime() - today.getTime());
-      daysToCharge = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // inclusive of today
+    let startDateForCalculation = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+
+    if (existingSub.plan_type === 'trial' && existingSub.end_date) {
+      // Upgrade from trial: start from day after trial ends
+      const trialEnd = new Date(existingSub.end_date);
+      startDateForCalculation = new Date(trialEnd);
+      startDateForCalculation.setDate(startDateForCalculation.getDate() + 1);
+      startDateForCalculation.setHours(0, 0, 0, 0);
+    } else if (today > targetDate && today <= endOfMonth) {
+      startDateForCalculation = today;
+    }
+
+    if (startDateForCalculation >= targetDate && startDateForCalculation <= endOfMonth) {
+      const diffTime = Math.abs(endOfMonth.getTime() - startDateForCalculation.getTime());
+      daysToCharge = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // inclusive of startDateForCalculation
+    } else if (startDateForCalculation > endOfMonth) {
+      daysToCharge = 0;
     }
     
     // Now subtract the excluded dates that fall within the remaining period
     let finalDays = daysToCharge;
     if (excluded_dates.length > 0) {
-      let current = new Date(Math.max(today.getTime(), targetDate.getTime()));
+      let current = new Date(startDateForCalculation);
       while (current <= endOfMonth) {
         const dStr = current.toISOString().split('T')[0];
         if (excluded_dates.includes(dStr)) {
