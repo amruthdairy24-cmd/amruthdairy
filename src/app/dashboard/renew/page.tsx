@@ -108,8 +108,7 @@ function RenewContent() {
   }, [dashboardData, contextLoading, router, targetMonth])
 
   const calculateRemainingDays = () => {
-    if (!targetMonth) return 30; // fallback
-    const start = new Date(targetMonth);
+    const start = new Date(targetDate);
     const end = new Date(start.getFullYear(), start.getMonth() + 1, 0); // last day of month
     
     const today = new Date();
@@ -159,11 +158,12 @@ function RenewContent() {
   const handlePayment = async () => {
     setIsProcessing(true)
     try {
+      const formattedTargetMonth = targetDate.toISOString().split('T')[0];
       const res = await fetch('/api/subscription/renew', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          target_month: targetMonth,
+          target_month: formattedTargetMonth,
           quantity: quantity,
           excluded_dates: excludedDates
         })
