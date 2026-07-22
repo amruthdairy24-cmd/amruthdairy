@@ -68,18 +68,18 @@ export default function DashboardClient({
 
   // Milk Pricing Modal State
   const [showPriceModal, setShowPriceModal] = useState(false)
-  const [prices, setPrices] = useState({ '0.5': '41', '1.0': '82', '1.5': '124', '2.0': '165' })
+  const [prices, setPrices] = useState({ '0.5': '40', '1.0': '80', '1.5': '120', '2.0': '160' })
   const [priceApplyMode, setPriceApplyMode] = useState<'next_month' | 'immediate'>('next_month')
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
   const [priceMessage, setPriceMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null)
 
   const openPriceModal = () => {
-    const activePricesToEdit = rawMilkPricing?.next_prices || rawMilkPricing?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
+    const activePricesToEdit = rawMilkPricing?.next_prices || rawMilkPricing?.prices || { '0.5': 40, '1.0': 80, '1.5': 120, '2.0': 160 };
     setPrices({
-      '0.5': activePricesToEdit['0.5']?.toString() || '41.34',
-      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '82.67',
-      '1.5': activePricesToEdit['1.5']?.toString() || '124',
-      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '165.34'
+      '0.5': activePricesToEdit['0.5']?.toString() || '40',
+      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '80',
+      '1.5': activePricesToEdit['1.5']?.toString() || '120',
+      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '160'
     })
     setShowPriceModal(true)
   }
@@ -110,7 +110,7 @@ export default function DashboardClient({
       // Fetch current to keep it
       const res = await fetch('/api/admin/settings?key=milk_tier_prices');
       const currentData = await res.json();
-      const currentPrices = currentData?.value?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
+      const currentPrices = currentData?.value?.prices || { '0.5': 40, '1.0': 80, '1.5': 120, '2.0': 160 };
 
       body.value = {
         prices: currentPrices,

@@ -192,10 +192,12 @@ export interface TieredPricingValue {
 }
 
 const DEFAULT_TIER_PRICES = {
-  "0.5": 41.34,
-  "1": 82.67,
-  "1.5": 124,
-  "2": 165.34
+  "0.5": 40,
+  "1": 80,
+  "1.0": 80,
+  "1.5": 120,
+  "2": 160,
+  "2.0": 160
 };
 
 export function calculateDailyRate(
@@ -211,7 +213,7 @@ export function calculateDailyRate(
     return prices[qtyStr2];
   }
   // Fallback if quantity is non-standard
-  const baseRate = prices["1.0"] || prices["1"] || 82.67;
+  const baseRate = prices["1.0"] || prices["1"] || 80;
   return Math.round(baseRate * quantity * 100) / 100;
 }
 
@@ -219,7 +221,7 @@ export function calculateExtraMilkCharge(
   extraLitres: number,
   prices: Record<string, number>
 ): number {
-  const baseRate = prices["1"] || 82.67;
+  const baseRate = prices["1.0"] || prices["1"] || 80;
   return Math.round(baseRate * extraLitres * 100) / 100;
 }
 
