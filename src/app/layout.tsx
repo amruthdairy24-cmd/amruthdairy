@@ -73,6 +73,19 @@ export default function RootLayout({
             <Toaster position="bottom-center" />
           </CartProvider>
         </ThemeProvider>
+        {/* Global SVG Color Swap Filter for Dark Mode Logo Inversion */}
+        <svg className="fixed top-0 left-0 w-0 h-0 pointer-events-none opacity-0" aria-hidden="true" focusable="false">
+          <defs>
+            <filter id="logo-invert-filter">
+              <feColorMatrix type="matrix" values="
+                -1  0  0  0  1
+                -1  0  0  0  1
+                -1  0  0  0  1
+                -1  0  0  1  0
+              " />
+            </filter>
+          </defs>
+        </svg>
       </body>
     </html>
   )
