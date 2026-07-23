@@ -101,7 +101,6 @@ export function ProductsClient({
   // Milk Pricing Modal State
   const [showMilkPriceModal, setShowMilkPriceModal] = useState(false)
   const [milkPricesForm, setMilkPricesForm] = useState({ '0.5': '41', '1.0': '82', '1.5': '124', '2.0': '165' })
-  const [priceApplyMode, setPriceApplyMode] = useState<'next_month' | 'immediate'>('next_month')
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
   const [priceMessage, setPriceMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null)
 
@@ -1048,49 +1047,12 @@ export function ProductsClient({
                 </div>
               </div>
 
-              {/* Effective Time Selection Card */}
-              <div className="text-left">
-                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-2.5 uppercase tracking-widest">
-                  When should new pricing apply?
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <label className={cn(
-                    "flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all duration-200 bg-slate-50/20 dark:bg-slate-950/10",
-                    priceApplyMode === 'next_month' 
-                      ? "border-blue-500 dark:border-blue-500 bg-blue-50/40 dark:bg-blue-950/15 shadow-3xs" 
-                      : "border-slate-200 dark:border-slate-800"
-                  )}>
-                    <input 
-                      type="radio" 
-                      name="applyModeMilk" 
-                      checked={priceApplyMode === 'next_month'} 
-                      onChange={() => setPriceApplyMode('next_month')} 
-                      className="accent-blue-600 w-4 h-4 cursor-pointer" 
-                    />
-                    <span className="text-xs font-extrabold text-slate-800 dark:text-white leading-tight">
-                      Next Billing Cycle<br/>
-                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">Recommended</span>
-                    </span>
-                  </label>
-                  <label className={cn(
-                    "flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all duration-200 bg-slate-50/20 dark:bg-slate-950/10",
-                    priceApplyMode === 'immediate' 
-                      ? "border-blue-500 dark:border-blue-500 bg-blue-50/40 dark:bg-blue-950/15 shadow-3xs" 
-                      : "border-slate-200 dark:border-slate-800"
-                  )}>
-                    <input 
-                      type="radio" 
-                      name="applyModeMilk" 
-                      checked={priceApplyMode === 'immediate'} 
-                      onChange={() => setPriceApplyMode('immediate')} 
-                      className="accent-blue-600 w-4 h-4 cursor-pointer" 
-                    />
-                    <span className="text-xs font-extrabold text-slate-800 dark:text-white leading-tight">
-                      Immediately<br/>
-                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">Applies starting today</span>
-                    </span>
-                  </label>
-                </div>
+              {/* Effective Time Notice */}
+              <div className="rounded-xl p-4 border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 text-xs text-slate-600 dark:text-slate-400 leading-relaxed text-left">
+                <span className="font-bold text-[#014DA4] dark:text-blue-400 block mb-1">
+                  Schedule: Next Billing Cycle
+                </span>
+                New signups get the new price immediately. Existing customers finish their current month at their old price, avoiding billing confusion mid-month.
               </div>
 
               {priceMessage && (
