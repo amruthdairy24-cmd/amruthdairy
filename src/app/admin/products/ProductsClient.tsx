@@ -141,7 +141,7 @@ export function ProductsClient({
     const totalCount = data.length
     const lowStock = data.filter(p => p.stock_available <= 5).length
     const activeTiers = plans.length
-    const standardPrice = milkPrices['1.0'] || milkPrices['1'] || 82.67
+    const standardPrice = milkPrices['1.0'] || milkPrices['1'] || 80
 
     return {
       totalCount,
@@ -154,10 +154,10 @@ export function ProductsClient({
   const openMilkPriceModal = () => {
     const activePricesToEdit = rawMilkPricing?.next_prices || rawMilkPricing?.prices || milkPrices;
     setMilkPricesForm({
-      '0.5': activePricesToEdit['0.5']?.toString() || '41.34',
-      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '82.67',
-      '1.5': activePricesToEdit['1.5']?.toString() || '124',
-      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '165.34'
+      '0.5': activePricesToEdit['0.5']?.toString() || '40',
+      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '80',
+      '1.5': activePricesToEdit['1.5']?.toString() || '120',
+      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '160'
     })
     setShowMilkPriceModal(true)
   }
