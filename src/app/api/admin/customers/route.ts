@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { isAdminEmail } from '@/lib/utils';
 
 export async function DELETE(request: Request) {
   try {
@@ -11,12 +12,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const adminClient = createAdminClient();
-    const { data: profile } = await adminClient.from('profiles').select('role').eq('id', user.id).single();
-
-    if (profile?.role !== 'admin') {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
+
+    const adminClient = createAdminClient();
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

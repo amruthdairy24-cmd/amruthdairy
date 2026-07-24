@@ -190,3 +190,14 @@ export function getEarliestStartDateStr(): string {
   
   return `${year}-${month}-${day}`
 }
+
+/**
+ * isAdminEmail — Returns true if the email matches the ADMIN_EMAIL environment variable.
+ */
+export function isAdminEmail(email?: string | null): boolean {
+  if (!email) return false
+  const adminEmail = process.env.ADMIN_EMAIL
+  if (!adminEmail) return false
+  return email.toLowerCase() === adminEmail.toLowerCase()
+}
+

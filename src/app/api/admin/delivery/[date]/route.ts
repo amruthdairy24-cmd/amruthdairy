@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { isAdminEmail } from '@/lib/utils';
 
 export async function GET(
   request: NextRequest,
@@ -15,8 +16,7 @@ export async function GET(
     }
 
     // Verify Admin
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
@@ -120,8 +120,7 @@ export async function PATCH(
     }
 
     // Verify Admin
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
@@ -214,8 +213,7 @@ export async function PUT(
     }
 
     // Verify Admin
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
