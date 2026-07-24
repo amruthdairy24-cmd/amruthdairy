@@ -123,7 +123,7 @@ export function HeroSection() {
             id="mobile-hero-subscribe"
             className="font-cabinet inline-flex items-center justify-center gap-1.5 h-10 px-5 rounded-[10px] bg-[#02429C] text-white font-semibold text-[13px] transition-all duration-200 cursor-pointer mb-3.5 shadow-md hover:shadow-lg hover:scale-105"
           >
-            Subscribe Today
+            {isLoggedIn === true ? 'Subscribe Today' : 'Login'}
             <ArrowRight size={14} strokeWidth={2.2} />
           </button>
 
