@@ -108,7 +108,7 @@ export function ProductsPreview() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/admin/products').then(r => r.json()),
+      fetch('/api/products').then(r => r.json()),
       fetch('/api/admin/settings?key=price_per_litre').then(r => r.json()).catch(() => null),
     ]).then(([productData, settingsData]) => {
       if (productData.success && productData.products) {
