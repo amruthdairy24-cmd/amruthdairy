@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { isAdminEmail } from '@/lib/utils';
 
 /**
  * GET /api/admin/settings?key=price_per_litre
@@ -86,21 +87,16 @@ export async function PUT(request: Request) {
     }
 
     // Role check
-    const adminClient = createAdminClient();
-    const { data: profile } = await adminClient
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'admin') {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json(
         { success: false, message: 'Forbidden — admin access required' },
         { status: 403 }
       );
     }
 
+
     // Business logic
+    const adminClient = createAdminClient();
     const body = await request.json();
 
     // Batch update support

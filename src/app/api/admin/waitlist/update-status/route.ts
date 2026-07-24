@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { isAdminEmail } from '@/lib/utils';
 
 export async function POST(request: Request) {
   try {
@@ -11,13 +12,7 @@ export async function POST(request: Request) {
     }
 
     // Verify admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || profile.role !== 'admin') {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
