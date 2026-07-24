@@ -49,8 +49,6 @@ interface DashboardClientProps {
   }>
   subOverview: {
     active: number
-    paused: number
-    cancelled: number
     pending: number
   }
   rawMilkPricing?: any
@@ -152,11 +150,9 @@ export default function DashboardClient({
   }, [])
 
   // Calculate percentages for subscription breakdown
-  const totalSubs = subOverview.active + subOverview.paused + subOverview.cancelled + subOverview.pending || 1
+  const totalSubs = subOverview.active + subOverview.pending || 1
   const activePct = Math.round((subOverview.active / totalSubs) * 100)
-  const pausedPct = Math.round((subOverview.paused / totalSubs) * 100)
   const pendingPct = Math.round((subOverview.pending / totalSubs) * 100)
-  const cancelledPct = Math.round((subOverview.cancelled / totalSubs) * 100)
 
   return (
     <div className="space-y-6">
@@ -531,17 +527,13 @@ export default function DashboardClient({
             <div className="w-full h-2.5 rounded-full overflow-hidden flex bg-slate-100 dark:bg-slate-950/80 mb-4 shadow-3xs">
               <div style={{ width: `${activePct}%` }} className="bg-emerald-500" title={`Active: ${activePct}%`} />
               <div style={{ width: `${pendingPct}%` }} className="bg-blue-500" title={`Pending: ${pendingPct}%`} />
-              <div style={{ width: `${pausedPct}%` }} className="bg-amber-400" title={`Paused: ${pausedPct}%`} />
-              <div style={{ width: `${cancelledPct}%` }} className="bg-rose-500" title={`Cancelled: ${cancelledPct}%`} />
             </div>
 
             {/* Segment Legend */}
             <div className="space-y-2.5 mt-4">
               {[
                 { label: 'Active', count: subOverview.active, pct: activePct, color: 'bg-emerald-500', bg: 'bg-emerald-50/35 dark:bg-emerald-950/10 border-emerald-100/50 dark:border-emerald-900/20' },
-                { label: 'Pending', count: subOverview.pending, pct: pendingPct, color: 'bg-blue-500', bg: 'bg-blue-50/35 dark:bg-blue-950/10 border-blue-100/50 dark:border-blue-900/20' },
-                { label: 'Paused', count: subOverview.paused, pct: pausedPct, color: 'bg-amber-400', bg: 'bg-amber-50/35 dark:bg-amber-950/10 border-amber-100/50 dark:border-amber-900/20' },
-                { label: 'Cancelled', count: subOverview.cancelled, pct: cancelledPct, color: 'bg-rose-500', bg: 'bg-rose-50/35 dark:bg-rose-950/10 border-rose-100/50 dark:border-rose-900/20' }
+                { label: 'Pending', count: subOverview.pending, pct: pendingPct, color: 'bg-blue-500', bg: 'bg-blue-50/35 dark:bg-blue-950/10 border-blue-100/50 dark:border-blue-900/20' }
               ].map((item) => (
                 <div 
                   key={item.label} 
