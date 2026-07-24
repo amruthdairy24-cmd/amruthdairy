@@ -106,8 +106,6 @@ export default async function AdminDashboardPage() {
   // 6. Subscriptions overview segments
   const subOverview = {
     active: 0,
-    paused: 0,
-    cancelled: 0,
     pending: 0
   }
 
