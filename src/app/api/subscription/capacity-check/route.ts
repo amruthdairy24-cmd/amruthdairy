@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { getTodayIST } from '@/lib/utils';
 
 const adminSupabase = createAdminClient();
 
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
+    const date = searchParams.get('date') || getTodayIST();
     const litres = parseFloat(searchParams.get('litres') || '1');
 
     const today = new Date();

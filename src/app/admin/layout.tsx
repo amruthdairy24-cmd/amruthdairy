@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils'
 import { createClient } from '@/utils/supabase/client'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConfirmModal } from '@/components/ui'
+import { Logo } from '@/components/layout/Logo'
 
 // Nav Items Grouped by Section
 const sidebarGroups = [
@@ -97,16 +98,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="hidden lg:flex flex-col w-[260px] z-30 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-150 dark:border-slate-800 transition-colors duration-300">
         {/* Logo Area */}
         <div className="px-6 py-5 flex items-center justify-center flex-shrink-0">
-          <Link href="/" className="flex items-center justify-center w-full">
-            <Image 
-              src="/images/logo/amruth-logo.png" 
-              alt="Amruth Dairy Logo" 
-              width={260} 
-              height={64} 
-              className="w-52 h-16 object-contain dark:brightness-110" 
-              priority
-            />
-          </Link>
+          <Logo href="/admin" className="w-52 h-16 object-contain" />
         </div>
 
         {/* Navigation Area */}
@@ -263,24 +255,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 bottom-0 left-0 w-[280px] z-[70] lg:hidden shadow-2xl flex flex-col bg-white border-r border-slate-150 transition-colors duration-300"
+              className="fixed top-0 bottom-0 left-0 w-[280px] z-[70] lg:hidden shadow-2xl flex flex-col bg-white dark:bg-slate-900 border-r border-slate-150 dark:border-slate-800 transition-colors duration-300"
             >
               <div className="px-6 py-4 flex items-center justify-between flex-shrink-0">
                 <div className="flex-1 flex justify-center py-1">
-                  <Link href="/" className="flex items-center justify-center">
-                    <Image 
-                      src="/images/logo/amruth-logo.png" 
-                      alt="Amruth Dairy Logo" 
-                      width={260} 
-                      height={64} 
-                      className="w-52 h-16 object-contain dark:brightness-110" 
-                      priority
-                    />
-                  </Link>
+                  <Logo href="/admin" className="w-52 h-16 object-contain" />
                 </div>
                 <button 
                   onClick={() => setIsMobileMenuOpen(false)} 
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-50 bg-transparent border-none cursor-pointer"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 bg-transparent border-none cursor-pointer"
                 >
                   <X size={18} />
                 </button>

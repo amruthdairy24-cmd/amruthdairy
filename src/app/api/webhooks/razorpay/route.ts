@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
       await adminClient
         .from('billing_months')
-        .update({ amount_paid: amount })
+        .update({ amount_paid: amount, payment_status: 'paid', net_due: 0 })
         .eq('subscription_id', subscription.id)
         .eq('billing_month', formattedBillingMonth);
       

@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { Logo } from '@/components/layout/Logo'
 
 const SESSION_KEY = 'amruth_intro_seen'
 
@@ -41,14 +42,7 @@ export function PageLoader() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex flex-col items-center gap-6"
           >
-            <Image 
-              src="/images/logo/amruth-logo.png" 
-              alt="Amruth Logo" 
-              width={160} 
-              height={160} 
-              className="w-40 h-auto" 
-              priority
-            />
+            <Logo href={null} className="w-40 h-auto object-contain" />
             <div className="flex gap-2">
               <motion.div
                 animate={{ y: [0, -10, 0] }}

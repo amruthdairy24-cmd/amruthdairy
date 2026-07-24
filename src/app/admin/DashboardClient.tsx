@@ -68,18 +68,17 @@ export default function DashboardClient({
 
   // Milk Pricing Modal State
   const [showPriceModal, setShowPriceModal] = useState(false)
-  const [prices, setPrices] = useState({ '0.5': '41', '1.0': '82', '1.5': '124', '2.0': '165' })
-  const [priceApplyMode, setPriceApplyMode] = useState<'next_month' | 'immediate'>('next_month')
+  const [prices, setPrices] = useState({ '0.5': '40', '1.0': '80', '1.5': '120', '2.0': '160' })
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
   const [priceMessage, setPriceMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null)
 
   const openPriceModal = () => {
-    const activePricesToEdit = rawMilkPricing?.next_prices || rawMilkPricing?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
+    const activePricesToEdit = rawMilkPricing?.next_prices || rawMilkPricing?.prices || { '0.5': 40, '1.0': 80, '1.5': 120, '2.0': 160 };
     setPrices({
-      '0.5': activePricesToEdit['0.5']?.toString() || '41.34',
-      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '82.67',
-      '1.5': activePricesToEdit['1.5']?.toString() || '124',
-      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '165.34'
+      '0.5': activePricesToEdit['0.5']?.toString() || '40',
+      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '80',
+      '1.5': activePricesToEdit['1.5']?.toString() || '120',
+      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '160'
     })
     setShowPriceModal(true)
   }
@@ -110,7 +109,7 @@ export default function DashboardClient({
       // Fetch current to keep it
       const res = await fetch('/api/admin/settings?key=milk_tier_prices');
       const currentData = await res.json();
-      const currentPrices = currentData?.value?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
+      const currentPrices = currentData?.value?.prices || { '0.5': 40, '1.0': 80, '1.5': 120, '2.0': 160 };
 
       body.value = {
         prices: currentPrices,
@@ -579,33 +578,41 @@ export default function DashboardClient({
 
           {/* Timeline List */}
           <div className="space-y-5 relative flex-1 mt-2">
-            {/* Timeline connector line */}
-            <div className="absolute left-[11px] top-2 bottom-2 w-[2px] bg-slate-100 dark:bg-slate-800" />
+            {recentActivities.length === 0 ? (
+              <div className="py-8 text-center text-[12.5px] font-bold text-slate-400 dark:text-slate-500">
+                No recent activity.
+              </div>
+            ) : (
+              <>
+                {/* Timeline connector line */}
+                <div className="absolute left-[11px] top-2 bottom-2 w-[2px] bg-slate-100 dark:bg-slate-800" />
 
-            {recentActivities.map((act) => {
-              const dotColorClass = {
-                blue: 'bg-blue-500',
-                green: 'bg-emerald-500',
-                amber: 'bg-amber-400',
-                red: 'bg-rose-500'
-              }[act.type] || 'bg-blue-500';
+                {recentActivities.map((act) => {
+                  const dotColorClass = {
+                    blue: 'bg-blue-500',
+                    green: 'bg-emerald-500',
+                    amber: 'bg-amber-400',
+                    red: 'bg-rose-500'
+                  }[act.type] || 'bg-blue-500';
 
-              return (
-                <div key={act.id} className="flex gap-4 relative z-10 items-start">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 shadow-3xs flex-shrink-0">
-                    <div className={cn("w-2 h-2 rounded-full", dotColorClass)} />
-                  </div>
-                  <div className="pt-0.5">
-                    <p className="text-[13px] font-extrabold text-slate-700 dark:text-slate-200 leading-snug">
-                      {act.text}
-                    </p>
-                    <p className="text-[10.5px] font-bold text-slate-400 dark:text-slate-500 mt-1">
-                      {act.time}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+                  return (
+                    <div key={act.id} className="flex gap-4 relative z-10 items-start">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 shadow-3xs flex-shrink-0">
+                        <div className={cn("w-2 h-2 rounded-full", dotColorClass)} />
+                      </div>
+                      <div className="pt-0.5">
+                        <p className="text-[13px] font-extrabold text-slate-700 dark:text-slate-200 leading-snug">
+                          {act.text}
+                        </p>
+                        <p className="text-[10.5px] font-bold text-slate-400 dark:text-slate-500 mt-1">
+                          {act.time}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
           </div>
         </div>
 
@@ -691,46 +698,11 @@ export default function DashboardClient({
               </div>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-3 uppercase tracking-wider">
-                Application Method
-              </label>
-              
-              <div className="space-y-3">
-                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors bg-slate-50/25 dark:bg-slate-950/20">
-                  <input 
-                    type="radio" 
-                    name="applyMode" 
-                    value="next_month"
-                    checked={priceApplyMode === 'next_month'}
-                    onChange={() => setPriceApplyMode('next_month')}
-                    className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                  />
-                  <div>
-                    <div className="font-bold text-slate-900 dark:text-white text-sm">Apply on Next Renewal (Recommended)</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                      New signups get the new price immediately. Existing customers finish their current month at their old price, avoiding billing confusion mid-month.
-                    </div>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors bg-slate-50/25 dark:bg-slate-950/20">
-                  <input 
-                    type="radio" 
-                    name="applyMode" 
-                    value="immediate"
-                    checked={priceApplyMode === 'immediate'}
-                    onChange={() => setPriceApplyMode('immediate')}
-                    className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                  />
-                  <div>
-                    <div className="font-bold text-slate-900 dark:text-white text-sm">Apply Immediately</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                      Instantly changes the price for everyone. Note: This will cause current month bills to be pro-rated, which may confuse existing customers.
-                    </div>
-                  </div>
-                </label>
-              </div>
+            <div className="mb-6 rounded-xl p-4 border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
+              <span className="font-bold text-[#014DA4] dark:text-blue-400 block mb-1">
+                Schedule: Next Renewal Cycle
+              </span>
+              New signups get the new price immediately. Existing customers finish their current month at their old price, avoiding billing confusion mid-month.
             </div>
 
             {priceMessage && (

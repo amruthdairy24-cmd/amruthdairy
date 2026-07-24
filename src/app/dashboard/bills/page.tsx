@@ -5,10 +5,10 @@ import {
   FileText, CreditCard, CheckCircle2, ShieldCheck, AlertCircle,
   TrendingUp, Info, Milk, SkipForward, Palmtree, PlusCircle,
   Wallet, ArrowRight, Eye, Calendar, Sparkles, Clock,
-  ArrowUpRight, RefreshCw, Banknote, ChevronRight, Zap
+  ArrowUpRight, RefreshCw, ChevronRight, Zap
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { cn } from '@/lib/utils'
+import { cn, getTodayIST } from '@/lib/utils'
 import Link from 'next/link'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
@@ -92,27 +92,7 @@ export default function BillsPage() {
   const [showPayModal, setShowPayModal] = useState(false)
   const [paymentStep, setPaymentStep] = useState<'details' | 'processing' | 'success'>('details')
   const [mockPaid, setMockPaid] = useState(false)
-  const [isRequestingRefund, setIsRequestingRefund] = useState(false)
   const [viewingBill, setViewingBill] = useState<BillingData | null>(null)
-
-  async function handleRefundRequest() {
-    if (!confirm('Are you sure you want to request a cash refund? This will convert your carry-forward credits to cash, and they will no longer reduce your next bill.')) return;
-    setIsRequestingRefund(true);
-    try {
-      const res = await fetch('/api/customer/refund', { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        alert('Refund requested successfully! Our admin will process your request shortly.');
-        loadData();
-      } else {
-        alert(data.message || 'Failed to request refund');
-      }
-    } catch (err) {
-      alert('Network error while requesting refund');
-    } finally {
-      setIsRequestingRefund(false);
-    }
-  }
 
   useEffect(() => {
     if (data) {
@@ -128,7 +108,7 @@ export default function BillsPage() {
       } else {
         const monthly = data.subscription ? data.subscription.monthly_amount : 0
         setBill({
-          billing_month: new Date().toISOString().split('T')[0],
+          billing_month: getTodayIST(),
           days_delivered: 0, days_skipped: 0, days_paused: 0, extra_litres_ordered: 0,
           skip_credit: 0, pause_credit: 0, extra_charges: 0, carry_in_balance: 0,
           net_due: monthly, amount_paid: 0, payment_status: 'pending'
@@ -903,27 +883,6 @@ export default function BillsPage() {
                 </div>
               ))}
 
-              {(() => {
-                const refundableAmt = upcomingAdjustments
-                  .filter(a => a.amount < 0 && (!a.refund_status || a.refund_status === 'none'))
-                  .reduce((sum, a) => sum + Math.abs(a.amount), 0);
-
-                if (refundableAmt > 0) {
-                  return (
-                    <div className="pt-2">
-                      <button
-                        onClick={handleRefundRequest}
-                        disabled={isRequestingRefund}
-                        className="w-full h-10 rounded-xl bg-white dark:bg-slate-900 border border-[#014DA4]/30 text-[#014DA4] dark:text-blue-400 hover:bg-[#014DA4]/5 active:scale-[0.98] font-bold text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-                      >
-                        <Banknote size={14} />
-                        {isRequestingRefund ? 'Requesting...' : `Request Cash Refund (₹${refundableAmt.toFixed(2)})`}
-                      </button>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
             </div>
           </div>
         )}
@@ -949,14 +908,6 @@ export default function BillsPage() {
               <div>
                 <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Credits & Extra Milk</p>
                 <p className="text-slate-450 dark:text-slate-500 mt-1">Skip day credits automatically offset extra milk charges. Any remaining credits carry forward to reduce your next monthly bill.</p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
-              <div>
-                <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Cash Refund Policy</p>
-                <p className="text-slate-450 dark:text-slate-500 mt-1">Accumulated carry-forward credits can be directly refunded to your bank account upon request rather than rolled over.</p>
               </div>
             </div>
           </div>

@@ -101,13 +101,7 @@ export default async function AdminDashboardPage() {
           type
         }
       })
-    : [
-        { id: '1', text: 'Rajesh Kumar paused subscription for vacation', time: '10 min ago', type: 'amber' },
-        { id: '2', text: 'New subscription added: Priya Sharma (A2 Cow Milk)', time: '1 hour ago', type: 'blue' },
-        { id: '3', text: 'Payment received from Amit Patel · ₹1,240', time: '2 hours ago', type: 'green' },
-        { id: '4', text: 'Delivery route completed by driver: Raj (Zone A)', time: '4 hours ago', type: 'green' },
-        { id: '5', text: 'Waitlist notification sent to Sunita Rao', time: '5 hours ago', type: 'blue' }
-      ]
+    : []
 
   // 6. Subscriptions overview segments
   const subOverview = {

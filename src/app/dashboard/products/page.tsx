@@ -107,7 +107,7 @@ export default function ProductsPage() {
     async function fetchData() {
       try {
         const [prodRes, setRes] = await Promise.all([
-          fetch('/api/admin/products'),
+          fetch('/api/products'),
           fetch('/api/admin/settings?key=price_per_litre').catch(() => null)
         ])
 
