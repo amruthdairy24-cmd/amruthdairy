@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { isAdminEmail } from "@/lib/utils";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -68,14 +69,13 @@ export async function updateSession(request: NextRequest) {
 
   // 2. Auth checks
   if (user) {
-    // Get user profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    const role = profile?.role || 'customer';
+    const role = isAdminEmail(user.email) ? 'admin' : (profile?.role || 'customer');
 
     // Check if customer has an active or pending subscription or waitlist
     let hasSubscription = false;

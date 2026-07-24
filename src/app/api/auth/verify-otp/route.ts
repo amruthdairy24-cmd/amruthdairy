@@ -6,6 +6,7 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 import * as crypto from 'crypto';
 import { pendingOtpStore } from '@/lib/otp-store';
+import { isAdminEmail } from '@/lib/utils';
 
 const adminClient = createAdminClient();
 
@@ -152,14 +153,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // ── Check subscription ────────────────────────────────────────────────────
-    const hasActiveSubscription = await checkActiveSubscription(authUserId, profile.role);
+    const userRole = isAdminEmail(profile.email) ? 'admin' : (profile.role || 'customer');
 
-    console.log(`[verify-otp] Success — email: ${emailLower}, role: ${profile.role}`);
+    // ── Check subscription ────────────────────────────────────────────────────
+    const hasActiveSubscription = await checkActiveSubscription(authUserId, userRole);
+
+    console.log(`[verify-otp] Success — email: ${emailLower}, role: ${userRole}`);
 
     return NextResponse.json({
       success: true,
-      role: profile.role,
+      role: userRole,
       is_new_user: true,
       has_active_subscription: hasActiveSubscription,
       profile: {
@@ -167,7 +170,7 @@ export async function POST(request: Request) {
         full_name: profile.full_name,
         email: profile.email,
         username: profile.username,
-        role: profile.role,
+        role: userRole,
       },
     });
 

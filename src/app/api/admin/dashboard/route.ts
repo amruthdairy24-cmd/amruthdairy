@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
-import { getTodayIST } from '@/lib/utils';
+import { getTodayIST, isAdminEmail } from '@/lib/utils';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 export async function GET(request: Request) {
@@ -13,8 +13,7 @@ export async function GET(request: Request) {
     }
 
     // Verify Admin
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
