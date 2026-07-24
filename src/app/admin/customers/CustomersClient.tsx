@@ -7,6 +7,12 @@ import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
+import { AddCustomerModal } from '@/components/admin/AddCustomerModal'
+import { CustomerActionsMenu } from '@/components/admin/CustomerActionsMenu'
+import { AdminSkipModal } from '@/components/admin/AdminSkipModal'
+import { AdminExtraMilkModal } from '@/components/admin/AdminExtraMilkModal'
+import { AdminVacationModal } from '@/components/admin/AdminVacationModal'
+import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -22,6 +28,12 @@ interface Customer {
 export function CustomersClient({ data }: { data: Customer[] }) {
   const router = useRouter()
   const [viewingEntry, setViewingEntry] = useState<Customer | null>(null)
+  const [showAddCustomer, setShowAddCustomer] = useState(false)
+  
+  // Actions Modals State
+  const [actionCustomer, setActionCustomer] = useState<Customer | null>(null)
+  const [activeModal, setActiveModal] = useState<'subscription' | 'skip' | 'extra' | 'vacation' | null>(null)
+
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -161,6 +173,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
         description="Manage your customer database and profiles." 
         icon={Users} 
         actionLabel="Add Customer"
+        onAction={() => setShowAddCustomer(true)}
       />
 
       {/* SEARCH AND FILTER BAR */}
@@ -199,6 +212,14 @@ export function CustomersClient({ data }: { data: Customer[] }) {
         columns={columns} 
         onView={(row) => setViewingEntry(row)} 
         onDelete={(row) => setCustomerToDelete(row)}
+        renderActions={(row) => (
+          <CustomerActionsMenu 
+            onManageSubscription={() => { setActionCustomer(row); setActiveModal('subscription') }}
+            onMarkSkip={() => { setActionCustomer(row); setActiveModal('skip') }}
+            onAddExtraMilk={() => { setActionCustomer(row); setActiveModal('extra') }}
+            onAddVacation={() => { setActionCustomer(row); setActiveModal('vacation') }}
+          />
+        )}
       />
 
       <RowDetailsModal
@@ -207,6 +228,47 @@ export function CustomersClient({ data }: { data: Customer[] }) {
         title="Customer Details"
         data={viewingEntry}
       />
+
+      <AddCustomerModal 
+        isOpen={showAddCustomer}
+        onClose={() => setShowAddCustomer(false)}
+        onSuccess={() => router.refresh()}
+      />
+
+      {/* Action Modals */}
+      {actionCustomer && (
+        <>
+          <AdminSkipModal
+            isOpen={activeModal === 'skip'}
+            onClose={() => { setActiveModal(null); setActionCustomer(null) }}
+            onSuccess={() => router.refresh()}
+            customerId={actionCustomer.id}
+            customerName={actionCustomer.full_name}
+          />
+          <AdminExtraMilkModal
+            isOpen={activeModal === 'extra'}
+            onClose={() => { setActiveModal(null); setActionCustomer(null) }}
+            onSuccess={() => router.refresh()}
+            customerId={actionCustomer.id}
+            customerName={actionCustomer.full_name}
+          />
+          <AdminVacationModal
+            isOpen={activeModal === 'vacation'}
+            onClose={() => { setActiveModal(null); setActionCustomer(null) }}
+            onSuccess={() => router.refresh()}
+            customerId={actionCustomer.id}
+            customerName={actionCustomer.full_name}
+          />
+          <AdminSubscriptionModal
+            isOpen={activeModal === 'subscription'}
+            onClose={() => { setActiveModal(null); setActionCustomer(null) }}
+            onSuccess={() => router.refresh()}
+            customerId={actionCustomer.id}
+            customerName={actionCustomer.full_name}
+            hasActiveSub={actionCustomer.is_active}
+          />
+        </>
+      )}
 
       <AnimatePresence>
         {customerToDelete && (
