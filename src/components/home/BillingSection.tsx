@@ -1,10 +1,9 @@
 import { cn } from '@/lib/utils'
-import { ArrowUpRight, Palmtree, PlusCircle, FastForward } from 'lucide-react'
+import { ArrowUpRight, PlusCircle, FastForward } from 'lucide-react'
 
 function getRuleIcon(key: string) {
   switch (key) {
     case 'skip': return <FastForward className="w-5 h-5 text-red-500" />
-    case 'vacation': return <Palmtree className="w-5 h-5 text-blue-500" />
     case 'extra': return <PlusCircle className="w-5 h-5 text-green-500" />
     case 'carryforward': return <ArrowUpRight className="w-5 h-5 text-amber-500" />
     default: return null
@@ -14,7 +13,6 @@ function getRuleIcon(key: string) {
 const billingRows = [
   { label: 'Base Subscription (30 days × ₹82.67)', value: '₹2,480.00', type: 'base' },
   { label: 'Skip Credits (3 days × ₹82.67)', value: '−₹248.01', type: 'credit' },
-  { label: 'Vacation Credit (June 10–12, 3 days)', value: '−₹248.01', type: 'credit' },
   { label: 'Extra Milk (June 20, +1L)', value: '+₹82.67', type: 'extra' },
   { label: 'Credit from May Bill', value: '−₹82.67', type: 'credit' },
 ]
@@ -25,12 +23,6 @@ const rules = [
     iconKey: 'skip',
     title: 'Skip Credits',
     body: 'Skip any day before 9 PM. Daily rate is credited to your next bill automatically. No hassle, no negotiations.',
-  },
-  {
-    color: 'border-blue-400',
-    iconKey: 'vacation',
-    title: 'Vacation Credits',
-    body: 'Pause for any number of days. Total credits calculated and applied to your next month\'s bill in full.',
   },
   {
     color: 'border-green-400',

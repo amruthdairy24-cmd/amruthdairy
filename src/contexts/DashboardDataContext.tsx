@@ -32,10 +32,8 @@ export interface DashboardData {
     billing_month: string;
     days_delivered: number;
     days_skipped: number;
-    days_paused: number;
     extra_litres_ordered: number;
     skip_credit: number;
-    pause_credit: number;
     extra_charges: number;
     carry_in_balance: number;
     net_due: number;
@@ -43,7 +41,6 @@ export interface DashboardData {
   } | null;
   upcoming_skips: Array<{ skip_date: string; credit_amount: number }>;
   upcoming_extras?: Array<{ id: string; order_date: string; extra_litres: number; charge_amount: number; skip_credit_applied: number; net_charge_amount: number; status: string }>;
-  active_vacation: { pause_start: string; pause_end: string; total_credit: number; total_days?: number; resume_date?: string; status?: string } | null;
   next_month_change: { quantity: number; amount: number } | null;
   recent_deliveries: Array<{ delivery_date: string; total_litres: number; delivery_status: string }>;
   upcoming_adjustments?: Array<{ id: string; adjustment_type: string; amount: number; description: string; target_month: string; refund_status?: string }>;

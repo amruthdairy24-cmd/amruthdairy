@@ -153,7 +153,7 @@ export async function POST(request: Request) {
       .select('amount')
       .eq('subscription_id', subscription.id)
       .eq('target_month', charge_month)
-      .in('adjustment_type', ['skip_credit', 'vacation_credit']);
+      .in('adjustment_type', ['skip_credit']);
       
     const totalCreditsForMonth = (skipCredits || []).reduce((sum, row) => sum + Number(row.amount), 0);
     

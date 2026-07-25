@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  LayoutDashboard, SkipForward, Palmtree, PlusCircle, FileText,
+  LayoutDashboard, SkipForward, PlusCircle, FileText,
   LogOut, User, ShoppingBag, Milk, ArrowLeftRight, CalendarDays,
   Menu, X, ChevronDown
 } from 'lucide-react'
@@ -32,7 +32,6 @@ const sidebarGroups = [
     title: 'SERVICES',
     items: [
       { href: '/dashboard/skip', icon: SkipForward, label: 'Skip Day' },
-      { href: '/dashboard/vacation', icon: Palmtree, label: 'Vacation Pause' },
       { href: '/dashboard/extra', icon: PlusCircle, label: 'Extra Milk' },
     ]
   },

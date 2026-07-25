@@ -164,18 +164,6 @@ export function calculateSkipCredit(dailyRate: number): number {
   return Math.round(dailyRate * 100) / 100
 }
 
-/**
- * Calculate vacation credit amount.
- * @param dailyRate - The subscription's daily rate
- * @param totalDays - Number of vacation days
- * @returns Credit amount in rupees
- */
-export function calculateVacationCredit(
-  dailyRate: number,
-  totalDays: number
-): number {
-  return Math.round(dailyRate * totalDays * 100) / 100
-}
 
 /**
  * Calculate extra milk charge.

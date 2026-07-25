@@ -38,7 +38,7 @@ export async function GET(request: Request) {
       total_deliveries: dailySummary?.total_customers || 0,
       delivering_count: dailySummary?.delivering || 0,
       skipped_count: dailySummary?.skipped || 0,
-      vacation_count: dailySummary?.on_vacation || 0,
+
       extra_orders_count: dailySummary?.extra_orders || 0,
       total_litres_needed: dailySummary?.total_litres_needed || 0,
       capacity_used_percent: capacity_used_percent
