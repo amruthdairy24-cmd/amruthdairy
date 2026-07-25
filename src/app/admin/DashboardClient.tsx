@@ -15,10 +15,16 @@ import {
   CheckCircle2,
   ArrowUpRight,
   X,
-  AlertCircle
+  AlertCircle,
+  Droplet
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { StatusBadge } from '@/components/admin/StatusBadge'
+import { SelectCustomerModal } from '@/components/admin/SelectCustomerModal'
+import { AdminSkipModal } from '@/components/admin/AdminSkipModal'
+import { AdminExtraMilkModal } from '@/components/admin/AdminExtraMilkModal'
+import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
 import { cn } from '@/lib/utils'
 
 interface DashboardClientProps {
@@ -61,8 +67,18 @@ export default function DashboardClient({
   subOverview,
   rawMilkPricing
 }: DashboardClientProps) {
+  const router = useRouter()
   const [greeting, setGreeting] = useState('Good Morning')
   const [formattedDate, setFormattedDate] = useState('')
+
+  // Modals state
+  const [showSelectCustomer, setShowSelectCustomer] = useState(false)
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null)
+  const [showSkipModal, setShowSkipModal] = useState(false)
+  const [showExtraMilkModal, setShowExtraMilkModal] = useState(false)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'skip' | 'extra' | 'subscription'>('skip')
 
   // Milk Pricing Modal State
   const [showPriceModal, setShowPriceModal] = useState(false)
@@ -451,13 +467,29 @@ export default function DashboardClient({
 
           {/* Actions Grid */}
           <div className="grid grid-cols-2 gap-3.5 mt-5 flex-1">
-            <Link 
-              href="/admin/deliveries" 
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
+            <button 
+              onClick={() => { setPendingAction('skip'); setShowSelectCustomer(true) }}
+              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-amber-400/50 dark:hover:border-amber-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs cursor-pointer h-[78px]"
             >
-              <Truck size={22} className="text-blue-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Delivery List</span>
-            </Link>
+              <SkipForward size={22} className="text-amber-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Mark Skip</span>
+            </button>
+
+            <button 
+              onClick={() => { setPendingAction('extra'); setShowSelectCustomer(true) }}
+              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-cyan-400/50 dark:hover:border-cyan-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs cursor-pointer h-[78px]"
+            >
+              <Droplet size={22} className="text-cyan-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">Add Extra Milk</span>
+            </button>
+
+            <button 
+              onClick={() => { setPendingAction('subscription'); setShowSelectCustomer(true) }}
+              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs cursor-pointer h-[78px]"
+            >
+              <Wallet size={22} className="text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">New Subscription</span>
+            </button>
 
             <Link 
               href="/admin/customers" 
@@ -479,24 +511,8 @@ export default function DashboardClient({
               href="/admin/deliveries" 
               className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
             >
-              <SkipForward size={22} className="text-amber-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Mark Skip</span>
-            </Link>
-
-            <Link 
-              href="/admin/reports" 
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
-            >
-              <BarChart2 size={22} className="text-rose-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Monthly Report</span>
-            </Link>
-
-            <Link 
-              href="/admin/products" 
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
-            >
-              <Package size={22} className="text-indigo-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Update Stock</span>
+              <Truck size={22} className="text-indigo-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Delivery List</span>
             </Link>
 
             <button 
@@ -717,6 +733,62 @@ export default function DashboardClient({
             </button>
           </div>
         </div>
+      )}
+      {/* Modals for customer selection & customer actions */}
+      <SelectCustomerModal 
+        isOpen={showSelectCustomer}
+        onClose={() => setShowSelectCustomer(false)}
+        actionContext={
+          pendingAction === 'skip' ? { title: 'Skip Day', subtitle: 'Select customer to mark skip' }
+          : pendingAction === 'extra' ? { title: 'Extra Milk', subtitle: 'Select customer for extra order' }
+          : { title: 'New Subscription', subtitle: 'Select customer to subscribe' }
+        }
+        onSelect={(customerId, customerName) => {
+          setShowSelectCustomer(false)
+          setSelectedCustomerId(customerId)
+          setSelectedCustomerName(customerName)
+          if (pendingAction === 'skip') setShowSkipModal(true)
+          else if (pendingAction === 'extra') setShowExtraMilkModal(true)
+          else if (pendingAction === 'subscription') setShowSubscriptionModal(true)
+        }}
+      />
+
+      {selectedCustomerId && selectedCustomerName && (
+        <>
+          <AdminSkipModal 
+            isOpen={showSkipModal}
+            onClose={() => {
+              setShowSkipModal(false)
+              setSelectedCustomerId(null)
+              setSelectedCustomerName(null)
+            }}
+            onSuccess={() => router.refresh()}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomerName}
+          />
+          <AdminExtraMilkModal 
+            isOpen={showExtraMilkModal}
+            onClose={() => {
+              setShowExtraMilkModal(false)
+              setSelectedCustomerId(null)
+              setSelectedCustomerName(null)
+            }}
+            onSuccess={() => router.refresh()}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomerName}
+          />
+          <AdminSubscriptionModal 
+            isOpen={showSubscriptionModal}
+            onClose={() => {
+              setShowSubscriptionModal(false)
+              setSelectedCustomerId(null)
+              setSelectedCustomerName(null)
+            }}
+            onSuccess={() => router.refresh()}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomerName}
+          />
+        </>
       )}
     </div>
   )
