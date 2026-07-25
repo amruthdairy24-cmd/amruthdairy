@@ -1,37 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
-import { Play, ArrowRight, ShieldCheck, Truck, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Play, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { cn } from '@/lib/utils'
-
-// Custom SVG Icons
-function CowIcon({ className = "w-6 h-6" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M7 15c0-4.5 1.5-7 5-7s5 2.5 5 7" />
-      <path d="M5 11c-1.5 0-3-1-3-2.5S3.5 6 5 8.5" />
-      <path d="M19 11c1.5 0 3-1 3-2.5S20.5 6 19 8.5" />
-      <path d="M8.5 8.5C8 7 7.5 5 8 4" />
-      <path d="M15.5 8.5C16 7 16.5 5 16 4" />
-      <path d="M12 20a5 5 0 0 0 5-5H7a5 5 0 0 0 5 5z" />
-      <circle cx="10" cy="17.5" r="0.8" fill="currentColor" />
-      <circle cx="14" cy="17.5" r="0.8" fill="currentColor" />
-    </svg>
-  )
-}
-
-function MilkBottleIcon({ className = "w-6 h-6" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 2h6v3H9z" />
-      <path d="M9 5l-1 3v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-1-3" />
-      <path d="M8 12h8" />
-      <path d="M10 16h4" />
-    </svg>
-  )
-}
 
 interface Reel {
   id: number
@@ -71,7 +43,7 @@ const DEFAULT_REELS: Reel[] = [
   },
 ]
 
-export function OurStory() {
+export function OurStoryVideos() {
   const [reels, setReels] = useState<Reel[]>(DEFAULT_REELS)
   const [currentIndex, setCurrentIndex] = useState(0)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -160,7 +132,7 @@ export function OurStory() {
   const isSlider = reels.length >= 3
 
   return (
-    <section id="our-story" className="relative overflow-hidden bg-[#ffff] py-16 md:py-24 bg-white">
+    <section id="our-story-videos" className="relative overflow-hidden bg-white py-16 md:py-20">
       <div className="container-page relative z-10 max-w-6xl mx-auto px-4">
 
         {/* Header */}

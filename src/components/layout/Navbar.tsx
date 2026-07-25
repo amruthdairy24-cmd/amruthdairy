@@ -98,11 +98,11 @@ export function Navbar() {
 
   return (
     <>
-      <header className={`fixed w-full z-50 transition-all duration-500 h-[70px] flex items-center px-0 md:px-10 ${isScrolled || forceWhiteBg ? 'bg-white shadow-sm' : 'bg-white shadow-sm md:bg-transparent md:shadow-none'}`}>
+      <header className={`fixed w-full z-50 transition-all duration-500 h-[70px] flex items-center px-6 md:px-10 ${isScrolled || forceWhiteBg ? 'bg-white shadow-sm' : 'bg-white shadow-sm md:bg-transparent md:shadow-none'}`}>
         <div className="max-w-7xl mx-auto flex items-center justify-between w-full">
 
           {/* Logo */}
-          <Logo href={user ? "/dashboard" : "/"} className="w-24 h-auto object-contain" />
+          <Logo href={user ? "/dashboard" : "/"} className="h-10 md:h-12 w-auto object-contain" />
 
           {/* Desktop Nav Links (Guests Only) */}
           {!user && (
