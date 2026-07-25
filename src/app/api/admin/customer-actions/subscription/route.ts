@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
-    const { customer_id, action_type, quantity, start_date, area, address, target_month, mark_as_paid } = await request.json();
+    const { customer_id, action_type, quantity, start_date, area, address, landmark, floor_notes, target_month, mark_as_paid } = await request.json();
 
     if (!customer_id || !action_type) {
       return NextResponse.json({ success: false, message: 'customer_id and action_type are required' }, { status: 400 });
@@ -80,8 +80,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: 'Failed to create subscription' }, { status: 500 });
       }
 
-      // Update customer profile with area and address
-      await adminSupabase.from('profiles').update({ area, address }).eq('id', customer_id);
+      // Update customer profile with area, address, landmark, floor_notes
+      await adminSupabase.from('profiles').update({ 
+        area, 
+        address, 
+        landmark: landmark || null, 
+        floor_notes: floor_notes || null 
+      }).eq('id', customer_id);
 
       const { data: billMonth, error: billError } = await adminSupabase
         .from('billing_months')

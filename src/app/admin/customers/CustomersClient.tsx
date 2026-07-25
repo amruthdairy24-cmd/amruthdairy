@@ -11,7 +11,6 @@ import { AddCustomerModal } from '@/components/admin/AddCustomerModal'
 import { CustomerActionsMenu } from '@/components/admin/CustomerActionsMenu'
 import { AdminSkipModal } from '@/components/admin/AdminSkipModal'
 import { AdminExtraMilkModal } from '@/components/admin/AdminExtraMilkModal'
-import { AdminVacationModal } from '@/components/admin/AdminVacationModal'
 import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -217,7 +216,6 @@ export function CustomersClient({ data }: { data: Customer[] }) {
             onManageSubscription={() => { setActionCustomer(row); setActiveModal('subscription') }}
             onMarkSkip={() => { setActionCustomer(row); setActiveModal('skip') }}
             onAddExtraMilk={() => { setActionCustomer(row); setActiveModal('extra') }}
-            onAddVacation={() => { setActionCustomer(row); setActiveModal('vacation') }}
           />
         )}
       />
@@ -252,13 +250,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
             customerId={actionCustomer.id}
             customerName={actionCustomer.full_name}
           />
-          <AdminVacationModal
-            isOpen={activeModal === 'vacation'}
-            onClose={() => { setActiveModal(null); setActionCustomer(null) }}
-            onSuccess={() => router.refresh()}
-            customerId={actionCustomer.id}
-            customerName={actionCustomer.full_name}
-          />
+
           <AdminSubscriptionModal
             isOpen={activeModal === 'subscription'}
             onClose={() => { setActiveModal(null); setActionCustomer(null) }}

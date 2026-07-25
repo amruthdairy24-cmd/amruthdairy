@@ -1,20 +1,18 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { MoreVertical, Settings, SkipForward, Droplet, CalendarRange } from 'lucide-react'
+import { MoreVertical, Settings, SkipForward, Droplet } from 'lucide-react'
 
 interface CustomerActionsMenuProps {
   onManageSubscription: () => void
   onMarkSkip: () => void
   onAddExtraMilk: () => void
-  onAddVacation: () => void
 }
 
 export function CustomerActionsMenu({
   onManageSubscription,
   onMarkSkip,
-  onAddExtraMilk,
-  onAddVacation
+  onAddExtraMilk
 }: CustomerActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -65,14 +63,6 @@ export function CustomerActionsMenu({
           >
             <Droplet size={14} className="text-cyan-500" />
             Add Extra Milk
-          </button>
-
-          <button
-            onClick={() => { setIsOpen(false); onAddVacation() }}
-            className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
-          >
-            <CalendarRange size={14} className="text-purple-500" />
-            Add Vacation
           </button>
         </div>
       )}

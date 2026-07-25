@@ -24,6 +24,8 @@ export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId,
   const [startDate, setStartDate] = useState('')
   const [area, setArea] = useState<string>(DELIVERY_AREAS[0])
   const [address, setAddress] = useState('')
+  const [landmark, setLandmark] = useState('')
+  const [floorNotes, setFloorNotes] = useState('')
   const [targetMonth, setTargetMonth] = useState(() => {
     const d = new Date()
     d.setMonth(d.getMonth() + 1)
@@ -49,6 +51,8 @@ export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId,
           start_date: actionType === 'renew' ? undefined : startDate,
           area: actionType === 'renew' ? undefined : area,
           address: actionType === 'renew' ? undefined : address,
+          landmark: actionType === 'renew' ? undefined : landmark,
+          floor_notes: actionType === 'renew' ? undefined : floorNotes,
           target_month: actionType === 'renew' ? targetMonth : undefined,
           mark_as_paid: markAsPaid
         })
@@ -164,7 +168,7 @@ export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId,
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Delivery Area / Pin</label>
                       <div className="relative">
@@ -183,16 +187,36 @@ export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId,
                         <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                       </div>
                     </div>
+                    <div>
+                      <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Landmark (Optional)</label>
+                      <input 
+                        type="text" 
+                        value={landmark}
+                        onChange={e => setLandmark(e.target.value)}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all"
+                        placeholder="E.g. Opposite Central Park"
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Full Address</label>
+                    <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Delivery Street Address</label>
                     <textarea 
                       required
                       rows={2}
                       value={address}
                       onChange={e => setAddress(e.target.value)}
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all resize-none"
-                      placeholder="Full street address..."
+                      placeholder="House No 12-B, Rose Villa, 2nd Cross road..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Floor / Delivery Instructions (Optional)</label>
+                    <input 
+                      type="text" 
+                      value={floorNotes}
+                      onChange={e => setFloorNotes(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all"
+                      placeholder="E.g. 2nd Floor, leave bag on door handle"
                     />
                   </div>
                 </>

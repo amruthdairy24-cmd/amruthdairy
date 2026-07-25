@@ -50,8 +50,8 @@ const customers = [
     area: 'Kottara',
     qty: '0.5L',
     amount: '₹1,240',
-    status: 'Vacation',
-    statusColor: 'bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20',
+    status: 'Active',
+    statusColor: 'bg-teal-50 text-teal-700 border border-teal-100 dark:bg-teal-500/10 dark:text-teal-400 dark:border-teal-500/20',
   },
   {
     initials: 'VD',
