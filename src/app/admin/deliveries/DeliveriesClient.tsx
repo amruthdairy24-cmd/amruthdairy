@@ -24,7 +24,7 @@ interface DeliveryEntry {
   total_litres: number
   delivery_status: string
   is_skip: boolean
-  is_vacation: boolean
+
   is_extra: boolean
   extra_order_id: string | null
   delivered_at: string | null
@@ -35,7 +35,7 @@ interface DeliverySummary {
   total_customers: number
   delivering: number
   skipped: number
-  on_vacation: number
+
   extra_orders: number
   total_litres_needed: number
 }
@@ -148,10 +148,9 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
     }
   }
 
-  const pendingCount = deliveries.filter(d => d.delivery_status === 'pending' && !d.is_skip && !d.is_vacation).length
+  const pendingCount = deliveries.filter(d => d.delivery_status === 'pending' && !d.is_skip).length
   const deliveredCount = deliveries.filter(d => d.delivery_status === 'delivered').length
   const skippedCount = deliveries.filter(d => d.is_skip).length
-  const vacationCount = deliveries.filter(d => d.is_vacation).length
 
   const extraCount = deliveries.filter(d => d.is_extra).length
   const totalLitres = deliveries.reduce((sum, d) => sum + Number(d.total_litres || 0), 0)
@@ -159,7 +158,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
   const isToday = selectedDate === initialDate
 
   const filteredDeliveries = deliveries.filter(d => {
-    if (d.is_skip || d.is_vacation) return false;
+    if (d.is_skip) return false;
 
     // text search
     if (searchQuery) {
@@ -366,8 +365,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
                   const isMarkingThis = markingId === del.id
                   const isDelivered = del.delivery_status === 'delivered'
                   const isSkipped = del.is_skip
-                  const isVacation = del.is_vacation
-                  const isPending = del.delivery_status === 'pending' && !isSkipped && !isVacation
+                  const isPending = del.delivery_status === 'pending' && !isSkipped
 
                   return (
                     <tr
@@ -375,8 +373,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
                       className={cn(
                         "hover:bg-slate-50/40 dark:hover:bg-slate-855/20 transition-colors h-[60px]",
                         isDelivered && "bg-emerald-500/2",
-                        isSkipped && "bg-rose-500/2",
-                        isVacation && "bg-blue-500/2"
+                        isSkipped && "bg-rose-500/2"
                       )}
                     >
                       {/* Customer info */}
@@ -415,13 +412,13 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
                       {/* Regular Volume */}
                       <td className="px-4 py-2.5 text-center">
                         <span className="text-[13.5px] font-bold text-slate-800 dark:text-slate-300 font-mono">
-                          {isSkipped || isVacation ? '—' : `${del.regular_litres}L`}
+                          {isSkipped ? '—' : `${del.regular_litres}L`}
                         </span>
                       </td>
 
                       {/* Extra Volume */}
                       <td className="px-4 py-2.5 text-center">
-                        {!isSkipped && !isVacation && del.is_extra && Number(del.extra_litres) > 0 ? (
+                        {!isSkipped && del.is_extra && Number(del.extra_litres) > 0 ? (
                           <span className="inline-flex text-[10px] font-extrabold text-purple-700 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/30 px-2 py-0.5 rounded-md border border-purple-200/20 dark:border-purple-900/30 font-mono">
                             +{del.extra_litres}L
                           </span>
@@ -434,7 +431,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
                       <td className="px-4 py-2.5 text-center">
                         <span className={cn(
                           "text-[14px] font-black font-mono",
-                          isSkipped || isVacation ? "text-slate-400 dark:text-slate-555" : "text-slate-850 dark:text-slate-100"
+                          isSkipped ? "text-slate-400 dark:text-slate-555" : "text-slate-850 dark:text-slate-100"
                         )}>
                           {del.total_litres}L
                         </span>
@@ -445,7 +442,6 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
                         <StatusBadge
                           status={del.delivery_status}
                           isSkip={del.is_skip}
-                          isVacation={del.is_vacation}
                         />
                       </td>
 
@@ -523,16 +519,13 @@ function SummaryCard({ icon, label, value, color, bg }: {
   )
 }
 
-function StatusBadge({ status, isSkip, isVacation }: { status: string; isSkip: boolean; isVacation: boolean }) {
+function StatusBadge({ status, isSkip }: { status: string; isSkip: boolean }) {
   let badgeClass = 'bg-slate-50 dark:bg-slate-950 border-slate-200/50 dark:border-slate-800/50 text-slate-455 dark:text-slate-400'
   let labelText = status
 
   if (isSkip) {
     badgeClass = 'bg-rose-500/10 dark:bg-rose-950/20 border-rose-500/15 dark:border-rose-900/30 text-rose-600 dark:text-rose-400'
     labelText = 'Skipped'
-  } else if (isVacation) {
-    badgeClass = 'bg-blue-500/10 dark:bg-blue-950/20 border-blue-500/15 dark:border-blue-900/30 text-blue-600 dark:text-blue-400'
-    labelText = 'Vacation'
   } else if (status === 'delivered') {
     badgeClass = 'bg-emerald-500/10 dark:bg-emerald-950/20 border-emerald-500/15 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400'
     labelText = 'Delivered'

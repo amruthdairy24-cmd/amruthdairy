@@ -11,7 +11,7 @@ const faqs = [
   },
   {
     q: 'How is my monthly bill calculated?',
-    a: 'Your base amount is your monthly subscription. We subtract skip credits and vacation credits, add any extra orders, and carry over unused credit from last month. The final bill is shown clearly with each line itemized — nothing hidden.',
+    a: 'Your base amount is your monthly subscription. We subtract skip credits, add any extra orders, and carry over unused credit from last month. The final bill is shown clearly with each line itemized — nothing hidden.',
   },
   {
     q: 'What if I pay more than my bill?',
