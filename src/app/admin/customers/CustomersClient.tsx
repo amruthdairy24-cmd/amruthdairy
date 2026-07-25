@@ -265,7 +265,6 @@ export function CustomersClient({ data }: { data: Customer[] }) {
             onSuccess={() => router.refresh()}
             customerId={actionCustomer.id}
             customerName={actionCustomer.full_name}
-            hasActiveSub={actionCustomer.is_active}
           />
         </>
       )}

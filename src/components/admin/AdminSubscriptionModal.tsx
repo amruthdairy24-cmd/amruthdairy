@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Settings, Check } from 'lucide-react'
+import { X, Settings, Check, ChevronDown } from 'lucide-react'
+import { DELIVERY_AREAS } from '@/lib/constants'
 
 interface AdminSubscriptionModalProps {
   isOpen: boolean
@@ -10,18 +11,19 @@ interface AdminSubscriptionModalProps {
   onSuccess: () => void
   customerId: string
   customerName: string
-  hasActiveSub: boolean
 }
 
-export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId, customerName, hasActiveSub }: AdminSubscriptionModalProps) {
+export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId, customerName }: AdminSubscriptionModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  // Either 'new' or 'renew'
-  const actionType = hasActiveSub ? 'renew' : 'new'
+  // Allow admin to toggle between New or Renew.
+  const [actionType, setActionType] = useState<'new' | 'renew'>('new')
   
   const [quantity, setQuantity] = useState<number>(1.0)
   const [startDate, setStartDate] = useState('')
+  const [area, setArea] = useState<string>(DELIVERY_AREAS[0])
+  const [address, setAddress] = useState('')
   const [targetMonth, setTargetMonth] = useState(() => {
     const d = new Date()
     d.setMonth(d.getMonth() + 1)
@@ -43,9 +45,11 @@ export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId,
         body: JSON.stringify({
           customer_id: customerId,
           action_type: actionType,
-          quantity: hasActiveSub ? undefined : quantity,
-          start_date: hasActiveSub ? undefined : startDate,
-          target_month: hasActiveSub ? targetMonth : undefined,
+          quantity: actionType === 'renew' ? undefined : quantity,
+          start_date: actionType === 'renew' ? undefined : startDate,
+          area: actionType === 'renew' ? undefined : area,
+          address: actionType === 'renew' ? undefined : address,
+          target_month: actionType === 'renew' ? targetMonth : undefined,
           mark_as_paid: markAsPaid
         })
       })
@@ -79,7 +83,7 @@ export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId,
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800"
+          className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800"
         >
           <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
             <div className="flex items-center gap-3">
@@ -110,32 +114,85 @@ export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId,
             
             <form id="admin-sub-form" onSubmit={handleSubmit} className="space-y-4">
               
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-6">
+                <button
+                  type="button"
+                  onClick={() => setActionType('new')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${actionType === 'new' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                >
+                  New Subscription
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActionType('renew')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${actionType === 'renew' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                >
+                  Renew Existing
+                </button>
+              </div>
+
               {actionType === 'new' && (
                 <>
-                  <div>
-                    <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Quantity</label>
-                    <select 
-                      required
-                      value={quantity}
-                      onChange={e => setQuantity(Number(e.target.value))}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all"
-                    >
-                      <option value={0.5}>0.5 Litre / Day</option>
-                      <option value={1.0}>1.0 Litre / Day</option>
-                      <option value={1.5}>1.5 Litres / Day</option>
-                      <option value={2.0}>2.0 Litres / Day</option>
-                      <option value={2.5}>2.5 Litres / Day</option>
-                      <option value={3.0}>3.0 Litres / Day</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Quantity</label>
+                      <div className="relative">
+                        <select 
+                          required
+                          value={quantity}
+                          onChange={e => setQuantity(Number(e.target.value))}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all appearance-none pr-10"
+                        >
+                          <option value={0.5}>0.5 Litre / Day</option>
+                          <option value={1.0}>1.0 Litre / Day</option>
+                          <option value={1.5}>1.5 Litres / Day</option>
+                          <option value={2.0}>2.0 Litres / Day</option>
+                          <option value={2.5}>2.5 Litres / Day</option>
+                          <option value={3.0}>3.0 Litres / Day</option>
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Start Date</label>
+                      <input 
+                        required
+                        type="date" 
+                        value={startDate}
+                        onChange={e => setStartDate(e.target.value)}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Delivery Area / Pin</label>
+                      <div className="relative">
+                        <select 
+                          required
+                          value={area}
+                          onChange={e => setArea(e.target.value)}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all appearance-none pr-10"
+                        >
+                          {DELIVERY_AREAS.map((a) => (
+                            <option key={a} value={a}>
+                              {a}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      </div>
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Start Date</label>
-                    <input 
+                    <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Full Address</label>
+                    <textarea 
                       required
-                      type="date" 
-                      value={startDate}
-                      onChange={e => setStartDate(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all"
+                      rows={2}
+                      value={address}
+                      onChange={e => setAddress(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all resize-none"
+                      placeholder="Full street address..."
                     />
                   </div>
                 </>

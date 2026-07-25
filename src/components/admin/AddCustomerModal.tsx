@@ -18,8 +18,6 @@ export function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCustomerModa
     full_name: '',
     email: '',
     phone: '',
-    area: '',
-    address: '',
     skip_otp: true
   })
 
@@ -115,7 +113,7 @@ export function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCustomerModa
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Phone</label>
                   <input 
@@ -126,27 +124,6 @@ export function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCustomerModa
                     placeholder="1234567890"
                   />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Area / Pin</label>
-                  <input 
-                    type="text" 
-                    value={formData.area}
-                    onChange={e => setFormData(f => ({ ...f, area: e.target.value }))}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all"
-                    placeholder="Downtown"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Address</label>
-                <textarea 
-                  rows={2}
-                  value={formData.address}
-                  onChange={e => setFormData(f => ({ ...f, address: e.target.value }))}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all resize-none"
-                  placeholder="Full street address..."
-                />
               </div>
 
               <div className="pt-2">
