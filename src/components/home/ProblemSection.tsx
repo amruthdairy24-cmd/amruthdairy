@@ -26,7 +26,7 @@ const problems = [
   {
     emoji: '🧮',
     title: 'Manual Bill Calculation',
-    body: '250 different bills, every month. Skips, vacations, extras — errors are inevitable.',
+    body: '250 different bills, every month. Skips, extras — errors are inevitable.',
   },
   {
     emoji: '😤',

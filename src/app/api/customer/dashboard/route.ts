@@ -67,9 +67,7 @@ export async function GET(request: Request) {
       currentMonthSkipsRes,
       currentMonthDeliveriesRes,
       currentMonthExtrasRes,
-      currentMonthPausesRes,
       upcomingSkipsRes,
-      activeVacationRes,
       nextMonthChangeRes,
       recentDeliveriesRes,
       upcomingExtrasRes,
@@ -80,7 +78,7 @@ export async function GET(request: Request) {
       // 1. Get Current Month Billing
       supabase
         .from('billing_months')
-        .select('id, billing_month, days_delivered, days_skipped, days_paused, extra_litres_ordered, skip_credit, pause_credit, extra_charges, carry_in_balance, net_due, amount_paid, monthly_amount, payment_status')
+        .select('id, billing_month, days_delivered, days_skipped, extra_litres_ordered, skip_credit, extra_charges, carry_in_balance, net_due, amount_paid, monthly_amount, payment_status')
         .eq('subscription_id', subId)
         .eq('billing_month', formattedBillingMonth)
         .maybeSingle(),
@@ -109,14 +107,7 @@ export async function GET(request: Request) {
         .eq('status', 'confirmed')
         .gte('order_date', formattedBillingMonth)
         .lt('order_date', formattedNextMonth),
-      // 5. Live Pauses
-      supabase
-        .from('daily_delivery_sheet')
-        .select('id')
-        .eq('subscription_id', subId)
-        .eq('delivery_status', 'paused')
-        .gte('delivery_date', formattedBillingMonth)
-        .lt('delivery_date', formattedNextMonth),
+      // 5. Live Pauses (Removed)
       // 6. Upcoming skips
       supabase
         .from('skip_requests')
@@ -124,14 +115,6 @@ export async function GET(request: Request) {
         .eq('subscription_id', subId)
         .gte('skip_date', todayStr)
         .in('status', ['confirmed']),
-      // 7. Active Vacation
-      supabase
-        .from('vacation_pauses')
-        .select('pause_start, pause_end, total_credit, total_days, resume_date, status')
-        .eq('subscription_id', subId)
-        .in('status', ['confirmed', 'active'])
-        .gte('pause_end', todayStr)
-        .maybeSingle(),
       // 8. Next month change
       supabase
         .from('quantity_changes')
@@ -179,9 +162,8 @@ export async function GET(request: Request) {
     const current_month_skips = currentMonthSkipsRes.data;
     const current_month_deliveries = currentMonthDeliveriesRes.data;
     const current_month_extras = currentMonthExtrasRes.data;
-    const current_month_pauses = currentMonthPausesRes.data;
+    // pauses removed
     const upcoming_skips = upcomingSkipsRes.data;
-    const active_vacation = activeVacationRes.data;
     const next_month_change = nextMonthChangeRes.data;
     const recent_deliveries = recentDeliveriesRes.data;
     const upcoming_extras = upcomingExtrasRes.data;
@@ -200,52 +182,39 @@ export async function GET(request: Request) {
     
     const live_extra_litres = current_month_extras?.reduce((sum, e) => sum + (e.extra_litres || 0), 0) || 0;
     const live_extra_charges = current_month_extras?.reduce((sum, e) => sum + Number(e.charge_amount || 0), 0) || 0;
-    
-    const live_days_paused = current_month_pauses?.length || 0;
-    const live_pause_credit = live_days_paused * (subscription.daily_rate || 0);
 
     if (current_month) {
-      // Overwrite static billing_months values with LIVE values for the UI
       current_month.days_delivered = live_days_delivered;
       current_month.days_skipped = live_days_skipped;
       current_month.skip_credit = live_skip_credit;
-      current_month.days_paused = live_days_paused;
-      current_month.pause_credit = live_pause_credit;
       current_month.extra_litres_ordered = live_extra_litres;
       current_month.extra_charges = live_extra_charges;
 
       const monthlyAmt = Number(current_month.monthly_amount) || 0;
       const skipCredit = Number(current_month.skip_credit) || 0;
-      const pauseCredit = Number(current_month.pause_credit) || 0;
       const extraCharges = Number(current_month.extra_charges) || 0;
       const carryIn = Number(current_month.carry_in_balance) || 0;
       const amountPaid = Number(current_month.amount_paid) || 0;
 
-      live_net_due = monthlyAmt - skipCredit - pauseCredit + extraCharges - carryIn - amountPaid;
+      live_net_due = (monthlyAmt + extraCharges) - skipCredit + carryIn - amountPaid;
       live_net_due = Math.round(live_net_due * 100) / 100;
     } else {
-      // If there is no billing_month row yet, we can construct a dummy one for the UI to render correctly
       current_month = {
         billing_month: formattedBillingMonth,
         days_delivered: live_days_delivered,
         days_skipped: live_days_skipped,
         skip_credit: live_skip_credit,
-        days_paused: live_days_paused,
-        pause_credit: live_pause_credit,
         extra_litres_ordered: live_extra_litres,
         extra_charges: live_extra_charges,
         monthly_amount: subscription.monthly_amount,
         carry_in_balance: 0,
         amount_paid: 0,
-        net_due: subscription.monthly_amount - live_skip_credit - live_pause_credit + live_extra_charges,
+        net_due: subscription.monthly_amount - live_skip_credit + live_extra_charges,
         payment_status: 'pending'
       } as any;
       live_net_due = (current_month as any).net_due;
     }
 
-
-
-    // 12. Adjust upcoming_adjustments by offsetting with used skip credits
     let adjustments = upcoming_adjustments || [];
     const totalSkipCreditsAppliedToExtra = (upcoming_extras || []).reduce((sum, e) => sum + Number(e.skip_credit_applied || 0), 0);
     
@@ -277,7 +246,6 @@ export async function GET(request: Request) {
       } : null,
       upcoming_skips: upcoming_skips || [],
       upcoming_extras: upcoming_extras || [],
-      active_vacation: active_vacation || null,
       next_month_change: next_month_change ? { 
         quantity: next_month_change.to_quantity, 
         amount: next_month_change.new_monthly_amount 

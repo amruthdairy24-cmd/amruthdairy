@@ -41,17 +41,15 @@ interface DashboardData {
     billing_month: string;
     days_delivered: number;
     days_skipped: number;
-    days_paused: number;
     extra_litres_ordered: number;
     skip_credit: number;
-    pause_credit: number;
     extra_charges: number;
     carry_in_balance: number;
     net_due: number;
     amount_paid: number;
   } | null;
   upcoming_skips: Array<{ skip_date: string; credit_amount: number }>;
-  active_vacation: { pause_start: string; pause_end: string; total_credit: number } | null;
+
   next_month_change: { quantity: number; amount: number } | null;
   recent_deliveries: Array<{ delivery_date: string; total_litres: number; delivery_status: string }>;
   upcoming_adjustments?: Array<{ id: string, adjustment_type: string, amount: number, description: string, target_month: string, refund_status?: string }>;
@@ -646,25 +644,6 @@ export default function CustomerDashboard() {
             </Link>
           </motion.div>
 
-          {/* Vacation Pause */}
-          <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
-            <Link href="/dashboard/vacation" className="flex flex-col items-center text-center bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors shadow-sm">
-                <Palmtree size={20} strokeWidth={2.5} />
-              </div>
-              <div className="mt-5 flex flex-col items-center">
-                <p className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">Vacation Pause</p>
-                <p className="text-xs text-slate-400 dark:text-slate-555 font-medium leading-relaxed mt-2 max-w-[220px]">
-                  Going away on holiday? Pause deliveries temporarily for a custom date range.
-                </p>
-              </div>
-              <div className="mt-4 text-[10.5px] font-bold text-blue-600 flex items-center justify-center gap-1">
-                <span>Set Dates</span>
-                <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-          </motion.div>
-
           {/* Extra Milk */}
           <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
             <Link href="/dashboard/extra" className="flex flex-col items-center text-center bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
@@ -744,17 +723,6 @@ export default function CustomerDashboard() {
                     <span className="font-bold text-emerald-600 dark:text-emerald-600 font-mono text-sm">-₹{(current_month?.skip_credit || 0).toFixed(2)}</span>
                   </div>
 
-                  {/* Vacation Credit */}
-                  <div className="flex justify-between items-center py-3">
-                    <span className="flex items-center gap-2.5 text-slate-600 dark:text-slate-750 font-semibold">
-                      <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-550 flex items-center justify-center">
-                        <Palmtree size={13} />
-                      </div>
-                      <span>Vacation Credit ({current_month?.days_paused || 0} days)</span>
-                    </span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-600 font-mono text-sm">-₹{(current_month?.pause_credit || 0).toFixed(2)}</span>
-                  </div>
-
                   {/* Extra Milk Charges */}
                   <div className="flex justify-between items-center py-3">
                     <span className="flex items-center gap-2.5 text-slate-600 dark:text-slate-750 font-semibold">
@@ -798,7 +766,7 @@ export default function CustomerDashboard() {
                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#014DA4]/3 rounded-full translate-x-8 -translate-y-8 pointer-events-none transition-transform group-hover:scale-110" />
                   <span className="text-[10px] font-extrabold text-slate-450 uppercase tracking-widest leading-none">Net Extra Due</span>
                   <p className="text-3xl font-black text-[#014DA4] dark:text-[#014DA4] tracking-tight mt-2 leading-none font-mono">
-                    ₹{Math.max(0, (current_month?.extra_charges || 0) - (current_month?.skip_credit || 0) - (current_month?.pause_credit || 0)).toFixed(2)}
+                    ₹{Math.max(0, (current_month?.extra_charges || 0) - (current_month?.skip_credit || 0)).toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -880,7 +848,6 @@ export default function CustomerDashboard() {
                             "absolute -left-[35px] top-1 w-3.5 h-3.5 rounded-full border-3 border-white dark:border-white flex items-center justify-center shadow-sm z-10 transition-transform duration-200 group-hover/timeline:scale-120",
                             delivery.delivery_status === 'delivered' && "bg-emerald-600 ring-2 ring-emerald-500/20",
                             delivery.delivery_status === 'skipped' && "bg-rose-550 ring-2 ring-rose-500/20",
-                            delivery.delivery_status === 'paused' && "bg-blue-550 ring-2 ring-blue-500/20",
                             delivery.delivery_status === 'pending' && "bg-[#D97706] ring-2 ring-amber-550/20 animate-pulse"
                           )}
                         />

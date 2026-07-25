@@ -24,7 +24,7 @@ const techStack = [
 const features = [
   'Complete subscription management portal',
   'Customer OTP login (no password needed)',
-  'Skip, vacation pause & extra order flows',
+  'Skip & extra order flows',
   '100% automated monthly billing engine',
   'Admin dashboard with delivery list',
   'Razorpay payment integration',

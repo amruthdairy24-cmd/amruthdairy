@@ -55,19 +55,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // VACATION CHECK
-    const { data: vacation } = await adminSupabase
-      .from('vacation_pauses')
-      .select('id')
-      .eq('subscription_id', subscription.id)
-      .lte('pause_start', skip_date)
-      .gte('pause_end', skip_date)
-      .in('status', ['confirmed', 'active'])
-      .maybeSingle();
-
-    if (vacation) {
-      return NextResponse.json({ success: false, message: `Customer already has a vacation pause on ${skip_date}.` }, { status: 400 });
-    }
+    // (Vacation check removed)
 
     // Calculate credits
     const credit_amount = subscription.daily_rate;

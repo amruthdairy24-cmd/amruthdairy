@@ -181,12 +181,6 @@ export default function ExtraMilkPage() {
   // Memoized sets for quick lookup
   const existingExtraDatesSet = useMemo(() => new Set(upcomingExtras.map(e => e.order_date)), [upcomingExtras])
   const skippedDatesSet = useMemo(() => new Set((dashboardData?.upcoming_skips || []).map((s: any) => s.skip_date)), [dashboardData])
-  const vacation = dashboardData?.active_vacation
-
-  const isWithinVacation = useCallback((dateStr: string) => {
-    if (!vacation) return false
-    return dateStr >= vacation.pause_start && dateStr <= vacation.pause_end
-  }, [vacation])
 
   const getAllDatesInMonth = useCallback((year: number, month: number) => {
     const date = new Date(year, month - 1, 1)
@@ -258,7 +252,7 @@ export default function ExtraMilkPage() {
       const existingExtras = dashboardData.upcoming_extras || []
 
       adjustments.forEach((a: any) => {
-        if (a.adjustment_type === 'skip_credit' || a.adjustment_type === 'vacation_credit') {
+        if (a.adjustment_type === 'skip_credit') {
           credits[a.target_month] = (credits[a.target_month] || 0) + Number(a.amount)
         }
       })
@@ -336,7 +330,7 @@ export default function ExtraMilkPage() {
 
       const adjustments = dashboardData.upcoming_adjustments || []
       const monthCredits = adjustments
-        .filter((a: any) => (a.adjustment_type === 'skip_credit' || a.adjustment_type === 'vacation_credit') && a.target_month === chargeMonth)
+        .filter((a: any) => (a.adjustment_type === 'skip_credit') && a.target_month === chargeMonth)
         .reduce((sum: number, a: any) => sum + Number(a.amount), 0)
 
       const usedCredits = (dashboardData.upcoming_extras || [])
@@ -623,19 +617,17 @@ export default function ExtraMilkPage() {
 
                     const isAlreadyOrdered = existingExtraDatesSet.has(dateStr)
                     const isSkipped = skippedDatesSet.has(dateStr)
-                    const isVacation = isWithinVacation(dateStr)
                     const isTomorrow = dateStr === tomorrowStr
                     const isCutoff = isTomorrow && isCutoffPassed
                     const isFull = capacityMap[dateStr]?.has_capacity === false
 
-                    const isDisabled = isAlreadyOrdered || isSkipped || isVacation || isCutoff || isFull
+                    const isDisabled = isAlreadyOrdered || isSkipped || isCutoff || isFull
 
                     let statusText = ""
                     let badgeColor = ""
                     if (isAlreadyOrdered) { statusText = "Ordered"; badgeColor = "bg-emerald-500 text-white" }
                     else if (isFull) { statusText = "Full"; badgeColor = "bg-rose-500 text-white" }
                     else if (isSkipped) { statusText = "Skipped"; badgeColor = "bg-rose-500 text-white" }
-                    else if (isVacation) { statusText = "Vacation"; badgeColor = "bg-amber-500 text-white" }
                     else if (isCutoff) { statusText = "Closed"; badgeColor = "bg-slate-400 text-white" }
 
                     return (
@@ -1213,7 +1205,6 @@ export default function ExtraMilkPage() {
 
                 const isAlreadyOrdered = existingExtraDatesSet.has(dateStr)
                 const isSkipped = skippedDatesSet.has(dateStr)
-                const isVacation = isWithinVacation(dateStr)
                 const isTomorrow = dateStr === tomorrowStr
                 const isCutoff = isTomorrow && isCutoffPassed
                 const isFull = capacityMap[dateStr]?.has_capacity === false
@@ -1223,14 +1214,13 @@ export default function ExtraMilkPage() {
                 const isOutsideSub = latestPaidMonthEnd && dateObj > latestPaidMonthEnd
                 const isBeforeSubStart = dateObj < subscriptionStart
 
-                const isDisabled = isPast || isOutsideSub || isBeforeSubStart || isAlreadyOrdered || isSkipped || isVacation || isCutoff || isFull
+                const isDisabled = isPast || isOutsideSub || isBeforeSubStart || isAlreadyOrdered || isSkipped || isCutoff || isFull
 
                 let badgeText = ""
                 let badgeColor = ""
                 if (isAlreadyOrdered) { badgeText = "ORDERED"; badgeColor = "bg-emerald-500 text-white" }
                 else if (isFull) { badgeText = "FULL"; badgeColor = "bg-rose-500 text-white" }
                 else if (isSkipped) { badgeText = "SKIPPED"; badgeColor = "bg-rose-500 text-white" }
-                else if (isVacation) { badgeText = "VACATION"; badgeColor = "bg-amber-400 text-white" }
 
                 return (
                   <button

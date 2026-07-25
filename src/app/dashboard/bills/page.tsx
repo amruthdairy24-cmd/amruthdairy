@@ -18,10 +18,8 @@ interface BillingData {
   billing_month: string;
   days_delivered: number;
   days_skipped: number;
-  days_paused: number;
   extra_litres_ordered: number;
   skip_credit: number;
-  pause_credit: number;
   extra_charges: number;
   carry_in_balance: number;
   net_due: number;
@@ -86,7 +84,7 @@ export default function BillsPage() {
   const [upcomingAdjustments, setUpcomingAdjustments] = useState<any[]>([])
   const [upcomingSkips, setUpcomingSkips] = useState<any[]>([])
   const [upcomingExtras, setUpcomingExtras] = useState<ExtraMilkOrder[]>([])
-  const [activeVacation, setActiveVacation] = useState<any>(null)
+
   const [nextMonthChange, setNextMonthChange] = useState<any>(null)
 
   const [showPayModal, setShowPayModal] = useState(false)
@@ -101,7 +99,7 @@ export default function BillsPage() {
       if (data.upcoming_adjustments) setUpcomingAdjustments(data.upcoming_adjustments)
       if (data.upcoming_skips) setUpcomingSkips(data.upcoming_skips)
       if (data.upcoming_extras) setUpcomingExtras(data.upcoming_extras)
-      if (data.active_vacation) setActiveVacation(data.active_vacation)
+
       if (data.next_month_change) setNextMonthChange(data.next_month_change)
       if (data.current_month) {
         setBill(data.current_month)
@@ -109,8 +107,8 @@ export default function BillsPage() {
         const monthly = data.subscription ? data.subscription.monthly_amount : 0
         setBill({
           billing_month: getTodayIST(),
-          days_delivered: 0, days_skipped: 0, days_paused: 0, extra_litres_ordered: 0,
-          skip_credit: 0, pause_credit: 0, extra_charges: 0, carry_in_balance: 0,
+          days_delivered: 0, days_skipped: 0, extra_litres_ordered: 0,
+          skip_credit: 0, extra_charges: 0, carry_in_balance: 0,
           net_due: monthly, amount_paid: 0, payment_status: 'pending'
         })
       }
@@ -252,7 +250,7 @@ export default function BillsPage() {
   const isDevMockPaid = process.env.NODE_ENV === 'development' && subscription?.status === 'active' && bill.payment_status === 'pending';
   const isPaid = mockPaid || bill.payment_status === 'paid' || (bill.amount_paid > 0 && bill.amount_paid >= bill.net_due) || isDevMockPaid;
   const hasPendingBill = bill.net_due > 0 && !isPaid
-  const basePlanAmount = bill.monthly_amount || (bill.net_due + bill.skip_credit + bill.pause_credit - bill.extra_charges + bill.carry_in_balance)
+  const basePlanAmount = bill.monthly_amount || (bill.net_due + bill.skip_credit - bill.extra_charges + bill.carry_in_balance)
 
   // Billing cycle dates
   const billingDate = new Date(bill.billing_month)
@@ -559,17 +557,6 @@ export default function BillsPage() {
                   <span className="font-bold text-emerald-600 dark:text-emerald-500 font-mono text-sm">-₹{bill.skip_credit.toFixed(2)}</span>
                 </div>
 
-                {/* Vacation Credits */}
-                <div className="flex justify-between items-center py-3.5 border-b border-slate-100 dark:border-slate-800 lg:border-b-0">
-                  <span className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center flex-shrink-0">
-                      <Palmtree size={13} />
-                    </div>
-                    <span className="font-bold text-slate-700 dark:text-slate-200">Vacation Pause Credits</span>
-                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">{bill.days_paused} days</span>
-                  </span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-500 font-mono text-sm">-₹{bill.pause_credit.toFixed(2)}</span>
-                </div>
               </div>
 
               {/* Right column of items */}
@@ -781,25 +768,7 @@ export default function BillsPage() {
               </span>
             </div>
 
-            {/* Active Vacation */}
-            {activeVacation && (
-              <div className="flex items-center justify-between p-3 bg-blue-50/50 dark:bg-blue-950/10 border border-blue-100/60 dark:border-blue-900/20 rounded-xl">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                    <Palmtree size={13} />
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-700 dark:text-slate-200 block">Active Vacation</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                      {new Date(activeVacation.pause_start).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – {new Date(activeVacation.pause_end).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                    </span>
-                  </div>
-                </div>
-                <span className="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400">
-                  -₹{activeVacation.total_credit?.toFixed(2) || '0.00'}
-                </span>
-              </div>
-            )}
+
 
             {/* Upcoming Skips */}
             {upcomingSkips.length > 0 && (
@@ -840,7 +809,7 @@ export default function BillsPage() {
             )}
 
             {/* Empty state */}
-            {!activeVacation && upcomingSkips.length === 0 && !nextMonthChange && carryForwardSum === 0 && (
+            {upcomingSkips.length === 0 && !nextMonthChange && carryForwardSum === 0 && (
               <div className="text-center py-4">
                 <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">No upcoming adjustments or changes</p>
                 <p className="text-[10px] text-slate-350 dark:text-slate-600 mt-1">Your next bill will be at the standard plan rate</p>
