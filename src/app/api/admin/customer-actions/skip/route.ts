@@ -123,7 +123,7 @@ export async function POST(request: Request) {
     await adminSupabase.from('billing_adjustments').insert({
       subscription_id: subscription.id,
       customer_id: customer_id,
-      adjustment_type: 'credit',
+      adjustment_type: 'skip_credit',
       amount: credit_amount,
       target_month: credit_month,
       reason: `Skip on ${skip_date}`

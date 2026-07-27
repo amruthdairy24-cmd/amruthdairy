@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { PlusCircle, Calendar, ShieldAlert, CheckCircle, Info, ChevronRight, ChevronLeft, Milk, Edit2, Trash2, CalendarDays } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { isCreditAdjustmentType } from '@/lib/billing'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { Modal } from '@/components/ui'
@@ -252,7 +253,7 @@ export default function ExtraMilkPage() {
       const existingExtras = dashboardData.upcoming_extras || []
 
       adjustments.forEach((a: any) => {
-        if (a.adjustment_type === 'skip_credit') {
+        if (isCreditAdjustmentType(a.adjustment_type)) {
           credits[a.target_month] = (credits[a.target_month] || 0) + Number(a.amount)
         }
       })
@@ -330,7 +331,7 @@ export default function ExtraMilkPage() {
 
       const adjustments = dashboardData.upcoming_adjustments || []
       const monthCredits = adjustments
-        .filter((a: any) => (a.adjustment_type === 'skip_credit') && a.target_month === chargeMonth)
+        .filter((a: any) => isCreditAdjustmentType(a.adjustment_type) && a.target_month === chargeMonth)
         .reduce((sum: number, a: any) => sum + Number(a.amount), 0)
 
       const usedCredits = (dashboardData.upcoming_extras || [])

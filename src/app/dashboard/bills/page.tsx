@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn, getTodayIST } from '@/lib/utils'
+import { isCreditAdjustmentType } from '@/lib/billing'
 import Link from 'next/link'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
@@ -86,6 +87,7 @@ export default function BillsPage() {
   const [upcomingExtras, setUpcomingExtras] = useState<ExtraMilkOrder[]>([])
 
   const [nextMonthChange, setNextMonthChange] = useState<any>(null)
+  const [nextMonthSummary, setNextMonthSummary] = useState<any>(null)
 
   const [showPayModal, setShowPayModal] = useState(false)
   const [paymentStep, setPaymentStep] = useState<'details' | 'processing' | 'success'>('details')
@@ -101,6 +103,7 @@ export default function BillsPage() {
       if (data.upcoming_extras) setUpcomingExtras(data.upcoming_extras)
 
       if (data.next_month_change) setNextMonthChange(data.next_month_change)
+      setNextMonthSummary(data.next_month_summary || null)
       if (data.current_month) {
         setBill(data.current_month)
       } else {
@@ -264,9 +267,7 @@ export default function BillsPage() {
   const cycleProgress = Math.round((dayOfMonth / totalDaysInMonth) * 100)
 
   // Carry forward amount
-  const carryForwardSum = upcomingAdjustments
-    .filter(a => a.adjustment_type.includes('credit') || a.amount < 0)
-    .reduce((sum, a) => sum + Math.abs(a.amount), 0)
+  const carryForwardSum = nextMonthSummary?.credit_remaining ?? 0
 
   // Extra milk upcoming
   const totalGrossExtraMilk = upcomingExtras.reduce((sum, e) => sum + (e.charge_amount || 0), 0)
@@ -846,8 +847,8 @@ export default function BillsPage() {
                     </span>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">{adj.description || 'Adjustment'}</span>
                   </span>
-                  <span className={cn("font-mono font-black ml-2.5 text-right text-sm", adj.adjustment_type.includes('credit') || adj.amount < 0 ? "text-emerald-600" : "text-rose-500")}>
-                    {adj.adjustment_type.includes('credit') || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
+                  <span className={cn("font-mono font-black ml-2.5 text-right text-sm", isCreditAdjustmentType(adj.adjustment_type) || adj.amount < 0 ? "text-emerald-600" : "text-rose-500")}>
+                    {isCreditAdjustmentType(adj.adjustment_type) || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
                   </span>
                 </div>
               ))}
