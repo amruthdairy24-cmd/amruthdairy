@@ -270,14 +270,15 @@ export function ProductsPreview() {
                           </div>
 
                           {/* CTA Button */}
-                          <Link href={product.is_subscription ? '/subscribe' : '/shop'}>
-                            <button className={cn(
-                              "h-10 sm:h-11 px-4 sm:px-5 rounded-full text-xs sm:text-[13px] font-bold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-1.5 hover:scale-[1.03] active:scale-95 border-none cursor-pointer group/btn",
+                          <Link
+                            href={product.is_subscription ? '/subscribe' : `/checkout?product_id=${product.id}`}
+                            className={cn(
+                              "h-10 sm:h-11 px-4 sm:px-5 rounded-full text-xs sm:text-[13px] font-bold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] inline-flex items-center justify-center gap-1.5 hover:scale-[1.03] active:scale-95 border-none cursor-pointer group/btn no-underline text-white",
                               BUTTON_CLASS
-                            )}>
-                              <span>{product.is_subscription ? 'Subscribe' : 'Buy Now'}</span>
-                              <span className="text-[14px] font-normal transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
-                            </button>
+                            )}
+                          >
+                            <span>{product.is_subscription ? 'Subscribe' : 'Buy Now'}</span>
+                            <span className="text-[14px] font-normal transition-transform duration-300 group-hover/btn:translate-x-1">→</span>
                           </Link>
                         </div>
                       </div>

@@ -2,62 +2,68 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import { Logo } from '@/components/layout/Logo'
 
 const SESSION_KEY = 'amruth_intro_seen'
 
 export function PageLoader() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [shouldAnimate, setShouldAnimate] = useState(true)
+  const [showLoader, setShowLoader] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const alreadySeen = sessionStorage.getItem(SESSION_KEY)
-    if (alreadySeen) {
-      setShouldAnimate(false)
-      setIsLoading(false)
-      return
+    if (!alreadySeen) {
+      setShowLoader(true)
+      const timer = setTimeout(() => {
+        sessionStorage.setItem(SESSION_KEY, 'true')
+        setShowLoader(false)
+      }, 1500)
+      return () => clearTimeout(timer)
     }
-
-    // First visit
-    const timer = setTimeout(() => {
-      sessionStorage.setItem(SESSION_KEY, '1')
-      setIsLoading(false)
-    }, 1500)
-    return () => clearTimeout(timer)
   }, [])
+
+  if (!mounted) return null
 
   return (
     <AnimatePresence>
-      {isLoading && (
+      {showLoader && (
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: shouldAnimate ? 0.6 : 0, ease: 'easeInOut' }}
-          className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center"
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          className="fixed inset-0 z-[9999] bg-white dark:bg-slate-950 flex flex-col items-center justify-center select-none"
         >
+          {/* Subtle Ambient Radial Glow */}
+          <div className="absolute w-72 h-72 rounded-full bg-blue-500/10 dark:bg-blue-400/10 blur-3xl pointer-events-none" />
+
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex flex-col items-center gap-6"
+            initial={{ scale: 0.85, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="relative flex flex-col items-center gap-7 z-10"
           >
-            <Logo href={null} className="w-40 h-auto object-contain" />
-            <div className="flex gap-2">
+            {/* Logo */}
+            <div className="relative">
+              <Logo href={null} className="w-48 sm:w-56 h-auto object-contain drop-shadow-sm" />
+            </div>
+
+            {/* Smooth Loading Indicator / Pulsing Wave */}
+            <div className="flex items-center gap-2 mt-2">
               <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
-                className="w-3 h-3 rounded-full bg-[#02429C]"
+                animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 0.8, repeat: Infinity, delay: 0 }}
+                className="w-2.5 h-2.5 rounded-full bg-[#02429C] dark:bg-blue-400"
               />
               <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
-                className="w-3 h-3 rounded-full bg-[#02429C]"
+                animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 0.8, repeat: Infinity, delay: 0.2 }}
+                className="w-2.5 h-2.5 rounded-full bg-[#02429C] dark:bg-blue-400"
               />
               <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
-                className="w-3 h-3 rounded-full bg-[#02429C]"
+                animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 0.8, repeat: Infinity, delay: 0.4 }}
+                className="w-2.5 h-2.5 rounded-full bg-[#02429C] dark:bg-blue-400"
               />
             </div>
           </motion.div>
@@ -66,3 +72,4 @@ export function PageLoader() {
     </AnimatePresence>
   )
 }
+
