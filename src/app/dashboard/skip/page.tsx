@@ -1,24 +1,48 @@
-'use client'
+﻿'use client'
 
-import { useState, useEffect } from 'react'
-import { SkipForward, CalendarDays, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Clock, Info, Calendar, X } from 'lucide-react'
+import { useState } from 'react'
+import { SkipForward, CalendarDays, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Modal } from '@/components/ui'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
 
-interface SkipRequest {
-  skip_date: string;
-  status?: string;
-  credit_amount: number;
-}
   
 const getLocalISODate = (d: Date) => {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+const parseLocalISODate = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+const getDateRange = (startDate: string, endDate: string) => {
+  const [from, to] = startDate <= endDate ? [startDate, endDate] : [endDate, startDate]
+  const dates: string[] = []
+  const cursor = parseLocalISODate(from)
+  const last = parseLocalISODate(to)
+
+  while (cursor <= last) {
+    dates.push(getLocalISODate(cursor))
+    cursor.setDate(cursor.getDate() + 1)
+  }
+
+  return dates
+}
+
+const formatDateRangeLabel = (startDate: string, endDate: string | '') => {
+  const start = parseLocalISODate(startDate)
+  if (!endDate) {
+    return start.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  const end = parseLocalISODate(endDate)
+  return `${start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
 }
 
 const isSkipCancellable = (skipDateStr: string) => {
@@ -63,22 +87,16 @@ export default function SkipDayPage() {
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [subscription, setSubscription] = useState<any>(null)
-  const [upcomingSkips, setUpcomingSkips] = useState<SkipRequest[]>([])
-  const [latestPaidMonth, setLatestPaidMonth] = useState<string | null>(null)
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedEndDate, setSelectedEndDate] = useState('')
+  const subscription = data?.subscription ?? null
+  const upcomingSkips = data?.upcoming_skips || []
+  const latestPaidMonth = data?.latest_paid_month || null
 
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [cancelDate, setCancelDate] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (data) {
-      setSubscription(data.subscription)
-      setUpcomingSkips(data.upcoming_skips || [])
-      setLatestPaidMonth(data.latest_paid_month || null)
-    }
-  }, [data])
 
   const pageLoading = contextLoading && !data
 
@@ -107,6 +125,8 @@ export default function SkipDayPage() {
   const isCutoffPassed = new Date().getHours() >= 21
 
   const skipDatesSet = new Set(upcomingSkips.map(s => s.skip_date))
+  const selectedDates = selectedDate ? getDateRange(selectedDate, selectedEndDate || selectedDate) : []
+  const selectedRangeLabel = selectedDate ? formatDateRangeLabel(selectedDate, selectedEndDate) : ''
 
   // Generate 7 days for the date picker based on offset
   const pickerDays = []
@@ -124,14 +144,12 @@ export default function SkipDayPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!selectedDate) {
-      setError('Please select a date to skip')
+      setError('Please select a date or date range')
       return
     }
 
-    const dateStr = getLocalISODate(selectedDate)
-    
-    if (skipDatesSet.has(dateStr)) {
-      setError('You have already skipped this date')
+    if (selectedDates.some(dateStr => skipDatesSet.has(dateStr))) {
+      setError('One or more selected dates are already skipped')
       return
     }
 
@@ -143,37 +161,52 @@ export default function SkipDayPage() {
   async function executeSkip() {
     if (!selectedDate) return
 
-    const dateStr = getLocalISODate(selectedDate)
-    
     setLoading(true)
     setError('')
     setSuccessMsg('')
 
-    try {
-      const res = await fetch('/api/skip/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ skip_date: dateStr })
-      })
-      const json = await res.json()
+    const results: string[] = []
+    const errors: string[] = []
 
-      if (json.success) {
-        setSuccessMsg(`Successfully skipped delivery for ${selectedDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}`)
-        setSelectedDate(null)
-        setIsConfirmOpen(false)
-        await loadData()
-      } else {
-        setError(json.message || 'Failed to process skip request')
-        setIsConfirmOpen(false)
+    try {
+      for (const dateStr of selectedDates) {
+        const res = await fetch('/api/skip/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ skip_date: dateStr })
+        })
+        const json = await res.json()
+
+        if (json.success) {
+          results.push(dateStr)
+        } else {
+          errors.push(`${dateStr}: ${json.message || 'Failed to process skip request'}`)
+        }
       }
-    } catch (err) {
+
+      if (results.length > 0) {
+        const firstDate = parseLocalISODate(results[0]).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
+        const lastDate = parseLocalISODate(results[results.length - 1]).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
+        setSuccessMsg(results.length === 1
+          ? `Successfully skipped delivery for ${firstDate}`
+          : `Successfully skipped ${results.length} delivery dates from ${firstDate} to ${lastDate}`)
+        setSelectedDate('')
+        setSelectedEndDate('')
+        await loadData()
+      }
+
+      if (errors.length > 0) {
+        setError(errors.join('\n'))
+      }
+
+      setIsConfirmOpen(false)
+    } catch {
       setError('Network error processing request')
       setIsConfirmOpen(false)
     } finally {
       setLoading(false)
     }
   }
-
   async function executeCancelSkip() {
     if (!cancelDate) return
 
@@ -197,7 +230,7 @@ export default function SkipDayPage() {
         setError(json.message || 'Failed to cancel skip request')
         setCancelDate(null)
       }
-    } catch (err) {
+    } catch {
       setError('Network error processing request')
       setCancelDate(null)
     } finally {
@@ -262,7 +295,7 @@ export default function SkipDayPage() {
             
             {/* Header controls */}
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-extrabold text-slate-455 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-[2px] pl-0.5 select-none">Select Skip Date</label>
+              <label className="text-[11px] font-extrabold text-slate-455 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-[2px] pl-0.5 select-none">Select Skip Range</label>
               
               <div className="flex items-center gap-2">
                 <button
@@ -291,7 +324,9 @@ export default function SkipDayPage() {
               {pickerDays.map((date) => {
                 const dateStr = getLocalISODate(date)
                 const isAlreadySkipped = skipDatesSet.has(dateStr)
-                const isSelected = selectedDate ? getLocalISODate(selectedDate) === dateStr : false
+                const isRangeStart = selectedDate === dateStr
+                const isRangeEnd = selectedEndDate === dateStr
+                const isInRange = selectedDate && selectedEndDate ? dateStr > selectedDate && dateStr < selectedEndDate : false
                 const isTomorrow = date.getTime() === tomorrow.getTime()
                 const isDisabled = isAlreadySkipped || (isTomorrow && isCutoffPassed)
 
@@ -301,29 +336,48 @@ export default function SkipDayPage() {
                     type="button"
                     disabled={isDisabled}
                     onClick={() => {
-                      setSelectedDate(date)
+                      if (!selectedDate || selectedEndDate) {
+                        setSelectedDate(dateStr)
+                        setSelectedEndDate('')
+                      } else if (dateStr < selectedDate) {
+                        setSelectedDate(dateStr)
+                        setSelectedEndDate('')
+                      } else {
+                        setSelectedEndDate(dateStr)
+                      }
                       setError('')
                       setSuccessMsg('')
                     }}
                     className={cn(
                       'h-20 sm:h-[84px] rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all relative overflow-hidden select-none',
-                      isSelected
+                      isRangeStart || isRangeEnd
                         ? 'border-[#014DA4] dark:border-blue-400 bg-[#014DA4]/5 dark:bg-blue-950/15 ring-1 ring-[#014DA4] dark:ring-blue-400 text-[#014DA4] dark:text-blue-400'
-                        : isDisabled
-                        ? 'border-border/30 dark:border-slate-800/45 bg-slate-50/75 dark:bg-slate-950/40 text-slate-350 dark:text-slate-600 dark:text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-65'
-                        : 'border-border dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 text-slate-550 dark:text-slate-300 cursor-pointer shadow-3xs'
+                        : isInRange
+                          ? 'border-[#014DA4]/20 dark:border-blue-800/40 bg-[#014DA4]/5 dark:bg-blue-950/10 text-[#014DA4] dark:text-blue-400'
+                          : isDisabled
+                            ? 'border-border/30 dark:border-slate-800/45 bg-slate-50/75 dark:bg-slate-950/40 text-slate-350 dark:text-slate-600 dark:text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-65'
+                            : 'border-border dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 text-slate-550 dark:text-slate-300 cursor-pointer shadow-3xs'
                     )}
                   >
                     <span className="text-[9.5px] font-extrabold uppercase tracking-wider">
                       {date.toLocaleDateString('en-IN', { weekday: 'short' })}
                     </span>
                     <span className={cn(
-                      "text-xl font-black leading-none",
-                      isSelected ? "text-[#014DA4] dark:text-blue-400" : (isDisabled ? "text-slate-300 dark:text-slate-600 dark:text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-200")
+                      'text-xl font-black leading-none',
+                      isRangeStart || isRangeEnd || isInRange ? 'text-[#014DA4] dark:text-blue-400' : (isDisabled ? 'text-slate-300 dark:text-slate-600 dark:text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200')
                     )}>
                       {date.getDate()}
                     </span>
-                    
+                    {isRangeStart && (
+                      <div className="absolute top-0 right-0 w-4 h-4 bg-[#014DA4] rounded-bl-lg flex items-center justify-center">
+                        <CheckCircle2 size={8} className="text-white" />
+                      </div>
+                    )}
+                    {isRangeEnd && selectedEndDate !== selectedDate && (
+                      <div className="absolute top-0 left-0 w-4 h-4 bg-[#014DA4] rounded-br-lg flex items-center justify-center">
+                        <CheckCircle2 size={8} className="text-white" />
+                      </div>
+                    )}
                     {isAlreadySkipped && (
                       <div className="absolute top-0 right-0 w-4 h-4 bg-[#014DA4] rounded-bl-lg flex items-center justify-center">
                         <SkipForward size={8} className="text-white" />
@@ -336,16 +390,16 @@ export default function SkipDayPage() {
 
             {/* Confirmation details */}
             {selectedDate && (
-              <div className="bg-slate-50 dark:bg-slate-950/45 border border-slate-100 dark:border-slate-800 rounded-2xl p-4.5 flex items-center justify-between select-none">
+              <div className="bg-slate-50 dark:bg-slate-950/45 border border-slate-100 dark:border-slate-800 rounded-2xl p-4.5 flex items-center justify-between select-none gap-4">
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Confirming Skip For</p>
                   <p className="text-[14px] font-black text-slate-800 dark:text-slate-200">
-                    {selectedDate.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    {selectedRangeLabel}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Statement Credit</p>
-                  <p className="text-[14.5px] font-black text-emerald-650 dark:text-emerald-500 font-mono">+₹{subscription?.daily_rate.toFixed(2)}</p>
+                  <p className="text-[14.5px] font-black text-emerald-650 dark:text-emerald-500 font-mono">+₹{((subscription?.daily_rate || 0) * selectedDates.length).toFixed(2)}</p>
                 </div>
               </div>
             )}
@@ -376,7 +430,7 @@ export default function SkipDayPage() {
               ) : (
                 <>
                   <SkipForward size={14} className="stroke-[2.5]" />
-                  <span>Confirm Skip Day</span>
+                  <span>{selectedDates.length > 1 ? `Confirm ${selectedDates.length} Skips` : 'Confirm Skip Day'}</span>
                 </>
               )}
             </button>
@@ -407,7 +461,7 @@ export default function SkipDayPage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Automatic Bill Credit</p>
-                  <p className="text-slate-455 dark:text-slate-400 dark:text-slate-500 mt-1">Each skipped day generates a credit equal to your subscription's daily rate of <strong className="text-emerald-650 dark:text-emerald-500 font-extrabold">₹{subscription?.daily_rate.toFixed(2)}</strong>, reducing your next statement.</p>
+                  <p className="text-slate-455 dark:text-slate-400 dark:text-slate-500 mt-1">Each skipped day generates a credit equal to your subscription&apos;s daily rate of <strong className="text-emerald-650 dark:text-emerald-500 font-extrabold">â‚¹{subscription?.daily_rate.toFixed(2)}</strong>, reducing your next statement.</p>
                 </div>
               </div>
             </div>
@@ -417,7 +471,7 @@ export default function SkipDayPage() {
                 <AlertCircle className="text-rose-500 flex-shrink-0 mt-0.5" size={16} />
                 <div className="text-left">
                   <h4 className="text-[10px] font-black text-rose-700 dark:text-rose-400 uppercase tracking-wide">Cut-off Deadline Passed</h4>
-                  <p className="text-[10.5px] text-rose-900 dark:text-rose-300 font-semibold leading-normal mt-0.5">It is past 9:00 PM. Skips for tomorrow's morning slot are closed. You can schedule skips for any subsequent dates.</p>
+                  <p className="text-[10.5px] text-rose-900 dark:text-rose-300 font-semibold leading-normal mt-0.5">It is past 9:00 PM. Skips for tomorrow&apos;s morning slot are closed. You can schedule skips for any subsequent dates.</p>
                 </div>
               </div>
             )}
@@ -478,7 +532,7 @@ export default function SkipDayPage() {
                             Confirmed
                           </span>
                           <p className="text-[11.5px] font-extrabold text-emerald-650 dark:text-emerald-500 font-mono leading-none">
-                            +₹{skip.credit_amount.toFixed(2)}
+                            +â‚¹{skip.credit_amount.toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -506,10 +560,10 @@ export default function SkipDayPage() {
             </div>
             <div className="text-left">
               <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1.5">
-                Skip Date
+                Skip Range
               </p>
               <p className="text-base font-black text-slate-800 dark:text-slate-200">
-                {selectedDate?.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                {selectedRangeLabel}
               </p>
             </div>
           </div>
@@ -525,13 +579,15 @@ export default function SkipDayPage() {
             </div>
             <div className="text-right">
               <p className="text-2xl font-black text-emerald-650 dark:text-emerald-500 font-mono">
-                +₹{subscription?.daily_rate.toFixed(2)}
+                +₹{((subscription?.daily_rate || 0) * selectedDates.length).toFixed(2)}
               </p>
             </div>
           </div>
 
           <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold text-center leading-relaxed max-w-sm mx-auto">
-            Please note: Submitting this skip request will pause your milk delivery for this day. You can skip up to 14 days in advance.
+            {selectedDates.length === 1
+              ? 'Please note: Submitting this skip request will pause your milk delivery for this day.'
+              : `Please note: Submitting this skip range will pause your milk delivery for ${selectedDates.length} days.`}
           </p>
 
           <div className="flex gap-3 justify-end pt-4 border-t border-slate-100 dark:border-slate-800/80">
@@ -553,14 +609,13 @@ export default function SkipDayPage() {
               ) : (
                 <>
                   <SkipForward size={14} className="stroke-[2.5]" />
-                  <span>Confirm Skip</span>
+                  <span>{selectedDates.length > 1 ? `Confirm ${selectedDates.length} Skips` : 'Confirm Skip'}</span>
                 </>
               )}
             </button>
           </div>
         </div>
       </Modal>
-
       <Modal
         open={!!cancelDate}
         onOpenChange={(open) => !open && setCancelDate(null)}
@@ -617,3 +672,6 @@ export default function SkipDayPage() {
     </motion.div>
   )
 }
+
+
+

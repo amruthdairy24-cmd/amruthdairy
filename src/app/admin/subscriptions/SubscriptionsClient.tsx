@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Wallet, Users, TrendingUp, CheckCircle2,
   XCircle, Droplets, CalendarDays,
-  ChevronDown, IndianRupee, SkipForward, Droplet
+  ChevronDown, IndianRupee
 } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
@@ -13,8 +13,6 @@ import { StatusBadge } from '@/components/admin/StatusBadge'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { SelectCustomerModal } from '@/components/admin/SelectCustomerModal'
 import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
-import { AdminSkipModal } from '@/components/admin/AdminSkipModal'
-import { AdminExtraMilkModal } from '@/components/admin/AdminExtraMilkModal'
 import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 
@@ -140,9 +138,6 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
   const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null)
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
-  const [showSkipModal, setShowSkipModal] = useState(false)
-  const [showExtraMilkModal, setShowExtraMilkModal] = useState(false)
-  const [pendingAction, setPendingAction] = useState<'subscription' | 'skip' | 'extra'>('subscription')
 
   const stats = useMemo(() => {
     const activeData = data.filter(d => d.status.toLowerCase() === 'active')
@@ -252,27 +247,10 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
           icon={Wallet}
           actionLabel="New Subscription"
           onAction={() => {
-            setPendingAction('subscription')
             setShowSelectCustomer(true)
           }}
           hideSearchRow={true}
         />
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => { setPendingAction('skip'); setShowSelectCustomer(true) }}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-xs font-bold border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors shadow-sm cursor-pointer"
-          >
-            <SkipForward size={14} />
-            Skip Day
-          </button>
-          <button
-            onClick={() => { setPendingAction('extra'); setShowSelectCustomer(true) }}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-50 dark:bg-cyan-950/30 text-cyan-700 dark:text-cyan-400 text-xs font-bold border border-cyan-200 dark:border-cyan-800/50 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 transition-colors shadow-sm cursor-pointer"
-          >
-            <Droplet size={14} />
-            Extra Milk
-          </button>
-        </div>
         <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 shadow-sm">
           <div className="pl-2 pr-1 text-slate-400"><CalendarDays size={16} /></div>
           <select
@@ -367,18 +345,12 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
       <SelectCustomerModal 
         isOpen={showSelectCustomer}
         onClose={() => setShowSelectCustomer(false)}
-        actionContext={
-          pendingAction === 'skip' ? { title: 'Skip Day', subtitle: 'Select customer to mark skip' }
-          : pendingAction === 'extra' ? { title: 'Extra Milk', subtitle: 'Select customer for extra order' }
-          : { title: 'New Subscription', subtitle: 'Select customer to subscribe' }
-        }
+        actionContext={{ title: 'New Subscription', subtitle: 'Select customer to subscribe' }}
         onSelect={(customerId, customerName) => {
           setShowSelectCustomer(false)
           setSelectedCustomerId(customerId)
           setSelectedCustomerName(customerName)
-          if (pendingAction === 'subscription') setShowSubscriptionModal(true)
-          else if (pendingAction === 'skip') setShowSkipModal(true)
-          else if (pendingAction === 'extra') setShowExtraMilkModal(true)
+          setShowSubscriptionModal(true)
         }}
       />
 
@@ -388,36 +360,6 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
           isOpen={showSubscriptionModal}
           onClose={() => {
             setShowSubscriptionModal(false)
-            setSelectedCustomerId(null)
-            setSelectedCustomerName(null)
-          }}
-          onSuccess={() => { router.refresh() }}
-          customerId={selectedCustomerId}
-          customerName={selectedCustomerName}
-        />
-      )}
-
-      {/* Admin Skip Modal */}
-      {selectedCustomerId && selectedCustomerName && (
-        <AdminSkipModal 
-          isOpen={showSkipModal}
-          onClose={() => {
-            setShowSkipModal(false)
-            setSelectedCustomerId(null)
-            setSelectedCustomerName(null)
-          }}
-          onSuccess={() => { router.refresh() }}
-          customerId={selectedCustomerId}
-          customerName={selectedCustomerName}
-        />
-      )}
-
-      {/* Admin Extra Milk Modal */}
-      {selectedCustomerId && selectedCustomerName && (
-        <AdminExtraMilkModal 
-          isOpen={showExtraMilkModal}
-          onClose={() => {
-            setShowExtraMilkModal(false)
             setSelectedCustomerId(null)
             setSelectedCustomerName(null)
           }}

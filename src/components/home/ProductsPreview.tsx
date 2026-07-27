@@ -108,8 +108,8 @@ export function ProductsPreview() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/products').then(r => r.json()),
-      fetch('/api/admin/settings?key=price_per_litre').then(r => r.json()).catch(() => null),
+      fetch('/api/products', { cache: 'no-store' }).then(r => r.json()),
+      fetch('/api/admin/settings?key=price_per_litre', { cache: 'no-store' }).then(r => r.json()).catch(() => null),
     ]).then(([productData, settingsData]) => {
       if (productData.success && productData.products) {
         // Only show active products, sorted by display_order then created_at
