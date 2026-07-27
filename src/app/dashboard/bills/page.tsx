@@ -5,22 +5,21 @@ import {
   FileText, CreditCard, CheckCircle2, ShieldCheck, AlertCircle,
   TrendingUp, Info, Milk, SkipForward, Palmtree, PlusCircle,
   Wallet, ArrowRight, Eye, Calendar, Sparkles, Clock,
-  ArrowUpRight, RefreshCw, Banknote, ChevronRight, Zap
+  ArrowUpRight, RefreshCw, ChevronRight, Zap
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { cn } from '@/lib/utils'
+import { cn, getTodayIST } from '@/lib/utils'
 import Link from 'next/link'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 interface BillingData {
   id?: string;
   billing_month: string;
   days_delivered: number;
   days_skipped: number;
-  days_paused: number;
   extra_litres_ordered: number;
   skip_credit: number;
-  pause_credit: number;
   extra_charges: number;
   carry_in_balance: number;
   net_due: number;
@@ -75,6 +74,8 @@ const itemVariants = {
 } as const
 
 export default function BillsPage() {
+  const { data, loading: contextLoading, refetch } = useDashboardData()
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [bill, setBill] = useState<BillingData | null>(null)
@@ -83,69 +84,43 @@ export default function BillsPage() {
   const [upcomingAdjustments, setUpcomingAdjustments] = useState<any[]>([])
   const [upcomingSkips, setUpcomingSkips] = useState<any[]>([])
   const [upcomingExtras, setUpcomingExtras] = useState<ExtraMilkOrder[]>([])
-  const [activeVacation, setActiveVacation] = useState<any>(null)
+
   const [nextMonthChange, setNextMonthChange] = useState<any>(null)
 
   const [showPayModal, setShowPayModal] = useState(false)
   const [paymentStep, setPaymentStep] = useState<'details' | 'processing' | 'success'>('details')
   const [mockPaid, setMockPaid] = useState(false)
-  const [isRequestingRefund, setIsRequestingRefund] = useState(false)
   const [viewingBill, setViewingBill] = useState<BillingData | null>(null)
 
-  async function handleRefundRequest() {
-    if (!confirm('Are you sure you want to request a cash refund? This will convert your carry-forward credits to cash, and they will no longer reduce your next bill.')) return;
-    setIsRequestingRefund(true);
-    try {
-      const res = await fetch('/api/customer/refund', { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        alert('Refund requested successfully! Our admin will process your request shortly.');
-        loadData();
-      } else {
-        alert(data.message || 'Failed to request refund');
-      }
-    } catch (err) {
-      alert('Network error while requesting refund');
-    } finally {
-      setIsRequestingRefund(false);
-    }
-  }
+  useEffect(() => {
+    if (data) {
+      if (data.profile) setProfile(data.profile)
+      if (data.subscription) setSubscription(data.subscription)
+      if (data.upcoming_adjustments) setUpcomingAdjustments(data.upcoming_adjustments)
+      if (data.upcoming_skips) setUpcomingSkips(data.upcoming_skips)
+      if (data.upcoming_extras) setUpcomingExtras(data.upcoming_extras)
 
-  async function loadData() {
-    try {
-      setLoading(true)
-      const res = await fetch('/api/customer/dashboard')
-      const json = await res.json()
-      if (json.success) {
-        if (json.profile) setProfile(json.profile)
-        if (json.subscription) setSubscription(json.subscription)
-        if (json.upcoming_adjustments) setUpcomingAdjustments(json.upcoming_adjustments)
-        if (json.upcoming_skips) setUpcomingSkips(json.upcoming_skips)
-        if (json.upcoming_extras) setUpcomingExtras(json.upcoming_extras)
-        if (json.active_vacation) setActiveVacation(json.active_vacation)
-        if (json.next_month_change) setNextMonthChange(json.next_month_change)
-        if (json.current_month) {
-          setBill(json.current_month)
-        } else {
-          const monthly = json.subscription ? json.subscription.monthly_amount : 0
-          setBill({
-            billing_month: new Date().toISOString().split('T')[0],
-            days_delivered: 0, days_skipped: 0, days_paused: 0, extra_litres_ordered: 0,
-            skip_credit: 0, pause_credit: 0, extra_charges: 0, carry_in_balance: 0,
-            net_due: monthly, amount_paid: 0, payment_status: 'pending'
-          })
-        }
+      if (data.next_month_change) setNextMonthChange(data.next_month_change)
+      if (data.current_month) {
+        setBill(data.current_month)
       } else {
-        setError(json.message || 'Failed to retrieve billing statements')
+        const monthly = data.subscription ? data.subscription.monthly_amount : 0
+        setBill({
+          billing_month: getTodayIST(),
+          days_delivered: 0, days_skipped: 0, extra_litres_ordered: 0,
+          skip_credit: 0, extra_charges: 0, carry_in_balance: 0,
+          net_due: monthly, amount_paid: 0, payment_status: 'pending'
+        })
       }
-    } catch (err) {
-      setError('Network error loading statements')
-    } finally {
+      setLoading(false)
+    } else if (!contextLoading) {
       setLoading(false)
     }
-  }
+  }, [data, contextLoading])
 
-  useEffect(() => { loadData() }, [])
+  async function loadData() {
+    await refetch()
+  }
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -275,7 +250,7 @@ export default function BillsPage() {
   const isDevMockPaid = process.env.NODE_ENV === 'development' && subscription?.status === 'active' && bill.payment_status === 'pending';
   const isPaid = mockPaid || bill.payment_status === 'paid' || (bill.amount_paid > 0 && bill.amount_paid >= bill.net_due) || isDevMockPaid;
   const hasPendingBill = bill.net_due > 0 && !isPaid
-  const basePlanAmount = bill.monthly_amount || (bill.net_due + bill.skip_credit + bill.pause_credit - bill.extra_charges + bill.carry_in_balance)
+  const basePlanAmount = bill.monthly_amount || (bill.net_due + bill.skip_credit - bill.extra_charges + bill.carry_in_balance)
 
   // Billing cycle dates
   const billingDate = new Date(bill.billing_month)
@@ -582,17 +557,6 @@ export default function BillsPage() {
                   <span className="font-bold text-emerald-600 dark:text-emerald-500 font-mono text-sm">-₹{bill.skip_credit.toFixed(2)}</span>
                 </div>
 
-                {/* Vacation Credits */}
-                <div className="flex justify-between items-center py-3.5 border-b border-slate-100 dark:border-slate-800 lg:border-b-0">
-                  <span className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center flex-shrink-0">
-                      <Palmtree size={13} />
-                    </div>
-                    <span className="font-bold text-slate-700 dark:text-slate-200">Vacation Pause Credits</span>
-                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">{bill.days_paused} days</span>
-                  </span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-500 font-mono text-sm">-₹{bill.pause_credit.toFixed(2)}</span>
-                </div>
               </div>
 
               {/* Right column of items */}
@@ -666,7 +630,16 @@ export default function BillsPage() {
               </button>
             )}
             <button
-              onClick={() => setViewingBill(bill)}
+              onClick={() => {
+                const billDetails = { ...bill };
+                if (isPaid) {
+                  billDetails.payment_status = 'paid';
+                  if (billDetails.amount_paid < billDetails.net_due) {
+                    billDetails.amount_paid = billDetails.net_due;
+                  }
+                }
+                setViewingBill(billDetails);
+              }}
               className={cn(
                 "h-12 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-[0.98] text-slate-700 dark:text-slate-300 font-extrabold text-xs shadow-sm transition-all border-none flex items-center justify-center gap-2 cursor-pointer",
                 hasPendingBill ? "flex-1" : "w-full"
@@ -795,25 +768,7 @@ export default function BillsPage() {
               </span>
             </div>
 
-            {/* Active Vacation */}
-            {activeVacation && (
-              <div className="flex items-center justify-between p-3 bg-blue-50/50 dark:bg-blue-950/10 border border-blue-100/60 dark:border-blue-900/20 rounded-xl">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                    <Palmtree size={13} />
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-700 dark:text-slate-200 block">Active Vacation</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                      {new Date(activeVacation.pause_start).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – {new Date(activeVacation.pause_end).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                    </span>
-                  </div>
-                </div>
-                <span className="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400">
-                  -₹{activeVacation.total_credit?.toFixed(2) || '0.00'}
-                </span>
-              </div>
-            )}
+
 
             {/* Upcoming Skips */}
             {upcomingSkips.length > 0 && (
@@ -854,7 +809,7 @@ export default function BillsPage() {
             )}
 
             {/* Empty state */}
-            {!activeVacation && upcomingSkips.length === 0 && !nextMonthChange && carryForwardSum === 0 && (
+            {upcomingSkips.length === 0 && !nextMonthChange && carryForwardSum === 0 && (
               <div className="text-center py-4">
                 <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">No upcoming adjustments or changes</p>
                 <p className="text-[10px] text-slate-350 dark:text-slate-600 mt-1">Your next bill will be at the standard plan rate</p>
@@ -897,27 +852,6 @@ export default function BillsPage() {
                 </div>
               ))}
 
-              {(() => {
-                const refundableAmt = upcomingAdjustments
-                  .filter(a => a.amount < 0 && (!a.refund_status || a.refund_status === 'none'))
-                  .reduce((sum, a) => sum + Math.abs(a.amount), 0);
-
-                if (refundableAmt > 0) {
-                  return (
-                    <div className="pt-2">
-                      <button
-                        onClick={handleRefundRequest}
-                        disabled={isRequestingRefund}
-                        className="w-full h-10 rounded-xl bg-white dark:bg-slate-900 border border-[#014DA4]/30 text-[#014DA4] dark:text-blue-400 hover:bg-[#014DA4]/5 active:scale-[0.98] font-bold text-xs transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-                      >
-                        <Banknote size={14} />
-                        {isRequestingRefund ? 'Requesting...' : `Request Cash Refund (₹${refundableAmt.toFixed(2)})`}
-                      </button>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
             </div>
           </div>
         )}
@@ -943,14 +877,6 @@ export default function BillsPage() {
               <div>
                 <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Credits & Extra Milk</p>
                 <p className="text-slate-450 dark:text-slate-500 mt-1">Skip day credits automatically offset extra milk charges. Any remaining credits carry forward to reduce your next monthly bill.</p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
-              <div>
-                <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Cash Refund Policy</p>
-                <p className="text-slate-450 dark:text-slate-500 mt-1">Accumulated carry-forward credits can be directly refunded to your bank account upon request rather than rolled over.</p>
               </div>
             </div>
           </div>

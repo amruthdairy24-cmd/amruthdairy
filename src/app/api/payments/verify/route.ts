@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, billing_month_id } = await request.json();
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, billing_month_id, adjustment_ids, target_month } = await request.json();
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !billing_month_id) {
       return NextResponse.json({ success: false, message: 'Missing payment details' }, { status: 400 });
@@ -81,6 +81,17 @@ export async function POST(request: Request) {
 
     if (paymentError) {
       console.error('Insert payment log error:', paymentError.message);
+    }
+
+    // Mark billing_adjustments as applied NOW (payment confirmed — prevents credit burn on abandoned checkout)
+    if (adjustment_ids && adjustment_ids.length > 0) {
+      await adminSupabase
+        .from('billing_adjustments')
+        .update({
+          is_applied: true,
+          target_month: target_month || bMonth.billing_month
+        })
+        .in('id', adjustment_ids);
     }
 
     // Fetch and update subscription status if it was pending_payment

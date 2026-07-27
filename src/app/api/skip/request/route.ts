@@ -14,6 +14,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'customer') {
+      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+    }
+
     const { skip_date } = await request.json();
 
     if (!skip_date) {
@@ -83,20 +88,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // VACATION CHECK
-    const { data: vacation } = await adminSupabase
-      .from('vacation_pauses')
-      .select('id')
-      .eq('subscription_id', subscription.id)
-      .lte('pause_start', skip_date)
-      .gte('pause_end', skip_date)
-      .in('status', ['confirmed', 'active'])
-      .maybeSingle();
-
-    if (vacation) {
-      return NextResponse.json({ success: false, message: `You already have a vacation pause on ${skip_date}.` }, { status: 400 });
-    }
-
     // Calculate credits
     const credit_amount = subscription.daily_rate;
     const skipDateObj = new Date(skip_date);
@@ -156,7 +147,7 @@ export async function POST(request: Request) {
           extra_litres: 0,
           total_litres: 0,
           is_skip: true,
-          is_vacation: false,
+
           is_extra: false,
           skip_id: skipRequest.id,
           delivery_status: 'skipped'
@@ -218,6 +209,11 @@ export async function DELETE(request: Request) {
 
     if (!user) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'customer') {
+      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
     const { skip_date } = await request.json();

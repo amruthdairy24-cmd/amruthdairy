@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { isAdminEmail } from '@/lib/utils';
 
 /**
  * GET /api/admin/system-settings
@@ -23,14 +24,8 @@ export async function GET() {
       );
     }
 
-    // 2. Role check — using userClient for reads
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'admin') {
+    // 2. Role check
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json(
         { success: false, message: 'Forbidden — admin access required' },
         { status: 403 }
@@ -77,14 +72,8 @@ export async function PUT(request: Request) {
       );
     }
 
-    // 2. Role check — using userClient for reads
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'admin') {
+    // 2. Role check
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json(
         { success: false, message: 'Forbidden — admin access required' },
         { status: 403 }

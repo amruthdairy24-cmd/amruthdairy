@@ -279,7 +279,7 @@ export default function SubscribePage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
               {FEATURES.map(({ icon: Icon, title, desc, color, bg }) => (
                 <motion.div
                   key={title}
@@ -287,13 +287,13 @@ export default function SubscribePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4 }}
-                  className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200"
+                  className="bg-white rounded-xl sm:rounded-2xl p-3.5 sm:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200"
                 >
-                  <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center border mb-4', bg)}>
-                    <Icon size={20} className={color} />
+                  <div className={cn('w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center border mb-3 sm:mb-4', bg)}>
+                    <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5", color)} />
                   </div>
-                  <h3 className="font-cabinet font-bold text-slate-900 text-[15px] mb-1.5">{title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
+                  <h3 className="font-cabinet font-bold text-slate-900 text-[13px] sm:text-[15px] mb-1 sm:mb-1.5 leading-snug sm:leading-normal">{title}</h3>
+                  <p className="text-slate-500 text-[11px] sm:text-sm leading-snug sm:leading-relaxed">{desc}</p>
                 </motion.div>
               ))}
             </div>
@@ -387,9 +387,13 @@ export default function SubscribePage() {
                 Start in 3 simple steps
               </h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-              {/* Connector line (desktop) */}
+            <div className="flex flex-col md:grid md:grid-cols-3 gap-8 md:gap-8 relative pl-4 md:pl-0">
+              {/* Connector line (mobile vertical) */}
+              <div className="absolute left-[34px] top-4 bottom-4 w-px bg-slate-200 md:hidden" />
+              
+              {/* Connector line (desktop horizontal) */}
               <div className="hidden md:block absolute top-8 left-[calc(16.67%+20px)] right-[calc(16.67%+20px)] h-px bg-slate-200" />
+              
               {HOW_IT_WORKS.map(({ step, title, desc }, i) => (
                 <motion.div
                   key={step}
@@ -397,13 +401,22 @@ export default function SubscribePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: i * 0.1 }}
-                  className="flex flex-col items-center text-center"
+                  className="flex flex-row md:flex-col items-start md:items-center text-left md:text-center gap-4 md:gap-0 relative z-10"
                 >
-                  <div className="w-16 h-16 rounded-full bg-[#02429C] text-white flex items-center justify-center font-cabinet font-bold text-xl mb-5 relative z-10 shadow-lg shadow-[#0f2e5c]/20">
+                  {/* Step Bubble */}
+                  <div className="w-9 h-9 md:w-16 md:h-16 rounded-full bg-[#02429C] text-white flex items-center justify-center font-cabinet font-bold text-sm md:text-xl mb-0 md:mb-5 flex-shrink-0 shadow-lg shadow-[#0f2e5c]/10">
                     {step}
                   </div>
-                  <h3 className="font-cabinet font-bold text-[#0f2e5c] text-base mb-2">{title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed max-w-[240px] mx-auto">{desc}</p>
+                  
+                  {/* Step Content */}
+                  <div className="flex-1 md:flex-initial pt-1 md:pt-0">
+                    <h3 className="font-cabinet font-bold text-[#0f2e5c] text-base md:mb-2 mb-1 leading-snug">
+                      {title}
+                    </h3>
+                    <p className="text-slate-500 text-xs md:text-sm leading-relaxed max-w-xs md:max-w-[240px] md:mx-auto">
+                      {desc}
+                    </p>
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -423,32 +436,61 @@ export default function SubscribePage() {
             DELIVERY AREAS
         ══════════════════════════════════════════════════════════ */}
         <section className="py-16 px-5 bg-white">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-10">
-              <div className="flex-1 text-center md:text-left">
-                <span className="text-[11px] font-extrabold tracking-widest uppercase text-[#0284C7]">Coverage</span>
-                <h2 className="font-cabinet text-2xl sm:text-3xl font-bold text-[#0f2e5c] mt-2 mb-3">
-                  We deliver across Mangalore
-                </h2>
-                <p className="text-slate-500 text-sm leading-relaxed mb-6 max-w-sm">
-                  Our delivery network covers major localities in Mangalore. More areas are being added soon!
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                  {DELIVERY_AREAS.map((area) => (
-                    <span
-                      key={area}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200"
-                    >
-                      <MapPin size={11} className="text-[#0284C7]" />
-                      {area}
-                    </span>
-                  ))}
-                </div>
+          <div className="max-w-5xl mx-auto">
+            {/* Header (Centered) */}
+            <div className="text-center mb-12 flex flex-col items-center">
+              <span className="text-[11px] font-extrabold tracking-widest uppercase text-[#0284C7]">Coverage</span>
+              <h2 className="font-cabinet text-2xl sm:text-4xl font-bold text-[#0f2e5c] mt-2 mb-3">
+                We deliver across Mangalore
+              </h2>
+              <p className="text-slate-500 text-sm sm:text-base leading-relaxed mt-2 max-w-lg mx-auto">
+                Our delivery network covers major localities in Mangalore. More areas are being added soon!
+              </p>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-stretch gap-10">
+              {/* Badges List (Below card on mobile, left side on desktop) */}
+              <div className="flex-1 flex flex-wrap gap-2 justify-center md:justify-start order-2 md:order-1">
+                {DELIVERY_AREAS.map((area) => (
+                  <span
+                    key={area}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-50/50 hover:bg-sky-50 text-[#0f2e5c] text-xs font-semibold border border-sky-100/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs hover:border-[#0284C7]/20 cursor-default"
+                  >
+                    <MapPin size={11} className="text-[#0284C7]" />
+                    {area}
+                  </span>
+                ))}
               </div>
-              {/* Map placeholder */}
-              <div className="flex-shrink-0 w-full md:w-64 h-52 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center gap-3 border border-slate-200">
-                <MapPin size={36} className="text-[#0284C7]" />
-                <span className="text-slate-500 text-sm font-medium text-center px-4">Padil, Mangalore<br />&amp; surrounding areas</span>
+
+              {/* Delivery Hub Status Card (Above badges on mobile, right side on desktop) */}
+              <div className="flex-shrink-0 w-full md:w-80 rounded-[32px] bg-gradient-to-br from-[#02429C] to-[#013378] text-white p-6 shadow-xl shadow-[#02429C]/10 flex flex-col items-center text-center justify-between relative overflow-hidden min-h-[280px] md:min-h-0 border border-blue-900/40 order-1 md:order-2">
+                {/* Decorative Glowing Elements */}
+                <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-sky-500/10 blur-2xl pointer-events-none" />
+                <div className="absolute -bottom-16 -left-16 w-36 h-36 rounded-full bg-blue-300/10 blur-2xl pointer-events-none" />
+                
+                <div className="flex flex-col items-center w-full">
+                  {/* Pulse Pin Container */}
+                  <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-6 border border-white/20 relative shadow-inner">
+                    <MapPin size={22} className="text-yellow-400 fill-yellow-400/20" />
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 border border-blue-900 animate-pulse" />
+                  </div>
+                  
+                  <span className="text-[10px] font-extrabold tracking-widest uppercase text-white/50">Delivery Zone</span>
+                  <h3 className="font-cabinet font-bold text-xl text-white mt-1 mb-2 leading-tight">
+                    Mangalore Hub
+                  </h3>
+                  <p className="text-white/70 text-xs leading-relaxed">
+                    Delivering fresh, pure milk directly to your doorstep every single morning before you wake up.
+                  </p>
+                </div>
+
+                <div className="border-t border-white/10 pt-4 mt-6 w-full flex flex-col items-center">
+                  <p className="text-[9px] font-extrabold text-white/40 uppercase tracking-widest mb-1.5">Primary Area</p>
+                  <div className="flex items-center gap-2 justify-center">
+                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                    <p className="text-white font-bold text-sm">Padil & surrounding areas</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -537,8 +579,8 @@ export default function SubscribePage() {
         {/* ══════════════════════════════════════════════════════════
             FINAL CTA
         ══════════════════════════════════════════════════════════ */}
-        <section className="py-20 px-5 bg-gradient-to-br from-[#0284C7] to-[#0f2e5c]">
-          <div className="max-w-2xl mx-auto text-center flex flex-col items-center gap-6">
+        <section className="pt-20 pb-28 md:pb-36 px-5 bg-gradient-to-br from-[#02429C] to-[#013378] relative overflow-hidden">
+          <div className="max-w-2xl mx-auto text-center flex flex-col items-center gap-6 relative z-10">
             <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center">
               <Milk size={32} className="text-white" />
             </div>
@@ -562,6 +604,33 @@ export default function SubscribePage() {
               <span className="flex items-center gap-1"><Check size={12} className="text-green-400" /> Skip any day</span>
               <span className="flex items-center gap-1"><Check size={12} className="text-green-400" /> Cancel anytime</span>
             </div>
+          </div>
+
+          {/* Milk Wave Divider (separates dark blue CTA from dark blue footer) */}
+          <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none z-10 translate-y-[2px]">
+            <svg
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+              className="relative block w-full h-[50px] md:h-[75px]"
+            >
+              {/* Layer 1: Translucent Creamy Back Wave (Milk shade 1) */}
+              <path
+                d="M0,10 C220,100 450,20 600,60 C750,100 980,20 1200,40 L1200,120 L0,120 Z"
+                fill="#F9F3E3"
+                opacity="0.35"
+              />
+              {/* Layer 2: Semi-translucent Middle Wave (Milk shade 2) */}
+              <path
+                d="M0,25 C180,90 380,30 550,70 C720,110 920,40 1200,75 L1200,120 L0,120 Z"
+                fill="#ffffff"
+                opacity="0.55"
+              />
+              {/* Layer 3: Solid Front Wave (Pure Milk) */}
+              <path
+                d="M0,40 C300,115 600,25 900,105 C1050,115 1200,85 1200,85 L1200,120 L0,120 Z"
+                fill="#ffffff"
+              />
+            </svg>
           </div>
         </section>
 

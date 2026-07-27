@@ -1,38 +1,18 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import {
-  Heart,
-  ShieldCheck,
-  Leaf,
-  UsersRound,
   ArrowRight,
   ChevronDown,
-  X,
   Sparkles,
   ShoppingBag
 } from 'lucide-react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-
-const TIMELINE_DATA = [
-  { year: '2020', title: 'The Beginning', desc: 'Started with a handful of healthy cows and a dream to bring pure milk directly to families.' },
-  { year: '2021', title: 'Daily Deliveries Began', desc: 'Launched daily delivery routes across neighborhoods to ensure fresh mornings for early customers.' },
-  { year: '2022', title: '100 Happy Families', desc: 'Built a foundation of trust, delivering 100% pure, farm-fresh milk to over 100 households.' },
-  { year: '2023', title: 'Expanded Our Dairy Farm', desc: 'Upgraded our pastures and facilities to incorporate modern automated, hygienic milking systems.' },
-  { year: '2024', title: 'Subscription Model', desc: 'Introduced automatic monthly subscription plans to make morning milk delivery effortless.' },
-  { year: 'Today', title: 'Serving Hundreds', desc: 'Delivering nutrition and pure dairy goodness to hundreds of homes before sunrise every day.' }
-]
-
-const VALUES = [
-  { icon: Heart, title: 'Healthy Cows', desc: 'Happy, pasture-fed cows produce naturally nutritious and tasty milk.', color: 'text-rose-500 bg-rose-50' },
-  { icon: ShieldCheck, title: 'Quality First', desc: 'Every batch is rigorously tested for purity, fat content, and hygiene.', color: 'text-emerald-500 bg-emerald-50' },
-  { icon: Leaf, title: 'Farm Fresh', desc: 'Chilled immediately at the farm and delivered fresh to your door before sunrise.', color: 'text-amber-500 bg-amber-50' },
-  { icon: UsersRound, title: 'Customer Trust', desc: 'We place our families first, maintaining transparent and honest sourcing.', color: 'text-sky-500 bg-sky-50' }
-]
+import { OurStoryVideos } from '@/components/our-story/OurStoryVideos'
 
 const PROCESS_STEPS = [
   { emoji: '🐄', title: 'Healthy Cows', desc: 'Pasture-fed cows raised with care and organic fodder.' },
@@ -42,16 +22,7 @@ const PROCESS_STEPS = [
   { emoji: '🚚', title: 'Doorstep Delivery', desc: 'Delivered in temperature-controlled transit before sunrise.' }
 ]
 
-const GALLERY_IMAGES = [
-  { src: '/images/amruth_farm_gate.png', alt: 'Entrance to the pristine Amruth Dairy Farm, nestled in nature.', title: 'Our Farm Gate' },
-  { src: '/images/bg/hero-banner-2.png', alt: 'A view of our healthy pasture-fed cows enjoying green meadows.', title: 'Pasture Life' },
-  { src: '/images/our-story-farm-fresh.png', alt: 'Hygienic, touch-free milking processes under expert care.', title: 'Modern Milking' },
-  { src: '/images/amruth_hero_composition.png', alt: 'Carefully sealed glass bottles prepared for dispatch.', title: 'Safe Packaging' },
-  { src: '/images/bg/hero-banner.png', alt: 'Chilled delivery vehicles ensuring sunrise doorstep drop-off.', title: 'Doorstep Delivery' }
-]
-
 export default function OurStoryPage() {
-  const [selectedImage, setSelectedImage] = useState<typeof GALLERY_IMAGES[0] | null>(null)
   
   // Hero Parallax Scroll
   const heroRef = useRef<HTMLDivElement>(null)
@@ -60,13 +31,6 @@ export default function OurStoryPage() {
     offset: ["start start", "end start"]
   })
   const heroY = useTransform(heroProgress, [0, 1], ["0%", "30%"])
-
-  // Timeline Progress Scroll
-  const timelineRef = useRef<HTMLDivElement>(null)
-  const { scrollYProgress: timelineProgress } = useScroll({
-    target: timelineRef,
-    offset: ["start center", "end center"]
-  })
 
   return (
     <>
@@ -144,7 +108,7 @@ export default function OurStoryPage() {
         </section>
 
         {/* 2. OUR BEGINNING */}
-        <section className="py-20 md:py-28 bg-white overflow-hidden">
+        <section className="py-16 md:py-20 bg-white overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               
@@ -204,128 +168,10 @@ export default function OurStoryPage() {
           </div>
         </section>
 
-        {/* 3. TIMELINE */}
-        <section ref={timelineRef} className="py-20 md:py-28 bg-[#F8FAFC]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
-            {/* Section Header */}
-            <div className="mb-16 flex flex-col items-center text-center">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <div className="w-8 h-[1px] bg-sky-200"></div>
-                <span className="text-[11px] md:text-xs font-bold text-[#02429C] uppercase tracking-widest">
-                  OUR ROADMAP
-                </span>
-                <div className="w-8 h-[1px] bg-sky-200"></div>
-              </div>
-              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-black font-cabinet leading-tight tracking-tight mb-4">
-                Milestones of Trust
-              </h2>
-              <p className="text-gray-500 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-                Take a look back at how we have grown from a single farm to serving hundreds of families across the region.
-              </p>
-            </div>
 
-            {/* Timeline Tree */}
-            <div className="relative max-w-4xl mx-auto mt-20">
-              {/* Timeline background vertical line */}
-              <div className="absolute left-4 md:left-1/2 top-4 bottom-4 w-[2px] bg-slate-200 -translate-x-1/2" />
-              
-              {/* Growing line overlay */}
-              <motion.div
-                style={{ scaleY: timelineProgress, originY: 0 }}
-                className="absolute left-4 md:left-1/2 top-4 bottom-4 w-[2px] bg-[#02429C] -translate-x-1/2"
-              />
-
-              {TIMELINE_DATA.map((item, idx) => {
-                const isEven = idx % 2 === 0
-                return (
-                  <div key={item.year} className={`relative flex flex-col md:flex-row items-start md:items-center justify-between mb-16 md:mb-24 last:mb-0 ${isEven ? 'md:flex-row-reverse' : ''}`}>
-                    {/* Spacer or content on opposite side */}
-                    <div className="hidden md:block w-[45%]" />
-
-                    {/* Timeline Node marker */}
-                    <div className="absolute left-4 md:left-1/2 w-4 h-4 rounded-full bg-white border-4 border-[#02429C] -translate-x-1/2 z-10 shadow-sm" />
-
-                    {/* Timeline card */}
-                    <motion.div
-                      initial={{ opacity: 0, x: isEven ? 30 : -30, y: 15 }}
-                      whileInView={{ opacity: 1, x: 0, y: 0 }}
-                      viewport={{ once: true, margin: "-100px" }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      className="w-[calc(100%-2.5rem)] ml-10 md:ml-0 md:w-[45%] bg-white p-6 md:p-8 rounded-[20px] border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_35px_rgba(2,66,156,0.05)] transition-all duration-300 group text-left"
-                    >
-                      <span className="inline-block text-xs font-bold text-[#02429C] bg-sky-50 px-3 py-1 rounded-full mb-3 tracking-wide">
-                        {item.year}
-                      </span>
-                      <h3 className="text-xl font-bold font-cabinet text-black mb-2 group-hover:text-[#02429C] transition-colors">
-                        {item.title}
-                      </h3>
-                      <p className="text-sm text-gray-500 leading-relaxed font-sans">
-                        {item.desc}
-                      </p>
-                    </motion.div>
-                  </div>
-                )
-              })}
-            </div>
-
-          </div>
-        </section>
-
-        {/* 4. OUR VALUES */}
-        <section className="py-20 md:py-28 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            
-            {/* Section Header */}
-            <div className="mb-16 flex flex-col items-center">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <div className="w-8 h-[1px] bg-sky-200"></div>
-                <span className="text-[11px] md:text-xs font-bold text-[#02429C] uppercase tracking-widest">
-                  OUR CORE VALUES
-                </span>
-                <div className="w-8 h-[1px] bg-sky-200"></div>
-              </div>
-              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-black font-cabinet leading-tight tracking-tight mb-4">
-                What Drives Amruth Dairy
-              </h2>
-              <p className="text-gray-500 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-                Our daily decisions are anchored in these principles, making sure the milk you receive is ethically, hygienically, and purely produced.
-              </p>
-            </div>
-
-            {/* Grid of 4 Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {VALUES.map((val, idx) => {
-                const IconComp = val.icon
-                return (
-                  <motion.div
-                    key={val.title}
-                    initial={{ opacity: 0, y: 35 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: idx * 0.1 }}
-                    whileHover={{ y: -6, scale: 1.01 }}
-                    className="bg-slate-50 p-8 rounded-[24px] border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.01)] hover:shadow-[0_15px_40px_rgba(2,66,156,0.05)] transition-all duration-300 text-left flex flex-col items-start"
-                  >
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${val.color}`}>
-                      <IconComp size={24} />
-                    </div>
-                    <h3 className="text-lg font-bold font-cabinet text-black mb-3">
-                      {val.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 leading-relaxed font-sans">
-                      {val.desc}
-                    </p>
-                  </motion.div>
-                )
-              })}
-            </div>
-
-          </div>
-        </section>
 
         {/* 5. PROCESS SECTION */}
-        <section className="py-20 md:py-28 bg-[#F8FAFC] overflow-hidden">
+        <section className="py-16 md:py-20 bg-[#F8FAFC] overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             
             {/* Section Header */}
@@ -346,18 +192,18 @@ export default function OurStoryPage() {
             </div>
 
             {/* Steps Container */}
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-4 relative max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 max-w-7xl mx-auto relative px-4">
               {PROCESS_STEPS.map((step, idx) => {
                 const isLast = idx === PROCESS_STEPS.length - 1
                 return (
-                  <div key={step.title} className="flex flex-col lg:flex-row items-center w-full lg:w-auto">
+                  <div key={step.title} className="relative w-full flex flex-col items-center">
                     {/* Card */}
                     <motion.div
                       initial={{ opacity: 0, y: 30 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.6, delay: idx * 0.12 }}
-                      className="flex flex-col items-center text-center p-6 bg-white border border-slate-100 rounded-[24px] w-full max-w-[280px] lg:w-[170px] xl:w-[190px] h-[210px] shadow-[0_4px_18px_rgba(0,0,0,0.01)] hover:shadow-[0_12px_28px_rgba(2,66,156,0.04)] transition-all duration-300"
+                      className="relative flex flex-col items-center text-center p-6 bg-white border border-slate-100 rounded-[24px] w-full max-w-[280px] h-[210px] shadow-[0_4px_18px_rgba(0,0,0,0.01)] hover:shadow-[0_12px_28px_rgba(2,66,156,0.04)] transition-all duration-300"
                     >
                       <span className="text-4xl mb-4 select-none">{step.emoji}</span>
                       <h3 className="text-sm font-bold font-cabinet text-black mb-2">
@@ -368,17 +214,29 @@ export default function OurStoryPage() {
                       </p>
                     </motion.div>
 
-                    {/* Connection Arrow */}
+                    {/* Connection Arrow (Desktop) */}
                     {!isLast && (
                       <motion.div
                         initial={{ opacity: 0, scale: 0.5 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.4, delay: idx * 0.12 + 0.08 }}
-                        className="my-3 lg:my-0 lg:mx-3 text-[#02429C] font-extrabold"
+                        className="hidden lg:flex absolute left-[100%] top-1/2 -translate-y-1/2 w-8 justify-center z-20 text-[#02429C] font-extrabold"
                       >
-                        <span className="hidden lg:inline text-xl">➔</span>
-                        <span className="inline lg:hidden text-xl">⬇</span>
+                        <span className="text-xl">➔</span>
+                      </motion.div>
+                    )}
+
+                    {/* Connection Arrow (Mobile) */}
+                    {!isLast && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, delay: idx * 0.12 + 0.08 }}
+                        className="flex lg:hidden justify-center my-3 text-[#02429C] font-extrabold"
+                      >
+                        <span className="text-xl">⬇</span>
                       </motion.div>
                     )}
                   </div>
@@ -389,105 +247,11 @@ export default function OurStoryPage() {
           </div>
         </section>
 
-        {/* 6. IMAGE GALLERY */}
-        <section className="py-20 md:py-28 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
-            {/* Section Header */}
-            <div className="mb-16 flex flex-col items-center text-center">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <div className="w-8 h-[1px] bg-sky-200"></div>
-                <span className="text-[11px] md:text-xs font-bold text-[#02429C] uppercase tracking-widest">
-                  VISUAL GALLERY
-                </span>
-                <div className="w-8 h-[1px] bg-sky-200"></div>
-              </div>
-              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-black font-cabinet leading-tight tracking-tight mb-4">
-                Life At The Farm
-              </h2>
-              <p className="text-gray-500 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-                Take a visual journey into our daily operations. Click on any picture to view it full size.
-              </p>
-            </div>
-
-            {/* Masonry-style column grid */}
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 max-w-6xl mx-auto">
-              {GALLERY_IMAGES.map((img, idx) => (
-                <motion.div
-                  key={img.title}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: idx * 0.1 }}
-                  onClick={() => setSelectedImage(img)}
-                  className="break-inside-avoid mb-6 relative group overflow-hidden rounded-[20px] cursor-zoom-in shadow-[0_8px_25px_rgba(0,0,0,0.03)] border border-slate-100 bg-slate-50"
-                >
-                  <div className="relative w-full aspect-[4/3] overflow-hidden">
-                    <Image
-                      src={img.src}
-                      alt={img.alt}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    />
-                  </div>
-                  {/* Subtle caption overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5 text-left text-white">
-                    <h4 className="text-base font-bold font-cabinet leading-none">{img.title}</h4>
-                    <p className="text-[11px] text-white/80 mt-2 font-sans line-clamp-1 leading-relaxed">{img.alt}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-          </div>
-        </section>
-
-        {/* Lightbox Modal */}
-        <AnimatePresence>
-          {selectedImage && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedImage(null)}
-              className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out"
-            >
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors border border-white/10 cursor-pointer"
-                aria-label="Close image lightbox"
-              >
-                <X size={24} />
-              </button>
-              
-              <motion.div
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
-                className="relative max-w-5xl max-h-[75vh] md:max-h-[80vh] aspect-[4/3] w-full rounded-2xl overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Image
-                  src={selectedImage.src}
-                  alt={selectedImage.alt}
-                  fill
-                  className="object-contain"
-                  priority
-                />
-                
-                {/* Lightbox Caption */}
-                <div className="absolute -bottom-14 left-0 right-0 text-white text-center py-2 px-4">
-                  <h3 className="text-lg font-bold font-cabinet">{selectedImage.title}</h3>
-                  <p className="text-xs text-white/70 mt-1 font-sans">{selectedImage.alt}</p>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* 6. VIDEOS GALLERY */}
+        <OurStoryVideos />
 
         {/* 7. MISSION SECTION */}
-        <section className="py-24 md:py-32 bg-white relative overflow-hidden">
+        <section className="pt-0 pb-16 md:pt-0 md:pb-20 bg-white relative overflow-hidden">
           {/* Decorative blur shadow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-sky-100 rounded-full filter blur-[100px] opacity-35 pointer-events-none" />
 
@@ -504,7 +268,7 @@ export default function OurStoryPage() {
         </section>
 
         {/* 8. CTA SECTION */}
-        <section className="py-16 md:py-24 bg-white">
+        <section className="pt-0 pb-16 md:pt-0 md:pb-20 bg-white">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 30 }}

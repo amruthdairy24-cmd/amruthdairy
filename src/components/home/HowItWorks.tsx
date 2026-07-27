@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { Check, ShieldCheck, Heart, Clock, Award, BookOpen } from 'lucide-react'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
+import Link from 'next/link'
 
 export function HowItWorks() {
   return (
@@ -66,9 +67,12 @@ export function HowItWorks() {
 
               {/* CTA */}
               <div className="w-full flex justify-center md:justify-start">
-                <button className="h-11 px-7 rounded-full bg-[#1230AE] text-white font-semibold text-[13.5px] cursor-pointer shadow-[0_4px_14px_rgba(18,48,174,0.3)] hover:scale-[1.03] hover:shadow-[0_6px_20px_rgba(18,48,174,0.4)] transition-all duration-200">
+                <Link 
+                  href="/our-story"
+                  className="flex items-center justify-center h-11 px-7 rounded-full bg-[#1230AE] text-white font-semibold text-[13.5px] cursor-pointer shadow-[0_4px_14px_rgba(18,48,174,0.3)] hover:scale-[1.03] hover:shadow-[0_6px_20px_rgba(18,48,174,0.4)] transition-all duration-200"
+                >
                   Know More About Us
-                </button>
+                </Link>
               </div>
             </div>
           </ScrollReveal>

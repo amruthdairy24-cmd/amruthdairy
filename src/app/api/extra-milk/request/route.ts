@@ -15,6 +15,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'customer') {
+      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+    }
+
     const { order_id, order_date, extra_litres } = await request.json();
 
     if (!order_date || extra_litres === undefined) {
@@ -148,7 +153,7 @@ export async function POST(request: Request) {
       .select('amount')
       .eq('subscription_id', subscription.id)
       .eq('target_month', charge_month)
-      .in('adjustment_type', ['skip_credit', 'vacation_credit']);
+      .in('adjustment_type', ['skip_credit']);
       
     const totalCreditsForMonth = (skipCredits || []).reduce((sum, row) => sum + Number(row.amount), 0);
     
@@ -177,9 +182,7 @@ export async function POST(request: Request) {
     if (extra_litres === 0) {
       // Cancellation logic
       if (order_id) {
-        await adminSupabase.from('extra_milk_orders').delete().eq('id', order_id);
-        
-        // Revert daily_delivery_sheet
+        // Revert daily_delivery_sheet first to release foreign key reference
         await adminSupabase
           .from('daily_delivery_sheet')
           .update({
@@ -189,6 +192,9 @@ export async function POST(request: Request) {
             total_litres: subscription.quantity_litres
           })
           .eq('extra_order_id', order_id);
+
+        // Delete the extra milk order now that it is no longer referenced
+        await adminSupabase.from('extra_milk_orders').delete().eq('id', order_id);
       }
       return NextResponse.json({
         success: true,

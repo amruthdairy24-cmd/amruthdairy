@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Users,
   Wallet,
@@ -10,15 +10,20 @@ import {
   UserPlus,
   CreditCard,
   SkipForward,
-  BarChart2,
-  Package,
   CheckCircle2,
   ArrowUpRight,
   X,
-  AlertCircle
+  Droplet,
+  Sparkles,
+  Clock
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { StatusBadge } from '@/components/admin/StatusBadge'
+import { SelectCustomerModal } from '@/components/admin/SelectCustomerModal'
+import { AdminSkipModal } from '@/components/admin/AdminSkipModal'
+import { AdminExtraMilkModal } from '@/components/admin/AdminExtraMilkModal'
+import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
 import { cn } from '@/lib/utils'
 
 interface DashboardClientProps {
@@ -39,6 +44,7 @@ interface DashboardClientProps {
     area: string
     qty: string
     status: string
+    isTrial?: boolean
   }>
   recentActivities: Array<{
     id: string
@@ -48,11 +54,12 @@ interface DashboardClientProps {
   }>
   subOverview: {
     active: number
-    paused: number
-    cancelled: number
     pending: number
   }
-  rawMilkPricing?: any
+  rawMilkPricing?: {
+    next_prices?: Record<string, number>
+    prices?: Record<string, number>
+  }
 }
 
 export default function DashboardClient({ 
@@ -62,23 +69,36 @@ export default function DashboardClient({
   subOverview,
   rawMilkPricing
 }: DashboardClientProps) {
-  const [greeting, setGreeting] = useState('Good Morning')
-  const [formattedDate, setFormattedDate] = useState('')
+  const router = useRouter()
+  const now = new Date()
+  const hour = now.getHours()
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  const formattedDate = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`
+
+  // Modals state
+  const [showSelectCustomer, setShowSelectCustomer] = useState(false)
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null)
+  const [showSkipModal, setShowSkipModal] = useState(false)
+  const [showExtraMilkModal, setShowExtraMilkModal] = useState(false)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'skip' | 'extra' | 'subscription'>('skip')
 
   // Milk Pricing Modal State
   const [showPriceModal, setShowPriceModal] = useState(false)
-  const [prices, setPrices] = useState({ '0.5': '41', '1.0': '82', '1.5': '124', '2.0': '165' })
-  const [priceApplyMode, setPriceApplyMode] = useState<'next_month' | 'immediate'>('next_month')
+  const [prices, setPrices] = useState({ '0.5': '40', '1.0': '80', '1.5': '120', '2.0': '160' })
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
   const [priceMessage, setPriceMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null)
 
   const openPriceModal = () => {
-    const activePricesToEdit = rawMilkPricing?.next_prices || rawMilkPricing?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
+    const activePricesToEdit = rawMilkPricing?.next_prices || rawMilkPricing?.prices || { '0.5': 40, '1.0': 80, '1.5': 120, '2.0': 160 };
     setPrices({
-      '0.5': activePricesToEdit['0.5']?.toString() || '41.34',
-      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '82.67',
-      '1.5': activePricesToEdit['1.5']?.toString() || '124',
-      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '165.34'
+      '0.5': activePricesToEdit['0.5']?.toString() || '40',
+      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '80',
+      '1.5': activePricesToEdit['1.5']?.toString() || '120',
+      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '160'
     })
     setShowPriceModal(true)
   }
@@ -99,7 +119,7 @@ export default function DashboardClient({
         throw new Error("Please enter valid positive prices for all tiers.")
       }
 
-      const body: any = { key: 'milk_tier_prices' };
+      const body: { key: string; value?: { prices: Record<string, number>; next_prices: Record<string, number>; effective_date: string } } = { key: 'milk_tier_prices' }
       
       // Apply next month
       const today = new Date();
@@ -108,8 +128,8 @@ export default function DashboardClient({
       
       // Fetch current to keep it
       const res = await fetch('/api/admin/settings?key=milk_tier_prices');
-      const currentData = await res.json();
-      const currentPrices = currentData?.value?.prices || { '0.5': 41.34, '1.0': 82.67, '1.5': 124, '2.0': 165.34 };
+      const currentData: { value?: { prices?: Record<string, number> } } = await res.json()
+      const currentPrices = currentData?.value?.prices || { '0.5': 40, '1.0': 80, '1.5': 120, '2.0': 160 };
 
       body.value = {
         prices: currentPrices,
@@ -132,37 +152,24 @@ export default function DashboardClient({
         setPriceMessage(null)
       }, 2000)
 
-    } catch (err: any) {
-      setPriceMessage({ text: err.message, type: 'error' })
+    } catch (err: unknown) {
+      setPriceMessage({ text: err instanceof Error ? err.message : 'Failed to update price', type: 'error' })
     } finally {
       setIsUpdatingPrice(false)
     }
   }
 
-  useEffect(() => {
-    const hr = new Date().getHours()
-    if (hr < 12) setGreeting('Good Morning')
-    else if (hr < 17) setGreeting('Good Afternoon')
-    else setGreeting('Good Evening')
-
-    const d = new Date()
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    setFormattedDate(`${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`)
-  }, [])
 
   // Calculate percentages for subscription breakdown
-  const totalSubs = subOverview.active + subOverview.paused + subOverview.cancelled + subOverview.pending || 1
+  const totalSubs = subOverview.active + subOverview.pending || 1
   const activePct = Math.round((subOverview.active / totalSubs) * 100)
-  const pausedPct = Math.round((subOverview.paused / totalSubs) * 100)
   const pendingPct = Math.round((subOverview.pending / totalSubs) * 100)
-  const cancelledPct = Math.round((subOverview.cancelled / totalSubs) * 100)
 
   return (
     <div className="space-y-6">
       
       {/* =========================================
-          SECTION 1 — HERO WELCOME BANNER
+          SECTION 1 â€” HERO WELCOME BANNER
       ========================================= */}
       <div className="rounded-3xl p-7 md:p-8 relative overflow-hidden text-white bg-[#014DA4] dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-950 shadow-lg border border-white/5 dark:border-slate-800">
         {/* Decorative background blurs */}
@@ -173,7 +180,8 @@ export default function DashboardClient({
           {/* Welcome Text */}
           <div>
             <h1 className="text-[22px] font-black font-display flex items-center gap-2 text-white dark:text-slate-100">
-              {greeting}, Admin 👋
+              <span>{greeting}, Admin</span>
+              <Sparkles size={18} className="text-blue-100/90" aria-hidden="true" />
             </h1>
             <p className="text-[12px] font-medium text-blue-200/70 dark:text-slate-400 mt-1">
               {formattedDate}
@@ -186,17 +194,17 @@ export default function DashboardClient({
           {/* Quick Stat Pills */}
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>🥛</span>
+              <Droplet size={12} className="text-blue-100" aria-hidden="true" />
               <span>{stats.totalLitresToday}L delivering today</span>
             </div>
-            
+
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>👥</span>
+              <Users size={12} className="text-blue-100" aria-hidden="true" />
               <span>{stats.activeSubscriptions} active customers</span>
             </div>
 
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>⏰</span>
+              <Clock size={12} className="text-blue-100" aria-hidden="true" />
               <span>Cutoff: 9:00 PM</span>
             </div>
           </div>
@@ -227,7 +235,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 2 — KPI METRIC CARDS
+          SECTION 2 â€” KPI METRIC CARDS
       ========================================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
@@ -325,7 +333,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 3 — TWO COLUMN (60/40 SPLIT)
+          SECTION 3 â€” TWO COLUMN (60/40 SPLIT)
       ========================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         
@@ -407,6 +415,7 @@ export default function DashboardClient({
                             <div>
                               <p className="text-[13.5px] font-extrabold text-slate-800 dark:text-slate-100 leading-none">
                                 {del.customerName}
+                                {del.isTrial && <span className="ml-2 text-[8px] uppercase tracking-widest bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded-md font-black">TRIAL</span>}
                               </p>
                               <p className="text-[10.5px] font-bold text-slate-400 dark:text-slate-550 mt-1">
                                 ID: #{String(del.id).slice(-4)}
@@ -454,13 +463,29 @@ export default function DashboardClient({
 
           {/* Actions Grid */}
           <div className="grid grid-cols-2 gap-3.5 mt-5 flex-1">
-            <Link 
-              href="/admin/deliveries" 
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
+            <button 
+              onClick={() => { setPendingAction('skip'); setShowSelectCustomer(true) }}
+              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-amber-400/50 dark:hover:border-amber-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs cursor-pointer h-[78px]"
             >
-              <Truck size={22} className="text-blue-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Delivery List</span>
-            </Link>
+              <SkipForward size={22} className="text-amber-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Mark Skip</span>
+            </button>
+
+            <button 
+              onClick={() => { setPendingAction('extra'); setShowSelectCustomer(true) }}
+              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-cyan-400/50 dark:hover:border-cyan-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs cursor-pointer h-[78px]"
+            >
+              <Droplet size={22} className="text-cyan-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">Add Extra Milk</span>
+            </button>
+
+            <button 
+              onClick={() => { setPendingAction('subscription'); setShowSelectCustomer(true) }}
+              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs cursor-pointer h-[78px]"
+            >
+              <Wallet size={22} className="text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">New Subscription</span>
+            </button>
 
             <Link 
               href="/admin/customers" 
@@ -482,24 +507,8 @@ export default function DashboardClient({
               href="/admin/deliveries" 
               className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
             >
-              <SkipForward size={22} className="text-amber-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Mark Skip</span>
-            </Link>
-
-            <Link 
-              href="/admin/reports" 
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
-            >
-              <BarChart2 size={22} className="text-rose-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Monthly Report</span>
-            </Link>
-
-            <Link 
-              href="/admin/products" 
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
-            >
-              <Package size={22} className="text-indigo-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Update Stock</span>
+              <Truck size={22} className="text-indigo-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Delivery List</span>
             </Link>
 
             <button 
@@ -515,7 +524,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 4 — THREE COLUMN BOTTOM
+          SECTION 4 â€” THREE COLUMN BOTTOM
       ========================================= */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
@@ -530,17 +539,13 @@ export default function DashboardClient({
             <div className="w-full h-2.5 rounded-full overflow-hidden flex bg-slate-100 dark:bg-slate-950/80 mb-4 shadow-3xs">
               <div style={{ width: `${activePct}%` }} className="bg-emerald-500" title={`Active: ${activePct}%`} />
               <div style={{ width: `${pendingPct}%` }} className="bg-blue-500" title={`Pending: ${pendingPct}%`} />
-              <div style={{ width: `${pausedPct}%` }} className="bg-amber-400" title={`Paused: ${pausedPct}%`} />
-              <div style={{ width: `${cancelledPct}%` }} className="bg-rose-500" title={`Cancelled: ${cancelledPct}%`} />
             </div>
 
             {/* Segment Legend */}
             <div className="space-y-2.5 mt-4">
               {[
                 { label: 'Active', count: subOverview.active, pct: activePct, color: 'bg-emerald-500', bg: 'bg-emerald-50/35 dark:bg-emerald-950/10 border-emerald-100/50 dark:border-emerald-900/20' },
-                { label: 'Pending', count: subOverview.pending, pct: pendingPct, color: 'bg-blue-500', bg: 'bg-blue-50/35 dark:bg-blue-950/10 border-blue-100/50 dark:border-blue-900/20' },
-                { label: 'Paused', count: subOverview.paused, pct: pausedPct, color: 'bg-amber-400', bg: 'bg-amber-50/35 dark:bg-amber-950/10 border-amber-100/50 dark:border-amber-900/20' },
-                { label: 'Cancelled', count: subOverview.cancelled, pct: cancelledPct, color: 'bg-rose-500', bg: 'bg-rose-50/35 dark:bg-rose-950/10 border-rose-100/50 dark:border-rose-900/20' }
+                { label: 'Pending', count: subOverview.pending, pct: pendingPct, color: 'bg-blue-500', bg: 'bg-blue-50/35 dark:bg-blue-950/10 border-blue-100/50 dark:border-blue-900/20' }
               ].map((item) => (
                 <div 
                   key={item.label} 
@@ -577,33 +582,41 @@ export default function DashboardClient({
 
           {/* Timeline List */}
           <div className="space-y-5 relative flex-1 mt-2">
-            {/* Timeline connector line */}
-            <div className="absolute left-[11px] top-2 bottom-2 w-[2px] bg-slate-100 dark:bg-slate-800" />
+            {recentActivities.length === 0 ? (
+              <div className="py-8 text-center text-[12.5px] font-bold text-slate-400 dark:text-slate-500">
+                No recent activity.
+              </div>
+            ) : (
+              <>
+                {/* Timeline connector line */}
+                <div className="absolute left-[11px] top-2 bottom-2 w-[2px] bg-slate-100 dark:bg-slate-800" />
 
-            {recentActivities.map((act) => {
-              const dotColorClass = {
-                blue: 'bg-blue-500',
-                green: 'bg-emerald-500',
-                amber: 'bg-amber-400',
-                red: 'bg-rose-500'
-              }[act.type] || 'bg-blue-500';
+                {recentActivities.map((act) => {
+                  const dotColorClass = {
+                    blue: 'bg-blue-500',
+                    green: 'bg-emerald-500',
+                    amber: 'bg-amber-400',
+                    red: 'bg-rose-500'
+                  }[act.type] || 'bg-blue-500';
 
-              return (
-                <div key={act.id} className="flex gap-4 relative z-10 items-start">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 shadow-3xs flex-shrink-0">
-                    <div className={cn("w-2 h-2 rounded-full", dotColorClass)} />
-                  </div>
-                  <div className="pt-0.5">
-                    <p className="text-[13px] font-extrabold text-slate-700 dark:text-slate-200 leading-snug">
-                      {act.text}
-                    </p>
-                    <p className="text-[10.5px] font-bold text-slate-400 dark:text-slate-500 mt-1">
-                      {act.time}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+                  return (
+                    <div key={act.id} className="flex gap-4 relative z-10 items-start">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 shadow-3xs flex-shrink-0">
+                        <div className={cn("w-2 h-2 rounded-full", dotColorClass)} />
+                      </div>
+                      <div className="pt-0.5">
+                        <p className="text-[13px] font-extrabold text-slate-700 dark:text-slate-200 leading-snug">
+                          {act.text}
+                        </p>
+                        <p className="text-[10.5px] font-bold text-slate-400 dark:text-slate-500 mt-1">
+                          {act.time}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
           </div>
         </div>
 
@@ -669,7 +682,6 @@ export default function DashboardClient({
             <p className="text-slate-550 dark:text-slate-400 text-sm mb-6 leading-relaxed">
               Set the new daily price for each tier explicitly. This allows you to set custom prices for different quantities.
             </p>
-
             <div className="mb-6 grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">0.5 L (₹)</label>
@@ -689,46 +701,11 @@ export default function DashboardClient({
               </div>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-3 uppercase tracking-wider">
-                Application Method
-              </label>
-              
-              <div className="space-y-3">
-                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors bg-slate-50/25 dark:bg-slate-950/20">
-                  <input 
-                    type="radio" 
-                    name="applyMode" 
-                    value="next_month"
-                    checked={priceApplyMode === 'next_month'}
-                    onChange={() => setPriceApplyMode('next_month')}
-                    className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                  />
-                  <div>
-                    <div className="font-bold text-slate-900 dark:text-white text-sm">Apply on Next Renewal (Recommended)</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                      New signups get the new price immediately. Existing customers finish their current month at their old price, avoiding billing confusion mid-month.
-                    </div>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors bg-slate-50/25 dark:bg-slate-950/20">
-                  <input 
-                    type="radio" 
-                    name="applyMode" 
-                    value="immediate"
-                    checked={priceApplyMode === 'immediate'}
-                    onChange={() => setPriceApplyMode('immediate')}
-                    className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                  />
-                  <div>
-                    <div className="font-bold text-slate-900 dark:text-white text-sm">Apply Immediately</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                      Instantly changes the price for everyone. Note: This will cause current month bills to be pro-rated, which may confuse existing customers.
-                    </div>
-                  </div>
-                </label>
-              </div>
+            <div className="mb-6 rounded-xl p-4 border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
+              <span className="font-bold text-[#014DA4] dark:text-blue-400 block mb-1">
+                Schedule: Next Renewal Cycle
+              </span>
+              New signups get the new price immediately. Existing customers finish their current month at their old price, avoiding billing confusion mid-month.
             </div>
 
             {priceMessage && (
@@ -752,6 +729,67 @@ export default function DashboardClient({
           </div>
         </div>
       )}
+      {/* Modals for customer selection & customer actions */}
+      <SelectCustomerModal 
+        isOpen={showSelectCustomer}
+        onClose={() => setShowSelectCustomer(false)}
+        actionContext={
+          pendingAction === 'skip' ? { title: 'Skip Day', subtitle: 'Select customer to mark skip' }
+          : pendingAction === 'extra' ? { title: 'Extra Milk', subtitle: 'Select customer for extra order' }
+          : { title: 'New Subscription', subtitle: 'Select customer to subscribe' }
+        }
+        onSelect={(customerId, customerName) => {
+          setShowSelectCustomer(false)
+          setSelectedCustomerId(customerId)
+          setSelectedCustomerName(customerName)
+          if (pendingAction === 'skip') setShowSkipModal(true)
+          else if (pendingAction === 'extra') setShowExtraMilkModal(true)
+          else if (pendingAction === 'subscription') setShowSubscriptionModal(true)
+        }}
+      />
+
+      {selectedCustomerId && selectedCustomerName && (
+        <>
+          <AdminSkipModal 
+            key={`${selectedCustomerId}-${showSkipModal ? 'open' : 'closed'}`}
+            isOpen={showSkipModal}
+            onClose={() => {
+              setShowSkipModal(false)
+              setSelectedCustomerId(null)
+              setSelectedCustomerName(null)
+            }}
+            onSuccess={() => router.refresh()}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomerName}
+          />
+          <AdminExtraMilkModal 
+            isOpen={showExtraMilkModal}
+            onClose={() => {
+              setShowExtraMilkModal(false)
+              setSelectedCustomerId(null)
+              setSelectedCustomerName(null)
+            }}
+            onSuccess={() => router.refresh()}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomerName}
+          />
+          <AdminSubscriptionModal 
+            isOpen={showSubscriptionModal}
+            onClose={() => {
+              setShowSubscriptionModal(false)
+              setSelectedCustomerId(null)
+              setSelectedCustomerName(null)
+            }}
+            onSuccess={() => router.refresh()}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomerName}
+          />
+        </>
+      )}
     </div>
   )
 }
+
+
+
+

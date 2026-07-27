@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { fetchMilkPrices, calculateDailyRate, calculateMonthlyAmount, calculateProRataAmount, getDaysInMonth } from '@/lib/billing';
+import { fetchMilkPrices, fetchTrialPricing, calculateDailyRate, calculateMonthlyAmount, calculateProRataAmount, getDaysInMonth } from '@/lib/billing';
 import { getEarliestStartDateStr } from '@/lib/utils';
 import Razorpay from 'razorpay';
 
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { quantity = 1.0, start_date, excluded_dates = [] } = body;
+    const { quantity = 1.0, start_date, excluded_dates = [], is_trial = false } = body;
 
     if (!start_date) {
       return NextResponse.json({ success: false, message: 'start_date is required' }, { status: 400 });
@@ -37,6 +37,22 @@ export async function POST(request: Request) {
         success: false, 
         message: 'You already have an active or pending subscription.' 
       }, { status: 400 });
+    }
+
+    // Check trial usage
+    if (is_trial) {
+      const { data: profile } = await adminSupabase
+        .from('profiles')
+        .select('has_used_trial')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.has_used_trial) {
+        return NextResponse.json({
+          success: false,
+          message: 'You have already used your trial.'
+        }, { status: 400 });
+      }
     }
 
     // 4. BOOK CAPACITY: Call RPC book_recurring_capacity
@@ -78,7 +94,15 @@ export async function POST(request: Request) {
 
     // 5. Calculate amounts using admin-managed pricing
     const prices = await fetchMilkPrices(adminSupabase);
-    const daily_rate = calculateDailyRate(quantity, prices);
+    let daily_rate = calculateDailyRate(quantity, prices);
+    
+    // Trial pricing logic
+    if (is_trial) {
+      const trialPricing = await fetchTrialPricing(adminSupabase);
+      if (trialPricing.enabled) {
+        daily_rate = calculateDailyRate(quantity, trialPricing.prices);
+      }
+    }
     
     // Calculate earliest start date in IST
     const earliestStartStr = getEarliestStartDateStr();
@@ -94,10 +118,14 @@ export async function POST(request: Request) {
     // Calculate delivery days for this month
     let deliveryDays = 0;
 
-    for (let i = 1; i <= daysInMonth; i++) {
-      const dStr = `${startYear}-${String(startMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      if (dStr >= actualStartDateStr && !excluded_dates.includes(dStr)) {
-        deliveryDays++;
+    if (is_trial) {
+      deliveryDays = 3; // Fixed 3 days for trial
+    } else {
+      for (let i = 1; i <= daysInMonth; i++) {
+        const dStr = `${startYear}-${String(startMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        if (dStr >= actualStartDateStr && !excluded_dates.includes(dStr)) {
+          deliveryDays++;
+        }
       }
     }
 
@@ -127,6 +155,14 @@ export async function POST(request: Request) {
 
     // 7. INSERT subscription with status='pending_payment' (or 'active' in dev mode)
     const initialStatus = razorpay_order_id ? 'pending_payment' : 'active';
+    
+    let end_date = null;
+    if (is_trial) {
+      const endObj = new Date(actualStartDateObj);
+      endObj.setDate(endObj.getDate() + 2); // start + 2 days = 3 total days
+      end_date = endObj.toISOString().split('T')[0];
+    }
+    
     const { data: subscription, error: subError } = await adminSupabase
       .from('subscriptions')
       .insert({
@@ -136,7 +172,9 @@ export async function POST(request: Request) {
         daily_rate: daily_rate,
         start_date: actualStartDateStr,
         status: initialStatus,
-        razorpay_subscription_id: razorpay_order_id
+        razorpay_subscription_id: razorpay_order_id,
+        plan_type: is_trial ? 'trial' : 'standard',
+        end_date: end_date
       })
       .select()
       .single();
@@ -178,6 +216,17 @@ export async function POST(request: Request) {
 
     if (waitlistUpdateError) {
       console.error('Waitlist conversion error:', waitlistUpdateError.message);
+    }
+
+    if (is_trial) {
+      const { error: profileError } = await adminSupabase
+        .from('profiles')
+        .update({ has_used_trial: true })
+        .eq('id', user.id);
+      
+      if (profileError) {
+        console.error('Profile update error:', profileError.message);
+      }
     }
 
     // 9. Return Razorpay order details for payment modal

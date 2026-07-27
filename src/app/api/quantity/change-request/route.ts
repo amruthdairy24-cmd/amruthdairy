@@ -71,17 +71,17 @@ export async function POST(request: Request) {
       }
     }
 
-    // 9. INSERT quantity_change_requests (using adminClient — RLS requires it)
+    // 9. INSERT quantity_changes (using adminClient — RLS requires it)
     const { error: insertError } = await adminSupabase
-      .from('quantity_change_requests')
+      .from('quantity_changes')
       .insert({
         subscription_id: subscription.id,
         customer_id: user.id,
-        current_quantity: subscription.quantity_litres,
-        requested_quantity: new_quantity,
+        from_quantity: subscription.quantity_litres,
+        to_quantity: new_quantity,
         new_monthly_amount: new_monthly_amount,
         new_daily_rate: new_daily_rate,
-        effective_from_month: effective_month,
+        effective_month: effective_month,
         status: 'pending'
       });
 

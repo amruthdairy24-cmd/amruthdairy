@@ -164,18 +164,6 @@ export function calculateSkipCredit(dailyRate: number): number {
   return Math.round(dailyRate * 100) / 100
 }
 
-/**
- * Calculate vacation credit amount.
- * @param dailyRate - The subscription's daily rate
- * @param totalDays - Number of vacation days
- * @returns Credit amount in rupees
- */
-export function calculateVacationCredit(
-  dailyRate: number,
-  totalDays: number
-): number {
-  return Math.round(dailyRate * totalDays * 100) / 100
-}
 
 /**
  * Calculate extra milk charge.
@@ -192,10 +180,12 @@ export interface TieredPricingValue {
 }
 
 const DEFAULT_TIER_PRICES = {
-  "0.5": 41.34,
-  "1": 82.67,
-  "1.5": 124,
-  "2": 165.34
+  "0.5": 40,
+  "1": 80,
+  "1.0": 80,
+  "1.5": 120,
+  "2": 160,
+  "2.0": 160
 };
 
 export function calculateDailyRate(
@@ -211,7 +201,7 @@ export function calculateDailyRate(
     return prices[qtyStr2];
   }
   // Fallback if quantity is non-standard
-  const baseRate = prices["1.0"] || prices["1"] || 82.67;
+  const baseRate = prices["1.0"] || prices["1"] || 80;
   return Math.round(baseRate * quantity * 100) / 100;
 }
 
@@ -219,7 +209,7 @@ export function calculateExtraMilkCharge(
   extraLitres: number,
   prices: Record<string, number>
 ): number {
-  const baseRate = prices["1"] || 82.67;
+  const baseRate = prices["1.0"] || prices["1"] || 80;
   return Math.round(baseRate * extraLitres * 100) / 100;
 }
 
@@ -299,3 +289,37 @@ export async function fetchMilkPricesClient(): Promise<Record<string, number>> {
   return DEFAULT_TIER_PRICES;
 }
 
+export interface TrialPricingValue {
+  enabled: boolean;
+  prices: Record<string, number>;
+}
+
+export async function fetchTrialPricing(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adminClient: { from: (table: string) => any }
+): Promise<TrialPricingValue> {
+  const { data, error } = await adminClient
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'trial_pricing')
+    .single()
+
+  if (error || !data || !data.value) {
+    return { enabled: false, prices: DEFAULT_TIER_PRICES };
+  }
+
+  return data.value as TrialPricingValue;
+}
+
+export async function fetchTrialPricingClient(): Promise<TrialPricingValue> {
+  try {
+    const res = await fetch('/api/admin/settings?key=trial_pricing')
+    const data = await res.json()
+    if (data.success && data.value) {
+      return data.value as TrialPricingValue;
+    }
+  } catch (err) {
+    console.warn('[billing] Failed to fetch trial price from API, using default')
+  }
+  return { enabled: false, prices: DEFAULT_TIER_PRICES };
+}

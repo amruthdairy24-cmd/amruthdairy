@@ -36,7 +36,7 @@ const playfairDisplay = Playfair_Display({
 export const metadata: Metadata = {
   title: 'Amruth Milk — Farm Fresh Milk Subscription · Padil, Mangalore',
   description:
-    'Manage your daily milk subscription with one tap. Skip, pause for vacation, order extra, pay bills online. Fresh milk from Amruth Dairy, Padil, Mangalore — delivered to your door every morning.',
+    'Manage your daily milk subscription with one tap. Skip days, order extra, pay bills online. Fresh milk from Amruth Dairy, Padil, Mangalore — delivered to your door every morning.',
   keywords: [
     'milk subscription Mangalore',
     'fresh milk delivery Padil',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'EKodrix', url: 'https://ekodrix.com' }],
   openGraph: {
     title: 'Amruth Milk — Farm Fresh Daily Milk Subscription',
-    description: 'Fresh milk delivered every morning. Manage subscriptions, skip days, pause for vacation — all online.',
+    description: 'Fresh milk delivered every morning. Manage subscriptions, skip days, order extra — all online.',
     type: 'website',
     locale: 'en_IN',
   },
@@ -73,6 +73,19 @@ export default function RootLayout({
             <Toaster position="bottom-center" />
           </CartProvider>
         </ThemeProvider>
+        {/* Global SVG Color Swap Filter for Dark Mode Logo Inversion */}
+        <svg className="fixed top-0 left-0 w-0 h-0 pointer-events-none opacity-0" aria-hidden="true" focusable="false">
+          <defs>
+            <filter id="logo-invert-filter">
+              <feColorMatrix type="matrix" values="
+                -1  0  0  0  1
+                -1  0  0  0  1
+                -1  0  0  0  1
+                -1  0  0  1  0
+              " />
+            </filter>
+          </defs>
+        </svg>
       </body>
     </html>
   )

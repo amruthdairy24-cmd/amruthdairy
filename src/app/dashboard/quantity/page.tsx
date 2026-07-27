@@ -5,6 +5,7 @@ import { ArrowLeftRight, Milk, AlertTriangle, CheckCircle, Info, ArrowRight, Spa
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 const QUANTITY_OPTIONS = [
   { litres: 0.5, label: '½ L', description: 'Perfect for 1-2 people' },
@@ -37,6 +38,8 @@ const itemVariants = {
 } as const
 
 export default function QuantityChangePage() {
+  const { data, loading: contextLoading, refetch } = useDashboardData()
+
   const [pageLoading, setPageLoading] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -48,27 +51,23 @@ export default function QuantityChangePage() {
   const [selectedQty, setSelectedQty] = useState<number | null>(null)
   const [pendingChange, setPendingChange] = useState<{ quantity: number; amount: number } | null>(null)
 
-  async function loadData() {
-    try {
-      setPageLoading(true)
-      const res = await fetch('/api/customer/dashboard')
-      const json = await res.json()
-      if (json.success && json.subscription) {
-        setCurrentQty(json.subscription.quantity_litres)
-        setCurrentDailyRate(json.subscription.daily_rate)
-        setCurrentMonthly(json.subscription.monthly_amount)
-        if (json.next_month_change) setPendingChange(json.next_month_change)
-      } else {
-        setError(json.message || 'Failed to load subscription details')
+  useEffect(() => {
+    if (data) {
+      if (data.subscription) {
+        setCurrentQty(data.subscription.quantity_litres)
+        setCurrentDailyRate(data.subscription.daily_rate)
+        setCurrentMonthly(data.subscription.monthly_amount)
       }
-    } catch (err) {
-      setError('Network error loading data')
-    } finally {
+      setPendingChange(data.next_month_change || null)
+      setPageLoading(false)
+    } else if (!contextLoading) {
       setPageLoading(false)
     }
-  }
+  }, [data, contextLoading])
 
-  useEffect(() => { loadData() }, [])
+  async function loadData() {
+    await refetch()
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

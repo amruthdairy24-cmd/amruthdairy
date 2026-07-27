@@ -2,12 +2,12 @@
 
 import Script from 'next/script'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Calendar, MapPin, CreditCard, CheckCircle,
   ArrowRight, User, Home, Building2, FileText,
   Phone, ShieldCheck, Clock, Leaf, ChevronDown,
-  Package, Tag, Milk, AlertCircle
+  Package, Tag, Milk, AlertCircle, Search
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -36,6 +36,10 @@ export default function OnboardingPage() {
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [area, setArea] = useState('Padil')
+  const [areaOpen, setAreaOpen] = useState(false)
+  const [areaSearch, setAreaSearch] = useState('')
+  const areaRef = useRef<HTMLDivElement>(null)
+  const areaSearchRef = useRef<HTMLInputElement>(null)
   const [landmark, setLandmark] = useState('')
   const [floorNotes, setFloorNotes] = useState('')
 
@@ -45,9 +49,11 @@ export default function OnboardingPage() {
   const [minAllowedDate, setMinAllowedDate] = useState('')
   const [deliveryNotes, setDeliveryNotes] = useState('')
   const [excludedDates, setExcludedDates] = useState<string[]>([])
+  const [isTrial, setIsTrial] = useState(false)
 
   // Admin-managed pricing
   const [milkPrices, setMilkPrices] = useState<Record<string, number>>({})
+  const [trialPricing, setTrialPricing] = useState<{enabled: boolean, prices: Record<string, number>}>({enabled: false, prices: {}})
   const [priceLoading, setPriceLoading] = useState(true)
 
   const [monthlyAmount, setMonthlyAmount] = useState(0)
@@ -56,10 +62,23 @@ export default function OnboardingPage() {
   const [deliveryDays, setDeliveryDays] = useState(0)
   const [isMonthFull, setIsMonthFull] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
+  const [hasUsedTrial, setHasUsedTrial] = useState(false)
 
   const handleExcludedDatesChange = useCallback((dates: string[]) => {
     setExcludedDates(dates)
   }, [])
+
+  // Close area dropdown when clicking outside
+  useEffect(() => {
+    if (!areaOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      if (areaRef.current && !areaRef.current.contains(e.target as Node)) {
+        setAreaOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [areaOpen])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -83,8 +102,12 @@ export default function OnboardingPage() {
   useEffect(() => {
     async function loadPrice() {
       setPriceLoading(true)
-      const prices = await fetchMilkPricesClient()
+      const [prices, trialData] = await Promise.all([
+        fetchMilkPricesClient(),
+        import('@/lib/billing').then(m => m.fetchTrialPricingClient())
+      ]);
       setMilkPrices(prices)
+      setTrialPricing(trialData)
       setPriceLoading(false)
     }
     loadPrice()
@@ -92,9 +115,10 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     if (!startDate || Object.keys(milkPrices).length === 0) return
-    const dRate = calculateDailyRate(quantity, milkPrices)
+    const activePrices = (isTrial && trialPricing.enabled) ? trialPricing.prices : milkPrices;
+    const dRate = calculateDailyRate(quantity, activePrices)
     setDailyRate(dRate)
-  }, [quantity, startDate, milkPrices])
+  }, [quantity, startDate, milkPrices, isTrial, trialPricing])
 
   useEffect(() => {
     setMonthlyAmount(deliveryDays * dailyRate)
@@ -110,6 +134,7 @@ export default function OnboardingPage() {
             return
           }
           if (data.profile) {
+            setHasUsedTrial(data.profile.has_used_trial || false)
             setFullName(data.profile.full_name || '')
             const cleanPhone = (data.profile.phone || '').replace(/\D/g, '')
             setPhone(cleanPhone.length === 12 && cleanPhone.startsWith('91') ? cleanPhone.slice(2) : cleanPhone)
@@ -157,7 +182,7 @@ export default function OnboardingPage() {
         const res = await fetch('/api/subscription/new', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quantity, start_date: startDate, excluded_dates: excludedDates })
+          body: JSON.stringify({ quantity, start_date: startDate, excluded_dates: excludedDates, is_trial: isTrial })
         })
         const data = await res.json()
         if (data.waitlisted) {
@@ -186,7 +211,7 @@ export default function OnboardingPage() {
       const res = await fetch('/api/subscription/new', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity, start_date: startDate, excluded_dates: excludedDates })
+        body: JSON.stringify({ quantity, start_date: startDate, excluded_dates: excludedDates, is_trial: isTrial })
       })
       const data = await res.json()
       if (data.success) {
@@ -428,18 +453,73 @@ export default function OnboardingPage() {
                           <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1">
                             <MapPin size={12} /> Delivery Locality / Area
                           </label>
-                          <div className="relative flex items-center">
-                            <MapPin size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 pointer-events-none z-10" />
-                            <select
-                              value={area}
-                              onChange={e => setArea(e.target.value)}
-                              className="w-full h-11 pl-11 pr-10 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm appearance-none cursor-pointer"
+                          <div className="relative" ref={areaRef}>
+                            {/* Trigger button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAreaOpen(o => {
+                                  if (!o) {
+                                    setAreaSearch('')
+                                    setTimeout(() => areaSearchRef.current?.focus(), 50)
+                                  }
+                                  return !o
+                                })
+                              }}
+                              className="w-full h-11 pl-11 pr-10 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer text-left flex items-center"
                             >
-                              {DELIVERY_AREAS.map(a => (
-                                <option key={a} value={a}>{a}</option>
-                              ))}
-                            </select>
-                            <ChevronDown size={14} className="absolute right-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                              <MapPin size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                              <span className="truncate">{area}</span>
+                              <ChevronDown
+                                size={14}
+                                className={`absolute right-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${areaOpen ? 'rotate-180' : ''}`}
+                              />
+                            </button>
+
+                            {/* Searchable dropdown — always opens downward */}
+                            {areaOpen && (
+                              <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden">
+                                {/* Search input */}
+                                <div className="sticky top-0 p-2 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+                                  <div className="relative flex items-center">
+                                    <Search size={13} className="absolute left-3 text-slate-400 pointer-events-none" />
+                                    <input
+                                      ref={areaSearchRef}
+                                      type="text"
+                                      value={areaSearch}
+                                      onChange={e => setAreaSearch(e.target.value)}
+                                      placeholder="Search area..."
+                                      className="w-full h-8 pl-8 pr-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-800 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    />
+                                  </div>
+                                </div>
+                                {/* Filtered list */}
+                                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                  {DELIVERY_AREAS.filter(a =>
+                                    a.toLowerCase().includes(areaSearch.toLowerCase())
+                                  ).length === 0 ? (
+                                    <p className="px-4 py-3 text-xs text-slate-400 text-center">No areas found</p>
+                                  ) : (
+                                    DELIVERY_AREAS.filter(a =>
+                                      a.toLowerCase().includes(areaSearch.toLowerCase())
+                                    ).map(a => (
+                                      <button
+                                        key={a}
+                                        type="button"
+                                        onClick={() => { setArea(a); setAreaOpen(false); setAreaSearch('') }}
+                                        className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer ${
+                                          a === area
+                                            ? 'bg-blue-600 text-white'
+                                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                        }`}
+                                      >
+                                        {a}
+                                      </button>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -531,6 +611,46 @@ export default function OnboardingPage() {
                     </div>
 
                     <form onSubmit={handlePlanSubmit} className="space-y-4">
+                      
+                      {/* Plan Type Selector */}
+                      {!hasUsedTrial && (
+                        <div className="flex flex-col gap-1.5 mb-2">
+                          <label className="text-xs font-bold text-slate-600 dark:text-slate-300">Select Plan Type</label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => { setIsTrial(false); setDeliveryDays(getDaysInMonth(new Date(startDate || new Date()).getFullYear(), new Date(startDate || new Date()).getMonth() + 1)) }}
+                              className={cn(
+                                'relative flex flex-col items-center justify-center p-3.5 bg-slate-50 dark:bg-slate-950 border-2 rounded-2xl cursor-pointer transition-all hover:bg-slate-100 dark:bg-slate-800',
+                                !isTrial
+                                  ? 'border-blue-600 bg-blue-50/40 hover:bg-blue-50 dark:bg-blue-900/20'
+                                  : 'border-slate-200 dark:border-slate-800'
+                              )}
+                            >
+                              {!isTrial && <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center">✓</div>}
+                              <span className="text-sm font-black text-slate-900 dark:text-white">Standard Monthly</span>
+                              <span className="text-[10px] font-semibold text-slate-500 mt-1">Pay for the whole month</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => { setIsTrial(true); setDeliveryDays(3); setExcludedDates([]); }}
+                              className={cn(
+                                'relative flex flex-col items-center justify-center p-3.5 bg-slate-50 dark:bg-slate-950 border-2 rounded-2xl cursor-pointer transition-all hover:bg-slate-100 dark:bg-slate-800 overflow-hidden',
+                                isTrial
+                                  ? 'border-purple-600 bg-purple-50/40 hover:bg-purple-50 dark:bg-purple-900/20'
+                                  : 'border-slate-200 dark:border-slate-800'
+                              )}
+                            >
+                              <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-pink-500 text-white text-[8px] font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-wider">Popular</div>
+                              {isTrial && <div className="absolute top-2 left-2 w-4 h-4 rounded-full bg-purple-600 text-white text-[10px] font-black flex items-center justify-center">✓</div>}
+                              <span className="text-sm font-black text-slate-900 dark:text-white mt-2">3-Day Trial</span>
+                              <span className="text-[10px] font-semibold text-slate-500 mt-1">Try before you commit</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Quantity selector */}
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-600 dark:text-slate-300">Daily Milk Quantity</label>
@@ -872,11 +992,11 @@ export default function OnboardingPage() {
                 </div>
               </div>
               <a
-                href="tel:+91+91 9880143808"
+                href="tel:+919880143808"
                 className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 h-9 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-[11px] font-extrabold text-blue-600 transition-all shadow-sm"
               >
                 <Phone size={13} />
-                +91 98765 43210
+                +91 9880143808
               </a>
             </div>
 

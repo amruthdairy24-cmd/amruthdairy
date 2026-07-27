@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CalendarDays, Milk, ChevronLeft, ChevronRight, Truck, SkipForward, Palmtree, CheckCircle2, Clock, Calendar, Eye } from 'lucide-react'
+import { CalendarDays, Milk, ChevronLeft, ChevronRight, Truck, SkipForward, CheckCircle2, Clock, Calendar, Eye } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 interface DeliveryRecord {
   delivery_date: string
@@ -16,7 +17,6 @@ interface DeliveryRecord {
 interface MonthSummary {
   delivered: number
   skipped: number
-  paused: number
   pending: number
   totalLitres: number
 }
@@ -46,6 +46,8 @@ const itemVariants = {
 } as const
 
 export default function DeliveryHistoryPage() {
+  const { data, loading: contextLoading, refetch } = useDashboardData()
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([])
@@ -55,25 +57,19 @@ export default function DeliveryHistoryPage() {
   const [viewYear, setViewYear] = useState(new Date().getFullYear())
   const [viewMonth, setViewMonth] = useState(new Date().getMonth())
 
-  async function loadData() {
-    try {
-      setLoading(true)
-      const res = await fetch('/api/customer/dashboard')
-      const json = await res.json()
-      if (json.success) {
-        if (json.subscription) setSubQty(json.subscription.quantity_litres)
-        setDeliveries(json.recent_deliveries || [])
-      } else {
-        setError(json.message || 'Failed to load delivery history')
-      }
-    } catch (err) {
-      setError('Network error loading data')
-    } finally {
+  useEffect(() => {
+    if (data) {
+      if (data.subscription) setSubQty(data.subscription.quantity_litres)
+      setDeliveries(data.recent_deliveries || [])
+      setLoading(false)
+    } else if (!contextLoading) {
       setLoading(false)
     }
-  }
+  }, [data, contextLoading])
 
-  useEffect(() => { loadData() }, [])
+  async function loadData() {
+    await refetch()
+  }
 
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
   const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay()
@@ -89,7 +85,7 @@ export default function DeliveryHistoryPage() {
     calendarCells.push({ day: d, record: deliveryMap.get(dateStr) })
   }
 
-  const summary: MonthSummary = { delivered: 0, skipped: 0, paused: 0, pending: 0, totalLitres: 0 }
+  const summary: MonthSummary = { delivered: 0, skipped: 0, pending: 0, totalLitres: 0 }
   calendarCells.forEach(cell => {
     if (cell.day && cell.record) {
       switch (cell.record.delivery_status) {
@@ -97,9 +93,6 @@ export default function DeliveryHistoryPage() {
           summary.delivered++; summary.totalLitres += cell.record.total_litres; break
         case 'skipped':
           summary.skipped++; break
-        case 'paused':
-        case 'vacation':
-          summary.paused++; break
         default:
           summary.pending++; break
       }
@@ -204,23 +197,7 @@ export default function DeliveryHistoryPage() {
           </div>
         </div>
 
-        {/* Card 3: Vacation */}
-        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-850 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between group">
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-widest">Vacation Pause</p>
-            <p className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight mt-1 leading-none font-mono">
-              {summary.paused} Days
-            </p>
-            <p className="text-[10.5px] text-slate-400 dark:text-slate-450 font-semibold mt-1.5 truncate">
-              Subscription pauses
-            </p>
-          </div>
-          <div className="w-11 h-11 rounded-xl bg-blue-500/10 dark:bg-blue-500/10 text-blue-550 dark:text-blue-400 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105">
-            <Palmtree size={20} />
-          </div>
-        </div>
-
-        {/* Card 4: Total Volume */}
+        {/* Card 3: Total Volume */}
         <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-850 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-widest">Total Volume</p>
@@ -303,17 +280,12 @@ export default function DeliveryHistoryPage() {
               cardBg = 'bg-rose-500/3 dark:bg-rose-950/10 hover:bg-rose-500/5 dark:hover:bg-rose-950/20'
               statusIcon = <SkipForward size={13} className="text-rose-500 dark:text-rose-400 flex-shrink-0" />
               statusLabel = 'Skipped'
-              statusColorClass = 'text-rose-650 dark:text-rose-400'
-            } else if (status === 'paused' || status === 'vacation') {
-              cardBg = 'bg-blue-500/3 dark:bg-blue-950/10 hover:bg-blue-500/5 dark:hover:bg-blue-950/20'
-              statusIcon = <Palmtree size={13} className="text-blue-550 dark:text-blue-400 flex-shrink-0" />
-              statusLabel = 'Vacation'
-              statusColorClass = 'text-blue-700 dark:text-blue-400'
+              statusColorClass = 'text-rose-600 dark:text-rose-400'
             } else if (status === 'pending') {
               cardBg = 'bg-amber-500/3 dark:bg-amber-950/10 hover:bg-amber-500/5 dark:hover:bg-amber-950/20 animate-pulse'
               statusIcon = <Clock size={13} className="text-amber-600 dark:text-amber-500 flex-shrink-0" />
               statusLabel = 'Pending'
-              statusColorClass = 'text-amber-705 dark:text-amber-450'
+              statusColorClass = 'text-amber-600 dark:text-amber-450'
             }
 
             return (
@@ -385,13 +357,6 @@ export default function DeliveryHistoryPage() {
               <SkipForward size={11} className="text-rose-500 dark:text-rose-400" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold tracking-wide">Skipped Delivery</span>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded-md bg-blue-500/10 dark:bg-blue-500/10 border border-blue-500/15 dark:border-blue-500/20 flex items-center justify-center flex-shrink-0">
-              <Palmtree size={12} className="text-blue-550 dark:text-blue-450" />
-            </div>
-            <span className="text-[11px] sm:text-xs font-bold tracking-wide">Vacation Pause</span>
           </div>
 
           <div className="flex items-center gap-2.5">

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { User, MapPin, Phone, Edit3, Save, AlertCircle, CheckCircle, Milk, FileText, Calendar, Shield, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DELIVERY_AREAS } from '@/lib/constants'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 interface ProfileData {
   full_name: string
@@ -33,6 +34,8 @@ const itemVariants = {
 } as const
 
 export default function AccountPage() {
+  const { data, loading: contextLoading, refetch } = useDashboardData()
+
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -75,7 +78,7 @@ export default function AccountPage() {
     return nextMonthDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
   }
 
-  async function loadData() {
+  async function loadProfile() {
     try {
       setLoading(true)
       const profileRes = await fetch('/api/customer/profile')
@@ -88,14 +91,6 @@ export default function AccountPage() {
         }
         setProfile(pData); setEditForm(pData)
       }
-
-      const dashRes = await fetch('/api/customer/dashboard')
-      const dashJson = await dashRes.json()
-      if (dashJson.success) {
-        setSubscription(dashJson.subscription || null)
-        setCurrentMonth(dashJson.current_month || null)
-        setLatestPaidMonth(dashJson.latest_paid_month || null)
-      }
     } catch (err) {
       setError('Failed to load account details')
     } finally {
@@ -103,7 +98,21 @@ export default function AccountPage() {
     }
   }
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => {
+    loadProfile()
+  }, [])
+
+  useEffect(() => {
+    if (data) {
+      setSubscription(data.subscription || null)
+      setCurrentMonth(data.current_month || null)
+      setLatestPaidMonth(data.latest_paid_month || null)
+    }
+  }, [data])
+
+  async function loadData() {
+    await Promise.all([loadProfile(), refetch()])
+  }
 
   function startEditing() {
     setEditForm({ ...profile })

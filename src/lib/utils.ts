@@ -40,6 +40,13 @@ export function getIndiaTimeString(): string {
 }
 
 /**
+ * getTodayIST — Returns current date string (YYYY-MM-DD) in Asia/Kolkata timezone
+ */
+export function getTodayIST(): string {
+  return formatInTimeZone(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd')
+}
+
+/**
  * getIndiaHour — Returns current hour (0-23) in India timezone
  */
 export function getIndiaHour(): number {
@@ -183,3 +190,14 @@ export function getEarliestStartDateStr(): string {
   
   return `${year}-${month}-${day}`
 }
+
+/**
+ * isAdminEmail — Returns true if the email matches the ADMIN_EMAIL environment variable.
+ */
+export function isAdminEmail(email?: string | null): boolean {
+  if (!email) return false
+  const adminEmail = process.env.ADMIN_EMAIL
+  if (!adminEmail) return false
+  return email.toLowerCase() === adminEmail.toLowerCase()
+}
+

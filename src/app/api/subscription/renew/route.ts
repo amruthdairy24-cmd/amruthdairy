@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { fetchMilkPrices, calculateDailyRate } from '@/lib/billing';
+import { fetchMilkPrices, calculateDailyRate, calculateProRataAmount } from '@/lib/billing';
 import Razorpay from 'razorpay';
 
 const adminSupabase = createAdminClient();
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     // 1. Get existing subscription
     const { data: existingSub } = await adminSupabase
       .from('subscriptions')
-      .select('id, status')
+      .select('id, status, plan_type, end_date')
       .eq('customer_id', user.id)
       .single();
 
@@ -55,34 +55,37 @@ export async function POST(request: Request) {
     const prices = await fetchMilkPrices(adminSupabase);
     const daily_rate = calculateDailyRate(quantity, prices);
     
-    // Calculate days to charge
+    // Calculate days to charge using billing.ts helper
     const targetDate = new Date(target_month);
     const endOfMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    let daysToCharge = endOfMonth.getDate();
-    
-    // Pro-rate if renewing mid-month for the current month
-    if (today > targetDate && today <= endOfMonth) {
-      const diffTime = Math.abs(endOfMonth.getTime() - today.getTime());
-      daysToCharge = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // inclusive of today
-    }
-    
-    // Now subtract the excluded dates that fall within the remaining period
-    let finalDays = daysToCharge;
-    if (excluded_dates.length > 0) {
-      let current = new Date(Math.max(today.getTime(), targetDate.getTime()));
-      while (current <= endOfMonth) {
-        const dStr = current.toISOString().split('T')[0];
-        if (excluded_dates.includes(dStr)) {
-          finalDays--;
-        }
-        current.setDate(current.getDate() + 1);
+
+    let startDateForCalculationStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth()+1).padStart(2, '0')}-01`;
+
+    if (existingSub.plan_type === 'trial' && existingSub.end_date) {
+      // Upgrade from trial: start from day after trial ends
+      const trialEnd = new Date(existingSub.end_date);
+      const standardStart = new Date(trialEnd);
+      standardStart.setDate(standardStart.getDate() + 1);
+      standardStart.setHours(0, 0, 0, 0);
+      
+      // Ensure we don't start before target month
+      if (standardStart > targetDate) {
+         startDateForCalculationStr = `${standardStart.getFullYear()}-${String(standardStart.getMonth()+1).padStart(2, '0')}-${String(standardStart.getDate()).padStart(2, '0')}`;
       }
+    } else if (today > targetDate && today <= endOfMonth) {
+      startDateForCalculationStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     }
+
+    const excludedDatesSet = new Set<string>(excluded_dates || []);
+    let monthly_amount = calculateProRataAmount(daily_rate, startDateForCalculationStr, excludedDatesSet);
     
-    const monthly_amount = Math.max(0, finalDays) * daily_rate;
+    // Check if the start date is in a future month relative to target_month, then zero it out
+    const startObj = new Date(startDateForCalculationStr);
+    if (startObj > endOfMonth) {
+      monthly_amount = 0;
+    }
 
     // Fetch unapplied adjustments to apply as carry-forward
     const { data: adjustments } = await supabase
@@ -114,26 +117,31 @@ export async function POST(request: Request) {
       razorpay_order_id = order.id;
     }
 
-    // Mark adjustments as applied
-    if (adjustments && adjustments.length > 0) {
-      await adminSupabase
-        .from('billing_adjustments')
-        .update({
-          is_applied: true,
-          target_month: target_month
-        })
-        .in('id', adjustments.map((a: any) => a.id));
-    }
+    // NOTE: Do NOT mark adjustments as is_applied here.
+    // They are only marked after Razorpay confirms payment in /api/payments/verify.
+    // This prevents credit burn on abandoned checkout.
+    const adjustment_ids = (adjustments || []).map((a: any) => a.id);
 
     // 5. Update Subscription (just in case they changed the quantity)
+    const updatePayload: any = {
+      quantity_litres: quantity,
+      daily_rate: daily_rate,
+      status: 'active', // ensure it's active
+      plan_type: 'standard',
+      end_date: null,
+      updated_at: new Date().toISOString()
+    };
+
+    if (existingSub.plan_type === 'trial' && existingSub.end_date) {
+      const trialEnd = new Date(existingSub.end_date);
+      const standardStart = new Date(trialEnd);
+      standardStart.setDate(standardStart.getDate() + 1);
+      updatePayload.start_date = standardStart.toISOString().split('T')[0];
+    }
+
     await adminSupabase
       .from('subscriptions')
-      .update({
-        quantity_litres: quantity,
-        daily_rate: daily_rate,
-        status: 'active', // ensure it's active
-        updated_at: new Date().toISOString()
-      })
+      .update(updatePayload)
       .eq('id', existingSub.id);
 
     // 6. UPSERT billing_month (it will be pending_payment until webhook/frontend confirms)
@@ -153,7 +161,7 @@ export async function POST(request: Request) {
           monthly_amount: monthly_amount,
           daily_rate: daily_rate,
           days_in_month: endOfMonth.getDate(),
-          payment_status: 'paid',
+          payment_status: 'pending',
           net_due: net_due
         })
         .eq('id', existingBillingMonth.id);
@@ -168,7 +176,7 @@ export async function POST(request: Request) {
           monthly_amount: monthly_amount,
           daily_rate: daily_rate,
           days_in_month: endOfMonth.getDate(),
-          payment_status: 'paid',
+          payment_status: 'pending',
           net_due: net_due
         });
     }
@@ -205,7 +213,10 @@ export async function POST(request: Request) {
       daily_rate: daily_rate,
       razorpay_order_id: razorpay_order_id,
       key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      billing_month_id: bMonthData?.id
+      billing_month_id: bMonthData?.id,
+      adjustment_ids: adjustment_ids,
+      carry_in_balance: carryInBalance,
+      net_due: net_due
     });
 
   } catch (err: any) {

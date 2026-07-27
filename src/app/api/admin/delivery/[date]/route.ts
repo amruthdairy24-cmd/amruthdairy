@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { isAdminEmail } from '@/lib/utils';
 
 export async function GET(
   request: NextRequest,
@@ -15,8 +16,7 @@ export async function GET(
     }
 
     // Verify Admin
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
@@ -24,6 +24,13 @@ export async function GET(
 
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return NextResponse.json({ success: false, message: 'Invalid date format (YYYY-MM-DD)' }, { status: 400 });
+    }
+
+    // Populate daily delivery sheet for the given date (Rule: no background cron, so trigger here)
+    const { error: rpcError } = await supabase.rpc('populate_daily_delivery_sheet', { p_date: date });
+    if (rpcError) {
+      console.warn('Populate delivery sheet warning:', rpcError.message);
+      // We log the warning but don't fail, in case the RPC doesn't exist or is not fully tested
     }
 
     // Get daily summary
@@ -70,7 +77,6 @@ export async function GET(
       total_litres: d.total_litres,
       delivery_status: d.delivery_status,
       is_skip: d.is_skip,
-      is_vacation: d.is_vacation,
       is_extra: d.is_extra,
       extra_order_id: d.extra_order_id,
       skip_credit_applied: d.extra_milk_orders?.skip_credit_applied,
@@ -89,7 +95,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       date: date,
-      summary: summary || { total_customers: 0, delivering: 0, skipped: 0, on_vacation: 0, total_litres_needed: 0 },
+      summary: summary || { total_customers: 0, delivering: 0, skipped: 0, total_litres_needed: 0 },
       capacity: capacity || { total_litres: 100, booked_litres: 0 },
       deliveries: formattedDeliveries
     });
@@ -113,8 +119,7 @@ export async function PATCH(
     }
 
     // Verify Admin
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
@@ -207,8 +212,7 @@ export async function PUT(
     }
 
     // Verify Admin
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
@@ -221,8 +225,7 @@ export async function PUT(
       .select('id, subscription_id, extra_order_id')
       .eq('delivery_date', date)
       .eq('delivery_status', 'pending')
-      .eq('is_skip', false)
-      .eq('is_vacation', false);
+      .eq('is_skip', false);
 
     if (fetchError || !pendingDeliveries || pendingDeliveries.length === 0) {
       return NextResponse.json({

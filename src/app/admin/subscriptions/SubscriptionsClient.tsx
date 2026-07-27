@@ -11,6 +11,9 @@ import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
+import { SelectCustomerModal } from '@/components/admin/SelectCustomerModal'
+import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
+import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 
 interface SubscriptionData {
@@ -129,6 +132,12 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('active')
   const [viewingEntry, setViewingEntry] = useState<SubscriptionData | null>(null)
+  
+  // Modals state for New Subscription flow
+  const [showSelectCustomer, setShowSelectCustomer] = useState(false)
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
 
   const stats = useMemo(() => {
     const activeData = data.filter(d => d.status.toLowerCase() === 'active')
@@ -237,6 +246,9 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
           description={`${selectedMonthLabel} — ${stats.total} active subscribers`}
           icon={Wallet}
           actionLabel="New Subscription"
+          onAction={() => {
+            setShowSelectCustomer(true)
+          }}
           hideSearchRow={true}
         />
         <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 shadow-sm">
@@ -328,6 +340,34 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
       )}
 
       <RowDetailsModal isOpen={!!viewingEntry} onClose={() => setViewingEntry(null)} title="Subscription Details" data={viewingEntry} />
+
+      {/* Select Customer Modal */}
+      <SelectCustomerModal 
+        isOpen={showSelectCustomer}
+        onClose={() => setShowSelectCustomer(false)}
+        actionContext={{ title: 'New Subscription', subtitle: 'Select customer to subscribe' }}
+        onSelect={(customerId, customerName) => {
+          setShowSelectCustomer(false)
+          setSelectedCustomerId(customerId)
+          setSelectedCustomerName(customerName)
+          setShowSubscriptionModal(true)
+        }}
+      />
+
+      {/* Admin Subscription Modal */}
+      {selectedCustomerId && selectedCustomerName && (
+        <AdminSubscriptionModal 
+          isOpen={showSubscriptionModal}
+          onClose={() => {
+            setShowSubscriptionModal(false)
+            setSelectedCustomerId(null)
+            setSelectedCustomerName(null)
+          }}
+          onSuccess={() => { router.refresh() }}
+          customerId={selectedCustomerId}
+          customerName={selectedCustomerName}
+        />
+      )}
     </div>
   )
 }

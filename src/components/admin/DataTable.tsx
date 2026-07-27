@@ -18,6 +18,7 @@ interface DataTableProps<T> {
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   onView?: (row: T) => void;
+  renderActions?: (row: T) => ReactNode;
 }
 
 export function DataTable<T extends { id: string | number }>({ 
@@ -26,7 +27,8 @@ export function DataTable<T extends { id: string | number }>({
   isLoading, 
   onEdit, 
   onDelete, 
-  onView 
+  onView,
+  renderActions
 }: DataTableProps<T>) {
   
   if (isLoading) {
@@ -84,7 +86,7 @@ export function DataTable<T extends { id: string | number }>({
                   {col.header}
                 </th>
               ))}
-              {(onEdit || onDelete || onView) && (
+              {(onEdit || onDelete || onView || renderActions) && (
                 <th className="py-4 px-4 text-[10.5px] uppercase font-black tracking-wider text-right text-slate-400 dark:text-slate-500">
                   Actions
                 </th>
@@ -119,9 +121,10 @@ export function DataTable<T extends { id: string | number }>({
                 ))}
 
                 {/* Actions */}
-                {(onEdit || onDelete || onView) && (
+                {(onEdit || onDelete || onView || renderActions) && (
                   <td className="py-3 px-4 text-right">
                     <div className="flex items-center justify-end gap-1.5 transition-opacity duration-150">
+                      {renderActions && renderActions(row)}
                       {onView && (
                         <button 
                           onClick={() => onView(row)} 

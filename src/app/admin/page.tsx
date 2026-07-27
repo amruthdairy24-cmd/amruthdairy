@@ -64,7 +64,7 @@ export default async function AdminDashboardPage() {
   // 4. Fetch Deliveries list (top 6 today)
   const { data: dbDeliveries } = await supabase
     .from('daily_delivery_sheet')
-    .select('id, delivery_status, total_litres, profiles(full_name, area)')
+    .select('id, delivery_status, total_litres, profiles(full_name, area), subscriptions(plan_type)')
     .eq('delivery_date', todayStr)
     .limit(6)
 
@@ -75,6 +75,7 @@ export default async function AdminDashboardPage() {
         area: (item.profiles as any)?.area || 'General',
         qty: `${item.total_litres}L`,
         status: item.delivery_status,
+        isTrial: (item.subscriptions as any)?.plan_type === 'trial'
       }))
     : []
 
@@ -100,19 +101,11 @@ export default async function AdminDashboardPage() {
           type
         }
       })
-    : [
-        { id: '1', text: 'Rajesh Kumar paused subscription for vacation', time: '10 min ago', type: 'amber' },
-        { id: '2', text: 'New subscription added: Priya Sharma (A2 Cow Milk)', time: '1 hour ago', type: 'blue' },
-        { id: '3', text: 'Payment received from Amit Patel · ₹1,240', time: '2 hours ago', type: 'green' },
-        { id: '4', text: 'Delivery route completed by driver: Raj (Zone A)', time: '4 hours ago', type: 'green' },
-        { id: '5', text: 'Waitlist notification sent to Sunita Rao', time: '5 hours ago', type: 'blue' }
-      ]
+    : []
 
   // 6. Subscriptions overview segments
   const subOverview = {
     active: 0,
-    paused: 0,
-    cancelled: 0,
     pending: 0
   }
 

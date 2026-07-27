@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Logo } from '@/components/layout/Logo'
 import { 
   Clock, 
   Heart, 
@@ -125,16 +126,7 @@ export function Footer() {
           <div className="col-span-1 md:col-span-3 xl:col-span-3 border-b border-white/10 pb-6 xl:border-b-0 xl:pb-0 flex flex-col gap-5 xl:pr-8">
             {/* Logo */}
             <div className="flex items-center justify-start">
-              <Link href="/">
-                <Image 
-                  src="/images/logo/amruth-logo.png" 
-                  alt="logo" 
-                  width={110} 
-                  height={73} 
-                  className="w-24 h-auto object-contain [filter:url(#logo-invert-filter)]" 
-                  priority
-                />
-              </Link>
+              <Logo href="/" forceWhiteLogo className="w-24 h-auto object-contain" />
             </div>
 
             <p className="text-xs md:text-sm text-blue-100/90 leading-relaxed">

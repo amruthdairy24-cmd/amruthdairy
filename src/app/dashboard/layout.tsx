@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  LayoutDashboard, SkipForward, Palmtree, PlusCircle, FileText,
+  LayoutDashboard, SkipForward, PlusCircle, FileText,
   LogOut, User, ShoppingBag, Milk, ArrowLeftRight, CalendarDays,
   Menu, X, ChevronDown
 } from 'lucide-react'
@@ -15,12 +15,15 @@ import { createClient } from '@/utils/supabase/client'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConfirmModal } from '@/components/ui'
+import { DashboardDataProvider, useDashboardData } from '@/contexts/DashboardDataContext'
+import { Logo } from '@/components/layout/Logo'
 
 const sidebarGroups = [
   {
     title: 'MAIN',
     items: [
       { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { href: '/dashboard/products', icon: ShoppingBag, label: 'Our Products' },
       { href: '/dashboard/history', icon: CalendarDays, label: 'Delivery History' },
       { href: '/dashboard/bills', icon: FileText, label: 'My Bills' },
     ]
@@ -29,7 +32,6 @@ const sidebarGroups = [
     title: 'SERVICES',
     items: [
       { href: '/dashboard/skip', icon: SkipForward, label: 'Skip Day' },
-      { href: '/dashboard/vacation', icon: Palmtree, label: 'Vacation Pause' },
       { href: '/dashboard/extra', icon: PlusCircle, label: 'Extra Milk' },
     ]
   },
@@ -51,12 +53,10 @@ const mobileNavItems = [
   { href: '/dashboard/account', icon: User, label: 'Account' },
 ]
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { setTheme } = useTheme()
-  const [profileName, setProfileName] = useState('Customer')
-  const [profilePhone, setProfilePhone] = useState('')
-  const [status, setStatus] = useState<string>('active')
+  const { data } = useDashboardData()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [dateStr, setDateStr] = useState('')
@@ -70,29 +70,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setDateStr(`${days[d.getDay()]} , ${d.getDate()} ${months[d.getMonth()]}`)
   }, [])
 
-  useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const res = await fetch('/api/customer/dashboard')
-        if (!res.ok) {
-          console.error('Profile fetch failed. Status:', res.status)
-          const text = await res.text()
-          console.error('Profile fetch response body:', text.substring(0, 300))
-        }
-        const data = await res.json()
-        if (data.success && data.profile) {
-          setProfileName(data.profile.full_name || 'Customer')
-          setProfilePhone(data.profile.phone || '')
-          if (data.subscription) {
-            setStatus(data.subscription.status)
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load layout profile details', err)
-      }
-    }
-    fetchProfile()
-  }, [])
+  const profileName = data?.profile?.full_name || 'Customer'
+  const profilePhone = data?.profile?.phone || ''
+  const status = data?.subscription?.status || 'active'
 
   async function handleLogout() {
     const supabase = createClient()
@@ -117,16 +97,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className="hidden lg:flex flex-col w-[260px] z-30 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-150 dark:border-slate-800 transition-colors duration-300">
         {/* Logo */}
         <div className="px-6 py-5 flex items-center justify-center flex-shrink-0">
-          <Link href="/dashboard" className="flex items-center justify-center w-full">
-            <Image 
-              src="/images/logo/amruth-logo.png" 
-              alt="Amruth Dairy Logo" 
-              width={260} 
-              height={64} 
-              className="w-52 h-16 object-contain dark:brightness-110" 
-              priority
-            />
-          </Link>
+          <Logo href="/dashboard" className="w-52 h-16 object-contain" />
         </div>
 
         {/* Navigation */}
@@ -140,13 +111,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {group.items.map((item) => {
                   const isActive = pathname === item.href || (pathname.startsWith(item.href + '/') && item.href !== '/dashboard')
                   const Icon = item.icon
-                  
+
                   const linkContent = (
                     <div
                       className={cn(
                         "flex items-center gap-3 px-3 h-10 rounded-xl transition-all duration-150 relative overflow-hidden",
-                        isActive 
-                          ? "bg-[#014DA4]/10 dark:bg-[#014DA4]/15 text-[#014DA4] dark:text-blue-400 font-bold" 
+                        isActive
+                          ? "bg-[#014DA4]/10 dark:bg-[#014DA4]/15 text-[#014DA4] dark:text-blue-400 font-bold"
                           : "text-slate-600 dark:text-slate-300 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/45 font-medium"
                       )}
                     >
@@ -229,22 +200,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div
               className={cn(
                 "hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border",
-                status === 'active' 
-                  ? "bg-green-500/10 text-green-700 border-green-200/40" 
+                status === 'active'
+                  ? "bg-green-500/10 text-green-700 border-green-200/40"
                   : "bg-amber-500/10 text-amber-700 border-amber-200/40"
               )}
             >
-              <span 
+              <span
                 className={cn(
-                  "w-1.5 h-1.5 rounded-full", 
+                  "w-1.5 h-1.5 rounded-full",
                   status === 'active' ? "bg-green-500" : "bg-amber-500"
-                )} 
+                )}
               />
               {status === 'active' ? 'Active Plan' : status === 'paused' ? 'Paused' : 'Payment Due'}
             </div>
 
             <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-800" />
-            
+
             <ThemeToggle />
 
             <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-800" />
@@ -310,16 +281,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             >
               <div className="px-6 py-4 flex items-center justify-between flex-shrink-0">
                 <div className="flex-1 flex justify-center py-1">
-                  <Link href="/dashboard" className="flex items-center justify-center">
-                    <Image 
-                      src="/images/logo/amruth-logo.png" 
-                      alt="Amruth Dairy Logo" 
-                      width={260} 
-                      height={64} 
-                      className="w-52 h-16 object-contain dark:brightness-110" 
-                      priority
-                    />
-                  </Link>
+                  <Logo href="/dashboard" className="w-52 h-16 object-contain" />
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -339,13 +301,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       {group.items.map((item) => {
                         const isActive = pathname === item.href || (pathname.startsWith(item.href + '/') && item.href !== '/dashboard')
                         const Icon = item.icon
-                        
+
                         const linkContent = (
                           <div
                             className={cn(
                               "flex items-center gap-3 px-3 h-10 rounded-xl transition-all duration-150 relative overflow-hidden",
-                              isActive 
-                                ? "bg-[#014DA4]/10 dark:bg-[#014DA4]/15 text-[#014DA4] dark:text-blue-400 font-bold" 
+                              isActive
+                                ? "bg-[#014DA4]/10 dark:bg-[#014DA4]/15 text-[#014DA4] dark:text-blue-400 font-bold"
                                 : "text-slate-655 dark:text-slate-300 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/45 font-medium"
                             )}
                           >
@@ -416,6 +378,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         danger
       />
     </div>
+  )
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <DashboardDataProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </DashboardDataProvider>
   )
 }
 

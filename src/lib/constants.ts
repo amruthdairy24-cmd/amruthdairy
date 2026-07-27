@@ -10,19 +10,64 @@
  * Used in onboarding, subscribe page, admin dashboard, and profile forms.
  */
 export const DELIVERY_AREAS = [
-  'Padil',
-  'Kulshekar',
-  'Kadri',
+  'Agnes',
   'Alape',
-  'Bajal',
-  'Pumpwell',
-  'State Bank',
-  'Kankanady',
-  'Urwa',
-  'Kottara',
-  'Lalbagh',
-  'Bendoorwell',
+  'Alvares Road',
+  'Anegundi',
+  'Attavar',
+  'Ballabag',
+  'Balmatta Road',
+  'Bavutagudde',
   'Bejai',
+  'Bendoorwell',
+  'Bikarnakatte',
+  'Brigade Pinnacle',
+  'Bunts Hostel',
+  'Casagrande',
+  'Charms Enclave',
+  'Chilimbi',
+  'Darbar Hills',
+  'Deepa Plaza',
+  'Esail Height',
+  'Falneer',
+  'Gandhinagara',
+  'Gorigudde',
+  'Gujjarakere',
+  'Habitat One 54',
+  'Jeppu Market',
+  'Kadri Ground',
+  'Kadrikambla',
+  'Kapikad',
+  'Karangalpady',
+  'Karmar',
+  'Kembar',
+  'Kodakal',
+  'Kodialguthu',
+  'Kudroli',
+  'Lohith Nagar',
+  'Mallikatte',
+  'Mangaladevi',
+  'Mannagudda',
+  'Marnamikatte',
+  'Maroli',
+  'Meghanagara',
+  'Mulihithlu',
+  'Naguri',
+  'Nandigudde',
+  'Nanthoor',
+  'Northan Sky City',
+  'Northern Sky Palm Streak',
+  'Padil',
+  'Padil Junction',
+  'Pandeshwar',
+  'Police Lane',
+  'Prestage Valley Crest',
+  'PVR',
+  'Pumpwell',
+  'Railway Junction',
+  'Shivabag',
+  'Ujjodi',
+  'Valencia',
 ] as const
 
 export type DeliveryArea = (typeof DELIVERY_AREAS)[number]
@@ -56,8 +101,8 @@ export const SKIP_DEADLINE_HOUR_IST = 21 // 9:00 PM IST
 /**
  * Support phone number.
  */
-export const SUPPORT_PHONE = '+91 98765 43210'
-export const SUPPORT_PHONE_RAW = '+91+91 9880143808'
+export const SUPPORT_PHONE = '+91 9880143808'
+export const SUPPORT_PHONE_RAW = '+919880143808'
 
 /**
  * Default app_settings key for price per litre.

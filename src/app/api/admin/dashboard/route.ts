@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { getTodayIST, isAdminEmail } from '@/lib/utils';
+import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 export async function GET(request: Request) {
   try {
@@ -11,12 +13,11 @@ export async function GET(request: Request) {
     }
 
     // Verify Admin
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getTodayIST();
     
     // 1. Today's Delivery Summary using RPC
     const { data: dailySummary } = await supabase.rpc('get_daily_summary', { p_date: todayStr });
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
       total_deliveries: dailySummary?.total_customers || 0,
       delivering_count: dailySummary?.delivering || 0,
       skipped_count: dailySummary?.skipped || 0,
-      vacation_count: dailySummary?.on_vacation || 0,
+
       extra_orders_count: dailySummary?.extra_orders || 0,
       total_litres_needed: dailySummary?.total_litres_needed || 0,
       capacity_used_percent: capacity_used_percent
@@ -62,8 +63,11 @@ export async function GET(request: Request) {
 
     // 3. This Month stats
     const currentDate = new Date();
-    const billingMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const formattedBillingMonth = billingMonthDate.toISOString().split('T')[0];
+    // Using current UTC date to approximate month, but better to use IST for the billing month start
+    const istTimeStr = formatInTimeZone(currentDate, 'Asia/Kolkata', "yyyy-MM-dd'T'HH:mm:ss");
+    const istDate = new Date(istTimeStr);
+    const billingMonthDate = new Date(istDate.getFullYear(), istDate.getMonth(), 1);
+    const formattedBillingMonth = `${istDate.getFullYear()}-${String(istDate.getMonth() + 1).padStart(2, '0')}-01`;
 
     const { data: thisMonthBilling } = await supabase
       .from('billing_months')
@@ -92,9 +96,7 @@ export async function GET(request: Request) {
     const alerts: string[] = [];
     
     // Tomorrow stats for alerts
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const tomorrowStr = formatInTimeZone(new Date(Date.now() + 86400000), 'Asia/Kolkata', 'yyyy-MM-dd');
 
     const { data: tmrwSummary } = await supabase.rpc('get_daily_summary', { p_date: tomorrowStr });
     if (tmrwSummary?.skipped > 0) alerts.push(`${tmrwSummary.skipped} customers skipping tomorrow`);

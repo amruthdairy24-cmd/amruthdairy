@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
+import { isAdminEmail } from '@/lib/utils';
 
 const adminClient = createAdminClient();
 
@@ -133,8 +134,10 @@ export async function POST(request: Request) {
       );
     }
 
+    const userRole = isAdminEmail(profile.email) ? 'admin' : (profile.role || 'customer');
+
     // ── Check subscription ────────────────────────────────────────────────────
-    const hasActiveSubscription = await checkActiveSubscription(userId, profile.role);
+    const hasActiveSubscription = await checkActiveSubscription(userId, userRole);
 
     // ── Business logic: determine if "new" (no onboarding done) ──────────────
     // A user is considered "new" if they have no subscription AND no waitlist entry
@@ -149,7 +152,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      role: profile.role,
+      role: userRole,
       is_new_user: isNewUser,
       has_active_subscription: hasActiveSubscription,
       profile: {
@@ -157,7 +160,7 @@ export async function POST(request: Request) {
         full_name: profile.full_name,
         email: profile.email,
         username: profile.username,
-        role: profile.role,
+        role: userRole,
       },
     });
 

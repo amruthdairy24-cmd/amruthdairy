@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { isAdminEmail } from '@/lib/utils';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -22,14 +23,7 @@ async function assertAdmin() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false as const, status: 401, message: 'Unauthorized' };
 
-  const admin = createAdminClient();
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') return { ok: false as const, status: 403, message: 'Forbidden' };
+  if (!isAdminEmail(user.email)) return { ok: false as const, status: 403, message: 'Forbidden' };
   return { ok: true as const };
 }
 

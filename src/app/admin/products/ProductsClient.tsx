@@ -7,6 +7,7 @@ import {
   X, 
   Milk, 
   ArrowUpRight, 
+  ArrowDown, 
   AlertTriangle, 
   Search, 
   SlidersHorizontal, 
@@ -101,7 +102,6 @@ export function ProductsClient({
   // Milk Pricing Modal State
   const [showMilkPriceModal, setShowMilkPriceModal] = useState(false)
   const [milkPricesForm, setMilkPricesForm] = useState({ '0.5': '41', '1.0': '82', '1.5': '124', '2.0': '165' })
-  const [priceApplyMode, setPriceApplyMode] = useState<'next_month' | 'immediate'>('next_month')
   const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
   const [priceMessage, setPriceMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null)
 
@@ -141,7 +141,7 @@ export function ProductsClient({
     const totalCount = data.length
     const lowStock = data.filter(p => p.stock_available <= 5).length
     const activeTiers = plans.length
-    const standardPrice = milkPrices['1.0'] || milkPrices['1'] || 82.67
+    const standardPrice = milkPrices['1.0'] || milkPrices['1'] || 80
 
     return {
       totalCount,
@@ -154,10 +154,10 @@ export function ProductsClient({
   const openMilkPriceModal = () => {
     const activePricesToEdit = rawMilkPricing?.next_prices || rawMilkPricing?.prices || milkPrices;
     setMilkPricesForm({
-      '0.5': activePricesToEdit['0.5']?.toString() || '41.34',
-      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '82.67',
-      '1.5': activePricesToEdit['1.5']?.toString() || '124',
-      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '165.34'
+      '0.5': activePricesToEdit['0.5']?.toString() || '40',
+      '1.0': activePricesToEdit['1.0']?.toString() || activePricesToEdit['1']?.toString() || '80',
+      '1.5': activePricesToEdit['1.5']?.toString() || '120',
+      '2.0': activePricesToEdit['2.0']?.toString() || activePricesToEdit['2']?.toString() || '160'
     })
     setShowMilkPriceModal(true)
   }
@@ -546,16 +546,40 @@ export function ProductsClient({
         </div>
 
         {/* Metric 4: Standard Milk Rate */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-6 flex items-center justify-between gap-4 shadow-3xs hover:shadow-2xs transition-all duration-250 hover:-translate-y-0.5">
-          <div className="text-left space-y-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Standard Milk Rate</p>
-            <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-800 dark:text-white font-mono">₹{stats.standardPrice}</h3>
-            <p className="text-[11px] font-bold text-slate-500 mt-1">Per Litre base pricing</p>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-3xs">
-            <Coins size={20} className="stroke-[2.5]" />
-          </div>
-        </div>
+        {(() => {
+          const nextStdPrice = rawMilkPricing?.next_prices?.['1.0'] ?? rawMilkPricing?.next_prices?.['1'] ?? null
+          const hasStdChange = rawMilkPricing?.next_prices && rawMilkPricing?.effective_date && nextStdPrice !== null && nextStdPrice !== stats.standardPrice
+          const stdDelta = hasStdChange ? nextStdPrice - stats.standardPrice : 0
+          const stdIsUp = stdDelta > 0
+          return (
+            <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-3xl p-6 flex items-center justify-between gap-4 shadow-3xs hover:shadow-2xs transition-all duration-250 hover:-translate-y-0.5">
+              <div className="text-left space-y-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Standard Milk Rate</p>
+                {hasStdChange ? (
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-base font-bold text-slate-400 font-mono line-through">₹{stats.standardPrice}</span>
+                    <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-800 dark:text-white font-mono">₹{nextStdPrice}</h3>
+                    <span className={cn(
+                      "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-black",
+                      stdIsUp
+                        ? "bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200/50 dark:border-red-900/40"
+                        : "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/40"
+                    )}>
+                      {stdIsUp ? <TrendingUp size={9} /> : <ArrowDown size={9} />}
+                      {stdIsUp ? '+' : ''}₹{stdDelta}
+                    </span>
+                  </div>
+                ) : (
+                  <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-800 dark:text-white font-mono">₹{stats.standardPrice}</h3>
+                )}
+                <p className="text-[11px] font-bold text-slate-500 mt-1">Per Litre base pricing</p>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-3xs">
+                <Coins size={20} className="stroke-[2.5]" />
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       {/* MILK SUBSCRIPTION PLANS CARDS GRID */}
@@ -593,11 +617,26 @@ export function ProductsClient({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map(plan => {
             const isPopular = plan.is_popular
+            const hasPendingPrices = rawMilkPricing?.next_prices && rawMilkPricing?.effective_date
+            // Compute proposed rates from next_prices
+            const nextPrices = rawMilkPricing?.next_prices as Record<string, number> | undefined
+            const qtyKey1 = plan.quantity_litres.toString()
+            const qtyKey2 = plan.quantity_litres.toFixed(1)
+            const nextDailyRate = nextPrices
+              ? (nextPrices[qtyKey1] ?? nextPrices[qtyKey2] ?? null)
+              : null
+            const nextMonthlyPrice = nextDailyRate !== null ? nextDailyRate * 30 : null
+            const hasChange = hasPendingPrices && nextDailyRate !== null && nextDailyRate !== plan.daily_rate
+            const monthlyDelta = hasChange && nextMonthlyPrice !== null ? nextMonthlyPrice - plan.monthly_price : 0
+            const dailyDelta = hasChange && nextDailyRate !== null ? nextDailyRate - plan.daily_rate : 0
+            const isIncrease = monthlyDelta > 0
+
             return (
               <div 
                 key={plan.id}
                 className={cn(
-                  "relative rounded-3xl p-6 flex flex-col justify-between h-[230px] transition-all duration-300 border shadow-3xs hover:shadow-sm hover:-translate-y-1 group",
+                  "relative rounded-3xl p-6 flex flex-col justify-between transition-all duration-300 border shadow-3xs hover:shadow-sm hover:-translate-y-1 group",
+                  hasChange ? "min-h-[270px]" : "h-[230px]",
                   isPopular 
                     ? "bg-gradient-to-b from-white to-blue-50/20 dark:from-slate-900 dark:to-blue-950/5 border-blue-300 dark:border-blue-800 shadow-blue-500/5" 
                     : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800"
@@ -630,12 +669,33 @@ export function ProductsClient({
                   {/* Pricing Breakdown */}
                   <div className="space-y-1.5 text-left pt-2">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Estimated Monthly</p>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black text-slate-800 dark:text-white font-mono">
-                        ₹{plan.monthly_price}
-                      </span>
-                      <span className="text-xs font-semibold text-slate-400">/mo</span>
-                    </div>
+                    {hasChange && nextMonthlyPrice !== null ? (
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-slate-400 font-mono line-through">
+                          ₹{plan.monthly_price}
+                        </span>
+                        <span className="text-2xl font-black text-slate-800 dark:text-white font-mono">
+                          ₹{nextMonthlyPrice}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-400">/mo</span>
+                        <span className={cn(
+                          "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-black",
+                          isIncrease
+                            ? "bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200/50 dark:border-red-900/40"
+                            : "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/40"
+                        )}>
+                          {isIncrease ? <TrendingUp size={9} /> : <ArrowDown size={9} />}
+                          {isIncrease ? '+' : ''}₹{monthlyDelta}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black text-slate-800 dark:text-white font-mono">
+                          ₹{plan.monthly_price}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-400">/mo</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -643,9 +703,26 @@ export function ProductsClient({
                 <div className="border-t border-slate-100 dark:border-slate-800 pt-3.5 mt-2 flex items-center justify-between text-left">
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Daily Rate</span>
-                    <p className="text-xs font-black text-slate-700 dark:text-slate-300 font-mono mt-0.5">
-                      ₹{plan.daily_rate.toFixed(2)}
-                    </p>
+                    {hasChange && nextDailyRate !== null ? (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] font-bold text-slate-400 font-mono line-through">
+                          ₹{plan.daily_rate.toFixed(2)}
+                        </span>
+                        <span className="text-xs font-black text-slate-700 dark:text-slate-300 font-mono">
+                          ₹{nextDailyRate.toFixed(2)}
+                        </span>
+                        <span className={cn(
+                          "text-[9px] font-black",
+                          dailyDelta > 0 ? "text-red-500" : "text-emerald-500"
+                        )}>
+                          {dailyDelta > 0 ? '+' : ''}₹{dailyDelta.toFixed(2)}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-xs font-black text-slate-700 dark:text-slate-300 font-mono mt-0.5">
+                        ₹{plan.daily_rate.toFixed(2)}
+                      </p>
+                    )}
                   </div>
                   <button 
                     onClick={openMilkPriceModal} 
@@ -1048,49 +1125,12 @@ export function ProductsClient({
                 </div>
               </div>
 
-              {/* Effective Time Selection Card */}
-              <div className="text-left">
-                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 mb-2.5 uppercase tracking-widest">
-                  When should new pricing apply?
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <label className={cn(
-                    "flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all duration-200 bg-slate-50/20 dark:bg-slate-950/10",
-                    priceApplyMode === 'next_month' 
-                      ? "border-blue-500 dark:border-blue-500 bg-blue-50/40 dark:bg-blue-950/15 shadow-3xs" 
-                      : "border-slate-200 dark:border-slate-800"
-                  )}>
-                    <input 
-                      type="radio" 
-                      name="applyModeMilk" 
-                      checked={priceApplyMode === 'next_month'} 
-                      onChange={() => setPriceApplyMode('next_month')} 
-                      className="accent-blue-600 w-4 h-4 cursor-pointer" 
-                    />
-                    <span className="text-xs font-extrabold text-slate-800 dark:text-white leading-tight">
-                      Next Billing Cycle<br/>
-                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">Recommended</span>
-                    </span>
-                  </label>
-                  <label className={cn(
-                    "flex items-center gap-3 p-4 border rounded-2xl cursor-pointer transition-all duration-200 bg-slate-50/20 dark:bg-slate-950/10",
-                    priceApplyMode === 'immediate' 
-                      ? "border-blue-500 dark:border-blue-500 bg-blue-50/40 dark:bg-blue-950/15 shadow-3xs" 
-                      : "border-slate-200 dark:border-slate-800"
-                  )}>
-                    <input 
-                      type="radio" 
-                      name="applyModeMilk" 
-                      checked={priceApplyMode === 'immediate'} 
-                      onChange={() => setPriceApplyMode('immediate')} 
-                      className="accent-blue-600 w-4 h-4 cursor-pointer" 
-                    />
-                    <span className="text-xs font-extrabold text-slate-800 dark:text-white leading-tight">
-                      Immediately<br/>
-                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">Applies starting today</span>
-                    </span>
-                  </label>
-                </div>
+              {/* Effective Time Notice */}
+              <div className="rounded-xl p-4 border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 text-xs text-slate-600 dark:text-slate-400 leading-relaxed text-left">
+                <span className="font-bold text-[#014DA4] dark:text-blue-400 block mb-1">
+                  Schedule: Next Billing Cycle
+                </span>
+                New signups get the new price immediately. Existing customers finish their current month at their old price, avoiding billing confusion mid-month.
               </div>
 
               {priceMessage && (
