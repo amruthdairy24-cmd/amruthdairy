@@ -23,7 +23,8 @@ import {
   Menu,
   X,
   ChevronDown,
-  MapPin
+  MapPin,
+  ShoppingBag
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/utils/supabase/client'
@@ -37,6 +38,7 @@ const sidebarGroups = [
     title: 'Operations',
     items: [
       { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+      { href: '/admin/orders', icon: ShoppingBag, label: 'Orders' },
       { href: '/admin/customers', icon: Users, label: 'Customers' },
       { href: '/admin/subscriptions', icon: Repeat, label: 'Subscriptions' },
       { href: '/admin/deliveries', icon: Truck, label: 'Deliveries' },
