@@ -615,6 +615,57 @@ export default function CustomerDashboard() {
         </div>
       </motion.div>
 
+      {/* ─── REFERRAL CARD ─── */}
+      <motion.div variants={itemVariants} className="relative z-10">
+        <div className="bg-gradient-to-r from-sky-900 via-[#02429C] to-blue-950 rounded-2xl p-6 sm:p-7 text-white shadow-xl border border-white/10 relative overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
+          
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-2 max-w-xl">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-black uppercase tracking-wider border border-amber-400/30">
+                🎁 Refer & Earn 2 Litres Free Milk
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black font-display tracking-tight text-white">
+                Share fresh milk with friends, get 2L Free Milk credit!
+              </h3>
+              <p className="text-xs sm:text-sm text-blue-100/90 font-medium leading-relaxed">
+                When your friend signs up with your code and completes their 1st payment, you automatically get 2 Litres of Free Milk credit on your next month&apos;s subscription renewal!
+              </p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15 shrink-0 flex flex-col sm:flex-row items-center gap-3">
+              <div className="bg-white/20 px-4 py-2.5 rounded-xl border border-white/20 text-center font-mono font-black text-lg text-amber-300 tracking-wider">
+                {(data.profile as any)?.referral_code || 'AMR-K89X'}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const code = (data.profile as any)?.referral_code || 'AMR-K89X';
+                  const link = `${window.location.origin}/onboarding?ref=${code}`;
+                  navigator.clipboard.writeText(link);
+                  alert('Referral link copied to clipboard!');
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white text-[#02429C] hover:bg-blue-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-md cursor-pointer"
+              >
+                <span>Copy Link</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const code = (data.profile as any)?.referral_code || 'AMR-K89X';
+                  const link = `${window.location.origin}/onboarding?ref=${code}`;
+                  const msg = `Hey! Subscribe to Amruth Dairy farm-fresh milk using my referral code *${code}* and get 2 Litres of Free Milk! Register here: ${link}`;
+                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-md cursor-pointer"
+              >
+                <span>Share WhatsApp</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
       {/* ─── 3. QUICK SERVICES SECTION ─── */}
       <motion.div variants={itemVariants} className="space-y-3.5 relative z-10">
         <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-[2.5px] px-1">Quick Services</h3>

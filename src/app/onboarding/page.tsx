@@ -64,6 +64,28 @@ export default function OnboardingPage() {
   const [showCalendar, setShowCalendar] = useState(false)
   const [hasUsedTrial, setHasUsedTrial] = useState(false)
 
+  // Referral System States
+  const [referralCode, setReferralCode] = useState('')
+  const [referralMessage, setReferralMessage] = useState('')
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const ref = new URLSearchParams(window.location.search).get('ref')
+      if (ref) {
+        const cleanRef = ref.trim().toUpperCase()
+        setReferralCode(cleanRef)
+        fetch(`/api/referral/validate?code=${cleanRef}`)
+          .then(r => r.json())
+          .then(d => {
+            if (d.success && d.valid) {
+              setReferralMessage(d.message)
+            }
+          })
+          .catch(() => {})
+      }
+    }
+  }, [])
+
   const handleExcludedDatesChange = useCallback((dates: string[]) => {
     setExcludedDates(dates)
   }, [])
@@ -211,7 +233,7 @@ export default function OnboardingPage() {
       const res = await fetch('/api/subscription/new', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity, start_date: startDate, excluded_dates: excludedDates, is_trial: isTrial })
+        body: JSON.stringify({ quantity, start_date: startDate, excluded_dates: excludedDates, is_trial: isTrial, referral_code: referralCode })
       })
       const data = await res.json()
       if (data.success) {
@@ -573,6 +595,41 @@ export default function OnboardingPage() {
                             className="w-full h-11 pl-11 pr-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                           />
                         </div>
+                      </div>
+
+                      {/* Referral Code Field */}
+                      <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                          <Tag size={12} className="text-amber-500" /> Referral Code (Optional)
+                        </label>
+                        <div className="relative flex items-center">
+                          <Tag size={14} className="absolute left-4 text-amber-500 pointer-events-none" />
+                          <input
+                            type="text"
+                            placeholder="e.g. AMR-K89X"
+                            value={referralCode}
+                            onChange={e => {
+                              const val = e.target.value.trim().toUpperCase()
+                              setReferralCode(val)
+                              if (val.length >= 6) {
+                                fetch(`/api/referral/validate?code=${val}`)
+                                  .then(r => r.json())
+                                  .then(d => {
+                                    if (d.success && d.valid) setReferralMessage(d.message)
+                                    else setReferralMessage('')
+                                  })
+                              } else {
+                                setReferralMessage('')
+                              }
+                            }}
+                            className="w-full h-11 pl-11 pr-4 bg-amber-50/50 dark:bg-slate-950 border border-amber-200/80 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono tracking-wider"
+                          />
+                        </div>
+                        {referralMessage && (
+                          <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
+                            <CheckCircle size={12} /> {referralMessage}
+                          </p>
+                        )}
                       </div>
 
                       {error && (
