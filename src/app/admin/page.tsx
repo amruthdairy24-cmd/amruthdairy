@@ -39,18 +39,15 @@ export default async function AdminDashboardPage() {
     supabase.from('billing_months').select('payment_status').eq('billing_month', formattedBillingMonth),
     supabase.from('daily_delivery_sheet').select('id, total_litres').eq('delivery_date', todayStr),
     supabase.from('daily_delivery_sheet').select('id', { count: 'exact' }).eq('delivery_date', todayStr).eq('delivery_status', 'skipped'),
-    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer').gte('created_at', (() => { const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7); return sevenDaysAgo.toISOString(); })()),
     fetchRawMilkPricing(adminClient)
   ])
 
   // 1. Total delivering litres today
-  // Use daily_delivery_sheet if available to account for skips/extras, otherwise fallback to active subs
-  let totalLitresToday = 0;
+  // Only count actual rows in today's delivery sheet.
+  let totalLitresToday = 0
   if (deliveriesToday && deliveriesToday.length > 0) {
-    totalLitresToday = deliveriesToday.reduce((acc, item) => acc + Number(item.total_litres || 0), 0);
-  } else {
-    const activeSubs = activeSubsData || []
-    totalLitresToday = activeSubs.reduce((acc, item) => acc + Number(item.quantity_litres || 0), 0)
+    totalLitresToday = deliveriesToday.reduce((acc, item) => acc + Number(item.total_litres || 0), 0)
   }
 
   // 2. Monthly Revenue (sum of monthly_amount of active subs for this month)
@@ -58,7 +55,7 @@ export default async function AdminDashboardPage() {
   const totalRevenue = activeSubs.reduce((acc, item) => acc + Number(item.monthly_amount || 0), 0)
 
   // 3. Deliveries count
-  const deliveriesCount = deliveriesToday?.length || activeSubsCount || 0
+  const deliveriesCount = deliveriesToday?.length || 0
   const skippedCount = skippedToday?.length || 0
 
   // 4. Fetch Deliveries list (top 6 today)
@@ -69,13 +66,19 @@ export default async function AdminDashboardPage() {
     .limit(6)
 
   const deliveriesList = dbDeliveries && dbDeliveries.length > 0
-    ? dbDeliveries.map(item => ({
+    ? dbDeliveries.map((item: {
+        id: string
+        delivery_status: string
+        total_litres: number | string | null
+        profiles?: { full_name?: string | null; area?: string | null } | null
+        subscriptions?: { plan_type?: string | null } | null
+      }) => ({
         id: item.id,
-        customerName: (item.profiles as any)?.full_name || 'Customer',
-        area: (item.profiles as any)?.area || 'General',
+        customerName: item.profiles?.full_name || 'Customer',
+        area: item.profiles?.area || 'General',
         qty: `${item.total_litres}L`,
         status: item.delivery_status,
-        isTrial: (item.subscriptions as any)?.plan_type === 'trial'
+        isTrial: item.subscriptions?.plan_type === 'trial'
       }))
     : []
 
@@ -88,7 +91,13 @@ export default async function AdminDashboardPage() {
 
   // Map to clean activities
   const recentActivities = dbNotifications && dbNotifications.length > 0
-    ? dbNotifications.map(n => {
+    ? dbNotifications.map((n: {
+        id: string
+        notification_type: string
+        created_at: string
+        message_body?: string | null
+        profiles?: { full_name?: string | null } | null
+      }) => {
         let type = 'blue'
         if (n.notification_type.includes('skip')) type = 'amber'
         else if (n.notification_type.includes('payment')) type = 'green'
@@ -96,7 +105,7 @@ export default async function AdminDashboardPage() {
 
         return {
           id: n.id,
-          text: n.message_body || `${(n.profiles as any)?.full_name || 'User'} triggered ${n.notification_type}`,
+          text: n.message_body || (n.profiles?.full_name ? n.profiles.full_name + ' triggered ' + n.notification_type : 'User triggered ' + n.notification_type),
           time: new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type
         }
@@ -139,3 +148,7 @@ export default async function AdminDashboardPage() {
     />
   )
 }
+
+
+
+
