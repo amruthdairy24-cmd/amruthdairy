@@ -92,8 +92,15 @@ export async function POST(request: Request) {
       }, { status: 200 }); // Status 200 because it's a valid business flow
     }
 
+    // Calculate earliest start date in IST
+    const earliestStartStr = getEarliestStartDateStr();
+
+    // If start_date is somehow before earliest allowed date, fallback to earliest allowed date
+    const actualStartDateStr = start_date < earliestStartStr ? earliestStartStr : start_date;
+    const actualStartDateObj = new Date(actualStartDateStr);
+
     // 5. Calculate amounts using admin-managed pricing
-    const prices = await fetchMilkPrices(adminSupabase);
+    const prices = await fetchMilkPrices(adminSupabase, actualStartDateStr);
     let daily_rate = calculateDailyRate(quantity, prices);
     
     // Trial pricing logic
@@ -103,13 +110,6 @@ export async function POST(request: Request) {
         daily_rate = calculateDailyRate(quantity, trialPricing.prices);
       }
     }
-    
-    // Calculate earliest start date in IST
-    const earliestStartStr = getEarliestStartDateStr();
-
-    // If start_date is somehow before earliest allowed date, fallback to earliest allowed date
-    const actualStartDateStr = start_date < earliestStartStr ? earliestStartStr : start_date;
-    const actualStartDateObj = new Date(actualStartDateStr);
 
     const startYear = actualStartDateObj.getFullYear();
     const startMonth = actualStartDateObj.getMonth() + 1;

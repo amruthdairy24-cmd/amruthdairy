@@ -13,7 +13,6 @@
  * ═══════════════════════════════════════════════════════════
  */
 
-import { SETTINGS_KEY_PRICE_PER_LITRE } from '@/lib/constants'
 
 export interface PriceSettingValue {
   amount: number;
@@ -217,9 +216,27 @@ export function calculateExtraMilkCharge(
 // Server-side pricing fetch
 // ─────────────────────────────────────────
 
+export function resolveTieredMilkPrices(
+  pricing: TieredPricingValue,
+  _asOfDate?: string | Date
+): Record<string, number> {
+  void _asOfDate
+
+  if (pricing.next_prices) {
+    return pricing.next_prices
+  }
+
+  if (pricing.prices) {
+    return pricing.prices
+  }
+
+  return DEFAULT_TIER_PRICES
+}
+
 export async function fetchMilkPrices(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  adminClient: { from: (table: string) => any }
+  adminClient: { from: (table: string) => any },
+  asOfDate?: string | Date
 ): Promise<Record<string, number>> {
   const { data, error } = await adminClient
     .from('app_settings')
@@ -234,16 +251,7 @@ export async function fetchMilkPrices(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const parsed = (data as any).value as TieredPricingValue
-  
-  if (parsed.next_prices && parsed.effective_date) {
-    const today = new Date();
-    const effective = new Date(parsed.effective_date);
-    if (today >= effective) {
-      return parsed.next_prices;
-    }
-  }
-
-  return parsed.prices || DEFAULT_TIER_PRICES;
+  return resolveTieredMilkPrices(parsed, asOfDate);
 }
 
 export async function fetchRawMilkPricing(
@@ -268,22 +276,15 @@ export async function fetchRawMilkPricing(
 // Client-side pricing fetch
 // ─────────────────────────────────────────
 
-export async function fetchMilkPricesClient(): Promise<Record<string, number>> {
+export async function fetchMilkPricesClient(asOfDate?: string | Date): Promise<Record<string, number>> {
   try {
     const res = await fetch('/api/admin/settings?key=milk_tier_prices')
     const data = await res.json()
     if (data.success && data.value) {
       const parsed = data.value as TieredPricingValue;
-      if (parsed.next_prices && parsed.effective_date) {
-        const today = new Date();
-        const effective = new Date(parsed.effective_date);
-        if (today >= effective) {
-          return parsed.next_prices;
-        }
-      }
-      return parsed.prices || DEFAULT_TIER_PRICES;
+      return resolveTieredMilkPrices(parsed, asOfDate);
     }
-  } catch (err) {
+  } catch {
     console.warn('[billing] Failed to fetch price from API, using default')
   }
   return DEFAULT_TIER_PRICES;
@@ -318,8 +319,10 @@ export async function fetchTrialPricingClient(): Promise<TrialPricingValue> {
     if (data.success && data.value) {
       return data.value as TrialPricingValue;
     }
-  } catch (err) {
+  } catch {
     console.warn('[billing] Failed to fetch trial price from API, using default')
   }
   return { enabled: false, prices: DEFAULT_TIER_PRICES };
 }
+
+

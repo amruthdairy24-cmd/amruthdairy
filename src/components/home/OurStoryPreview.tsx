@@ -32,12 +32,27 @@ export function OurStoryPreview() {
             </h2>
 
             {/* Body */}
-            <div className="space-y-4 mb-8">
-              <p className="text-gray-600 text-sm sm:text-base leading-relaxed font-sans">
-                What started as a small dairy farm has grown into a trusted farm-to-home milk delivery service.
+            <div className="space-y-4 mb-8 text-gray-600 text-sm sm:text-[15px] leading-[1.7] font-sans">
+              <p>
+                Our small dream of starting a cow farm began in 2023. Stepping out of the corporate world and into business was a big decision, but following our dream was always the goal.
               </p>
-              <p className="text-gray-600 text-sm sm:text-base leading-relaxed font-sans">
-                Every morning before sunrise, our team works with care, hygiene and dedication to deliver fresh milk to families who value quality, purity and trust.
+
+              {/* Highlighted promise block */}
+              <div className="border-l-4 border-[#02429C] pl-4 py-2 bg-blue-50/50 rounded-r-xl">
+                <p className="text-gray-700">
+                  With the unwavering support of our family, we started our farm, <strong className="text-gray-900">&ldquo;Amruth Dairy,&rdquo;</strong> with one simple promise: <strong className="text-[#02429C]">Purity is Our Priority</strong>—bringing fresh milk directly from our farm to your family.
+                </p>
+              </div>
+
+              <p>
+                Dreaming is easy, but giving your 100% to make that dream a reality is what true passion is all about. Our dedication, hard work, and commitment to learning have brought us to where we are today.
+              </p>
+
+              {/* Divider */}
+              <div className="w-10 h-[1.5px] bg-sky-200 my-2" />
+
+              <p className="text-gray-500 italic text-[13.5px] sm:text-[14px] leading-[1.75]">
+                We are truly grateful to have such wonderful customers who have trusted, supported, and encouraged us throughout this journey. Your love and faith in us inspire us to keep delivering the very best. We will always be thankful for your support.
               </p>
             </div>
 

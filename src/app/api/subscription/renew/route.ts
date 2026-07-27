@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Calculate amounts
-    const prices = await fetchMilkPrices(adminSupabase);
+    const prices = await fetchMilkPrices(adminSupabase, target_month);
     const daily_rate = calculateDailyRate(quantity, prices);
     
     // Calculate days to charge using billing.ts helper

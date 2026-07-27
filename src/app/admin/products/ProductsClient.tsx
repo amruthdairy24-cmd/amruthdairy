@@ -474,7 +474,7 @@ export function ProductsClient({
             <span>Edit</span>
           </button>
           <button 
-            onClick={() => setDeleteProductId(row.id)} 
+            onClick={() => { setErrorMsg(null); setDeleteProductId(row.id) }} 
             className="p-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-750 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800 transition-all shadow-3xs cursor-pointer active:scale-95 rounded-xl"
             title="Delete Product"
           >
@@ -1164,13 +1164,16 @@ export function ProductsClient({
             if (!open) setDeleteProductId(null)
           }}
           title="Delete Product"
-          message="Are you sure you want to delete this product? This action cannot be undone."
+          message="Are you sure you want to delete this product? This action cannot be undone. If it is linked to orders, it will be archived instead."
           confirmLabel="Delete"
           onConfirm={handleDeleteProduct}
           loading={isSubmitting}
           danger={true}
+          errorMessage={deleteProductId ? errorMsg || undefined : undefined}
         />
       )}
     </div>
   )
 }
+
+

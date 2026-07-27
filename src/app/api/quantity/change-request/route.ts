@@ -41,17 +41,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'New quantity is the same as current quantity' }, { status: 400 });
     }
 
-    // 6. Calculate new pricing using admin-managed price
-    const prices = await fetchMilkPrices(adminSupabase);
-    const new_daily_rate = calculateDailyRate(new_quantity, prices);
-
-    // 7. effective_month = first day of NEXT month (quantity changes NEVER apply to current month)
+    // 6. effective_month = first day of NEXT month (quantity changes NEVER apply to current month)
     const effectiveDateObj = new Date();
     effectiveDateObj.setMonth(effectiveDateObj.getMonth() + 1);
     effectiveDateObj.setDate(1);
     const effective_month = effectiveDateObj.toISOString().split('T')[0];
     const effectiveYear = effectiveDateObj.getFullYear();
     const effectiveMonth = effectiveDateObj.getMonth() + 1;
+
+    // 7. Calculate new pricing using admin-managed price
+    const prices = await fetchMilkPrices(adminSupabase, effective_month);
+    const new_daily_rate = calculateDailyRate(new_quantity, prices);
     const new_monthly_amount = calculateMonthlyAmount(new_daily_rate, effectiveYear, effectiveMonth);
 
     // 8. Secure capacity for next month if quantity changing

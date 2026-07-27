@@ -57,11 +57,11 @@ function RenewContent() {
 
   useEffect(() => {
     async function loadPrice() {
-      const prices = await fetchMilkPricesClient()
+      const prices = await fetchMilkPricesClient(targetDate)
       setMilkPrices(prices)
     }
     loadPrice()
-  }, [])
+  }, [targetDate])
   
   useEffect(() => {
     if (dashboardData) {

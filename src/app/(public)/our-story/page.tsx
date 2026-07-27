@@ -146,20 +146,32 @@ export default function OurStoryPage() {
                 </div>
 
                 {/* Heading */}
-                <h2 className="text-3xl sm:text-4xl md:text-[40px] font-bold text-black font-cabinet leading-tight tracking-tight mb-8">
+                <h2 className="text-3xl sm:text-4xl md:text-[40px] font-bold text-black font-cabinet leading-tight tracking-tight mb-6">
                   A Vision of Absolute Purity.
                 </h2>
 
                 {/* Content */}
-                <div className="space-y-6 text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed font-sans">
+                <div className="space-y-5 text-gray-600 text-sm sm:text-[15px] leading-[1.8] font-sans">
                   <p>
-                    Amruth Dairy began with one simple belief: <strong>Every family deserves fresh, pure milk delivered with honesty and care.</strong>
+                    Our small dream of starting a cow farm began in 2023. Stepping out of the corporate world and into business was a big decision, but following our dream was always the goal.
                   </p>
+
+                  {/* Highlighted promise block */}
+                  <div className="border-l-4 border-[#02429C] pl-4 py-1 bg-blue-50/50 rounded-r-xl">
+                    <p className="text-gray-700">
+                      With the unwavering support of our family, we started our farm, <strong className="text-gray-900">&ldquo;Amruth Dairy,&rdquo;</strong> with one simple promise: <strong className="text-[#02429C]">Purity is Our Priority</strong>—bringing fresh milk directly from our farm to your family.
+                    </p>
+                  </div>
+
                   <p>
-                    What started as a small family-run dairy has grown into a trusted farm-to-home service built on quality, consistency, and genuine relationships with our customers.
+                    Dreaming is easy, but giving your 100% to make that dream a reality is what true passion is all about. Our dedication, hard work, and commitment to learning have brought us to where we are today.
                   </p>
-                  <p>
-                    We believe the best milk comes from cows that are fed on nutrient-rich fodder, monitored daily for wellness, and nurtured in a hygienic environment. We reject synthetic chemicals, hormones, and preservatives, ensuring you receive nature's gift exactly as intended.
+
+                  {/* Divider */}
+                  <div className="w-12 h-[1.5px] bg-sky-200 my-1" />
+
+                  <p className="text-gray-500 italic text-sm sm:text-[14px] leading-[1.85]">
+                    We are truly grateful to have such wonderful customers who have trusted, supported, and encouraged us throughout this journey. Your love and faith in us inspire us to keep delivering the very best. We will always be thankful for your support.
                   </p>
                 </div>
               </motion.div>
