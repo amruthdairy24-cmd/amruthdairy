@@ -73,7 +73,8 @@ export async function GET(request: Request) {
       upcomingExtrasRes,
       upcomingAdjustmentsRes,
       latestPaidMonthRes,
-      excludedDatesRes
+      excludedDatesRes,
+      nextPaidMonthRes
     ] = await Promise.all([
       // 1. Get Current Month Billing
       supabase
@@ -155,7 +156,17 @@ export async function GET(request: Request) {
       supabase
         .from('subscription_excluded_dates')
         .select('excluded_date')
+        .eq('subscription_id', subId),
+      // 14. Next pre-paid billing month (e.g., August if already renewed)
+      supabase
+        .from('billing_months')
+        .select('id, billing_month, days_delivered, days_skipped, extra_litres_ordered, skip_credit, extra_charges, carry_in_balance, net_due, amount_paid, monthly_amount, payment_status')
         .eq('subscription_id', subId)
+        .eq('payment_status', 'paid')
+        .gt('billing_month', formattedBillingMonth)
+        .order('billing_month', { ascending: true })
+        .limit(1)
+        .maybeSingle()
     ]);
 
     let current_month = currentMonthRes.data;
@@ -170,6 +181,7 @@ export async function GET(request: Request) {
     const upcoming_adjustments = upcomingAdjustmentsRes.data;
     const latest_paid_month = latestPaidMonthRes.data;
     const excluded_dates = excludedDatesRes.data;
+    const next_paid_month_data = nextPaidMonthRes.data;
 
     // Live-calculate net_due from billing_months data for accuracy
     let live_net_due = current_month?.net_due ?? 0;
@@ -244,6 +256,7 @@ export async function GET(request: Request) {
         ...current_month,
         net_due: live_net_due
       } : null,
+      next_paid_month: next_paid_month_data || null,
       upcoming_skips: upcoming_skips || [],
       upcoming_extras: upcoming_extras || [],
       next_month_change: next_month_change ? { 
