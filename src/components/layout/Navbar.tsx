@@ -15,7 +15,7 @@ const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/#products', label: 'Products' },
   { href: '/subscribe', label: 'Subscription' },
-  { href: '/#our-story', label: 'Life At Amruth Dairy' },
+  { href: '/#our-story-videos', label: 'Life At Amruth Dairy' },
   { href: '/our-story', label: 'Our Story' },
   { href: '/#about-us', label: 'About Us' },
 ]
