@@ -103,7 +103,7 @@ export default function OnboardingPage() {
     async function loadPrice() {
       setPriceLoading(true)
       const [prices, trialData] = await Promise.all([
-        fetchMilkPricesClient(),
+        fetchMilkPricesClient(startDate),
         import('@/lib/billing').then(m => m.fetchTrialPricingClient())
       ]);
       setMilkPrices(prices)
@@ -111,7 +111,7 @@ export default function OnboardingPage() {
       setPriceLoading(false)
     }
     loadPrice()
-  }, [])
+  }, [startDate])
 
   useEffect(() => {
     if (!startDate || Object.keys(milkPrices).length === 0) return

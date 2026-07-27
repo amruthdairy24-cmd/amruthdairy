@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: 'Insufficient capacity available' }, { status: 400 });
       }
 
-      const prices = await fetchMilkPrices(adminSupabase);
+      const prices = await fetchMilkPrices(adminSupabase, start_date);
       const daily_rate = calculateDailyRate(quantity, prices);
 
       const actualStartDateObj = new Date(start_date);
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: 'No subscription found to renew' }, { status: 404 });
       }
 
-      const prices = await fetchMilkPrices(adminSupabase);
+      const prices = await fetchMilkPrices(adminSupabase, target_month);
       const daily_rate = calculateDailyRate(existingSub.quantity_litres, prices);
       const targetDate = new Date(target_month);
       const startDateForCalculationStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth()+1).padStart(2, '0')}-01`;
