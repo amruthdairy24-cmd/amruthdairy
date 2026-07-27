@@ -137,7 +137,7 @@ export async function POST(request: Request) {
     }
 
     // Calculate gross charge
-    const prices = await fetchMilkPrices(adminSupabase);
+    const prices = await fetchMilkPrices(adminSupabase, order_date);
     const charge_amount = extra_litres > 0 ? calculateExtraMilkCharge(extra_litres, prices) : 0;
 
     // Determine billing month
