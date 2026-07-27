@@ -65,22 +65,19 @@ export default async function AdminDashboardPage() {
     .eq('delivery_date', todayStr)
     .limit(6)
 
-  const deliveriesList = dbDeliveries && dbDeliveries.length > 0
-    ? dbDeliveries.map((item: {
-        id: string
-        delivery_status: string
-        total_litres: number | string | null
-        profiles?: { full_name?: string | null; area?: string | null } | null
-        subscriptions?: { plan_type?: string | null } | null
-      }) => ({
-        id: item.id,
-        customerName: item.profiles?.full_name || 'Customer',
-        area: item.profiles?.area || 'General',
-        qty: `${item.total_litres}L`,
-        status: item.delivery_status,
-        isTrial: item.subscriptions?.plan_type === 'trial'
-      }))
-    : []
+  const deliveriesList = (dbDeliveries || []).map((item) => {
+    const profile = item.profiles?.[0]
+    const subscription = item.subscriptions?.[0]
+
+    return {
+      id: item.id,
+      customerName: profile?.full_name || 'Customer',
+      area: profile?.area || 'General',
+      qty: `${item.total_litres}L`,
+      status: item.delivery_status,
+      isTrial: subscription?.plan_type === 'trial'
+    }
+  })
 
   // 5. Fetch Recent Activities or notifications log
   const { data: dbNotifications } = await supabase
@@ -90,27 +87,20 @@ export default async function AdminDashboardPage() {
     .limit(5)
 
   // Map to clean activities
-  const recentActivities = dbNotifications && dbNotifications.length > 0
-    ? dbNotifications.map((n: {
-        id: string
-        notification_type: string
-        created_at: string
-        message_body?: string | null
-        profiles?: { full_name?: string | null } | null
-      }) => {
-        let type = 'blue'
-        if (n.notification_type.includes('skip')) type = 'amber'
-        else if (n.notification_type.includes('payment')) type = 'green'
-        else if (n.notification_type.includes('cancel')) type = 'red'
+  const recentActivities = (dbNotifications || []).map((n) => {
+    const profile = n.profiles?.[0]
+    let type = 'blue'
+    if (n.notification_type.includes('skip')) type = 'amber'
+    else if (n.notification_type.includes('payment')) type = 'green'
+    else if (n.notification_type.includes('cancel')) type = 'red'
 
-        return {
-          id: n.id,
-          text: n.message_body || (n.profiles?.full_name ? n.profiles.full_name + ' triggered ' + n.notification_type : 'User triggered ' + n.notification_type),
-          time: new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          type
-        }
-      })
-    : []
+    return {
+      id: n.id,
+      text: n.message_body || (profile?.full_name ? profile.full_name + ' triggered ' + n.notification_type : 'User triggered ' + n.notification_type),
+      time: new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      type
+    }
+  })
 
   // 6. Subscriptions overview segments
   const subOverview = {
@@ -148,6 +138,7 @@ export default async function AdminDashboardPage() {
     />
   )
 }
+
 
 
 
