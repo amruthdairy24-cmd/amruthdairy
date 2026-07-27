@@ -54,6 +54,62 @@ export async function POST(request: Request) {
     const new_daily_rate = calculateDailyRate(new_quantity, prices);
     const new_monthly_amount = calculateMonthlyAmount(new_daily_rate, effectiveYear, effectiveMonth);
 
+    // FIX C9: Check for existing pending quantity change for same subscription + effective month
+    // If one exists, update it (prevents double capacity booking and duplicate records)
+    const { data: existingChange } = await adminSupabase
+      .from('quantity_changes')
+      .select('id, to_quantity, from_quantity')
+      .eq('subscription_id', subscription.id)
+      .eq('effective_month', effective_month)
+      .eq('status', 'pending')
+      .maybeSingle();
+
+    if (existingChange) {
+      // Release the old capacity delta, then book the new delta
+      const oldExtra = existingChange.to_quantity - existingChange.from_quantity;
+      const newExtra = new_quantity - subscription.quantity_litres;
+      const capacityDelta = newExtra - oldExtra; // net change vs what was already booked
+
+      if (capacityDelta !== 0) {
+        const { data: capacityOk } = await adminSupabase.rpc('book_recurring_capacity', {
+          p_start_date: effective_month,
+          p_litres: capacityDelta
+        });
+        if (!capacityOk) {
+          return NextResponse.json({
+            success: false,
+            capacity_full: true,
+            message: `Sorry! Insufficient capacity for next month.`
+          }, { status: 400 });
+        }
+      }
+
+      // Update existing record instead of inserting a new one
+      await adminSupabase
+        .from('quantity_changes')
+        .update({
+          to_quantity: new_quantity,
+          new_monthly_amount: new_monthly_amount,
+          new_daily_rate: new_daily_rate
+        })
+        .eq('id', existingChange.id);
+
+      await adminSupabase
+        .from('subscriptions')
+        .update({ next_month_quantity_litres: new_quantity })
+        .eq('id', subscription.id);
+
+      return NextResponse.json({
+        success: true,
+        current_quantity: subscription.quantity_litres,
+        new_quantity: new_quantity,
+        effective_from: new Date(effective_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
+        new_monthly_amount: new_monthly_amount,
+        message: `Quantity change updated to ${new_quantity}L from ${new Date(effective_month).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}.`
+      });
+    }
+
+    // No existing change — book capacity and insert new record
     // 8. Secure capacity for next month if quantity changing
     const extra_needed = new_quantity - subscription.quantity_litres;
     if (extra_needed !== 0) {
@@ -63,10 +119,11 @@ export async function POST(request: Request) {
       });
 
       if (bookingError || !bookingSuccess) {
+        const direction = extra_needed > 0 ? `increase by ${extra_needed}L` : `decrease by ${Math.abs(extra_needed)}L`;
         return NextResponse.json({
           success: false,
           capacity_full: true,
-          message: `Sorry! Insufficient capacity for next month. Cannot increase by ${extra_needed}L.`
+          message: `Sorry! Insufficient capacity for next month. Cannot ${direction}.`
         }, { status: 400 });
       }
     }

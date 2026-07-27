@@ -181,6 +181,11 @@ export async function POST(request: Request) {
 
     if (subError) {
       console.error('Subscription insert error:', subError.message);
+      // FIX C4: Rollback capacity booking since subscription insert failed
+      await adminSupabase.rpc('book_recurring_capacity', {
+        p_start_date: actualStartDateStr,
+        p_litres: -quantity
+      });
       return NextResponse.json({ success: false, message: 'Failed to create subscription' }, { status: 500 });
     }
 
@@ -204,8 +209,17 @@ export async function POST(request: Request) {
 
     if (billingError) {
       console.error('Billing month insert error:', billingError.message);
-      // We don't fail the whole request here, but log it
+      // FIX C5: Billing month is essential. Roll back the subscription and capacity, then fail.
+      await adminSupabase.from('subscriptions').delete().eq('id', subscription.id);
+      await adminSupabase.rpc('book_recurring_capacity', {
+        p_start_date: actualStartDateStr,
+        p_litres: -quantity
+      });
+      return NextResponse.json({ success: false, message: 'Failed to create billing record. Please try again.' }, { status: 500 });
     }
+
+    // Fetch the inserted billing month id for the response
+    const billingMonthId = (await adminSupabase.from('billing_months').select('id').eq('subscription_id', subscription.id).order('created_at', { ascending: false }).limit(1).single()).data?.id;
 
     // 9. Update waitlist to converted if the user was on the waitlist
     const { error: waitlistUpdateError } = await adminSupabase
@@ -237,7 +251,7 @@ export async function POST(request: Request) {
       daily_rate: daily_rate,
       razorpay_order_id: razorpay_order_id,
       key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      billing_month_id: billingError ? null : (await adminSupabase.from('billing_months').select('id').eq('subscription_id', subscription.id).single()).data?.id // fallback or use the destructured value
+      billing_month_id: billingMonthId ?? null
     });
 
   } catch (err: any) {

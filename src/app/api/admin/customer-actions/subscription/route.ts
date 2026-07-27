@@ -70,6 +70,7 @@ export async function POST(request: Request) {
           plan_type: 'standard',
           quantity_litres: quantity,
           daily_rate: daily_rate,
+          monthly_amount: monthly_amount,
           start_date: start_date,
           status: mark_as_paid ? 'active' : 'pending_payment'
         })
@@ -77,6 +78,11 @@ export async function POST(request: Request) {
         .single();
 
       if (subError) {
+        // Rollback booked capacity
+        await adminSupabase.rpc('book_recurring_capacity', {
+          p_start_date: start_date,
+          p_litres: -quantity
+        });
         return NextResponse.json({ success: false, message: 'Failed to create subscription' }, { status: 500 });
       }
 

@@ -2,7 +2,7 @@
 
 import Script from 'next/script'
 
-import { useState, useEffect, Suspense, useMemo } from 'react'
+import React, { useState, useEffect, Suspense, useMemo, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, CheckCircle, Calendar, ShieldCheck, ChevronDown } from 'lucide-react'
@@ -41,6 +41,7 @@ function RenewContent() {
   const [excludedDates, setExcludedDates] = useState<string[]>([])
   const [showCalendar, setShowCalendar] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const toastShownRef = useRef(false)
   const [milkPrices, setMilkPrices] = useState<Record<string, number>>({})
 
   // Parse the target month for display
@@ -98,10 +99,13 @@ function RenewContent() {
         
         setExcludedDates(initialDates)
         
-        toast('We have pre-filled your plan from last month. You can adjust it below if needed.', {
-          icon: 'ℹ️',
-          duration: 5000
-        })
+        if (!toastShownRef.current) {
+          toast('We have pre-filled your plan from last month. You can adjust it below if needed.', {
+            icon: 'ℹ️',
+            duration: 5000
+          })
+          toastShownRef.current = true
+        }
         setLoading(false)
       } else {
         router.push('/dashboard')
