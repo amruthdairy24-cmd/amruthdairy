@@ -412,8 +412,7 @@ export function SettingsClient({ initialConfigs }: { initialConfigs: Configs }) 
             </button>
             <button 
               type="submit" 
-              disabled={isSaving}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-650 hover:bg-blue-700 text-white rounded-xl text-xs font-black shadow-md shadow-blue-500/10 hover:shadow-lg transition-all border-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-98 min-w-[130px]"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 hover:shadow-lg transition-all border-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-98 min-w-[130px]"
             >
               {isSaving ? (
                 <>
