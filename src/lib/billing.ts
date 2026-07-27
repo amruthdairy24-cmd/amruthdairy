@@ -13,7 +13,6 @@
  * ═══════════════════════════════════════════════════════════
  */
 
-import { getTodayIST } from '@/lib/utils'
 
 export interface PriceSettingValue {
   amount: number;
@@ -217,33 +216,19 @@ export function calculateExtraMilkCharge(
 // Server-side pricing fetch
 // ─────────────────────────────────────────
 
-function normalizePricingDate(asOfDate?: string | Date): string {
-  if (!asOfDate) {
-      return getTodayIST()
-        }
-        
-  if (typeof asOfDate === 'string') {
-      return asOfDate.slice(0, 10)
-        }
-        
-  return asOfDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
-  }
-  
 export function resolveTieredMilkPrices(
   pricing: TieredPricingValue,
-    asOfDate?: string | Date
-    ): Record<string, number> {
-      const currentDate = normalizePricingDate(asOfDate)
-      
-  if (pricing.next_prices && pricing.effective_date) {
-      const effectiveDate = pricing.effective_date.slice(0, 10)
-          if (currentDate >= effectiveDate) {
-                return pricing.next_prices
-                    }
-                      }
-                      
-  return pricing.prices || DEFAULT_TIER_PRICES
+): Record<string, number> {
+  if (pricing.next_prices) {
+    return pricing.next_prices
   }
+
+  if (pricing.prices) {
+    return pricing.prices
+  }
+
+  return DEFAULT_TIER_PRICES
+}
 
 export async function fetchMilkPrices(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -296,7 +281,7 @@ export async function fetchMilkPricesClient(asOfDate?: string | Date): Promise<R
       const parsed = data.value as TieredPricingValue;
       return resolveTieredMilkPrices(parsed, asOfDate);
     }
-  } catch (err) {
+  } catch {
     console.warn('[billing] Failed to fetch price from API, using default')
   }
   return DEFAULT_TIER_PRICES;
@@ -331,7 +316,7 @@ export async function fetchTrialPricingClient(): Promise<TrialPricingValue> {
     if (data.success && data.value) {
       return data.value as TrialPricingValue;
     }
-  } catch (err) {
+  } catch {
     console.warn('[billing] Failed to fetch trial price from API, using default')
   }
   return { enabled: false, prices: DEFAULT_TIER_PRICES };

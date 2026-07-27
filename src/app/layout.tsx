@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Playfair_Display } from 'next/font/google'
 import { bespokeStencil, panchangVariable, cabinetGrotesk } from "@/lib/fonts";
+import Script from 'next/script'
 import './globals.css'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -66,6 +67,25 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${plusJakartaSans.variable} ${inter.variable} ${jetbrainsMono.variable} ${playfairDisplay.variable} ${bespokeStencil.variable} ${panchangVariable.variable} ${cabinetGrotesk.variable}`}>
       <body suppressHydrationWarning className="font-body antialiased bg-cream-50 text-brown-800 transition-colors duration-300 overflow-x-hidden">
+        <Script id="strip-fdprocessedid" strategy="beforeInteractive">
+          {`(() => {
+  const strip = (root = document) => {
+    root.querySelectorAll('[fdprocessedid]').forEach((el) => {
+      el.removeAttribute('fdprocessedid')
+    })
+  }
+
+  strip()
+
+  const observer = new MutationObserver(() => strip())
+  observer.observe(document.documentElement, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['fdprocessedid']
+  })
+})()`}
+        </Script>
         <ThemeProvider>
           <CartProvider>
             <PageLoader />
@@ -90,3 +110,4 @@ export default function RootLayout({
     </html>
   )
 }
+
