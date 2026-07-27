@@ -218,7 +218,10 @@ export function calculateExtraMilkCharge(
 
 export function resolveTieredMilkPrices(
   pricing: TieredPricingValue,
+  _asOfDate?: string | Date
 ): Record<string, number> {
+  void _asOfDate
+
   if (pricing.next_prices) {
     return pricing.next_prices
   }
@@ -321,3 +324,5 @@ export async function fetchTrialPricingClient(): Promise<TrialPricingValue> {
   }
   return { enabled: false, prices: DEFAULT_TIER_PRICES };
 }
+
+
