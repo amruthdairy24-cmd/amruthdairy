@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Users,
   Wallet,
@@ -10,13 +10,12 @@ import {
   UserPlus,
   CreditCard,
   SkipForward,
-  BarChart2,
-  Package,
   CheckCircle2,
   ArrowUpRight,
   X,
-  AlertCircle,
-  Droplet
+  Droplet,
+  Sparkles,
+  Clock
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -57,7 +56,10 @@ interface DashboardClientProps {
     active: number
     pending: number
   }
-  rawMilkPricing?: any
+  rawMilkPricing?: {
+    next_prices?: Record<string, number>
+    prices?: Record<string, number>
+  }
 }
 
 export default function DashboardClient({ 
@@ -68,8 +70,12 @@ export default function DashboardClient({
   rawMilkPricing
 }: DashboardClientProps) {
   const router = useRouter()
-  const [greeting, setGreeting] = useState('Good Morning')
-  const [formattedDate, setFormattedDate] = useState('')
+  const now = new Date()
+  const hour = now.getHours()
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  const formattedDate = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`
 
   // Modals state
   const [showSelectCustomer, setShowSelectCustomer] = useState(false)
@@ -113,7 +119,7 @@ export default function DashboardClient({
         throw new Error("Please enter valid positive prices for all tiers.")
       }
 
-      const body: any = { key: 'milk_tier_prices' };
+      const body: { key: string; value?: { prices: Record<string, number>; next_prices: Record<string, number>; effective_date: string } } = { key: 'milk_tier_prices' }
       
       // Apply next month
       const today = new Date();
@@ -122,7 +128,7 @@ export default function DashboardClient({
       
       // Fetch current to keep it
       const res = await fetch('/api/admin/settings?key=milk_tier_prices');
-      const currentData = await res.json();
+      const currentData: { value?: { prices?: Record<string, number> } } = await res.json()
       const currentPrices = currentData?.value?.prices || { '0.5': 40, '1.0': 80, '1.5': 120, '2.0': 160 };
 
       body.value = {
@@ -146,24 +152,13 @@ export default function DashboardClient({
         setPriceMessage(null)
       }, 2000)
 
-    } catch (err: any) {
-      setPriceMessage({ text: err.message, type: 'error' })
+    } catch (err: unknown) {
+      setPriceMessage({ text: err instanceof Error ? err.message : 'Failed to update price', type: 'error' })
     } finally {
       setIsUpdatingPrice(false)
     }
   }
 
-  useEffect(() => {
-    const hr = new Date().getHours()
-    if (hr < 12) setGreeting('Good Morning')
-    else if (hr < 17) setGreeting('Good Afternoon')
-    else setGreeting('Good Evening')
-
-    const d = new Date()
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    setFormattedDate(`${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`)
-  }, [])
 
   // Calculate percentages for subscription breakdown
   const totalSubs = subOverview.active + subOverview.pending || 1
@@ -185,7 +180,8 @@ export default function DashboardClient({
           {/* Welcome Text */}
           <div>
             <h1 className="text-[22px] font-black font-display flex items-center gap-2 text-white dark:text-slate-100">
-              {greeting}, Admin ðŸ‘‹
+              <span>{greeting}, Admin</span>
+              <Sparkles size={18} className="text-blue-100/90" aria-hidden="true" />
             </h1>
             <p className="text-[12px] font-medium text-blue-200/70 dark:text-slate-400 mt-1">
               {formattedDate}
@@ -198,17 +194,17 @@ export default function DashboardClient({
           {/* Quick Stat Pills */}
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>ðŸ¥›</span>
+              <Droplet size={12} className="text-blue-100" aria-hidden="true" />
               <span>{stats.totalLitresToday}L delivering today</span>
             </div>
-            
+
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>ðŸ‘¥</span>
+              <Users size={12} className="text-blue-100" aria-hidden="true" />
               <span>{stats.activeSubscriptions} active customers</span>
             </div>
 
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>â°</span>
+              <Clock size={12} className="text-blue-100" aria-hidden="true" />
               <span>Cutoff: 9:00 PM</span>
             </div>
           </div>
@@ -319,7 +315,7 @@ export default function DashboardClient({
               Monthly Revenue
             </h4>
             <p className="text-2xl sm:text-3xl font-black tracking-tight leading-none font-display text-slate-800 dark:text-white">
-              â‚¹{stats.totalRevenue.toLocaleString('en-IN')}
+              ₹{stats.totalRevenue.toLocaleString('en-IN')}
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
@@ -686,22 +682,21 @@ export default function DashboardClient({
             <p className="text-slate-550 dark:text-slate-400 text-sm mb-6 leading-relaxed">
               Set the new daily price for each tier explicitly. This allows you to set custom prices for different quantities.
             </p>
-
             <div className="mb-6 grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">0.5 L (â‚¹)</label>
+                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">0.5 L (₹)</label>
                 <input type="number" value={prices['0.5']} onChange={(e) => setPrices({...prices, '0.5': e.target.value})} className="w-full p-3 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none text-base font-black" />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">1.0 L (â‚¹)</label>
+                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">1.0 L (₹)</label>
                 <input type="number" value={prices['1.0']} onChange={(e) => setPrices({...prices, '1.0': e.target.value})} className="w-full p-3 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none text-base font-black" />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">1.5 L (â‚¹)</label>
+                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">1.5 L (₹)</label>
                 <input type="number" value={prices['1.5']} onChange={(e) => setPrices({...prices, '1.5': e.target.value})} className="w-full p-3 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none text-base font-black" />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">2.0 L (â‚¹)</label>
+                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">2.0 L (₹)</label>
                 <input type="number" value={prices['2.0']} onChange={(e) => setPrices({...prices, '2.0': e.target.value})} className="w-full p-3 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none text-base font-black" />
               </div>
             </div>
@@ -794,4 +789,7 @@ export default function DashboardClient({
     </div>
   )
 }
+
+
+
 
