@@ -111,13 +111,13 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                 {group.items.map((item) => {
                   const isActive = pathname === item.href || (pathname.startsWith(item.href + '/') && item.href !== '/dashboard')
                   const Icon = item.icon
-                  
+
                   const linkContent = (
                     <div
                       className={cn(
                         "flex items-center gap-3 px-3 h-10 rounded-xl transition-all duration-150 relative overflow-hidden",
-                        isActive 
-                          ? "bg-[#014DA4]/10 dark:bg-[#014DA4]/15 text-[#014DA4] dark:text-blue-400 font-bold" 
+                        isActive
+                          ? "bg-[#014DA4]/10 dark:bg-[#014DA4]/15 text-[#014DA4] dark:text-blue-400 font-bold"
                           : "text-slate-600 dark:text-slate-300 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/45 font-medium"
                       )}
                     >
@@ -200,22 +200,22 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             <div
               className={cn(
                 "hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border",
-                status === 'active' 
-                  ? "bg-green-500/10 text-green-700 border-green-200/40" 
+                status === 'active'
+                  ? "bg-green-500/10 text-green-700 border-green-200/40"
                   : "bg-amber-500/10 text-amber-700 border-amber-200/40"
               )}
             >
-              <span 
+              <span
                 className={cn(
-                  "w-1.5 h-1.5 rounded-full", 
+                  "w-1.5 h-1.5 rounded-full",
                   status === 'active' ? "bg-green-500" : "bg-amber-500"
-                )} 
+                )}
               />
               {status === 'active' ? 'Active Plan' : status === 'paused' ? 'Paused' : 'Payment Due'}
             </div>
 
             <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-800" />
-            
+
             <ThemeToggle />
 
             <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-800" />
@@ -301,13 +301,13 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                       {group.items.map((item) => {
                         const isActive = pathname === item.href || (pathname.startsWith(item.href + '/') && item.href !== '/dashboard')
                         const Icon = item.icon
-                        
+
                         const linkContent = (
                           <div
                             className={cn(
                               "flex items-center gap-3 px-3 h-10 rounded-xl transition-all duration-150 relative overflow-hidden",
-                              isActive 
-                                ? "bg-[#014DA4]/10 dark:bg-[#014DA4]/15 text-[#014DA4] dark:text-blue-400 font-bold" 
+                              isActive
+                                ? "bg-[#014DA4]/10 dark:bg-[#014DA4]/15 text-[#014DA4] dark:text-blue-400 font-bold"
                                 : "text-slate-655 dark:text-slate-300 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/45 font-medium"
                             )}
                           >

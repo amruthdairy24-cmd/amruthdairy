@@ -8,6 +8,7 @@ import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { cn } from '@/lib/utils'
+import { isCreditAdjustmentType } from '@/lib/billing'
 
 interface Invoice {
   id: string;
@@ -176,7 +177,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
     { 
       header: 'Type', 
       cell: (row) => {
-        const isCredit = row.amount < 0 || row.adjustment_type.includes('credit')
+        const isCredit = row.amount < 0 || isCreditAdjustmentType(row.adjustment_type)
         return (
           <span className={cn(
             "inline-flex text-[9.5px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border",
@@ -209,7 +210,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       header: 'Amount', 
       align: 'right', 
       cell: (row) => {
-        const isCredit = row.amount < 0 || row.adjustment_type.includes('credit')
+        const isCredit = row.amount < 0 || isCreditAdjustmentType(row.adjustment_type)
         return (
           <div className="text-right">
             <p className={cn(

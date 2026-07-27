@@ -40,12 +40,27 @@ export interface DashboardData {
     amount_paid: number;
   } | null;
   upcoming_skips: Array<{ skip_date: string; credit_amount: number }>;
-  upcoming_extras?: Array<{ id: string; order_date: string; extra_litres: number; charge_amount: number; skip_credit_applied: number; net_charge_amount: number; status: string }>;
+  upcoming_extras?: Array<{ id: string; order_date: string; charge_month?: string; extra_litres: number; charge_amount: number; skip_credit_applied: number; net_charge_amount: number; status: string }>;
+  next_month_summary?: { billing_month: string; credit_total: number; credit_used: number; credit_remaining: number; extra_charge_total: number; estimated_due: number };
   next_month_change: { quantity: number; amount: number } | null;
   recent_deliveries: Array<{ delivery_date: string; total_litres: number; delivery_status: string }>;
   upcoming_adjustments?: Array<{ id: string; adjustment_type: string; amount: number; description: string; target_month: string; refund_status?: string }>;
   latest_paid_month: string | null;
   excluded_dates?: string[];
+  next_paid_month?: {
+    id: string;
+    billing_month: string;
+    days_delivered: number;
+    days_skipped: number;
+    extra_litres_ordered: number;
+    skip_credit: number;
+    extra_charges: number;
+    carry_in_balance: number;
+    net_due: number;
+    amount_paid: number;
+    monthly_amount: number;
+    payment_status: string;
+  } | null;
 }
 
 interface DashboardDataContextType {

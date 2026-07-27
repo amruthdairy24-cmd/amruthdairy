@@ -33,7 +33,6 @@ export function Modal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        {/* Overlay */}
         <Dialog.Overlay
           className={cn(
             'fixed inset-0 z-50',
@@ -43,7 +42,6 @@ export function Modal({
           )}
         />
 
-        {/* Content */}
         <Dialog.Content
           className={cn(
             'fixed left-1/2 top-1/2 z-50',
@@ -56,7 +54,6 @@ export function Modal({
             'data-[state=open]:animate-fade-up'
           )}
         >
-          {/* Close button */}
           <Dialog.Close asChild>
             <button
               className={cn(
@@ -73,7 +70,6 @@ export function Modal({
             </button>
           </Dialog.Close>
 
-          {/* Header */}
           <div className="mb-6">
             <Dialog.Title className="text-xl font-bold text-teal-900 dark:text-white">
               {title}
@@ -85,10 +81,8 @@ export function Modal({
             )}
           </div>
 
-          {/* Body */}
           <div className="text-teal-900/80 dark:text-brown-600">{children}</div>
 
-          {/* Footer */}
           {footer && (
             <div className="mt-8 flex items-center justify-end gap-3">
               {footer}
@@ -100,7 +94,6 @@ export function Modal({
   )
 }
 
-// Confirm Modal — for destructive actions
 interface ConfirmModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -110,6 +103,7 @@ interface ConfirmModalProps {
   onConfirm: () => void
   loading?: boolean
   danger?: boolean
+  errorMessage?: string
 }
 
 export function ConfirmModal({
@@ -121,6 +115,7 @@ export function ConfirmModal({
   onConfirm,
   loading = false,
   danger = false,
+  errorMessage,
 }: ConfirmModalProps) {
   return (
     <Modal
@@ -144,7 +139,14 @@ export function ConfirmModal({
         </>
       }
     >
-      <p className="text-sm text-teal-900/70 dark:text-teal-300/70 leading-relaxed">{message}</p>
+      <div className="space-y-4">
+        <p className="text-sm text-teal-900/70 dark:text-teal-300/70 leading-relaxed">{message}</p>
+        {errorMessage && (
+          <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
+            {errorMessage}
+          </div>
+        )}
+      </div>
     </Modal>
   )
 }

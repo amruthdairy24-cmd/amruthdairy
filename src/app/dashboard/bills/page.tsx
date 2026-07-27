@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   FileText, CreditCard, CheckCircle2, ShieldCheck, AlertCircle,
   TrendingUp, Info, Milk, SkipForward, Palmtree, PlusCircle,
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn, getTodayIST } from '@/lib/utils'
+import { isCreditAdjustmentType } from '@/lib/billing'
 import Link from 'next/link'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
@@ -86,6 +87,24 @@ export default function BillsPage() {
   const [upcomingExtras, setUpcomingExtras] = useState<ExtraMilkOrder[]>([])
 
   const [nextMonthChange, setNextMonthChange] = useState<any>(null)
+  const [nextMonthSummary, setNextMonthSummary] = useState<any>(null)
+
+  const [nextPaidMonth, setNextPaidMonth] = useState<BillingData | null>(null)
+  const [selectedMonthKey, setSelectedMonthKey] = useState<'current' | 'next'>('current')
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = React.useRef<HTMLDivElement>(null)
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!dropdownOpen) return
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [dropdownOpen])
 
   const [showPayModal, setShowPayModal] = useState(false)
   const [paymentStep, setPaymentStep] = useState<'details' | 'processing' | 'success'>('details')
@@ -244,16 +263,19 @@ export default function BillsPage() {
   }
 
   // ─── Derived Values ───
-  const monthName = new Date(bill.billing_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+  // If user switched to next month view, use that data instead
+  const activeBill = (selectedMonthKey === 'next' && nextPaidMonth) ? nextPaidMonth : bill
+
+  const monthName = new Date(activeBill.billing_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
   // Payment status: check payment_status field first, then fall back to amount_paid check
   // Treat as paid in dev mode if the subscription is active but billing hasn't caught up (local Razorpay bypass)
-  const isDevMockPaid = process.env.NODE_ENV === 'development' && subscription?.status === 'active' && bill.payment_status === 'pending';
-  const isPaid = mockPaid || bill.payment_status === 'paid' || (bill.amount_paid > 0 && bill.amount_paid >= bill.net_due) || isDevMockPaid;
-  const hasPendingBill = bill.net_due > 0 && !isPaid
-  const basePlanAmount = bill.monthly_amount || (bill.net_due + bill.skip_credit - bill.extra_charges + bill.carry_in_balance)
+  const isDevMockPaid = process.env.NODE_ENV === 'development' && subscription?.status === 'active' && activeBill.payment_status === 'pending';
+  const isPaid = mockPaid || activeBill.payment_status === 'paid' || (activeBill.amount_paid > 0 && activeBill.amount_paid >= activeBill.net_due) || isDevMockPaid;
+  const hasPendingBill = activeBill.net_due > 0 && !isPaid
+  const basePlanAmount = activeBill.monthly_amount || (activeBill.net_due + activeBill.skip_credit - activeBill.extra_charges + activeBill.carry_in_balance)
 
   // Billing cycle dates
-  const billingDate = new Date(bill.billing_month)
+  const billingDate = new Date(activeBill.billing_month)
   const cycleStart = new Date(billingDate.getFullYear(), billingDate.getMonth(), 1)
   const cycleEnd = new Date(billingDate.getFullYear(), billingDate.getMonth() + 1, 0)
   const cycleStartStr = cycleStart.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
@@ -264,9 +286,7 @@ export default function BillsPage() {
   const cycleProgress = Math.round((dayOfMonth / totalDaysInMonth) * 100)
 
   // Carry forward amount
-  const carryForwardSum = upcomingAdjustments
-    .filter(a => a.adjustment_type.includes('credit') || a.amount < 0)
-    .reduce((sum, a) => sum + Math.abs(a.amount), 0)
+  const carryForwardSum = nextMonthSummary?.credit_remaining ?? 0
 
   // Extra milk upcoming
   const totalGrossExtraMilk = upcomingExtras.reduce((sum, e) => sum + (e.charge_amount || 0), 0)
@@ -296,6 +316,59 @@ export default function BillsPage() {
       {/* Ambient background glows */}
       <div className="absolute -top-32 -right-32 w-[340px] h-[340px] bg-gradient-to-br from-blue-500/5 to-emerald-500/5 blur-[90px] rounded-full pointer-events-none" />
       <div className="absolute top-[50%] -left-32 w-[260px] h-[260px] bg-gradient-to-tr from-amber-400/5 to-blue-400/5 blur-[80px] rounded-full pointer-events-none" />
+
+      {/* ─── Month Selector Dropdown (only visible when next month is pre-paid) ─── */}
+      {nextPaidMonth && (() => {
+        const months = [
+          { key: 'current' as const, label: new Date(bill!.billing_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), paid: activeBill.payment_status === 'paid' || mockPaid },
+          { key: 'next' as const, label: new Date(nextPaidMonth.billing_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), paid: true },
+        ]
+        const selected = months.find(m => m.key === selectedMonthKey)!
+        return (
+          <motion.div variants={itemVariants} className="relative z-20 w-fit">
+            <div className="group relative" ref={dropdownRef}>
+              {/* Trigger */}
+              <button
+                onClick={() => setDropdownOpen(o => !o)}
+                className="flex items-center gap-2.5 h-10 pl-3.5 pr-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md hover:border-[#014DA4]/30 dark:hover:border-blue-700/40 transition-all text-sm font-bold text-slate-700 dark:text-slate-200 select-none"
+              >
+                <Calendar size={13} className="text-[#014DA4] dark:text-blue-400 flex-shrink-0" />
+                <span>{selected.label}</span>
+                {selected.paid && (
+                  <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">Paid</span>
+                )}
+                <svg className={cn('w-3.5 h-3.5 text-slate-400 dark:text-slate-500 ml-0.5 transition-transform duration-200', dropdownOpen && 'rotate-180')} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+              </button>
+
+              {/* Dropdown panel */}
+              {dropdownOpen && (
+                <div className="absolute top-full left-0 mt-1.5 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden z-30">
+                  {months.map((m) => (
+                    <button
+                      key={m.key}
+                      onClick={() => { setSelectedMonthKey(m.key); setDropdownOpen(false); }}
+                      className={cn(
+                        'w-full flex items-center justify-between px-4 py-3 text-[13px] font-semibold transition-colors',
+                        m.key === selectedMonthKey
+                          ? 'bg-blue-50 dark:bg-blue-950/30 text-[#014DA4] dark:text-blue-400'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', m.key === selectedMonthKey ? 'bg-[#014DA4] dark:bg-blue-400' : 'bg-slate-300 dark:bg-slate-600')} />
+                        {m.label}
+                      </span>
+                      {m.paid && (
+                        <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-full flex-shrink-0">Paid</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )
+      })()}
 
       {/* ═══════════════════════════════════════════════════════════
           ZONE 1 — HERO PLAN CARD (full width)
@@ -396,7 +469,7 @@ export default function BillsPage() {
                 "text-2xl font-black font-mono tracking-tight mt-1.5 leading-none",
                 hasPendingBill ? "text-[#014DA4] dark:text-blue-400" : "text-emerald-600 dark:text-emerald-400"
               )}>
-                ₹{isPaid ? '0.00' : bill.net_due.toFixed(2)}
+                ₹{isPaid ? '0.00' : activeBill.net_due.toFixed(2)}
               </p>
               <div className="mt-2">
                 {isPaid ? (
@@ -552,9 +625,9 @@ export default function BillsPage() {
                       <SkipForward size={13} />
                     </div>
                     <span className="font-bold text-slate-700 dark:text-slate-200">Skip Day Credits</span>
-                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">{bill.days_skipped} days</span>
+                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">{activeBill.days_skipped} days</span>
                   </span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-500 font-mono text-sm">-₹{bill.skip_credit.toFixed(2)}</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-500 font-mono text-sm">-₹{activeBill.skip_credit.toFixed(2)}</span>
                 </div>
 
               </div>
@@ -568,9 +641,9 @@ export default function BillsPage() {
                       <PlusCircle size={13} />
                     </div>
                     <span className="font-bold text-slate-700 dark:text-slate-200">Extra Milk Charges</span>
-                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">+{bill.extra_litres_ordered}L</span>
+                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/60 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wide uppercase">+{activeBill.extra_litres_ordered}L</span>
                   </span>
-                  <span className="font-bold text-rose-500 dark:text-rose-400 font-mono text-sm">+₹{bill.extra_charges.toFixed(2)}</span>
+                  <span className="font-bold text-rose-500 dark:text-rose-400 font-mono text-sm">+₹{activeBill.extra_charges.toFixed(2)}</span>
                 </div>
 
                 {/* Previous Carry-over */}
@@ -581,8 +654,8 @@ export default function BillsPage() {
                     </div>
                     <span className="font-bold text-slate-700 dark:text-slate-200">Previous Carry-over</span>
                   </span>
-                  <span className={cn("font-bold font-mono text-sm", bill.carry_in_balance >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-500 dark:text-rose-400")}>
-                    {bill.carry_in_balance >= 0 ? '-' : '+'}₹{Math.abs(bill.carry_in_balance).toFixed(2)}
+                  <span className={cn("font-bold font-mono text-sm", activeBill.carry_in_balance >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-rose-500 dark:text-rose-400")}>
+                    {activeBill.carry_in_balance >= 0 ? '-' : '+'}₹{Math.abs(activeBill.carry_in_balance).toFixed(2)}
                   </span>
                 </div>
 
@@ -612,7 +685,7 @@ export default function BillsPage() {
                   </span>
                 )}
                 <span className={cn("font-mono text-2xl font-black tracking-tight", isPaid ? "text-emerald-600 dark:text-emerald-400 line-through opacity-60" : "text-[#014DA4] dark:text-blue-400")}>
-                  ₹{bill.net_due.toFixed(2)}
+                  ₹{activeBill.net_due.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -626,12 +699,12 @@ export default function BillsPage() {
                 className="flex-1 h-12 rounded-xl bg-[#014DA4] hover:bg-[#014DA4]/90 active:scale-[0.98] text-white font-extrabold text-xs shadow-md shadow-[#014DA4]/10 transition-all border-none flex items-center justify-center gap-2 cursor-pointer group"
               >
                 <CreditCard size={15} className="group-hover:scale-110 transition-transform" />
-                <span>Pay Balance Due (₹{bill.net_due.toFixed(2)})</span>
+                <span>Pay Balance Due (₹{activeBill.net_due.toFixed(2)})</span>
               </button>
             )}
             <button
               onClick={() => {
-                const billDetails = { ...bill };
+                const billDetails = { ...activeBill };
                 if (isPaid) {
                   billDetails.payment_status = 'paid';
                   if (billDetails.amount_paid < billDetails.net_due) {
@@ -846,8 +919,8 @@ export default function BillsPage() {
                     </span>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">{adj.description || 'Adjustment'}</span>
                   </span>
-                  <span className={cn("font-mono font-black ml-2.5 text-right text-sm", adj.adjustment_type.includes('credit') || adj.amount < 0 ? "text-emerald-600" : "text-rose-500")}>
-                    {adj.adjustment_type.includes('credit') || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
+                  <span className={cn("font-mono font-black ml-2.5 text-right text-sm", isCreditAdjustmentType(adj.adjustment_type) || adj.amount < 0 ? "text-emerald-600" : "text-rose-500")}>
+                    {isCreditAdjustmentType(adj.adjustment_type) || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
                   </span>
                 </div>
               ))}
