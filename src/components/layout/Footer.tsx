@@ -264,15 +264,12 @@ export function Footer() {
 
       {/* ── BOTTOM BAR ────────────────────────────── */}
       <div className="border-t border-white/10 py-6 bg-[#00255c]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full grid grid-cols-1 md:grid-cols-3 items-center gap-4 text-xs text-blue-100/75">
-          {/* Left spacer to center copyright on desktop */}
-          <div className="hidden md:block" />
-          
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full flex flex-col items-center gap-2 text-xs text-blue-100/75">
           <p className="text-center">
-            © 2005 Amruth Dairy Farm, Padi, Mangaluru. All rights reserved.
+            © {new Date().getFullYear()} Amruth Dairy Farm, Padi, Mangaluru. All rights reserved.
           </p>
           
-          <p className="text-center md:text-right">
+          <p className="text-center">
             Developed by{' '}
             <a
               href="https://ekodrix.com"

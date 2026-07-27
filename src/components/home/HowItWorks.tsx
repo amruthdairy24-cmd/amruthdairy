@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { Check, ShieldCheck, Heart, Clock, Award, BookOpen } from 'lucide-react'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import Link from 'next/link'
+import { BookVisitModal } from './BookVisitModal'
 
 export function HowItWorks() {
   return (
@@ -65,15 +66,6 @@ export function HowItWorks() {
                 ))}
               </div>
 
-              {/* CTA */}
-              <div className="w-full flex justify-center md:justify-start">
-                <Link 
-                  href="/our-story"
-                  className="flex items-center justify-center h-11 px-7 rounded-full bg-[#1230AE] text-white font-semibold text-[13.5px] cursor-pointer shadow-[0_4px_14px_rgba(18,48,174,0.3)] hover:scale-[1.03] hover:shadow-[0_6px_20px_rgba(18,48,174,0.4)] transition-all duration-200"
-                >
-                  Know More About Us
-                </Link>
-              </div>
             </div>
           </ScrollReveal>
 
@@ -122,9 +114,11 @@ export function HowItWorks() {
                   ))}
                 </div>
 
-                <button className="w-full h-11 md:h-9 rounded-full bg-[#1230AE] text-white font-semibold text-sm md:text-[12.5px] cursor-pointer shadow-[0_4px_12px_rgba(18,48,174,0.25)] hover:scale-[1.02] transition-all duration-200">
-                  Book Your Visit
-                </button>
+                <BookVisitModal>
+                  <button className="w-full h-11 md:h-9 rounded-full bg-[#1230AE] text-white font-semibold text-sm md:text-[12.5px] cursor-pointer shadow-[0_4px_12px_rgba(18,48,174,0.25)] hover:scale-[1.02] transition-all duration-200">
+                    Book Your Visit
+                  </button>
+                </BookVisitModal>
               </div>
 
             </div>
