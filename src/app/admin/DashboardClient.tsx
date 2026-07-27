@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import {
@@ -174,7 +174,7 @@ export default function DashboardClient({
     <div className="space-y-6">
       
       {/* =========================================
-          SECTION 1 — HERO WELCOME BANNER
+          SECTION 1 â€” HERO WELCOME BANNER
       ========================================= */}
       <div className="rounded-3xl p-7 md:p-8 relative overflow-hidden text-white bg-[#014DA4] dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-950 shadow-lg border border-white/5 dark:border-slate-800">
         {/* Decorative background blurs */}
@@ -185,7 +185,7 @@ export default function DashboardClient({
           {/* Welcome Text */}
           <div>
             <h1 className="text-[22px] font-black font-display flex items-center gap-2 text-white dark:text-slate-100">
-              {greeting}, Admin 👋
+              {greeting}, Admin ðŸ‘‹
             </h1>
             <p className="text-[12px] font-medium text-blue-200/70 dark:text-slate-400 mt-1">
               {formattedDate}
@@ -198,17 +198,17 @@ export default function DashboardClient({
           {/* Quick Stat Pills */}
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>🥛</span>
+              <span>ðŸ¥›</span>
               <span>{stats.totalLitresToday}L delivering today</span>
             </div>
             
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>👥</span>
+              <span>ðŸ‘¥</span>
               <span>{stats.activeSubscriptions} active customers</span>
             </div>
 
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>⏰</span>
+              <span>â°</span>
               <span>Cutoff: 9:00 PM</span>
             </div>
           </div>
@@ -239,7 +239,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 2 — KPI METRIC CARDS
+          SECTION 2 â€” KPI METRIC CARDS
       ========================================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
@@ -319,7 +319,7 @@ export default function DashboardClient({
               Monthly Revenue
             </h4>
             <p className="text-2xl sm:text-3xl font-black tracking-tight leading-none font-display text-slate-800 dark:text-white">
-              ₹{stats.totalRevenue.toLocaleString('en-IN')}
+              â‚¹{stats.totalRevenue.toLocaleString('en-IN')}
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
@@ -337,7 +337,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 3 — TWO COLUMN (60/40 SPLIT)
+          SECTION 3 â€” TWO COLUMN (60/40 SPLIT)
       ========================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         
@@ -528,7 +528,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 4 — THREE COLUMN BOTTOM
+          SECTION 4 â€” THREE COLUMN BOTTOM
       ========================================= */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
@@ -689,19 +689,19 @@ export default function DashboardClient({
 
             <div className="mb-6 grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">0.5 L (₹)</label>
+                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">0.5 L (â‚¹)</label>
                 <input type="number" value={prices['0.5']} onChange={(e) => setPrices({...prices, '0.5': e.target.value})} className="w-full p-3 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none text-base font-black" />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">1.0 L (₹)</label>
+                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">1.0 L (â‚¹)</label>
                 <input type="number" value={prices['1.0']} onChange={(e) => setPrices({...prices, '1.0': e.target.value})} className="w-full p-3 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none text-base font-black" />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">1.5 L (₹)</label>
+                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">1.5 L (â‚¹)</label>
                 <input type="number" value={prices['1.5']} onChange={(e) => setPrices({...prices, '1.5': e.target.value})} className="w-full p-3 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none text-base font-black" />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">2.0 L (₹)</label>
+                <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">2.0 L (â‚¹)</label>
                 <input type="number" value={prices['2.0']} onChange={(e) => setPrices({...prices, '2.0': e.target.value})} className="w-full p-3 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none text-base font-black" />
               </div>
             </div>
@@ -756,6 +756,7 @@ export default function DashboardClient({
       {selectedCustomerId && selectedCustomerName && (
         <>
           <AdminSkipModal 
+            key={`${selectedCustomerId}-${showSkipModal ? 'open' : 'closed'}`}
             isOpen={showSkipModal}
             onClose={() => {
               setShowSkipModal(false)
@@ -793,3 +794,4 @@ export default function DashboardClient({
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -237,6 +237,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
       {actionCustomer && (
         <>
           <AdminSkipModal
+            key={`${actionCustomer.id}-${activeModal === 'skip' ? 'open' : 'closed'}`}
             isOpen={activeModal === 'skip'}
             onClose={() => { setActiveModal(null); setActionCustomer(null) }}
             onSuccess={() => router.refresh()}
@@ -316,3 +317,4 @@ export function CustomersClient({ data }: { data: Customer[] }) {
     </div>
   )
 }
+
