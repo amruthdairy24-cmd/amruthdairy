@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Users,
   Wallet,
@@ -10,15 +10,20 @@ import {
   UserPlus,
   CreditCard,
   SkipForward,
-  BarChart2,
-  Package,
   CheckCircle2,
   ArrowUpRight,
   X,
-  AlertCircle
+  Droplet,
+  Sparkles,
+  Clock
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { StatusBadge } from '@/components/admin/StatusBadge'
+import { SelectCustomerModal } from '@/components/admin/SelectCustomerModal'
+import { AdminSkipModal } from '@/components/admin/AdminSkipModal'
+import { AdminExtraMilkModal } from '@/components/admin/AdminExtraMilkModal'
+import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
 import { cn } from '@/lib/utils'
 
 interface DashboardClientProps {
@@ -51,7 +56,10 @@ interface DashboardClientProps {
     active: number
     pending: number
   }
-  rawMilkPricing?: any
+  rawMilkPricing?: {
+    next_prices?: Record<string, number>
+    prices?: Record<string, number>
+  }
 }
 
 export default function DashboardClient({ 
@@ -61,8 +69,22 @@ export default function DashboardClient({
   subOverview,
   rawMilkPricing
 }: DashboardClientProps) {
-  const [greeting, setGreeting] = useState('Good Morning')
-  const [formattedDate, setFormattedDate] = useState('')
+  const router = useRouter()
+  const now = new Date()
+  const hour = now.getHours()
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  const formattedDate = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`
+
+  // Modals state
+  const [showSelectCustomer, setShowSelectCustomer] = useState(false)
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null)
+  const [showSkipModal, setShowSkipModal] = useState(false)
+  const [showExtraMilkModal, setShowExtraMilkModal] = useState(false)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'skip' | 'extra' | 'subscription'>('skip')
 
   // Milk Pricing Modal State
   const [showPriceModal, setShowPriceModal] = useState(false)
@@ -97,7 +119,7 @@ export default function DashboardClient({
         throw new Error("Please enter valid positive prices for all tiers.")
       }
 
-      const body: any = { key: 'milk_tier_prices' };
+      const body: { key: string; value?: { prices: Record<string, number>; next_prices: Record<string, number>; effective_date: string } } = { key: 'milk_tier_prices' }
       
       // Apply next month
       const today = new Date();
@@ -106,7 +128,7 @@ export default function DashboardClient({
       
       // Fetch current to keep it
       const res = await fetch('/api/admin/settings?key=milk_tier_prices');
-      const currentData = await res.json();
+      const currentData: { value?: { prices?: Record<string, number> } } = await res.json()
       const currentPrices = currentData?.value?.prices || { '0.5': 40, '1.0': 80, '1.5': 120, '2.0': 160 };
 
       body.value = {
@@ -130,24 +152,13 @@ export default function DashboardClient({
         setPriceMessage(null)
       }, 2000)
 
-    } catch (err: any) {
-      setPriceMessage({ text: err.message, type: 'error' })
+    } catch (err: unknown) {
+      setPriceMessage({ text: err instanceof Error ? err.message : 'Failed to update price', type: 'error' })
     } finally {
       setIsUpdatingPrice(false)
     }
   }
 
-  useEffect(() => {
-    const hr = new Date().getHours()
-    if (hr < 12) setGreeting('Good Morning')
-    else if (hr < 17) setGreeting('Good Afternoon')
-    else setGreeting('Good Evening')
-
-    const d = new Date()
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    setFormattedDate(`${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`)
-  }, [])
 
   // Calculate percentages for subscription breakdown
   const totalSubs = subOverview.active + subOverview.pending || 1
@@ -158,7 +169,7 @@ export default function DashboardClient({
     <div className="space-y-6">
       
       {/* =========================================
-          SECTION 1 — HERO WELCOME BANNER
+          SECTION 1 â€” HERO WELCOME BANNER
       ========================================= */}
       <div className="rounded-3xl p-7 md:p-8 relative overflow-hidden text-white bg-[#014DA4] dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-950 shadow-lg border border-white/5 dark:border-slate-800">
         {/* Decorative background blurs */}
@@ -169,7 +180,8 @@ export default function DashboardClient({
           {/* Welcome Text */}
           <div>
             <h1 className="text-[22px] font-black font-display flex items-center gap-2 text-white dark:text-slate-100">
-              {greeting}, Admin 👋
+              <span>{greeting}, Admin</span>
+              <Sparkles size={18} className="text-blue-100/90" aria-hidden="true" />
             </h1>
             <p className="text-[12px] font-medium text-blue-200/70 dark:text-slate-400 mt-1">
               {formattedDate}
@@ -182,17 +194,17 @@ export default function DashboardClient({
           {/* Quick Stat Pills */}
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>🥛</span>
+              <Droplet size={12} className="text-blue-100" aria-hidden="true" />
               <span>{stats.totalLitresToday}L delivering today</span>
             </div>
-            
+
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>👥</span>
+              <Users size={12} className="text-blue-100" aria-hidden="true" />
               <span>{stats.activeSubscriptions} active customers</span>
             </div>
 
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
-              <span>⏰</span>
+              <Clock size={12} className="text-blue-100" aria-hidden="true" />
               <span>Cutoff: 9:00 PM</span>
             </div>
           </div>
@@ -223,7 +235,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 2 — KPI METRIC CARDS
+          SECTION 2 â€” KPI METRIC CARDS
       ========================================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
@@ -321,7 +333,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 3 — TWO COLUMN (60/40 SPLIT)
+          SECTION 3 â€” TWO COLUMN (60/40 SPLIT)
       ========================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         
@@ -451,13 +463,29 @@ export default function DashboardClient({
 
           {/* Actions Grid */}
           <div className="grid grid-cols-2 gap-3.5 mt-5 flex-1">
-            <Link 
-              href="/admin/deliveries" 
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
+            <button 
+              onClick={() => { setPendingAction('skip'); setShowSelectCustomer(true) }}
+              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-amber-400/50 dark:hover:border-amber-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs cursor-pointer h-[78px]"
             >
-              <Truck size={22} className="text-blue-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Delivery List</span>
-            </Link>
+              <SkipForward size={22} className="text-amber-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Mark Skip</span>
+            </button>
+
+            <button 
+              onClick={() => { setPendingAction('extra'); setShowSelectCustomer(true) }}
+              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-cyan-400/50 dark:hover:border-cyan-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs cursor-pointer h-[78px]"
+            >
+              <Droplet size={22} className="text-cyan-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">Add Extra Milk</span>
+            </button>
+
+            <button 
+              onClick={() => { setPendingAction('subscription'); setShowSelectCustomer(true) }}
+              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs cursor-pointer h-[78px]"
+            >
+              <Wallet size={22} className="text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">New Subscription</span>
+            </button>
 
             <Link 
               href="/admin/customers" 
@@ -479,24 +507,8 @@ export default function DashboardClient({
               href="/admin/deliveries" 
               className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
             >
-              <SkipForward size={22} className="text-amber-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Mark Skip</span>
-            </Link>
-
-            <Link 
-              href="/admin/reports" 
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
-            >
-              <BarChart2 size={22} className="text-rose-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Monthly Report</span>
-            </Link>
-
-            <Link 
-              href="/admin/products" 
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
-            >
-              <Package size={22} className="text-indigo-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Update Stock</span>
+              <Truck size={22} className="text-indigo-500 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Delivery List</span>
             </Link>
 
             <button 
@@ -512,7 +524,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 4 — THREE COLUMN BOTTOM
+          SECTION 4 â€” THREE COLUMN BOTTOM
       ========================================= */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
@@ -670,7 +682,6 @@ export default function DashboardClient({
             <p className="text-slate-550 dark:text-slate-400 text-sm mb-6 leading-relaxed">
               Set the new daily price for each tier explicitly. This allows you to set custom prices for different quantities.
             </p>
-
             <div className="mb-6 grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-550 mb-2 uppercase tracking-wider">0.5 L (₹)</label>
@@ -718,6 +729,67 @@ export default function DashboardClient({
           </div>
         </div>
       )}
+      {/* Modals for customer selection & customer actions */}
+      <SelectCustomerModal 
+        isOpen={showSelectCustomer}
+        onClose={() => setShowSelectCustomer(false)}
+        actionContext={
+          pendingAction === 'skip' ? { title: 'Skip Day', subtitle: 'Select customer to mark skip' }
+          : pendingAction === 'extra' ? { title: 'Extra Milk', subtitle: 'Select customer for extra order' }
+          : { title: 'New Subscription', subtitle: 'Select customer to subscribe' }
+        }
+        onSelect={(customerId, customerName) => {
+          setShowSelectCustomer(false)
+          setSelectedCustomerId(customerId)
+          setSelectedCustomerName(customerName)
+          if (pendingAction === 'skip') setShowSkipModal(true)
+          else if (pendingAction === 'extra') setShowExtraMilkModal(true)
+          else if (pendingAction === 'subscription') setShowSubscriptionModal(true)
+        }}
+      />
+
+      {selectedCustomerId && selectedCustomerName && (
+        <>
+          <AdminSkipModal 
+            key={`${selectedCustomerId}-${showSkipModal ? 'open' : 'closed'}`}
+            isOpen={showSkipModal}
+            onClose={() => {
+              setShowSkipModal(false)
+              setSelectedCustomerId(null)
+              setSelectedCustomerName(null)
+            }}
+            onSuccess={() => router.refresh()}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomerName}
+          />
+          <AdminExtraMilkModal 
+            isOpen={showExtraMilkModal}
+            onClose={() => {
+              setShowExtraMilkModal(false)
+              setSelectedCustomerId(null)
+              setSelectedCustomerName(null)
+            }}
+            onSuccess={() => router.refresh()}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomerName}
+          />
+          <AdminSubscriptionModal 
+            isOpen={showSubscriptionModal}
+            onClose={() => {
+              setShowSubscriptionModal(false)
+              setSelectedCustomerId(null)
+              setSelectedCustomerName(null)
+            }}
+            onSuccess={() => router.refresh()}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomerName}
+          />
+        </>
+      )}
     </div>
   )
 }
+
+
+
+
