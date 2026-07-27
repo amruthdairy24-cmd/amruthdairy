@@ -47,6 +47,20 @@ export interface DashboardData {
   upcoming_adjustments?: Array<{ id: string; adjustment_type: string; amount: number; description: string; target_month: string; refund_status?: string }>;
   latest_paid_month: string | null;
   excluded_dates?: string[];
+  next_paid_month?: {
+    id: string;
+    billing_month: string;
+    days_delivered: number;
+    days_skipped: number;
+    extra_litres_ordered: number;
+    skip_credit: number;
+    extra_charges: number;
+    carry_in_balance: number;
+    net_due: number;
+    amount_paid: number;
+    monthly_amount: number;
+    payment_status: string;
+  } | null;
 }
 
 interface DashboardDataContextType {
