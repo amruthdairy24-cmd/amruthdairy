@@ -22,11 +22,13 @@ export async function POST(request: Request) {
       phone,
       area,
       address,
+      landmark,
+      floor_notes,
       skip_otp
     } = await request.json();
 
-    if (!full_name || !email) {
-      return NextResponse.json({ success: false, message: 'Full name and email are required' }, { status: 400 });
+    if (!full_name || !email || !area || !address) {
+      return NextResponse.json({ success: false, message: 'Full name, email, area, and address are required' }, { status: 400 });
     }
 
     const emailLower = email.toLowerCase().trim();
@@ -77,9 +79,12 @@ export async function POST(request: Request) {
         phone: phone || null,
         area: area || null,
         address: address || null,
+        landmark: landmark || null,
+        floor_notes: floor_notes || null,
         role: 'customer',
         is_active: true,
         email_verified: skip_otp === true,
+        has_used_trial: false,
       },
       { onConflict: 'id' }
     );
@@ -103,3 +108,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
   }
 }
+

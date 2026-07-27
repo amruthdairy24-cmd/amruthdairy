@@ -18,7 +18,9 @@ export async function GET() {
       .maybeSingle();
 
     return NextResponse.json({ success: true, profile });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error'
+    console.error('Profile GET route exception:', message)
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -33,7 +35,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { full_name, address, area, landmark, floor_notes } = body;
+    const { full_name, phone, address, area, landmark, floor_notes } = body;
 
     if (!full_name || !address || !area) {
       return NextResponse.json({ success: false, message: 'Full name, address, and area are required' }, { status: 400 });
@@ -51,7 +53,7 @@ export async function PUT(request: Request) {
       .from('profiles')
       .upsert({
         id: user.id,
-        phone: existing?.phone || user.phone || null,
+        phone: phone || existing?.phone || user.phone || null,
         full_name,
         address,
         area,
@@ -73,8 +75,9 @@ export async function PUT(request: Request) {
       message: 'Profile updated successfully'
     });
 
-  } catch (err: any) {
-    console.error('Profile update route exception:', err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal Server Error'
+    console.error('Profile update route exception:', message);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
   }
 }

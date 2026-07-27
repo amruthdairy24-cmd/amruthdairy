@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, Phone, MapPin, AlertTriangle, Trash2, Search } from 'lucide-react'
+import { Users, Phone, MapPin, AlertTriangle, Trash2, Search, MessageCircleMore } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
@@ -63,6 +63,17 @@ export function CustomersClient({ data }: { data: Customer[] }) {
   }
   
   // Format dates cleanly like "24 Jun 2026"
+  const buildWhatsAppUrl = (customer: Customer) => {
+    const digits = (customer.phone || '').replace(/\D/g, '')
+    if (!digits) return ''
+    const normalized = digits.length === 10 ? `91${digits}` : digits
+    const message = encodeURIComponent(
+      `Hi ${customer.full_name || 'there'}, this is Amruth Dairy. ` +
+      `We would like to discuss your milk subscription.`
+    )
+    return `https://wa.me/${normalized}?text=${message}`
+  }
+
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr)
     if (isNaN(d.getTime())) return 'N/A'
@@ -211,13 +222,30 @@ export function CustomersClient({ data }: { data: Customer[] }) {
         columns={columns} 
         onView={(row) => setViewingEntry(row)} 
         onDelete={(row) => setCustomerToDelete(row)}
-        renderActions={(row) => (
-          <CustomerActionsMenu 
-            onManageSubscription={() => { setActionCustomer(row); setActiveModal('subscription') }}
-            onMarkSkip={() => { setActionCustomer(row); setActiveModal('skip') }}
-            onAddExtraMilk={() => { setActionCustomer(row); setActiveModal('extra') }}
-          />
-        )}
+        renderActions={(row) => {
+          const whatsappUrl = buildWhatsAppUrl(row)
+          return (
+            <div className="flex items-center gap-1.5">
+              {whatsappUrl && (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center rounded-lg text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-900/40 transition-colors cursor-pointer w-[30px] h-[30px]"
+                  title="Message on WhatsApp"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MessageCircleMore size={14} />
+                </a>
+              )}
+              <CustomerActionsMenu 
+                onManageSubscription={() => { setActionCustomer(row); setActiveModal('subscription') }}
+                onMarkSkip={() => { setActionCustomer(row); setActiveModal('skip') }}
+                onAddExtraMilk={() => { setActionCustomer(row); setActiveModal('extra') }}
+              />
+            </div>
+          )
+        }}
       />
 
       <RowDetailsModal
