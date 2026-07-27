@@ -221,15 +221,14 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-800" />
 
             {/* Profile Chip */}
-            <div className="flex items-center gap-2 p-1 rounded-xl transition-colors cursor-pointer border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-200">
+            <div className="flex items-center gap-2 p-1 rounded-xl transition-colors border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-200">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs text-white bg-gradient-to-br from-[#014DA4] to-brand-secondary">
                 {initials}
               </div>
-              <div className="hidden sm:block text-left min-w-0 pr-1">
+              <div className="hidden sm:block text-left min-w-0 pr-2">
                 <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200 leading-none">{profileName.split(' ')[0]}</p>
-                <p className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-0.5 leading-none">Subscriber</p>
+                <p className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5 leading-none">Subscriber</p>
               </div>
-              <ChevronDown size={13} className="text-slate-400 dark:text-slate-500" />
             </div>
           </div>
         </header>
