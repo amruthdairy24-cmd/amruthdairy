@@ -22,7 +22,8 @@ import {
   Bell,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  MapPin
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/utils/supabase/client'
@@ -48,6 +49,7 @@ const sidebarGroups = [
       { href: '/admin/products', icon: Package, label: 'Products' },
       { href: '/admin/capacity', icon: Layers, label: 'Capacity' },
       { href: '/admin/waitlist', icon: Clock, label: 'Waitlist' },
+      { href: '/admin/farm-visits', icon: MapPin, label: 'Farm Visits' },
     ]
   },
   {
