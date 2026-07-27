@@ -31,7 +31,7 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConfirmModal } from '@/components/ui'
 import { Logo } from '@/components/layout/Logo'
 
-// Nav Items Grouped by Section
+// Nav Items Grouped by Section (Forcing recompile)
 const sidebarGroups = [
   {
     title: 'Operations',
