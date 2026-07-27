@@ -2,12 +2,12 @@
 
 import Script from 'next/script'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Calendar, MapPin, CreditCard, CheckCircle,
   ArrowRight, User, Home, Building2, FileText,
   Phone, ShieldCheck, Clock, Leaf, ChevronDown,
-  Package, Tag, Milk, AlertCircle
+  Package, Tag, Milk, AlertCircle, Search
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -36,6 +36,10 @@ export default function OnboardingPage() {
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [area, setArea] = useState('Padil')
+  const [areaOpen, setAreaOpen] = useState(false)
+  const [areaSearch, setAreaSearch] = useState('')
+  const areaRef = useRef<HTMLDivElement>(null)
+  const areaSearchRef = useRef<HTMLInputElement>(null)
   const [landmark, setLandmark] = useState('')
   const [floorNotes, setFloorNotes] = useState('')
 
@@ -64,6 +68,18 @@ export default function OnboardingPage() {
     setExcludedDates(dates)
   }, [])
 
+  // Close area dropdown when clicking outside
+  useEffect(() => {
+    if (!areaOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      if (areaRef.current && !areaRef.current.contains(e.target as Node)) {
+        setAreaOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [areaOpen])
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const minDateParam = params.get('min_date')
@@ -87,7 +103,7 @@ export default function OnboardingPage() {
     async function loadPrice() {
       setPriceLoading(true)
       const [prices, trialData] = await Promise.all([
-        fetchMilkPricesClient(),
+        fetchMilkPricesClient(startDate),
         import('@/lib/billing').then(m => m.fetchTrialPricingClient())
       ]);
       setMilkPrices(prices)
@@ -95,7 +111,7 @@ export default function OnboardingPage() {
       setPriceLoading(false)
     }
     loadPrice()
-  }, [])
+  }, [startDate])
 
   useEffect(() => {
     if (!startDate || Object.keys(milkPrices).length === 0) return
@@ -437,18 +453,73 @@ export default function OnboardingPage() {
                           <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1">
                             <MapPin size={12} /> Delivery Locality / Area
                           </label>
-                          <div className="relative flex items-center">
-                            <MapPin size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 pointer-events-none z-10" />
-                            <select
-                              value={area}
-                              onChange={e => setArea(e.target.value)}
-                              className="w-full h-11 pl-11 pr-10 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm appearance-none cursor-pointer"
+                          <div className="relative" ref={areaRef}>
+                            {/* Trigger button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAreaOpen(o => {
+                                  if (!o) {
+                                    setAreaSearch('')
+                                    setTimeout(() => areaSearchRef.current?.focus(), 50)
+                                  }
+                                  return !o
+                                })
+                              }}
+                              className="w-full h-11 pl-11 pr-10 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer text-left flex items-center"
                             >
-                              {DELIVERY_AREAS.map(a => (
-                                <option key={a} value={a}>{a}</option>
-                              ))}
-                            </select>
-                            <ChevronDown size={14} className="absolute right-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                              <MapPin size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                              <span className="truncate">{area}</span>
+                              <ChevronDown
+                                size={14}
+                                className={`absolute right-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${areaOpen ? 'rotate-180' : ''}`}
+                              />
+                            </button>
+
+                            {/* Searchable dropdown — always opens downward */}
+                            {areaOpen && (
+                              <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden">
+                                {/* Search input */}
+                                <div className="sticky top-0 p-2 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+                                  <div className="relative flex items-center">
+                                    <Search size={13} className="absolute left-3 text-slate-400 pointer-events-none" />
+                                    <input
+                                      ref={areaSearchRef}
+                                      type="text"
+                                      value={areaSearch}
+                                      onChange={e => setAreaSearch(e.target.value)}
+                                      placeholder="Search area..."
+                                      className="w-full h-8 pl-8 pr-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-800 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    />
+                                  </div>
+                                </div>
+                                {/* Filtered list */}
+                                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                  {DELIVERY_AREAS.filter(a =>
+                                    a.toLowerCase().includes(areaSearch.toLowerCase())
+                                  ).length === 0 ? (
+                                    <p className="px-4 py-3 text-xs text-slate-400 text-center">No areas found</p>
+                                  ) : (
+                                    DELIVERY_AREAS.filter(a =>
+                                      a.toLowerCase().includes(areaSearch.toLowerCase())
+                                    ).map(a => (
+                                      <button
+                                        key={a}
+                                        type="button"
+                                        onClick={() => { setArea(a); setAreaOpen(false); setAreaSearch('') }}
+                                        className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer ${
+                                          a === area
+                                            ? 'bg-blue-600 text-white'
+                                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                        }`}
+                                      >
+                                        {a}
+                                      </button>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -921,11 +992,11 @@ export default function OnboardingPage() {
                 </div>
               </div>
               <a
-                href="tel:+91+91 9880143808"
+                href="tel:+919880143808"
                 className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 h-9 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-[11px] font-extrabold text-blue-600 transition-all shadow-sm"
               >
                 <Phone size={13} />
-                +91 98765 43210
+                +91 9880143808
               </a>
             </div>
 

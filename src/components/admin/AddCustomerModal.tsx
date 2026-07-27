@@ -18,6 +18,10 @@ export function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCustomerModa
     full_name: '',
     email: '',
     phone: '',
+    area: '',
+    address: '',
+    landmark: '',
+    floor_notes: '',
     skip_otp: true
   })
 
@@ -43,8 +47,8 @@ export function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCustomerModa
 
       onSuccess()
       onClose()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to add customer')
     } finally {
       setLoading(false)
     }
@@ -126,6 +130,52 @@ export function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCustomerModa
                 </div>
               </div>
 
+              <div>
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Delivery Area *</label>
+                <input 
+                  required
+                  type="text" 
+                  value={formData.area}
+                  onChange={e => setFormData(f => ({ ...f, area: e.target.value }))}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all"
+                  placeholder="Padil"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Delivery Address *</label>
+                <textarea 
+                  required
+                  value={formData.address}
+                  onChange={e => setFormData(f => ({ ...f, address: e.target.value }))}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all min-h-[96px] resize-y"
+                  placeholder="House / apartment / street details"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Landmark</label>
+                  <input 
+                    type="text" 
+                    value={formData.landmark}
+                    onChange={e => setFormData(f => ({ ...f, landmark: e.target.value }))}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all"
+                    placeholder="Near..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Floor Notes</label>
+                  <input 
+                    type="text" 
+                    value={formData.floor_notes}
+                    onChange={e => setFormData(f => ({ ...f, floor_notes: e.target.value }))}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all"
+                    placeholder="Left at door / 2nd floor / etc."
+                  />
+                </div>
+              </div>
+
               <div className="pt-2">
                 <label className="flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/30 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                   <div className="relative flex items-center justify-center">
@@ -180,3 +230,4 @@ export function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCustomerModa
     </AnimatePresence>
   )
 }
+

@@ -33,7 +33,7 @@ function RenewContent() {
   const searchParams = useSearchParams()
   const targetMonth = searchParams.get('month')
   
-  const { data: dashboardData, loading: contextLoading } = useDashboardData()
+  const { data: dashboardData, loading: contextLoading, refetch } = useDashboardData()
 
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<RenewData | null>(null)
@@ -57,11 +57,11 @@ function RenewContent() {
 
   useEffect(() => {
     async function loadPrice() {
-      const prices = await fetchMilkPricesClient()
+      const prices = await fetchMilkPricesClient(targetDate)
       setMilkPrices(prices)
     }
     loadPrice()
-  }, [])
+  }, [targetDate])
   
   useEffect(() => {
     if (dashboardData) {
@@ -205,12 +205,15 @@ function RenewContent() {
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_signature: response.razorpay_signature,
-                  billing_month_id: json.billing_month_id
+                  billing_month_id: json.billing_month_id,
+                  adjustment_ids: json.adjustment_ids,
+                  target_month: formattedTargetMonth
                 })
               });
               const verifyData = await verifyRes.json();
               if (verifyData.success) {
                 toast.success('Payment successful! Subscription renewed.')
+                await refetch()
                 router.push('/dashboard')
               } else {
                 toast.error(verifyData.message || 'Payment verification failed.')
@@ -238,8 +241,32 @@ function RenewContent() {
         razorpay.open()
       } else {
         // Development mode bypass
-        toast.success('Subscription renewed (Development Bypass).')
-        router.push('/dashboard')
+        try {
+          const verifyRes = await fetch('/api/payments/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_payment_id: "dev_bypass_payment",
+              razorpay_order_id: "dev_bypass_order",
+              razorpay_signature: "dev_bypass_signature",
+              billing_month_id: json.billing_month_id,
+              adjustment_ids: json.adjustment_ids,
+              target_month: formattedTargetMonth
+            })
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            toast.success('Subscription renewed (Development Bypass).')
+            await refetch()
+            router.push('/dashboard')
+          } else {
+            toast.error(verifyData.message || 'Bypass processing failed.')
+            setIsProcessing(false)
+          }
+        } catch (err) {
+          toast.error('Bypass verification request failed.')
+          setIsProcessing(false)
+        }
       }
       
     } catch (err) {

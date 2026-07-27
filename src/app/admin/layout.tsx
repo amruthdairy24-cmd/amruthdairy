@@ -22,7 +22,8 @@ import {
   Bell,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  MapPin
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/utils/supabase/client'
@@ -30,7 +31,7 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import { ConfirmModal } from '@/components/ui'
 import { Logo } from '@/components/layout/Logo'
 
-// Nav Items Grouped by Section
+// Nav Items Grouped by Section (Forcing recompile)
 const sidebarGroups = [
   {
     title: 'Operations',
@@ -48,6 +49,7 @@ const sidebarGroups = [
       { href: '/admin/products', icon: Package, label: 'Products' },
       { href: '/admin/capacity', icon: Layers, label: 'Capacity' },
       { href: '/admin/waitlist', icon: Clock, label: 'Waitlist' },
+      { href: '/admin/farm-visits', icon: MapPin, label: 'Farm Visits' },
     ]
   },
   {
