@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { getTodayIST } from '@/lib/utils';
 import { formatInTimeZone } from 'date-fns-tz';
+import { calculateCarryForwardCreditBalance, calculateNetDueFromCredits, sumCreditAdjustments, sumExtraMilkCreditUsage, sumExtraMilkNetCharges } from '@/lib/billing';
 
 export async function GET(request: Request) {
   try {
@@ -133,7 +134,7 @@ export async function GET(request: Request) {
       // 10. Upcoming extra milk orders
       supabase
         .from('extra_milk_orders')
-        .select('id, order_date, extra_litres, charge_amount, skip_credit_applied, net_charge_amount, status')
+        .select('id, order_date, charge_month, extra_litres, charge_amount, skip_credit_applied, net_charge_amount, status')
         .eq('subscription_id', subId)
         .gte('order_date', todayStr)
         .in('status', ['confirmed']),
@@ -227,26 +228,14 @@ export async function GET(request: Request) {
       live_net_due = (current_month as any).net_due;
     }
 
-    let adjustments = upcoming_adjustments || [];
-    const totalSkipCreditsAppliedToExtra = (upcoming_extras || []).reduce((sum, e) => sum + Number(e.skip_credit_applied || 0), 0);
-    
-    if (totalSkipCreditsAppliedToExtra > 0 && adjustments.length > 0) {
-      let remainingOffset = totalSkipCreditsAppliedToExtra;
-      adjustments = adjustments.map(adj => {
-        if (remainingOffset > 0 && (adj.adjustment_type.includes('credit') || adj.amount < 0)) {
-          const creditAmount = Math.abs(adj.amount);
-          if (creditAmount <= remainingOffset) {
-            remainingOffset -= creditAmount;
-            return { ...adj, amount: 0 };
-          } else {
-            const newAmount = -(creditAmount - remainingOffset);
-            remainingOffset = 0;
-            return { ...adj, amount: newAmount };
-          }
-        }
-        return adj;
-      }).filter(adj => adj.amount !== 0);
-    }
+    const adjustments = upcoming_adjustments || [];
+    const nextMonthAdjustments = adjustments.filter(adj => adj.target_month === formattedNextMonth);
+    const nextMonthExtras = (upcoming_extras || []).filter(extra => extra.charge_month === formattedNextMonth);
+    const nextMonthCreditTotal = sumCreditAdjustments(nextMonthAdjustments);
+    const nextMonthCreditUsed = sumExtraMilkCreditUsage(nextMonthExtras);
+    const nextMonthCreditRemaining = calculateCarryForwardCreditBalance(nextMonthAdjustments, nextMonthExtras, formattedNextMonth);
+    const nextMonthExtraCharges = sumExtraMilkNetCharges(nextMonthExtras);
+    const nextMonthEstimatedDue = Math.max(0, calculateNetDueFromCredits(Number(subscription.monthly_amount) || 0, nextMonthCreditRemaining, nextMonthExtraCharges));
 
     return NextResponse.json({
       success: true,
@@ -259,6 +248,14 @@ export async function GET(request: Request) {
       next_paid_month: next_paid_month_data || null,
       upcoming_skips: upcoming_skips || [],
       upcoming_extras: upcoming_extras || [],
+      next_month_summary: {
+        billing_month: formattedNextMonth,
+        credit_total: nextMonthCreditTotal,
+        credit_used: nextMonthCreditUsed,
+        credit_remaining: nextMonthCreditRemaining,
+        extra_charge_total: nextMonthExtraCharges,
+        estimated_due: nextMonthEstimatedDue
+      },
       next_month_change: next_month_change ? { 
         quantity: next_month_change.to_quantity, 
         amount: next_month_change.new_monthly_amount 

@@ -145,7 +145,7 @@ export async function POST(request: Request) {
       await adminSupabase.from('billing_adjustments').insert({
         subscription_id: subscription.id,
         customer_id: customer_id,
-        adjustment_type: 'charge',
+        adjustment_type: 'extra_charge',
         amount: net_charge,
         target_month: charge_month,
         reason: `Extra milk (+${extra_litres}L) on ${order_date}`

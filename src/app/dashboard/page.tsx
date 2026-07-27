@@ -8,6 +8,7 @@ import {
   Wallet, CreditCard, CheckCircle, ArrowUpRight, X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { isCreditAdjustmentType } from '@/lib/billing'
 import { motion } from 'framer-motion'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
 
@@ -50,6 +51,7 @@ interface DashboardData {
   } | null;
   upcoming_skips: Array<{ skip_date: string; credit_amount: number }>;
 
+  next_month_summary?: { billing_month: string; credit_total: number; credit_used: number; credit_remaining: number; extra_charge_total: number; estimated_due: number };
   next_month_change: { quantity: number; amount: number } | null;
   recent_deliveries: Array<{ delivery_date: string; total_litres: number; delivery_status: string }>;
   upcoming_adjustments?: Array<{ id: string, adjustment_type: string, amount: number, description: string, target_month: string, refund_status?: string }>;
@@ -388,21 +390,14 @@ export default function CustomerDashboard() {
     return null;
   }
 
-  const { subscription, current_month, recent_deliveries, profile, upcoming_adjustments } = data
+  const { subscription, current_month, recent_deliveries, profile, upcoming_adjustments, next_month_summary } = data
   const todayStr = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
   const accountBalance = subscription.balance || 0
-
-  // Calculate total carry-forward skip credits from upcoming adjustments
-  const carryForwardCredits = (upcoming_adjustments || []).reduce((sum, adj) => {
-    if (adj.amount < 0) return sum + Math.abs(adj.amount);
-    return sum;
-  }, 0);
-
-  // Combined total credits: account balance + carry-forward skip credits
-  const totalCredits = accountBalance + carryForwardCredits;
-  const totalCreditsText = `₹${Math.abs(totalCredits).toFixed(0)}`;
+  const carryForwardCredits = next_month_summary?.credit_remaining ?? 0
+  const totalCredits = accountBalance + carryForwardCredits
+  const totalCreditsText = `\u20B9${Math.abs(totalCredits).toFixed(0)}`
 
   return (
     <motion.div
@@ -789,8 +784,8 @@ export default function CustomerDashboard() {
                             </span>
                             <span className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium truncate mt-0.5">{adj.description || 'Adjustment'}</span>
                           </span>
-                          <span className={cn("font-mono font-black ml-2.5 text-right flex-shrink-0 text-[12px]", adj.adjustment_type.includes('credit') || adj.amount < 0 ? "text-emerald-600" : "text-rose-550")}>
-                            {adj.adjustment_type.includes('credit') || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
+                          <span className={cn("font-mono font-black ml-2.5 text-right flex-shrink-0 text-[12px]", isCreditAdjustmentType(adj.adjustment_type) || adj.amount < 0 ? "text-emerald-600" : "text-rose-550")}>
+                            {isCreditAdjustmentType(adj.adjustment_type) || adj.amount < 0 ? '-' : '+'}₹{Math.abs(adj.amount).toFixed(2)}
                           </span>
                         </div>
                       ))}

@@ -163,6 +163,152 @@ export function calculateSkipCredit(dailyRate: number): number {
   return Math.round(dailyRate * 100) / 100
 }
 
+export interface BillingAdjustmentLike {
+  adjustment_type?: string | null
+  amount?: number | string | null
+  target_month?: string | null
+  is_applied?: boolean | null
+}
+
+export interface ExtraMilkOrderLike {
+  charge_month?: string | null
+  net_charge_amount?: number | string | null
+  skip_credit_applied?: number | string | null
+  status?: string | null
+}
+
+function toMoneyValue(value: number | string | null | undefined): number {
+  const parsed = Number(value ?? 0)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function roundMoney(value: number): number {
+  return Math.round(value * 100) / 100
+}
+
+export function isCreditAdjustmentType(type?: string | null): boolean {
+  return type === 'skip_credit'
+    || type === 'vacation_credit'
+    || type === 'carry_forward'
+    || type === 'credit'
+}
+
+export function isChargeAdjustmentType(type?: string | null): boolean {
+  return type === 'extra_charge'
+    || type === 'charge'
+}
+
+export function getNextMonthStart(monthStart: string): string {
+  const [yearStr, monthStr] = monthStart.slice(0, 10).split('-')
+  const year = Number(yearStr)
+  const month = Number(monthStr)
+  const nextMonth = month === 12 ? 1 : month + 1
+  const nextYear = month === 12 ? year + 1 : year
+  return getFirstOfMonth(nextYear, nextMonth)
+}
+
+export function sumCreditAdjustments(
+  adjustments: BillingAdjustmentLike[] = [],
+  targetMonth?: string
+): number {
+  const total = adjustments.reduce((sum, adjustment) => {
+    if (targetMonth && adjustment.target_month !== targetMonth) {
+      return sum
+    }
+
+    const amount = toMoneyValue(adjustment.amount)
+    if (amount < 0 || isCreditAdjustmentType(adjustment.adjustment_type)) {
+      return sum + Math.abs(amount)
+    }
+
+    return sum
+  }, 0)
+
+  return roundMoney(total)
+}
+
+export function sumChargeAdjustments(
+  adjustments: BillingAdjustmentLike[] = [],
+  targetMonth?: string
+): number {
+  const total = adjustments.reduce((sum, adjustment) => {
+    if (targetMonth && adjustment.target_month !== targetMonth) {
+      return sum
+    }
+
+    const amount = toMoneyValue(adjustment.amount)
+    if (amount > 0 && isChargeAdjustmentType(adjustment.adjustment_type)) {
+      return sum + amount
+    }
+
+    return sum
+  }, 0)
+
+  return roundMoney(total)
+}
+
+export function sumExtraMilkNetCharges(
+  orders: ExtraMilkOrderLike[] = [],
+  chargeMonth?: string
+): number {
+  const total = orders.reduce((sum, order) => {
+    if (chargeMonth && order.charge_month !== chargeMonth) {
+      return sum
+    }
+
+    if (order.status && order.status !== 'confirmed') {
+      return sum
+    }
+
+    const netCharge = order.net_charge_amount !== undefined && order.net_charge_amount !== null
+      ? toMoneyValue(order.net_charge_amount)
+      : 0
+
+    return sum + Math.max(0, netCharge)
+  }, 0)
+
+  return roundMoney(total)
+}
+
+export function sumExtraMilkCreditUsage(
+  orders: ExtraMilkOrderLike[] = [],
+  chargeMonth?: string
+): number {
+  const total = orders.reduce((sum, order) => {
+    if (chargeMonth && order.charge_month !== chargeMonth) {
+      return sum
+    }
+
+    if (order.status && order.status !== 'confirmed') {
+      return sum
+    }
+
+    return sum + Math.max(0, toMoneyValue(order.skip_credit_applied))
+  }, 0)
+
+  return roundMoney(total)
+}
+
+export function calculateCarryForwardCreditBalance(
+  adjustments: BillingAdjustmentLike[] = [],
+  extraMilkOrders: ExtraMilkOrderLike[] = [],
+  targetMonth?: string
+): number {
+  const creditTotal = sumCreditAdjustments(adjustments, targetMonth)
+  const creditUsed = sumExtraMilkCreditUsage(extraMilkOrders, targetMonth)
+  return roundMoney(Math.max(0, creditTotal - creditUsed))
+}
+
+export function calculateNetDueFromCredits(
+  monthlyAmount: number,
+  creditBalance: number,
+  extraMilkCharges: number,
+  carryInBalance = 0,
+  amountPaid = 0
+): number {
+  return roundMoney((monthlyAmount + extraMilkCharges) - creditBalance + carryInBalance - amountPaid)
+}
+
 
 /**
  * Calculate extra milk charge.
