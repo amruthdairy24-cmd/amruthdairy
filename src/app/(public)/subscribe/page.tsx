@@ -73,6 +73,7 @@ export default function SubscribePage() {
   const [milkPrices, setMilkPrices] = useState<Record<string, number>>({})
   const [priceLoading, setPriceLoading] = useState(true)
   const [faqOpen, setFaqOpen] = useState<number | null>(null)
+  const [showAllAreas, setShowAllAreas] = useState(false)
 
   // ── Check auth ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -448,51 +449,44 @@ export default function SubscribePage() {
               </p>
             </div>
 
-            <div className="flex flex-col md:flex-row items-stretch gap-10">
-              {/* Badges List (Below card on mobile, left side on desktop) */}
-              <div className="flex-1 flex flex-wrap gap-2 justify-center md:justify-start order-2 md:order-1">
-                {DELIVERY_AREAS.map((area) => (
-                  <span
+            {/* Desktop: show all — Mobile: show 6 + View More button */}
+            <div className="flex flex-wrap justify-center gap-3 mt-8 w-full">
+              {DELIVERY_AREAS.map((area, i) => {
+                const isHiddenOnMobile = !showAllAreas && i >= 6
+                return (
+                  <motion.div
                     key={area}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-50/50 hover:bg-sky-50 text-[#0f2e5c] text-xs font-semibold border border-sky-100/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs hover:border-[#0284C7]/20 cursor-default"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.2, delay: i * 0.03 }}
+                    className={cn(
+                      "inline-flex items-center gap-1 px-3 py-1 rounded-full bg-sky-50/50 hover:bg-sky-100 text-[#0f2e5c] text-[11px] font-semibold border border-sky-100/80 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md cursor-default",
+                      isHiddenOnMobile ? "hidden sm:inline-flex" : "inline-flex"
+                    )}
                   >
                     <MapPin size={11} className="text-[#0284C7]" />
                     {area}
-                  </span>
-                ))}
-              </div>
-
-              {/* Delivery Hub Status Card (Above badges on mobile, right side on desktop) */}
-              <div className="flex-shrink-0 w-full md:w-80 rounded-[32px] bg-gradient-to-br from-[#02429C] to-[#013378] text-white p-6 shadow-xl shadow-[#02429C]/10 flex flex-col items-center text-center justify-between relative overflow-hidden min-h-[280px] md:min-h-0 border border-blue-900/40 order-1 md:order-2">
-                {/* Decorative Glowing Elements */}
-                <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-sky-500/10 blur-2xl pointer-events-none" />
-                <div className="absolute -bottom-16 -left-16 w-36 h-36 rounded-full bg-blue-300/10 blur-2xl pointer-events-none" />
-                
-                <div className="flex flex-col items-center w-full">
-                  {/* Pulse Pin Container */}
-                  <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-6 border border-white/20 relative shadow-inner">
-                    <MapPin size={22} className="text-yellow-400 fill-yellow-400/20" />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 border border-blue-900 animate-pulse" />
-                  </div>
-                  
-                  <span className="text-[10px] font-extrabold tracking-widest uppercase text-white/50">Delivery Zone</span>
-                  <h3 className="font-cabinet font-bold text-xl text-white mt-1 mb-2 leading-tight">
-                    Mangalore Hub
-                  </h3>
-                  <p className="text-white/70 text-xs leading-relaxed">
-                    Delivering fresh, pure milk directly to your doorstep every single morning before you wake up.
-                  </p>
-                </div>
-
-                <div className="border-t border-white/10 pt-4 mt-6 w-full flex flex-col items-center">
-                  <p className="text-[9px] font-extrabold text-white/40 uppercase tracking-widest mb-1.5">Primary Area</p>
-                  <div className="flex items-center gap-2 justify-center">
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                    <p className="text-white font-bold text-sm">Padil & surrounding areas</p>
-                  </div>
-                </div>
-              </div>
+                  </motion.div>
+                )
+              })}
             </div>
+
+            {/* View More / View Less button — mobile only */}
+            {DELIVERY_AREAS.length > 6 && (
+              <div className="flex justify-center mt-4 sm:hidden">
+                <button
+                  onClick={() => setShowAllAreas(!showAllAreas)}
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#0284C7]/10 text-[#0284C7] text-[12px] font-bold border border-[#0284C7]/20 hover:bg-[#0284C7]/15 transition-all duration-200"
+                >
+                  <ChevronDown
+                    size={14}
+                    className={cn('transition-transform duration-300', showAllAreas ? 'rotate-180' : '')}
+                  />
+                  {showAllAreas ? 'View Less' : `+${DELIVERY_AREAS.length - 6} More Areas`}
+                </button>
+              </div>
+            )}
           </div>
         </section>
 

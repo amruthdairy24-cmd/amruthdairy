@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { fetchMilkPrices, calculateDailyRate, calculateProRataAmount } from '@/lib/billing';
+import { calculateCarryForwardCreditBalance, calculateNetDueFromCredits, fetchMilkPrices, calculateDailyRate, calculateProRataAmount, sumCreditAdjustments, sumExtraMilkNetCharges } from '@/lib/billing';
 import Razorpay from 'razorpay';
 
 const adminSupabase = createAdminClient();
@@ -90,12 +90,20 @@ export async function POST(request: Request) {
     // Fetch unapplied adjustments to apply as carry-forward
     const { data: adjustments } = await supabase
       .from('billing_adjustments')
-      .select('id, amount, adjustment_type')
+      .select('id, amount, adjustment_type, target_month')
       .eq('subscription_id', existingSub.id)
       .eq('is_applied', false);
-      
-    const carryInBalance = (adjustments || []).reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
-    const net_due = Math.max(0, monthly_amount - carryInBalance);
+
+    const { data: extraMilkOrders } = await adminSupabase
+      .from('extra_milk_orders')
+      .select('id, charge_month, extra_litres, charge_amount, skip_credit_applied, net_charge_amount, status')
+      .eq('subscription_id', existingSub.id)
+      .eq('charge_month', target_month)
+      .eq('status', 'confirmed');
+
+    const carryInBalance = calculateCarryForwardCreditBalance(adjustments || [], extraMilkOrders || [], target_month);
+    const extraMilkCharges = sumExtraMilkNetCharges(extraMilkOrders || [], target_month);
+    const net_due = Math.max(0, calculateNetDueFromCredits(monthly_amount, carryInBalance, extraMilkCharges));
 
     // 4. Create Razorpay order
     let razorpay_order_id = null;

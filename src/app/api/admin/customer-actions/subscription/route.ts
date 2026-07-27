@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { fetchMilkPrices, calculateDailyRate, calculateProRataAmount, getDaysInMonth } from '@/lib/billing';
+import { calculateCarryForwardCreditBalance, calculateNetDueFromCredits, fetchMilkPrices, calculateDailyRate, calculateProRataAmount, getDaysInMonth, sumExtraMilkNetCharges } from '@/lib/billing';
 import { isAdminEmail, getEarliestStartDateStr } from '@/lib/utils';
 
 export async function POST(request: Request) {
@@ -136,13 +136,21 @@ export async function POST(request: Request) {
 
       const { data: adjustments } = await adminSupabase
         .from('billing_adjustments')
-        .select('id, amount, adjustment_type')
+        .select('id, amount, adjustment_type, target_month')
         .eq('subscription_id', existingSub.id)
         .eq('target_month', target_month)
         .eq('is_applied', false);
-        
-      const carryInBalance = (adjustments || []).reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
-      const net_due = Math.max(0, monthly_amount - carryInBalance);
+
+      const { data: extraMilkOrders } = await adminSupabase
+        .from('extra_milk_orders')
+        .select('id, charge_month, extra_litres, charge_amount, skip_credit_applied, net_charge_amount, status')
+        .eq('subscription_id', existingSub.id)
+        .eq('charge_month', target_month)
+        .eq('status', 'confirmed');
+
+      const carryInBalance = calculateCarryForwardCreditBalance(adjustments || [], extraMilkOrders || [], target_month);
+      const extraMilkCharges = sumExtraMilkNetCharges(extraMilkOrders || [], target_month);
+      const net_due = Math.max(0, calculateNetDueFromCredits(monthly_amount, carryInBalance, extraMilkCharges));
 
       const { data: billMonth } = await adminSupabase
         .from('billing_months')

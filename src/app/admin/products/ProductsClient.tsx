@@ -605,7 +605,7 @@ export function ProductsClient({
             )}
             <button 
               onClick={openMilkPriceModal} 
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-650 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/10 hover:shadow-lg transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer border-none"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/10 hover:shadow-lg transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer border-none"
             >
               <span>Edit Base Prices</span>
               <ArrowUpRight size={13} strokeWidth={2.5} />
@@ -1148,7 +1148,7 @@ export function ProductsClient({
               <button 
                 type="submit" 
                 disabled={isUpdatingPrice}
-                className="w-full py-3.5 bg-blue-600 hover:bg-blue-650 text-white border-none rounded-xl text-sm font-extrabold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 shadow-md shadow-blue-500/15 active:scale-98"
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white border-none rounded-xl text-sm font-extrabold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 shadow-md shadow-blue-500/15 active:scale-98"
               >
                 {isUpdatingPrice ? 'Saving Price Config...' : 'Confirm Pricing Updates'}
               </button>
