@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const [profileRes, subscriptionRes] = await Promise.all([
       supabase
         .from('profiles')
-        .select('full_name, phone, address, has_used_trial')
+        .select('full_name, phone, address, has_used_trial, referral_code, referred_by_code')
         .eq('id', user.id)
         .single(),
       supabase
