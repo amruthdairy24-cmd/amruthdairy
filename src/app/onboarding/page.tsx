@@ -106,6 +106,12 @@ export default function OnboardingPage() {
     const params = new URLSearchParams(window.location.search)
     const minDateParam = params.get('min_date')
     const quantityParam = params.get('quantity')
+    const trialParam = params.get('trial') || params.get('is_trial')
+
+    if (trialParam === 'true') {
+      setIsTrial(true)
+      setDeliveryDays(3)
+    }
 
     if (quantityParam) {
       setQuantity(Number(quantityParam))

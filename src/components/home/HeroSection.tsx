@@ -7,9 +7,9 @@ import { ArrowRight, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const slides = [
-  { src: '/images/bg/hero-banner.png', mobileSrc: '/images/bg/mobile-banner-1.png', alt: 'Amruth Dairy Premium Farm Fresh Milk Bottles' },
+  { src: '/images/bg/hero-banner.png', mobileSrc: '/images/bg/amruth-mobile-milk.png', alt: 'Amruth Dairy Premium Farm Fresh Milk Bottles' },
   { src: '/images/bg/hero-banner-2.png', mobileSrc: '/images/bg/mobile-banner-2.png', alt: 'Amruth Dairy Fresh Cow and Milk' },
-  { src: '/images/bg/hero-banner.png', mobileSrc: '/images/bg/mobile-banner-1.png', alt: 'Amruth Dairy Delicious Fresh Butter and Cheese' },
+  { src: '/images/bg/amruth-butter.png', mobileSrc: '/images/bg/amruth-mobile-banner.png', alt: 'Amruth Dairy Delicious Fresh Butter and Cheese' },
 ]
 
 export function HeroSection() {
