@@ -293,10 +293,19 @@ export default function BillsPage() {
   // Carry forward amount
   const carryForwardSum = nextMonthSummary?.credit_remaining ?? 0
 
-  // Extra milk upcoming
-  const totalGrossExtraMilk = upcomingExtras.reduce((sum, e) => sum + (e.charge_amount || 0), 0)
-  const totalExtraMilkCharges = upcomingExtras.reduce((sum, e) => sum + Number(e.net_charge_amount !== undefined ? e.net_charge_amount : e.charge_amount || 0), 0)
-  const totalSkipCreditsAppliedToExtra = upcomingExtras.reduce((sum, e) => sum + Number(e.skip_credit_applied || 0), 0)
+  // Extra milk upcoming (filtering out extra orders belonging to already paid statements)
+  const activeUnpaidExtras = upcomingExtras.filter(e => {
+    if (e.status && e.status !== 'confirmed') return false;
+    if (activeBill && isPaid && (activeBill as any).payment_status === 'paid') {
+      const billMonth = activeBill.billing_month;
+      if ((e as any).charge_month === billMonth) return false;
+    }
+    return true;
+  });
+
+  const totalGrossExtraMilk = activeUnpaidExtras.reduce((sum, e) => sum + (e.charge_amount || 0), 0)
+  const totalExtraMilkCharges = activeUnpaidExtras.reduce((sum, e) => sum + Number(e.net_charge_amount !== undefined ? e.net_charge_amount : e.charge_amount || 0), 0)
+  const totalSkipCreditsAppliedToExtra = activeUnpaidExtras.reduce((sum, e) => sum + Number(e.skip_credit_applied || 0), 0)
 
   
   const totalSkipCredits = upcomingSkips.reduce((sum: number, s: any) => sum + (s.credit_amount || 0), 0)
@@ -743,11 +752,11 @@ export default function BillsPage() {
           </div>
 
           <div className="p-5 space-y-4">
-            {upcomingExtras.length > 0 ? (
+            {activeUnpaidExtras.length > 0 ? (
               <>
                 {/* Individual extra milk orders */}
                 <div className="space-y-2">
-                  {upcomingExtras.map((extra, idx) => (
+                  {activeUnpaidExtras.map((extra, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100/60 dark:border-amber-900/20 rounded-xl text-[12.5px]">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">

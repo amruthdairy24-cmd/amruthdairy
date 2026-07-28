@@ -105,10 +105,10 @@ function RenewalBanner({ latest_paid_month, status }: { latest_paid_month: strin
   const currentYear = currentDate.getFullYear();
   const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
   const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-  
+
   const formattedCurrentMonth = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
   const formattedNextMonth = `${nextMonthYear}-${String(nextMonth).padStart(2, '0')}-01`;
-  
+
   const isPast25th = currentDate.getDate() >= 25;
 
   let renewalTargetMonth = formattedCurrentMonth;
@@ -120,7 +120,7 @@ function RenewalBanner({ latest_paid_month, status }: { latest_paid_month: strin
     renewalTargetMonth = formattedNextMonth;
     isRenewingNextMonth = true;
   }
-  
+
   if (latest_paid_month === formattedNextMonth || (latest_paid_month && latest_paid_month > formattedNextMonth)) {
     // Already paid for next month (or beyond), don't show button
     return null;
@@ -152,10 +152,10 @@ function RenewalBanner({ latest_paid_month, status }: { latest_paid_month: strin
               {isRenewingNextMonth ? "Renew for Next Month" : "Renew Subscription"}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-              {!isRenewingNextMonth 
-                ? "Your subscription for this month is pending. Renew now to resume deliveries." 
-                : isPast25th 
-                  ? "It's time to renew your milk subscription for next month." 
+              {!isRenewingNextMonth
+                ? "Your subscription for this month is pending. Renew now to resume deliveries."
+                : isPast25th
+                  ? "It's time to renew your milk subscription for next month."
                   : "Next month's renewals open on the 25th."}
             </p>
           </div>
@@ -207,7 +207,7 @@ export default function CustomerDashboard() {
 
   const handleDeclineSlot = async (waitlistId: string) => {
     if (!confirm('Are you sure you want to decline this slot? Your request will be cancelled.')) return
-    
+
     setDeclining(true)
     try {
       const res = await fetch('/api/customer/waitlist/reject', {
@@ -284,7 +284,7 @@ export default function CustomerDashboard() {
       >
         <motion.div variants={itemVariants}>
           <h1 className="text-[22px] sm:text-[28px] font-black text-slate-900 dark:text-white font-display tracking-tight flex items-center gap-2.5">
-            {wl.status === 'notified' ? 'Slot Available!' : wl.status === 'cancelled' ? 'Waitlist Cancelled' : 'Waitlist Status'} 
+            {wl.status === 'notified' ? 'Slot Available!' : wl.status === 'cancelled' ? 'Waitlist Cancelled' : 'Waitlist Status'}
             {wl.status !== 'cancelled' && <Clock size={24} className={wl.status === 'notified' ? "text-blue-95000 animate-pulse" : "text-amber-600 animate-pulse"} />}
           </h1>
           <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 mt-1">
@@ -437,11 +437,11 @@ export default function CustomerDashboard() {
   const nextMonthLongName = nextMonthDateObj.toLocaleDateString('en-IN', { month: 'long' })
   const formattedNextBillDate = `1 ${nextMonthShortName} ${nextMonthYearNum}`
 
-  const isNextMonthPaid = data.latest_paid_month === formattedNextMonthStr || 
+  const isNextMonthPaid = data.latest_paid_month === formattedNextMonthStr ||
     (data.latest_paid_month && data.latest_paid_month > formattedNextMonthStr) ||
     (data.next_paid_month && data.next_paid_month.payment_status === 'paid')
 
-  const isCurrentMonthPending = subscription.status === 'pending_payment' || 
+  const isCurrentMonthPending = subscription.status === 'pending_payment' ||
     (current_month && current_month.payment_status === 'pending' && !data.latest_paid_month)
 
   let renewalCardTitle = `Next Bill: ${formattedNextBillDate}`
@@ -525,33 +525,33 @@ export default function CustomerDashboard() {
         {/* Custom Charming Farm Scene SVG Vector Illustration */}
         <svg width="240" height="160" viewBox="0 0 240 160" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute right-8 bottom-0 opacity-90 dark:opacity-30 pointer-events-none hidden md:block select-none transform translate-y-3">
           {/* Glowing rising sun */}
-          <circle cx="160" cy="70" r="35" fill="url(#sunGlow)" opacity="0.3"/>
-          <circle cx="160" cy="70" r="14" fill="#FCD34D"/>
+          <circle cx="160" cy="70" r="35" fill="url(#sunGlow)" opacity="0.3" />
+          <circle cx="160" cy="70" r="14" fill="#FCD34D" />
           {/* Rolling Farm Hills */}
-          <path d="M60 160C110 120 160 140 220 110C240 100 260 110 280 110V160H60Z" fill="#047857" opacity="0.3"/>
-          <path d="M10 160C70 110 130 130 190 95C210 85 230 90 250 90V160H10Z" fill="#065F46" opacity="0.2"/>
+          <path d="M60 160C110 120 160 140 220 110C240 100 260 110 280 110V160H60Z" fill="#047857" opacity="0.3" />
+          <path d="M10 160C70 110 130 130 190 95C210 85 230 90 250 90V160H10Z" fill="#065F46" opacity="0.2" />
           {/* Grazing Cow Silhouette */}
           <g transform="translate(95, 115) scale(0.4)" fill="#065F46" opacity="0.45">
-            <path d="M50 30C42 30 38 28 35 25C32 28 28 30 20 30H10V45C10 47 12 48 14 48H18V65C18 68 22 68 22 65V48H38V65C38 68 42 68 42 65V48H46C48 48 50 47 50 45V30Z"/>
-            <path d="M8 30C5 30 2 28 0 25V18C0 15 3 12 6 12H15L22 22C24 25 28 26 32 26H40L45 18C47 15 50 15 52 18L58 28C60 30 62 32 65 32H75C78 32 80 34 80 37V45C80 48 78 50 75 50H70V75C70 78 65 78 65 75V50H58V75C58 78 53 78 53 75V50H18V75C18 78 13 78 13 75V50H10C8 50 6 48 6 45V30H8Z"/>
-            <path d="M78 20L84 10C86 7 90 7 92 10L98 20C100 23 98 27 94 27H82C78 27 76 23 78 20Z"/>
+            <path d="M50 30C42 30 38 28 35 25C32 28 28 30 20 30H10V45C10 47 12 48 14 48H18V65C18 68 22 68 22 65V48H38V65C38 68 42 68 42 65V48H46C48 48 50 47 50 45V30Z" />
+            <path d="M8 30C5 30 2 28 0 25V18C0 15 3 12 6 12H15L22 22C24 25 28 26 32 26H40L45 18C47 15 50 15 52 18L58 28C60 30 62 32 65 32H75C78 32 80 34 80 37V45C80 48 78 50 75 50H70V75C70 78 65 78 65 75V50H58V75C58 78 53 78 53 75V50H18V75C18 78 13 78 13 75V50H10C8 50 6 48 6 45V30H8Z" />
+            <path d="M78 20L84 10C86 7 90 7 92 10L98 20C100 23 98 27 94 27H82C78 27 76 23 78 20Z" />
           </g>
           {/* Vintage Copper Milk Churn */}
           <g transform="translate(185, 95) scale(0.65)">
-            <ellipse cx="15" cy="50" rx="11" ry="3" fill="#000000" opacity="0.2"/>
-            <path d="M7 22C7 17 10 14 15 14C20 14 23 17 23 22V45C23 48 20 50 15 50C10 50 7 48 7 45V22Z" fill="url(#churnMetal)" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1"/>
-            <path d="M10 14V8H20V14H10Z" fill="rgba(255, 255, 255, 0.8)"/>
-            <rect x="8" y="4" width="14" height="4" rx="2" fill="#D97706"/>
-            <path d="M4 14C4 10 7 8 10 8V10C8 10 6 12 6 14H4ZM26 14C26 10 23 8 20 8V10C22 10 24 12 24 14H26Z" fill="#D97706"/>
+            <ellipse cx="15" cy="50" rx="11" ry="3" fill="#000000" opacity="0.2" />
+            <path d="M7 22C7 17 10 14 15 14C20 14 23 17 23 22V45C23 48 20 50 15 50C10 50 7 48 7 45V22Z" fill="url(#churnMetal)" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1" />
+            <path d="M10 14V8H20V14H10Z" fill="rgba(255, 255, 255, 0.8)" />
+            <rect x="8" y="4" width="14" height="4" rx="2" fill="#D97706" />
+            <path d="M4 14C4 10 7 8 10 8V10C8 10 6 12 6 14H4ZM26 14C26 10 23 8 20 8V10C22 10 24 12 24 14H26Z" fill="#D97706" />
           </g>
           <defs>
             <radialGradient id="sunGlow" cx="0.5" cy="0.5" r="0.5" fx="0.5" fy="0.5">
-              <stop offset="0%" stopColor="#F59E0B" stopOpacity="1"/>
-              <stop offset="100%" stopColor="#F59E0B" stopOpacity="0"/>
+              <stop offset="0%" stopColor="#F59E0B" stopOpacity="1" />
+              <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
             </radialGradient>
             <linearGradient id="churnMetal" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.35)"/>
-              <stop offset="100%" stopColor="rgba(255, 255, 255, 0.1)"/>
+              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.35)" />
+              <stop offset="100%" stopColor="rgba(255, 255, 255, 0.1)" />
             </linearGradient>
           </defs>
         </svg>
@@ -568,13 +568,13 @@ export default function CustomerDashboard() {
                 Welcome to your morning harvest! 🌾
               </h2>
               <p className="text-xs sm:text-sm font-medium text-emerald-100/90 dark:text-slate-300 mt-2 leading-relaxed">
-                {subscription.status === 'active' 
+                {subscription.status === 'active'
                   ? 'Your raw, farm-fresh milk subscription is active. Delivered daily before 7:00 AM straight to your home.'
                   : 'Your subscription is currently paused. Resume your milk delivery anytime below.'
                 }
               </p>
             </div>
-            
+
             <div className="pt-2 flex flex-wrap items-center gap-3">
               <span className="text-[11px] font-bold text-blue-50 dark:text-slate-400 bg-emerald-950/20 dark:bg-slate-950/30 backdrop-blur-sm border border-white/5 dark:border-slate-800/50 py-2 px-3.5 rounded-xl select-none">
                 Zone: Mangalore Metro
@@ -600,8 +600,8 @@ export default function CustomerDashboard() {
       </motion.div>
 
       {/* ─── 2. DASHBOARD STATS ROW (Financial & Subscription Cards) ─── */}
-      <motion.div 
-        variants={itemVariants} 
+      <motion.div
+        variants={itemVariants}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10"
       >
         {/* Card 1: 💚 Credit Balance */}
@@ -612,7 +612,7 @@ export default function CustomerDashboard() {
               {creditBalanceText}
             </p>
             <p className="text-[10px] text-slate-400 dark:text-slate-400 font-semibold mt-1.5 truncate">
-              Will be adjusted in next bill
+              {creditBalance > 0 ? 'Will be adjusted in next bill' : 'No credit balance'}
             </p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105">
@@ -673,7 +673,7 @@ export default function CustomerDashboard() {
       <motion.div variants={itemVariants} className="relative z-10">
         <div className="bg-gradient-to-r from-sky-900 via-[#02429C] to-blue-950 rounded-2xl p-6 sm:p-7 text-white shadow-xl border border-white/10 relative overflow-hidden">
           <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
-          
+
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
             <div className="space-y-2 max-w-xl">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-black uppercase tracking-wider border border-amber-400/30">
@@ -811,7 +811,7 @@ export default function CustomerDashboard() {
         <motion.div variants={itemVariants} className="lg:col-span-3 flex flex-col space-y-3.5">
           <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-[2.5px] px-1">Live Billing Calculator</h3>
           <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl shadow-sm overflow-hidden flex flex-col md:flex-row flex-1">
-            
+
             {/* Left Breakdown Column */}
             <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-5">
               <div className="space-y-4">
@@ -819,7 +819,7 @@ export default function CustomerDashboard() {
                   <h4 className="text-[14px] font-bold text-slate-800 dark:text-slate-900 dark:text-white uppercase tracking-wider">Statement Breakdown</h4>
                   <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 font-medium mt-0.5">Estimated calculations for current billing cycle</p>
                 </div>
-                
+
                 <div className="space-y-1 divide-y divide-slate-100 dark:divide-slate-100/50 text-[13px]">
                   {/* Base Plan */}
                   <div className="flex justify-between items-center py-3 first:pt-0">
@@ -868,7 +868,7 @@ export default function CustomerDashboard() {
                   </div>
                 </div>
               </div>
-              
+
               <p className="text-[10px] text-slate-400 dark:text-slate-555 font-semibold leading-normal pt-2">
                 * All credits and adjustments are verified and applied automatically at the end of each monthly billing cycle.
               </p>
@@ -939,7 +939,7 @@ export default function CustomerDashboard() {
             <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-[2.5px]">Recent Delivery Log</h3>
             <span className="text-[9.5px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200/50">Last 5 Deliveries</span>
           </div>
-          
+
           <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-6 shadow-sm flex-1 flex flex-col justify-between">
             {recent_deliveries.length === 0 ? (
               <div className="py-16 text-center text-[13px] font-medium text-slate-450 flex flex-col items-center justify-center gap-3 flex-grow">
@@ -958,12 +958,12 @@ export default function CustomerDashboard() {
                     const delDate = new Date(delivery.delivery_date)
                     const dayName = delDate.toLocaleDateString('en-IN', { weekday: 'short' })
                     const dateNum = delDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-                    
+
                     return (
                       <div key={index} className="relative group/timeline">
-                        
+
                         {/* Timeline Dot with Color-coding */}
-                        <span 
+                        <span
                           className={cn(
                             "absolute -left-[35px] top-1 w-3.5 h-3.5 rounded-full border-3 border-white dark:border-white flex items-center justify-center shadow-sm z-10 transition-transform duration-200 group-hover/timeline:scale-120",
                             delivery.delivery_status === 'delivered' && "bg-emerald-600 ring-2 ring-emerald-500/20",
@@ -971,7 +971,7 @@ export default function CustomerDashboard() {
                             delivery.delivery_status === 'pending' && "bg-[#D97706] ring-2 ring-amber-550/20 animate-pulse"
                           )}
                         />
-                        
+
                         {/* Entry row card on hover */}
                         <div className="flex items-center justify-between gap-3 min-w-0 p-2.5 -mx-3.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all duration-200 group-hover/timeline:translate-x-0.5 cursor-default">
                           <div className="min-w-0 text-left">
@@ -984,7 +984,7 @@ export default function CustomerDashboard() {
                               <span className="font-normal text-[11px] text-slate-400 dark:text-slate-500">Morning Slot</span>
                             </p>
                           </div>
-                          
+
                           <div className="flex-shrink-0">
                             {delivery.delivery_status === 'delivered' && (
                               <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-green-700 bg-green-500/10 px-2.5 py-0.5 rounded-full border border-green-200/20">
@@ -1018,7 +1018,7 @@ export default function CustomerDashboard() {
                 </div>
               </div>
             )}
-            
+
             <div className="pt-4 border-t border-slate-100 dark:border-slate-100/80 flex items-center justify-between text-[11px] font-bold text-slate-400 dark:text-slate-550 px-1">
               <span>Updated daily at 7:30 AM</span>
               <Link href="/dashboard/history" className="text-[#014DA4] hover:underline flex items-center gap-0.5 font-extrabold group/btn">

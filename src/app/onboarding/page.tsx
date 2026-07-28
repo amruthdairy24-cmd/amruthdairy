@@ -164,6 +164,9 @@ export default function OnboardingPage() {
             setArea(data.profile.area || 'Padil')
             setLandmark(data.profile.landmark || '')
             setFloorNotes(data.profile.floor_notes || '')
+            if (data.profile.referred_by_code) {
+              setReferralCode(prev => prev || data.profile.referred_by_code)
+            }
 
             // If they already have an address saved, we can safely jump to Step 2
             if (data.profile.address && data.profile.address.trim() !== '') {
@@ -184,7 +187,15 @@ export default function OnboardingPage() {
       const res = await fetch('/api/customer/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_name: fullName, phone, address, area, landmark, floor_notes: floorNotes })
+        body: JSON.stringify({
+          full_name: fullName,
+          phone,
+          address,
+          area,
+          landmark,
+          floor_notes: floorNotes,
+          referral_code: referralCode
+        })
       })
       const data = await res.json()
       if (data.success) setStep(2)
@@ -240,7 +251,7 @@ export default function OnboardingPage() {
         if (data.razorpay_order_id) {
           const options = {
             key: data.key_id,
-            amount: data.monthly_amount * 100,
+            amount: Math.round((data.net_due !== undefined ? data.net_due : data.monthly_amount) * 100),
             currency: "INR",
             name: "Amruth Dairy",
             description: "Monthly Milk Subscription",
@@ -254,7 +265,8 @@ export default function OnboardingPage() {
                     razorpay_payment_id: response.razorpay_payment_id,
                     razorpay_order_id: response.razorpay_order_id,
                     razorpay_signature: response.razorpay_signature,
-                    billing_month_id: data.billing_month_id
+                    billing_month_id: data.billing_month_id,
+                    adjustment_ids: data.adjustment_ids
                   })
                 });
                 const verifyData = await verifyRes.json();
@@ -625,11 +637,6 @@ export default function OnboardingPage() {
                             className="w-full h-11 pl-11 pr-4 bg-amber-50/50 dark:bg-slate-950 border border-amber-200/80 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono tracking-wider"
                           />
                         </div>
-                        {referralMessage && (
-                          <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
-                            <CheckCircle size={12} /> {referralMessage}
-                          </p>
-                        )}
                       </div>
 
                       {error && (

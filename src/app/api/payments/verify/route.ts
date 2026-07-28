@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { processPendingReferralReward } from '@/lib/referral';
 import crypto from 'crypto';
 
 const adminSupabase = createAdminClient();
@@ -97,14 +98,36 @@ export async function POST(request: Request) {
     }
 
     // Mark billing_adjustments as applied NOW (payment confirmed — prevents credit burn on abandoned checkout)
+    const monthToSettle = target_month || bMonth.billing_month;
+
     if (adjustment_ids && adjustment_ids.length > 0) {
       await adminSupabase
         .from('billing_adjustments')
         .update({
           is_applied: true,
-          target_month: target_month || bMonth.billing_month
+          target_month: monthToSettle
         })
         .in('id', adjustment_ids);
+    } else {
+      // Fallback: mark any unapplied credit adjustments for this customer as applied
+      await adminSupabase
+        .from('billing_adjustments')
+        .update({
+          is_applied: true,
+          target_month: monthToSettle
+        })
+        .or(`customer_id.eq.${user.id},subscription_id.eq.${bMonth.subscription_id}`)
+        .eq('is_applied', false);
+    }
+
+    // Mark extra_milk_orders for this charge_month as paid NOW
+    if (monthToSettle) {
+      await adminSupabase
+        .from('extra_milk_orders')
+        .update({ status: 'paid' })
+        .eq('subscription_id', bMonth.subscription_id)
+        .eq('charge_month', monthToSettle)
+        .eq('status', 'confirmed');
     }
 
     // Fetch and update subscription status if it was pending_payment
@@ -119,52 +142,10 @@ export async function POST(request: Request) {
         .from('subscriptions')
         .update({ status: 'active' })
         .eq('id', subscription.id);
-
-      // Trigger Referral Reward (Rule: Granted ON FIRST PAYMENT COMPLETION ONLY)
-      try {
-        const { data: referral } = await adminSupabase
-          .from('referrals')
-          .select('*')
-          .eq('referee_id', user.id)
-          .eq('status', 'pending')
-          .maybeSingle();
-
-        if (referral) {
-          const { data: priceSetting } = await adminSupabase
-            .from('system_settings')
-            .select('value')
-            .eq('key', 'price_per_litre')
-            .maybeSingle();
-
-          const pricePerLitre = priceSetting?.value ? Number(priceSetting.value) : 60;
-          const rewardAmount = Math.round((Number(referral.reward_litres) || 2) * pricePerLitre * 100) / 100;
-
-          // 1. Mark referral as completed
-          await adminSupabase
-            .from('referrals')
-            .update({
-              status: 'completed',
-              reward_amount: rewardAmount,
-              completed_at: new Date().toISOString()
-            })
-            .eq('id', referral.id);
-
-          // 2. Insert Carry-forward credit adjustment for Referrer (Customer A)
-          await adminSupabase
-            .from('billing_adjustments')
-            .insert({
-              customer_id: referral.referrer_id,
-              amount: rewardAmount,
-              reason: `Referral Reward: 2L Free Milk (Friend completed 1st payment)`,
-              is_applied: false
-            });
-
-          console.log(`[Referral Reward Triggered] Referrer (${referral.referrer_id}) awarded ₹${rewardAmount} credit for Customer B payment`);
-        }
-      } catch (refErr) {
-        console.error('Referral reward processing exception:', refErr);
-      }
     }
+
+    // Process & award referral credit reward if pending
+    await processPendingReferralReward(adminSupabase, user.id);
 
     return NextResponse.json({
       success: true,

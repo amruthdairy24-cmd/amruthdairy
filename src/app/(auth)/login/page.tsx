@@ -785,11 +785,6 @@ export default function LoginPage() {
                             className="flex-1 min-w-0 h-full pr-4 bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none uppercase font-mono"
                           />
                         </div>
-                        {referralValidationMsg && (
-                          <p className="text-xs font-bold text-emerald-600 flex items-center gap-1.5 pl-1">
-                            <CheckCircle size={13} /> {referralValidationMsg}
-                          </p>
-                        )}
                         {error && (
                           <motion.p
                             initial={{ opacity: 0, y: -10 }}
