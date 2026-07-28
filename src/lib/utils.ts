@@ -191,6 +191,8 @@ export function getEarliestStartDateStr(): string {
   return `${year}-${month}-${day}`
 }
 
+import { createAdminClient } from '@/utils/supabase/admin'
+
 /**
  * isAdminEmail — Returns true if the email matches the ADMIN_EMAIL environment variable.
  */
@@ -199,5 +201,28 @@ export function isAdminEmail(email?: string | null): boolean {
   const adminEmail = process.env.ADMIN_EMAIL
   if (!adminEmail) return false
   return email.toLowerCase() === adminEmail.toLowerCase()
+}
+
+/**
+ * checkIsAdmin — Returns true if the user is an admin (via ADMIN_EMAIL env var OR profile role === 'admin' in DB).
+ */
+export async function checkIsAdmin(user: { id: string; email?: string | null } | null | undefined): Promise<boolean> {
+  if (!user) return false
+  if (user.email && isAdminEmail(user.email)) {
+    return true
+  }
+  try {
+    const adminClient = createAdminClient()
+    const { data: profile } = await adminClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    return profile?.role === 'admin'
+  } catch (e) {
+    console.error('checkIsAdmin error:', e)
+    return false
+  }
 }
 

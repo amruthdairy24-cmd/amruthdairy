@@ -9,7 +9,7 @@ import { Footer } from '@/components/layout/Footer'
 import { DELIVERY_AREAS, DELIVERY_TIME_PROMISE } from '@/lib/constants'
 import {
   ShoppingBag, Plus, Minus, CheckCircle2, ArrowRight,
-  Truck, ShieldCheck, MapPin, Phone, User, Clock, AlertCircle, Sparkles, Loader2
+  Truck, ShieldCheck, MapPin, Phone, User, Clock, AlertCircle, Sparkles, Loader2, Image as ImageIcon
 } from 'lucide-react'
 
 declare global {
@@ -483,8 +483,8 @@ function CheckoutContent() {
                         className="object-contain p-1"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-blue-50 text-[#02429C] font-bold text-xs">
-                        AMRUTH
+                      <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
+                        <ImageIcon size={20} strokeWidth={1.5} />
                       </div>
                     )}
                   </div>

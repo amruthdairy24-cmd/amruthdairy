@@ -38,10 +38,11 @@ export interface DashboardData {
     carry_in_balance: number;
     net_due: number;
     amount_paid: number;
+    payment_status?: string;
   } | null;
   upcoming_skips: Array<{ skip_date: string; credit_amount: number }>;
   upcoming_extras?: Array<{ id: string; order_date: string; charge_month?: string; extra_litres: number; charge_amount: number; skip_credit_applied: number; net_charge_amount: number; status: string }>;
-  next_month_summary?: { billing_month: string; credit_total: number; credit_used: number; credit_remaining: number; extra_charge_total: number; estimated_due: number };
+  next_month_summary?: { billing_month: string; credit_total: number; credit_used: number; credit_remaining: number; extra_charge_total: number; total_pending_charges?: number; total_credit_balance?: number; estimated_due: number };
   next_month_change: { quantity: number; amount: number } | null;
   recent_deliveries: Array<{ delivery_date: string; total_litres: number; delivery_status: string }>;
   upcoming_adjustments?: Array<{ id: string; adjustment_type: string; amount: number; description: string; target_month: string; refund_status?: string }>;

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { isAdminEmail } from '@/lib/utils';
+import { checkIsAdmin } from '@/lib/utils';
 
 const MODERN_PRODUCT_CATEGORIES = new Set([
   'milk',
@@ -71,7 +71,7 @@ async function assertAdmin() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false as const, status: 401, message: 'Unauthorized' };
 
-  if (!isAdminEmail(user.email)) return { ok: false as const, status: 403, message: 'Forbidden' };
+  if (!(await checkIsAdmin(user))) return { ok: false as const, status: 403, message: 'Forbidden' };
   return { ok: true as const };
 }
 

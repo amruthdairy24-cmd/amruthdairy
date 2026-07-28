@@ -1,7 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { SkipForward, CalendarDays, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
+import { formatInTimeZone } from 'date-fns-tz'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -122,7 +123,8 @@ export default function SkipDayPage() {
     maxDate.setDate(maxDate.getDate() - 1);
   }
 
-  const isCutoffPassed = new Date().getHours() >= 21
+  const nowIST = formatInTimeZone(new Date(), 'Asia/Kolkata', 'HH')
+  const isCutoffPassed = parseInt(nowIST, 10) >= 21
 
   const skipDatesSet = new Set(upcomingSkips.map(s => s.skip_date))
   const selectedDates = selectedDate ? getDateRange(selectedDate, selectedEndDate || selectedDate) : []

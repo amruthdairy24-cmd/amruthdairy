@@ -348,8 +348,8 @@ export function ProductsClient({
     setShowModal(true)
   }
 
-  // Common initials avatar generator for consistent layout style
-  const renderItemCell = (name: string, isMilk: boolean = false) => {
+  // Common initials avatar generator for consistent layout style (renders thumbnail image if present)
+  const renderItemCell = (name: string, imageUrl?: string | null, isMilk: boolean = false) => {
     const nameParts = name.trim().split(/\s+/)
     const initials = nameParts.length > 1 
       ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
@@ -368,12 +368,22 @@ export function ProductsClient({
 
     return (
       <div className="flex items-center gap-3.5">
-        <div className={cn(
-          "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xs text-white bg-gradient-to-br shadow-3xs flex-shrink-0 select-none",
-          avatarBg
-        )}>
-          {isMilk ? <Milk size={16} className="animate-pulse" /> : initials}
-        </div>
+        {imageUrl ? (
+          <div className="w-10 h-10 rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-700/80 shadow-3xs flex-shrink-0 relative bg-slate-100 dark:bg-slate-800">
+            <img 
+              src={imageUrl} 
+              alt={name} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className={cn(
+            "w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xs text-white bg-gradient-to-br shadow-3xs flex-shrink-0 select-none",
+            avatarBg
+          )}>
+            {isMilk ? <Milk size={16} className="animate-pulse" /> : initials}
+          </div>
+        )}
         <div className="min-w-0 text-left">
           <p className="text-[13.5px] font-black text-slate-855 dark:text-slate-100 leading-tight">
             {name}
@@ -390,7 +400,7 @@ export function ProductsClient({
   const productColumns: ColumnDef<Product>[] = [
     { 
       header: 'Product Name', 
-      cell: (row) => renderItemCell(row.name) 
+      cell: (row) => renderItemCell(row.name, row.image_url) 
     },
     { 
       header: 'Category', 

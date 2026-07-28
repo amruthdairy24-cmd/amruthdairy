@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { isAdminEmail } from '@/lib/utils';
+import { checkIsAdmin } from '@/lib/utils';
 
 export async function DELETE(request: Request) {
   try {
@@ -12,7 +12,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!isAdminEmail(user.email)) {
+    if (!(await checkIsAdmin(user))) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 

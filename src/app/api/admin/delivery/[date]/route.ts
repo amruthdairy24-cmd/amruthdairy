@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { isAdminEmail } from '@/lib/utils';
+import { checkIsAdmin } from '@/lib/utils';
 
 export async function GET(
   request: NextRequest,
@@ -16,7 +16,7 @@ export async function GET(
     }
 
     // Verify Admin
-    if (!isAdminEmail(user.email)) {
+    if (!(await checkIsAdmin(user))) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
@@ -119,7 +119,7 @@ export async function PATCH(
     }
 
     // Verify Admin
-    if (!isAdminEmail(user.email)) {
+    if (!(await checkIsAdmin(user))) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
@@ -212,7 +212,7 @@ export async function PUT(
     }
 
     // Verify Admin
-    if (!isAdminEmail(user.email)) {
+    if (!(await checkIsAdmin(user))) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 

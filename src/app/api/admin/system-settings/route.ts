@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { isAdminEmail } from '@/lib/utils';
+import { checkIsAdmin } from '@/lib/utils';
 
 /**
  * GET /api/admin/system-settings
@@ -25,7 +25,7 @@ export async function GET() {
     }
 
     // 2. Role check
-    if (!isAdminEmail(user.email)) {
+    if (!(await checkIsAdmin(user))) {
       return NextResponse.json(
         { success: false, message: 'Forbidden — admin access required' },
         { status: 403 }
@@ -73,7 +73,7 @@ export async function PUT(request: Request) {
     }
 
     // 2. Role check
-    if (!isAdminEmail(user.email)) {
+    if (!(await checkIsAdmin(user))) {
       return NextResponse.json(
         { success: false, message: 'Forbidden — admin access required' },
         { status: 403 }

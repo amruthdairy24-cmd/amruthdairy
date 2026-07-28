@@ -120,6 +120,11 @@ export default function BillsPage() {
       if (data.upcoming_extras) setUpcomingExtras(data.upcoming_extras)
 
       if (data.next_month_change) setNextMonthChange(data.next_month_change)
+      // FIX: Wire next_month_summary from context to populate the Carry Forward card
+      if (data.next_month_summary) setNextMonthSummary(data.next_month_summary)
+      // FIX: Wire next_paid_month from context
+      if (data.next_paid_month) setNextPaidMonth(data.next_paid_month as BillingData)
+
       if (data.current_month) {
         setBill(data.current_month)
       } else {

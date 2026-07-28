@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { getDeadlineForDate, isAdminEmail } from '@/lib/utils';
+import { getDeadlineForDate, checkIsAdmin } from '@/lib/utils';
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!isAdminEmail(user.email)) {
+    if (!(await checkIsAdmin(user))) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
@@ -110,8 +110,8 @@ export async function POST(request: Request) {
           subscription_id: subscription.id,
           customer_id: customer_id,
           delivery_date: skip_date,
-          base_volume: subscription.daily_volume,
-          extra_volume: 0,
+          regular_litres: subscription.quantity_litres,
+          extra_litres: 0,
           total_litres: 0,
           is_skip: true,
           delivery_status: 'skipped',

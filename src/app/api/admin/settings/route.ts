@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { isAdminEmail } from '@/lib/utils';
+import { checkIsAdmin } from '@/lib/utils';
 
 /**
  * GET /api/admin/settings?key=price_per_litre
@@ -87,7 +87,7 @@ export async function PUT(request: Request) {
     }
 
     // Role check
-    if (!isAdminEmail(user.email)) {
+    if (!(await checkIsAdmin(user))) {
       return NextResponse.json(
         { success: false, message: 'Forbidden — admin access required' },
         { status: 403 }

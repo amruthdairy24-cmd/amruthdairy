@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import crypto from 'crypto';
 
 const adminSupabase = createAdminClient();
-import crypto from 'crypto';
 
 export async function POST(request: Request) {
   try {
@@ -20,11 +20,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Missing payment details' }, { status: 400 });
     }
 
-    // Verify signature
+    // Verify signature — NEVER use placeholder secrets in production
     const isDevBypass = process.env.NODE_ENV === 'development' && razorpay_signature === 'dev_bypass_signature';
 
     if (!isDevBypass) {
-      const keySecret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_secret_placeholder';
+      const keySecret = process.env.RAZORPAY_KEY_SECRET;
+      if (!keySecret) {
+        console.error('[payments/verify] RAZORPAY_KEY_SECRET is not set — cannot verify payment.');
+        return NextResponse.json({ success: false, message: 'Payment verification service is not configured.' }, { status: 500 });
+      }
       const body = razorpay_order_id + '|' + razorpay_payment_id;
       const expectedSignature = crypto
         .createHmac('sha256', keySecret)
@@ -47,6 +51,11 @@ export async function POST(request: Request) {
 
     if (bMonthError || !bMonth) {
       return NextResponse.json({ success: false, message: 'Billing month not found' }, { status: 400 });
+    }
+
+    // Idempotency check — if already paid, return success immediately (prevents double-processing)
+    if (bMonth.payment_status === 'paid') {
+      return NextResponse.json({ success: true, message: 'Payment already recorded.' });
     }
 
     // Update billing month record
