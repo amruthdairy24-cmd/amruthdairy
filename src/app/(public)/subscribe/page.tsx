@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { PricingSection } from '@/components/subscribe/PricingSection'
 import { motion } from 'framer-motion'
 import {
   ArrowRight, Check, Leaf, ShieldCheck, Truck, Clock,
@@ -13,7 +14,7 @@ import {
   Smartphone, X, ChevronDown
 } from 'lucide-react'
 import { DELIVERY_AREAS, DELIVERY_TIME_PROMISE } from '@/lib/constants'
-import { fetchMilkPricesClient, calculateDailyRate, getDaysInMonth } from '@/lib/billing'
+import { fetchMilkPricesClient } from '@/lib/billing'
 import { cn } from '@/lib/utils'
 
 // ─── Testimonials ──────────────────────────────────────────────────────────────
@@ -58,13 +59,7 @@ const HOW_IT_WORKS = [
   { step: '03', title: 'Milk at Your Doorstep', desc: 'Wake up to fresh farm milk every morning. Manage everything from the app.' },
 ]
 
-// ─── Quantity plans ────────────────────────────────────────────────────────────
-const PLANS = [
-  { litres: 0.5, label: '½ Litre / Day', tag: 'Solo', desc: 'Perfect for a single person' },
-  { litres: 1.0, label: '1 Litre / Day', tag: 'Popular', desc: 'Ideal for a small family', highlight: true },
-  { litres: 1.5, label: '1½ Litres / Day', tag: 'Family', desc: 'Great for 3–4 members' },
-  { litres: 2.0, label: '2 Litres / Day', tag: 'Large', desc: 'For larger households' },
-]
+
 
 export default function SubscribePage() {
   const router = useRouter()
@@ -101,42 +96,37 @@ export default function SubscribePage() {
   }, [])
 
   // ── CTA handler ────────────────────────────────────────────────────────────
-  async function handleSubscribe() {
+  async function handleSubscribe(planType?: string) {
     setCtaLoading(true)
+    let targetPath = '/onboarding'
+    if (planType === 'trial') {
+      targetPath = '/onboarding?trial=true'
+    } else if (planType && !isNaN(Number(planType))) {
+      targetPath = `/onboarding?quantity=${planType}`
+    }
+
     if (isLoggedIn === null) {
       // Re-check auth if we don't have a result yet
       try {
         const res = await fetch('/api/customer/dashboard')
         const data = await res.json()
         if (data.success) {
-          router.push('/onboarding')
+          router.push(targetPath)
         } else {
-          router.push('/login?redirect=/onboarding')
+          router.push(`/login?redirect=${encodeURIComponent(targetPath)}`)
         }
       } catch {
-        router.push('/login?redirect=/onboarding')
+        router.push(`/login?redirect=${encodeURIComponent(targetPath)}`)
       }
     } else if (isLoggedIn) {
-      router.push('/onboarding')
+      router.push(targetPath)
     } else {
-      router.push('/login?redirect=/onboarding')
+      router.push(`/login?redirect=${encodeURIComponent(targetPath)}`)
     }
     setCtaLoading(false)
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  const getMonthlyEstimate = (litres: number) => {
-    if (priceLoading || !Object.keys(milkPrices).length) return null
-    const daily = calculateDailyRate(litres, milkPrices)
-    const now = new Date()
-    const days = getDaysInMonth(now.getFullYear(), now.getMonth() + 1)
-    return Math.round(daily * days)
-  }
 
-  const getDaily = (litres: number) => {
-    if (priceLoading || !Object.keys(milkPrices).length) return null
-    return calculateDailyRate(litres, milkPrices)
-  }
 
   const faqs = [
     { q: 'When does delivery happen?', a: `We deliver fresh milk ${DELIVERY_TIME_PROMISE} every morning, 7 days a week including Sundays and public holidays.` },
@@ -209,7 +199,7 @@ export default function SubscribePage() {
               className="flex flex-col sm:flex-row items-center gap-3 mt-2"
             >
               <button
-                onClick={handleSubscribe}
+                onClick={() => handleSubscribe()}
                 disabled={ctaLoading}
                 className="inline-flex items-center justify-center gap-2 h-13 px-8 rounded-[12px] bg-white text-[#0f2e5c] font-bold text-[15px] hover:bg-yellow-400 hover:text-[#0f2e5c] transition-all duration-200 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-black/20"
               >
@@ -304,78 +294,11 @@ export default function SubscribePage() {
         {/* ══════════════════════════════════════════════════════════
             PRICING / PLANS
         ══════════════════════════════════════════════════════════ */}
-        <section className="py-20 px-5 bg-white" id="plans">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <span className="text-[11px] font-extrabold tracking-widest uppercase text-[#0284C7]">Pricing</span>
-              <h2 className="font-cabinet text-3xl sm:text-4xl font-bold text-[#0f2e5c] mt-2">
-                Simple, transparent pricing
-              </h2>
-              <p className="text-slate-500 text-sm sm:text-base mt-3 max-w-lg mx-auto">
-                Pay only for what you receive. Skip a day, don&apos;t pay for it.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {PLANS.map(({ litres, label, tag, desc, highlight }) => {
-                const monthly = getMonthlyEstimate(litres)
-                const daily = getDaily(litres)
-                return (
-                  <motion.div
-                    key={litres}
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.35 }}
-                    className={cn(
-                      'relative flex flex-col rounded-2xl border p-6 transition-all duration-200',
-                      highlight
-                        ? 'bg-[#02429C] border-[#0f2e5c] shadow-xl shadow-[#0f2e5c]/20'
-                        : 'bg-white border-slate-200 hover:border-[#0284C7]/50 hover:shadow-md'
-                    )}
-                  >
-                    {highlight && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-yellow-400 text-[#0f2e5c] text-[10px] font-extrabold tracking-wider uppercase">
-                        Most Popular
-                      </div>
-                    )}
-                    <div className={cn('text-[10px] font-extrabold uppercase tracking-widest mb-2', highlight ? 'text-white/50' : 'text-slate-400')}>{tag}</div>
-                    <div className={cn('font-cabinet font-bold text-lg leading-tight mb-1', highlight ? 'text-white' : 'text-[#0f2e5c]')}>{label}</div>
-                    <div className={cn('text-xs mb-5 leading-relaxed', highlight ? 'text-white/60' : 'text-slate-400')}>{desc}</div>
-
-                    <div className="mt-auto">
-                      <div className={cn('text-[11px] font-semibold mb-1', highlight ? 'text-white/50' : 'text-slate-400')}>
-                        {priceLoading ? 'Loading price...' : `₹${daily?.toFixed(2) ?? '—'} / day`}
-                      </div>
-                      <div className={cn('font-cabinet text-2xl font-bold', highlight ? 'text-white' : 'text-[#0f2e5c]')}>
-                        {priceLoading ? (
-                          <span className="text-base font-medium opacity-50">Calculating...</span>
-                        ) : (
-                          <>₹{monthly?.toLocaleString() ?? '—'}<span className={cn('text-sm font-medium ml-1', highlight ? 'text-white/50' : 'text-slate-400')}>/mo</span></>
-                        )}
-                      </div>
-                      <button
-                        onClick={handleSubscribe}
-                        className={cn(
-                          'mt-4 w-full h-11 rounded-[10px] text-sm font-bold transition-all duration-200 hover:scale-[1.02]',
-                          highlight
-                            ? 'bg-white text-[#0f2e5c] hover:bg-yellow-400'
-                            : 'bg-[#02429C] text-white hover:bg-[#0F2E5C]'
-                        )}
-                      >
-                        Get Started
-                      </button>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-
-            <p className="text-center text-xs text-slate-400 font-medium mt-6">
-              Estimated for a 30-day month. Actual billing varies based on delivery days and skips. No taxes applied.
-            </p>
-          </div>
-        </section>
+        <PricingSection
+          onSubscribe={handleSubscribe}
+          milkPrices={milkPrices}
+          priceLoading={priceLoading}
+        />
 
         {/* ══════════════════════════════════════════════════════════
             HOW IT WORKS
@@ -423,7 +346,7 @@ export default function SubscribePage() {
             </div>
             <div className="flex justify-center mt-12">
               <button
-                onClick={handleSubscribe}
+                onClick={() => handleSubscribe()}
                 disabled={ctaLoading}
                 className="inline-flex items-center gap-2 h-13 px-8 rounded-[12px] bg-[#02429C] text-white font-bold text-[15px] hover:bg-[#0F2E5C] transition-all duration-200 hover:scale-105 disabled:opacity-60 shadow-lg shadow-[#0f2e5c]/20"
               >
@@ -585,7 +508,7 @@ export default function SubscribePage() {
               Join hundreds of Mangalore families who trust Amruth Dairy for their daily milk. Fresh, pure, and on time — every day.
             </p>
             <button
-              onClick={handleSubscribe}
+              onClick={() => handleSubscribe()}
               disabled={ctaLoading}
               className="inline-flex items-center gap-2 h-13 px-10 rounded-[12px] bg-white text-[#0f2e5c] font-bold text-[15px] hover:bg-yellow-400 transition-all duration-200 hover:scale-105 disabled:opacity-60 shadow-xl"
             >
