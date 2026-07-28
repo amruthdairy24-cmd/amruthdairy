@@ -206,9 +206,12 @@ export function isAdminEmail(email?: string | null): boolean {
 /**
  * checkIsAdmin — Returns true if the user is an admin (via ADMIN_EMAIL env var OR profile role === 'admin' in DB).
  */
-export async function checkIsAdmin(user: { id: string; email?: string | null } | null | undefined): Promise<boolean> {
+export async function checkIsAdmin(user: { id: string; email?: string | null; app_metadata?: any; user_metadata?: any } | null | undefined): Promise<boolean> {
   if (!user) return false
   if (user.email && isAdminEmail(user.email)) {
+    return true
+  }
+  if (user.app_metadata?.role === 'admin' || user.user_metadata?.role === 'admin') {
     return true
   }
   try {

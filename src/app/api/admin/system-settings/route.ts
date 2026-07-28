@@ -32,10 +32,11 @@ export async function GET() {
       );
     }
 
-    // 3. Business logic — fetching settings
-    const { data: settings, error } = await supabase
+    // 3. Business logic — fetching settings using adminClient
+    const adminClient = createAdminClient();
+    const { data: settings, error } = await adminClient
       .from('system_settings')
-      .select('key, value, description, updated_at');
+      .select('key, value, description');
 
     if (error) {
       console.error('[admin/system-settings GET] Error:', error.message);
@@ -106,34 +107,52 @@ export async function PUT(request: Request) {
         throw new Error('Key and value are required for all settings');
       }
 
-      // Format value as JSONB structure
-      let jsonValue = item.value;
-      
       return {
         key: item.key,
-        value: jsonValue,
-        updated_at: new Date().toISOString(),
-        updated_by: user.id
+        value: item.value
       };
     });
 
-    const { data, error } = await adminClient
-      .from('system_settings')
-      .upsert(updates, { onConflict: 'key' })
-      .select();
+    // Update each setting key using adminClient
+    for (const item of updates) {
+      // Check if setting exists first
+      const { data: existing } = await adminClient
+        .from('system_settings')
+        .select('key')
+        .eq('key', item.key)
+        .maybeSingle();
 
-    if (error) {
-      console.error('[admin/system-settings PUT] Error:', error.message);
-      return NextResponse.json(
-        { success: false, message: 'Failed to update system settings' },
-        { status: 500 }
-      );
+      if (existing) {
+        const { error: updateError } = await adminClient
+          .from('system_settings')
+          .update({ value: item.value })
+          .eq('key', item.key);
+
+        if (updateError) {
+          console.error('[admin/system-settings PUT] Update Error:', updateError.message);
+          return NextResponse.json(
+            { success: false, message: updateError.message },
+            { status: 500 }
+          );
+        }
+      } else {
+        const { error: insertError } = await adminClient
+          .from('system_settings')
+          .insert({ key: item.key, value: item.value });
+
+        if (insertError) {
+          console.error('[admin/system-settings PUT] Insert Error:', insertError.message);
+          return NextResponse.json(
+            { success: false, message: insertError.message },
+            { status: 500 }
+          );
+        }
+      }
     }
 
     return NextResponse.json({
       success: true,
-      message: 'System settings updated successfully',
-      settings: data
+      message: 'System settings updated successfully'
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
