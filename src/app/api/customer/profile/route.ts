@@ -13,7 +13,7 @@ export async function GET() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name, phone, address, area, landmark, floor_notes, role')
+      .select('full_name, phone, address, area, landmark, floor_notes, role, referral_code, referred_by_code')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -35,30 +35,35 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { full_name, phone, address, area, landmark, floor_notes } = body;
+    const { full_name, phone, address, area, landmark, floor_notes, referral_code } = body;
 
     if (!full_name || !address || !area) {
       return NextResponse.json({ success: false, message: 'Full name, address, and area are required' }, { status: 400 });
     }
 
-    // Use admin client with upsert so it works even if the row was just seeded
-    // with minimal data and session cookie isn't fully propagated yet
+    // Fetch existing profile data to ensure email and role are preserved
     const { data: existing } = await adminSupabase
       .from('profiles')
-      .select('phone')
+      .select('phone, email, role, referred_by_code')
       .eq('id', user.id)
       .maybeSingle();
+
+    const cleanRefCode = referral_code ? referral_code.trim().toUpperCase() : null;
+    const finalRefCode = cleanRefCode || existing?.referred_by_code || null;
 
     const { data: profile, error: updateError } = await adminSupabase
       .from('profiles')
       .upsert({
         id: user.id,
+        email: user.email || existing?.email || null,
         phone: phone || existing?.phone || user.phone || null,
         full_name,
         address,
         area,
         landmark: landmark || null,
         floor_notes: floor_notes || null,
+        role: existing?.role || 'customer',
+        referred_by_code: finalRefCode,
         updated_at: new Date().toISOString()
       }, { onConflict: 'id' })
       .select()
@@ -66,7 +71,33 @@ export async function PUT(request: Request) {
 
     if (updateError) {
       console.error('Profile update error:', updateError.message);
-      return NextResponse.json({ success: false, message: 'Failed to update profile details' }, { status: 500 });
+      return NextResponse.json({ success: false, message: updateError.message || 'Failed to update profile details' }, { status: 500 });
+    }
+
+    // Create pending referral record if referral code was provided
+    if (cleanRefCode) {
+      try {
+        const { data: referrerProfile } = await adminSupabase
+          .from('profiles')
+          .select('id')
+          .ilike('referral_code', cleanRefCode)
+          .maybeSingle();
+
+        if (referrerProfile && referrerProfile.id !== user.id) {
+          await adminSupabase
+            .from('referrals')
+            .upsert({
+              referrer_id: referrerProfile.id,
+              referee_id: user.id,
+              referral_code: cleanRefCode,
+              status: 'pending',
+              reward_litres: 2.0,
+              reward_amount: 120.0
+            }, { onConflict: 'referee_id' });
+        }
+      } catch (refErr) {
+        console.error('Referral record error in profile update:', refErr);
+      }
     }
 
     return NextResponse.json({

@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { NotifyModal } from './NotifyModal'
 import { cn } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 interface WaitlistEntry {
   id: string;
@@ -38,12 +39,13 @@ export function WaitlistClient({ data }: { data: WaitlistEntry[] }) {
       })
       const json = await res.json()
       if (json.success) {
+        toast.success(`Waitlist status updated to ${newStatus}`)
         window.location.reload()
       } else {
-        alert(json.message || 'Failed to update status')
+        toast.error(json.message || 'Failed to update status')
       }
     } catch (err) {
-      alert('Network error')
+      toast.error('Network error. Please try again.')
     } finally {
       setUpdatingId(null)
     }

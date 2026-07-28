@@ -87,11 +87,11 @@ export async function POST(request: Request) {
       monthly_amount = 0;
     }
 
-    // Fetch unapplied adjustments to apply as carry-forward
+    // Fetch unapplied adjustments to apply as carry-forward (including customer-level referral credits)
     const { data: adjustments } = await supabase
       .from('billing_adjustments')
       .select('id, amount, adjustment_type, target_month')
-      .eq('subscription_id', existingSub.id)
+      .or(`subscription_id.eq.${existingSub.id},customer_id.eq.${user.id}`)
       .eq('is_applied', false);
 
     const { data: extraMilkOrders } = await adminSupabase

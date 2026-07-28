@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { getTodayIST } from '@/lib/utils';
 import { formatInTimeZone } from 'date-fns-tz';
 import { calculateCarryForwardCreditBalance, calculateNetDueFromCredits, sumCreditAdjustments, sumChargeAdjustments, sumExtraMilkCreditUsage, sumExtraMilkNetCharges } from '@/lib/billing';
+import { processPendingReferralReward } from '@/lib/referral';
 
 export async function GET(request: Request) {
   try {
@@ -12,6 +14,8 @@ export async function GET(request: Request) {
     if (!user) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
+
+    const adminSupabase = createAdminClient();
 
     // 1 & 2. Get Profile and Subscription in parallel
     const [profileRes, subscriptionRes] = await Promise.all([
@@ -61,6 +65,45 @@ export async function GET(request: Request) {
     const nextYear = istMonth === 12 ? istYear + 1 : istYear;
     const formattedNextMonth = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
     const sevenDaysAgoStr = formatInTimeZone(new Date(Date.now() - 7 * 86400000), 'Asia/Kolkata', 'yyyy-MM-dd');
+
+    // Auto-sync any pending referral rewards for referee or referrer
+    try {
+      // Process if current user is referee
+      if (subscription) {
+        await processPendingReferralReward(adminSupabase, user.id);
+      }
+
+      // Process if current user is referrer (find referees from referrals table and profiles table)
+      const myRefCode = (profile as any)?.referral_code;
+      const refereeIdSet = new Set<string>();
+
+      const { data: myPendingRefs } = await adminSupabase
+        .from('referrals')
+        .select('referee_id')
+        .eq('referrer_id', user.id)
+        .eq('status', 'pending');
+
+      if (myPendingRefs) {
+        myPendingRefs.forEach(r => refereeIdSet.add(r.referee_id));
+      }
+
+      if (myRefCode) {
+        const { data: profilesReferred } = await adminSupabase
+          .from('profiles')
+          .select('id')
+          .ilike('referred_by_code', myRefCode);
+
+        if (profilesReferred) {
+          profilesReferred.forEach(p => refereeIdSet.add(p.id));
+        }
+      }
+
+      for (const refereeId of Array.from(refereeIdSet)) {
+        await processPendingReferralReward(adminSupabase, refereeId);
+      }
+    } catch (refSyncErr) {
+      console.error('Dashboard referral auto-sync exception:', refSyncErr);
+    }
 
     // Fetch all subscription details in parallel
     const [
@@ -139,10 +182,10 @@ export async function GET(request: Request) {
         .gte('order_date', todayStr)
         .in('status', ['confirmed']),
       // 11. Upcoming adjustments
-      supabase
+      adminSupabase
         .from('billing_adjustments')
         .select('id, adjustment_type, amount, description, target_month, refund_status')
-        .eq('subscription_id', subId)
+        .or(`subscription_id.eq.${subId},customer_id.eq.${user.id}`)
         .eq('is_applied', false),
       // 12. Latest Paid Month
       supabase
@@ -228,17 +271,56 @@ export async function GET(request: Request) {
       live_net_due = (current_month as any).net_due;
     }
 
+    // 12. All Paid Months
+    const { data: allPaidMonthsData } = await supabase
+      .from('billing_months')
+      .select('billing_month')
+      .eq('subscription_id', subId)
+      .eq('payment_status', 'paid');
+
+    const paidMonthsSet = new Set<string>(
+      allPaidMonthsData ? allPaidMonthsData.map(m => m.billing_month) : []
+    );
+    if (current_month && current_month.payment_status === 'paid') {
+      paidMonthsSet.add(current_month.billing_month);
+    }
+    if (next_paid_month_data && next_paid_month_data.payment_status === 'paid') {
+      paidMonthsSet.add(next_paid_month_data.billing_month);
+    }
+
+    // Auto-sync database status to 'paid' for any extra milk orders belonging to a paid month
+    if (paidMonthsSet.size > 0) {
+      try {
+        const { createAdminClient } = await import('@/utils/supabase/admin');
+        const adminSupabase = createAdminClient();
+        await adminSupabase
+          .from('extra_milk_orders')
+          .update({ status: 'paid' })
+          .eq('subscription_id', subId)
+          .in('charge_month', Array.from(paidMonthsSet))
+          .eq('status', 'confirmed');
+      } catch (err) {
+        console.error('Error auto-syncing paid extra milk orders status:', err);
+      }
+    }
+
+    const unpaidUpcomingExtras = (upcoming_extras || []).filter(extra => {
+      if (extra.status && extra.status !== 'confirmed') return false;
+      if (extra.charge_month && paidMonthsSet.has(extra.charge_month)) return false;
+      return true;
+    });
+
     const adjustments = upcoming_adjustments || [];
-    const nextMonthAdjustments = adjustments.filter(adj => adj.target_month === formattedNextMonth);
-    const nextMonthExtras = (upcoming_extras || []).filter(extra => extra.charge_month === formattedNextMonth);
+    const nextMonthAdjustments = adjustments.filter((adj: any) => adj.target_month === formattedNextMonth);
+    const nextMonthExtras = unpaidUpcomingExtras.filter(extra => extra.charge_month === formattedNextMonth);
     const nextMonthCreditTotal = sumCreditAdjustments(nextMonthAdjustments);
     const nextMonthCreditUsed = sumExtraMilkCreditUsage(nextMonthExtras);
     const nextMonthCreditRemaining = calculateCarryForwardCreditBalance(nextMonthAdjustments, nextMonthExtras, formattedNextMonth);
     const nextMonthExtraCharges = sumExtraMilkNetCharges(nextMonthExtras);
     const nextMonthEstimatedDue = Math.max(0, calculateNetDueFromCredits(Number(subscription.monthly_amount) || 0, nextMonthCreditRemaining, nextMonthExtraCharges));
 
-    const totalPendingCharges = sumExtraMilkNetCharges(upcoming_extras || []) + sumChargeAdjustments(adjustments);
-    const totalCreditBalance = Math.max(0, sumCreditAdjustments(adjustments) - sumExtraMilkCreditUsage(upcoming_extras || []));
+    const totalPendingCharges = sumExtraMilkNetCharges(unpaidUpcomingExtras) + sumChargeAdjustments(adjustments);
+    const totalCreditBalance = Math.max(0, sumCreditAdjustments(adjustments) - sumExtraMilkCreditUsage(unpaidUpcomingExtras));
 
     return NextResponse.json({
       success: true,
@@ -250,7 +332,7 @@ export async function GET(request: Request) {
       } : null,
       next_paid_month: next_paid_month_data || null,
       upcoming_skips: upcoming_skips || [],
-      upcoming_extras: upcoming_extras || [],
+      upcoming_extras: unpaidUpcomingExtras || [],
       next_month_summary: {
         billing_month: formattedNextMonth,
         credit_total: nextMonthCreditTotal,

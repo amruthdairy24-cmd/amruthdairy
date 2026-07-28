@@ -414,20 +414,12 @@ export default function ProductsPage() {
                         </div>
                       </div>
 
-                      {/* Action buttons depending on type */}
                       {product.is_subscription ? (
-                        <div className="grid grid-cols-2 gap-2">
-                          <Link href="/dashboard/quantity" className="w-full">
-                            <button className="w-full h-9 rounded-xl text-[10.5px] font-extrabold transition-all border border-slate-200 dark:border-slate-800 bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-center gap-1">
-                              Manage Sub
-                            </button>
-                          </Link>
-                          <Link href="/dashboard/extra" className="w-full">
-                            <button className="w-full h-9 rounded-xl text-[10.5px] font-extrabold transition-all bg-[#014DA4] text-white hover:bg-blue-700 cursor-pointer flex items-center justify-center gap-1">
-                              Order Extra
-                            </button>
-                          </Link>
-                        </div>
+                        <Link href="/dashboard/extra" className="block w-full">
+                          <button className="w-full h-9 rounded-xl text-[10.5px] font-extrabold transition-all bg-[#014DA4] text-white hover:bg-blue-700 cursor-pointer flex items-center justify-center gap-1">
+                            Order Extra
+                          </button>
+                        </Link>
                       ) : (
                         <Link href="/shop" className="block w-full">
                           <button className="w-full h-9 rounded-xl text-[10.5px] font-extrabold transition-all bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border-none cursor-pointer flex items-center justify-center gap-1 group/btn">
