@@ -421,9 +421,9 @@ export default function ProductsPage() {
                           </button>
                         </Link>
                       ) : (
-                        <Link href="/shop" className="block w-full">
-                          <button className="w-full h-9 rounded-xl text-[10.5px] font-extrabold transition-all bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border-none cursor-pointer flex items-center justify-center gap-1 group/btn">
-                            <span>Order from Shop</span>
+                        <Link href={`/checkout?product_id=${product.id}`} className="block w-full">
+                          <button className="w-full h-9 rounded-xl text-[10.5px] font-extrabold transition-all bg-gradient-to-r from-[#02429C] to-[#013378] hover:from-[#013378] hover:to-[#00255c] text-white border-none cursor-pointer flex items-center justify-center gap-1.5 group/btn shadow-sm">
+                            <span>Buy Now</span>
                             <ArrowRight size={12} className="group-hover/btn:translate-x-0.5 transition-transform" />
                           </button>
                         </Link>
