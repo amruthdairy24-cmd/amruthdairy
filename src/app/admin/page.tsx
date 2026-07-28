@@ -61,13 +61,13 @@ export default async function AdminDashboardPage() {
   // 4. Fetch Deliveries list (top 6 today)
   const { data: dbDeliveries } = await supabase
     .from('daily_delivery_sheet')
-    .select('id, delivery_status, total_litres, profiles(full_name, area), subscriptions(plan_type)')
+    .select('id, delivery_status, total_litres, profiles:customer_id(full_name, area), subscriptions:subscription_id(plan_type)')
     .eq('delivery_date', todayStr)
     .limit(6)
 
-  const deliveriesList = (dbDeliveries || []).map((item) => {
-    const profile = item.profiles?.[0]
-    const subscription = item.subscriptions?.[0]
+  const deliveriesList = (dbDeliveries || []).map((item: any) => {
+    const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+    const subscription = Array.isArray(item.subscriptions) ? item.subscriptions[0] : item.subscriptions
 
     return {
       id: item.id,
@@ -82,13 +82,13 @@ export default async function AdminDashboardPage() {
   // 5. Fetch Recent Activities or notifications log
   const { data: dbNotifications } = await supabase
     .from('notifications_log')
-    .select('id, notification_type, created_at, message_body, profiles(full_name)')
+    .select('id, notification_type, created_at, message_body, profiles:user_id(full_name)')
     .order('created_at', { ascending: false })
     .limit(5)
 
   // Map to clean activities
-  const recentActivities = (dbNotifications || []).map((n) => {
-    const profile = n.profiles?.[0]
+  const recentActivities = (dbNotifications || []).map((n: any) => {
+    const profile = Array.isArray(n.profiles) ? n.profiles[0] : n.profiles
     let type = 'blue'
     if (n.notification_type.includes('skip')) type = 'amber'
     else if (n.notification_type.includes('payment')) type = 'green'
