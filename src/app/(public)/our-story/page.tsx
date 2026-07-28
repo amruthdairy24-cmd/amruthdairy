@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
+import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, useScroll, useTransform } from 'framer-motion'
@@ -14,11 +15,35 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { OurStoryVideos } from '@/components/our-story/OurStoryVideos'
 
-const PROCESS_STEPS = [
+// Milk packets on tray SVG icon for Packing step
+const MilkPackingIcon = () => (
+  <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+    {/* Tray */}
+    <rect x="4" y="46" width="56" height="8" rx="3" fill="#CBD5E1" />
+    <rect x="2" y="50" width="60" height="4" rx="2" fill="#94A3B8" />
+    {/* Milk Packet Left */}
+    <rect x="8" y="20" width="14" height="26" rx="3" fill="#E0F2FE" stroke="#38BDF8" strokeWidth="1.5"/>
+    <rect x="11" y="14" width="8" height="8" rx="1.5" fill="#BAE6FD" stroke="#38BDF8" strokeWidth="1.5"/>
+    <rect x="10" y="30" width="12" height="2" rx="1" fill="#38BDF8" opacity="0.5"/>
+    <text x="15" y="41" textAnchor="middle" fontSize="5" fill="#0369A1" fontWeight="bold">MILK</text>
+    {/* Milk Packet Middle */}
+    <rect x="25" y="18" width="14" height="28" rx="3" fill="#E0F2FE" stroke="#38BDF8" strokeWidth="1.5"/>
+    <rect x="28" y="12" width="8" height="8" rx="1.5" fill="#BAE6FD" stroke="#38BDF8" strokeWidth="1.5"/>
+    <rect x="27" y="28" width="12" height="2" rx="1" fill="#38BDF8" opacity="0.5"/>
+    <text x="32" y="41" textAnchor="middle" fontSize="5" fill="#0369A1" fontWeight="bold">MILK</text>
+    {/* Milk Packet Right */}
+    <rect x="42" y="20" width="14" height="26" rx="3" fill="#E0F2FE" stroke="#38BDF8" strokeWidth="1.5"/>
+    <rect x="45" y="14" width="8" height="8" rx="1.5" fill="#BAE6FD" stroke="#38BDF8" strokeWidth="1.5"/>
+    <rect x="44" y="30" width="12" height="2" rx="1" fill="#38BDF8" opacity="0.5"/>
+    <text x="49" y="41" textAnchor="middle" fontSize="5" fill="#0369A1" fontWeight="bold">MILK</text>
+  </svg>
+)
+
+const PROCESS_STEPS: { emoji?: string; icon?: React.ReactNode; title: string; desc: string }[] = [
   { emoji: '🐄', title: 'Healthy Cows', desc: 'Pasture-fed cows raised with care and organic fodder.' },
   { emoji: '🥛', title: 'Morning Milking', desc: 'Hygienic milking using modern touch-free automation.' },
   { emoji: '🧪', title: 'Quality Testing', desc: 'Tested for purity and chilled instantly to preserve nutrients.' },
-  { emoji: '🍼', title: 'Packing', desc: 'Sealed safely in clean eco-friendly bottles.' },
+  { icon: <MilkPackingIcon />, title: 'Packing', desc: 'Sealed safely in clean eco-friendly bottles.' },
   { emoji: '🚚', title: 'Doorstep Delivery', desc: 'Delivered in temperature-controlled transit before sunrise.' }
 ]
 
@@ -217,7 +242,10 @@ export default function OurStoryPage() {
                       transition={{ duration: 0.6, delay: idx * 0.12 }}
                       className="relative flex flex-col items-center text-center p-6 bg-white border border-slate-100 rounded-[24px] w-full max-w-[280px] h-[210px] shadow-[0_4px_18px_rgba(0,0,0,0.01)] hover:shadow-[0_12px_28px_rgba(2,66,156,0.04)] transition-all duration-300"
                     >
-                      <span className="text-4xl mb-4 select-none">{step.emoji}</span>
+                      {step.icon
+                        ? <div className="mb-4 flex items-center justify-center">{step.icon}</div>
+                        : <span className="text-4xl mb-4 select-none">{step.emoji}</span>
+                      }
                       <h3 className="text-sm font-bold font-cabinet text-black mb-2">
                         {step.title}
                       </h3>
