@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   LayoutDashboard, SkipForward, Palmtree, PlusCircle, FileText,
-  Calendar, ArrowRight, AlertTriangle, HelpCircle, Clock, Milk,
+  Calendar, CalendarDays, ArrowRight, AlertTriangle, HelpCircle, Clock, Milk,
   Wallet, CreditCard, CheckCircle, ArrowUpRight, X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -727,9 +727,9 @@ export default function CustomerDashboard() {
         </div>
       </motion.div>
 
-      {/* ─── 3. QUICK SERVICES SECTION ─── */}
+      {/* ─── 3. QUICK ACTIONS SECTION ─── */}
       <motion.div variants={itemVariants} className="space-y-3.5 relative z-10">
-        <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-[2.5px] px-1">Quick Services</h3>
+        <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-[2.5px] px-1">Quick Actions</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
           {/* Skip Day */}
@@ -788,6 +788,26 @@ export default function CustomerDashboard() {
               </div>
             </Link>
           </motion.div>
+
+          {/* Delivery History */}
+          <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
+            <Link href="/dashboard/history" className="flex flex-col items-center text-center bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors shadow-sm">
+                <CalendarDays size={20} strokeWidth={2.5} />
+              </div>
+              <div className="mt-5 flex flex-col items-center">
+                <p className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">Delivery History</p>
+                <p className="text-xs text-slate-400 dark:text-slate-555 font-medium leading-relaxed mt-2 max-w-[220px]">
+                  View your recent milk deliveries and delivery history.
+                </p>
+              </div>
+              <div className="mt-4 text-[10.5px] font-bold text-blue-600 dark:text-blue-400 flex items-center justify-center gap-1">
+                <span>View History</span>
+                <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+          </motion.div>
+
         </div>
       </motion.div>
 
