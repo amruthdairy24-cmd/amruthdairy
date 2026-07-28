@@ -30,8 +30,7 @@ export default async function SettingsPage() {
   const configs = {
     // General
     businessName: getSetting('business_name', 'Amruth Dairy'),
-    supportPhone: getSetting('business_phone', '+91 0000000000'),
-    ownerPhone: getSetting('owner_phone', '+91 9048571147'),
+    supportPhone: getSetting('business_phone', '+91 9880143808'),
     
     // Operations
     dailyCapacity: Number(getSetting('daily_capacity_litres', 100)),

@@ -25,7 +25,6 @@ import { cn } from '@/lib/utils'
 interface Configs {
   businessName: string;
   supportPhone: string;
-  ownerPhone: string;
   dailyCapacity: number;
   deliveryStartTime: string;
   waitlistOfferHours: number;
@@ -63,7 +62,7 @@ export function SettingsClient({ initialConfigs }: { initialConfigs: Configs }) 
       const payload = [
         { key: 'business_name', value: formState.businessName },
         { key: 'business_phone', value: formState.supportPhone },
-        { key: 'owner_phone', value: formState.ownerPhone },
+        { key: 'owner_phone', value: formState.supportPhone },
         { key: 'daily_capacity_litres', value: formState.dailyCapacity },
         { key: 'delivery_start_time', value: formState.deliveryStartTime },
         { key: 'waitlist_offer_hours', value: formState.waitlistOfferHours },
@@ -190,21 +189,6 @@ export function SettingsClient({ initialConfigs }: { initialConfigs: Configs }) 
                         className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-205 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/10 focus:border-[#014DA4]/45 text-slate-800 dark:text-white text-sm font-semibold transition-all" 
                       />
                     </div>
-                  </div>
-
-                  <div className="space-y-2 sm:col-span-2">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Super Admin SMS Alerts Channel</label>
-                    <div className="relative">
-                      <Shield className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <input 
-                        required
-                        type="text" 
-                        value={formState.ownerPhone} 
-                        onChange={(e) => handleInputChange('ownerPhone', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-205 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/10 focus:border-[#014DA4]/45 text-slate-800 dark:text-white text-sm font-semibold transition-all" 
-                      />
-                    </div>
-                    <p className="text-[10px] font-bold text-slate-450 dark:text-slate-500">The destination phone number for critical system alert logs and SMS triggers.</p>
                   </div>
                 </div>
               </div>
