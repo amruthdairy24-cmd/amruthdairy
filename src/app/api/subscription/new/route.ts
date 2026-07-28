@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { fetchMilkPrices, fetchTrialPricing, calculateDailyRate, calculateMonthlyAmount, calculateProRataAmount, getDaysInMonth } from '@/lib/billing';
+import { fetchMilkPrices, fetchTrialPricing, calculateDailyRate, calculateMonthlyAmount, calculateProRataAmount, getDaysInMonth, sumCreditAdjustments } from '@/lib/billing';
+import { processPendingReferralReward } from '@/lib/referral';
 import { getEarliestStartDateStr } from '@/lib/utils';
 import Razorpay from 'razorpay';
 
@@ -130,6 +131,18 @@ export async function POST(request: Request) {
     }
 
     const monthly_amount = deliveryDays * daily_rate;
+
+    // Fetch unapplied credit adjustments to apply discount
+    const { data: unappliedAdjustments } = await adminSupabase
+      .from('billing_adjustments')
+      .select('id, amount, adjustment_type')
+      .eq('customer_id', user.id)
+      .eq('is_applied', false);
+
+    const creditBalance = sumCreditAdjustments(unappliedAdjustments || []);
+    const net_due = Math.max(0, monthly_amount - creditBalance);
+    const adjustment_ids = (unappliedAdjustments || []).map((a: any) => a.id);
+
     // 6. Create Razorpay order
     let razorpay_order_id = null;
     
@@ -144,7 +157,7 @@ export async function POST(request: Request) {
       });
 
       const orderOptions = {
-        amount: Math.round(monthly_amount * 100), // amount in paise
+        amount: Math.round(net_due * 100), // amount in paise
         currency: "INR",
         receipt: `rcpt_sub_${user.id.slice(0, 8)}_${Date.now()}`
       };
@@ -200,6 +213,7 @@ export async function POST(request: Request) {
         billing_month: formattedBillingMonth,
         quantity_litres: quantity,
         monthly_amount: monthly_amount,
+        net_due: net_due,
         daily_rate: daily_rate,
         days_in_month: daysInMonth,
         payment_status: initialStatus === 'active' ? 'paid' : 'pending'
@@ -250,19 +264,22 @@ export async function POST(request: Request) {
 
           await adminSupabase
             .from('referrals')
-            .insert({
+            .upsert({
               referrer_id: referrerProfile.id,
               referee_id: user.id,
               referral_code: referralCodeInput,
               status: 'pending',
               reward_litres: 2.0,
               reward_amount: 120.0
-            });
+            }, { onConflict: 'referee_id' });
         }
       } catch (refErr) {
         console.error('Pending referral creation exception:', refErr);
       }
     }
+
+    // Process and grant referral credit reward to referrer if pending
+    await processPendingReferralReward(adminSupabase, user.id);
 
     if (is_trial) {
       const { error: profileError } = await adminSupabase
@@ -280,10 +297,12 @@ export async function POST(request: Request) {
       success: true,
       subscription_id: subscription.id,
       monthly_amount: monthly_amount,
+      net_due: net_due,
       daily_rate: daily_rate,
       razorpay_order_id: razorpay_order_id,
       key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      billing_month_id: billingMonthId ?? null
+      billing_month_id: billingMonthId ?? null,
+      adjustment_ids: adjustment_ids
     });
 
   } catch (err: any) {

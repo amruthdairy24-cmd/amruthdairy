@@ -34,7 +34,6 @@ export async function GET(request: Request) {
       valid: true,
       referral_code: profile.referral_code,
       referrer_name: firstName,
-      message: `Referred by ${firstName}! You will get 2L Free Milk reward on subscription.`
     });
 
   } catch (err: unknown) {

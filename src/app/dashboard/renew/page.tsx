@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { ArrowLeft, CheckCircle, Calendar, ShieldCheck, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import SubscriptionCalendar from '@/components/SubscriptionCalendar'
-import { calculateDailyRate, fetchMilkPricesClient } from '@/lib/billing'
+import { calculateDailyRate, fetchMilkPricesClient, calculateNetDueFromCredits } from '@/lib/billing'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
@@ -168,8 +168,10 @@ function RenewContent() {
   const daysToCharge = calculateRemainingDays();
   const dailyRate = Object.keys(milkPrices).length > 0 ? calculateDailyRate(quantity, milkPrices) : (data?.previousMonth?.daily_rate || 20); 
   const totalAmount = dailyRate * daysToCharge;
-  const carryInBalance = data?.upcoming_adjustments?.reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0) || 0;
-  const netDue = Math.max(0, totalAmount - carryInBalance);
+  
+  const pendingCharges = dashboardData?.next_month_summary?.total_pending_charges || 0;
+  const creditBalance = dashboardData?.next_month_summary?.total_credit_balance || 0;
+  const netDue = Math.max(0, calculateNetDueFromCredits(totalAmount, creditBalance, pendingCharges));
 
   const handlePayment = async () => {
     setIsProcessing(true)
@@ -395,17 +397,22 @@ function RenewContent() {
             <span className="font-bold text-slate-800 dark:text-slate-200">{excludedDates.length} days</span>
           </div>
           
-          {carryInBalance > 0 && (
-            <div className="flex justify-between items-center text-green-600 dark:text-green-400">
-              <span className="font-medium">Carry Forward Balance</span>
-              <span className="font-bold">-₹{carryInBalance.toFixed(2)}</span>
+          <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 font-semibold border-t border-slate-200/60 dark:border-slate-800/60 pt-3">
+            <span>Base Plan Amount</span>
+            <span>₹{totalAmount.toFixed(2)}</span>
+          </div>
+          
+          {pendingCharges > 0 && (
+            <div className="flex justify-between items-center text-amber-600 dark:text-amber-400 font-semibold">
+              <span className="font-medium">Pending Charges / Dues</span>
+              <span className="font-bold">+₹{pendingCharges.toFixed(2)}</span>
             </div>
           )}
           
-          {carryInBalance < 0 && (
-            <div className="flex justify-between items-center text-rose-600 dark:text-rose-400">
-              <span className="font-medium">Pending Dues</span>
-              <span className="font-bold">+₹{Math.abs(carryInBalance).toFixed(2)}</span>
+          {creditBalance > 0 && (
+            <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-semibold">
+              <span className="font-medium">Credit Balance</span>
+              <span className="font-bold">-₹{creditBalance.toFixed(2)}</span>
             </div>
           )}
           

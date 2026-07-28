@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Droplet } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 interface AdminExtraMilkModalProps {
   isOpen: boolean
@@ -39,10 +40,12 @@ export function AdminExtraMilkModal({ isOpen, onClose, onSuccess, customerId, cu
         throw new Error(data.message || 'Failed to add extra milk')
       }
 
+      toast.success('Extra milk request added successfully!')
       onSuccess()
       onClose()
     } catch (err: any) {
       setError(err.message)
+      toast.error(err.message || 'Failed to add extra milk')
     } finally {
       setLoading(false)
     }

@@ -6,6 +6,7 @@ import { User, MapPin, Phone, Edit3, Save, AlertCircle, CheckCircle, Milk, FileT
 import { cn } from '@/lib/utils'
 import { DELIVERY_AREAS } from '@/lib/constants'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
+import toast from 'react-hot-toast'
 
 interface ProfileData {
   full_name: string
@@ -147,12 +148,16 @@ export default function AccountPage() {
         setProfile({ ...editForm })
         setIsEditing(false)
         setSuccessMsg('Profile updated successfully!')
+        toast.success('Profile updated successfully!')
         setTimeout(() => setSuccessMsg(''), 3000)
       } else {
-        setError(json.message || 'Failed to update profile')
+        const msg = json.message || 'Failed to update profile'
+        setError(msg)
+        toast.error(msg)
       }
     } catch (err) {
       setError('Network error saving profile')
+      toast.error('Network error saving profile')
     } finally {
       setSaving(false)
     }

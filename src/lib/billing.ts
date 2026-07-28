@@ -191,6 +191,7 @@ export function isCreditAdjustmentType(type?: string | null): boolean {
     || type === 'vacation_credit'
     || type === 'carry_forward'
     || type === 'credit'
+    || type === 'referral_credit'
 }
 
 export function isChargeAdjustmentType(type?: string | null): boolean {

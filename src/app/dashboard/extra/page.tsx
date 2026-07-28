@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { Modal } from '@/components/ui'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
+import toast from 'react-hot-toast'
 
 const getLocalISODate = (d: Date) => {
   const y = d.getFullYear();
@@ -393,14 +394,18 @@ export default function ExtraMilkPage() {
         const json = await res.json()
         if (json.success) {
           setSuccessMsg(json.message)
+          toast.success(json.message || 'Extra milk order updated successfully!')
           await loadData(true)
           setEditingOrderId(null)
           setExtraLitres(0.5)
         } else {
-          setError(json.message || 'Failed to update extra milk')
+          const msg = json.message || 'Failed to update extra milk'
+          setError(msg)
+          toast.error(msg)
         }
       } catch (err) {
         setError('Network error submitting request')
+        toast.error('Network error submitting request')
       } finally {
         setLoading(false)
       }
@@ -430,17 +435,24 @@ export default function ExtraMilkPage() {
       }
 
       if (successCount === selectedDates.length) {
-        setSuccessMsg(`Successfully ordered extra milk for ${successCount} date(s).`)
+        const msg = `Successfully ordered extra milk for ${successCount} date(s).`
+        setSuccessMsg(msg)
+        toast.success(msg)
         setSelectedDates([])
         await loadData(true)
       } else if (successCount > 0) {
-        setError(`Ordered for ${successCount} date(s), but failed for some: ${lastError}`)
+        const msg = `Ordered for ${successCount} date(s), but failed for some: ${lastError}`
+        setError(msg)
+        toast.error(msg)
         await loadData(true)
       } else {
-        setError(`Failed to place orders: ${lastError}`)
+        const msg = `Failed to place orders: ${lastError}`
+        setError(msg)
+        toast.error(msg)
       }
     } catch (err) {
       setError('Network error submitting request')
+      toast.error('Network error submitting request')
     } finally {
       setLoading(false)
     }
@@ -463,14 +475,18 @@ export default function ExtraMilkPage() {
       const json = await res.json()
       if (json.success) {
         setSuccessMsg(json.message)
+        toast.success(json.message || 'Order cancelled successfully')
         await loadData(true)
         setEditingOrderId(null)
         setExtraLitres(0.5)
       } else {
-        setError(json.message || 'Failed to cancel order')
+        const msg = json.message || 'Failed to cancel order'
+        setError(msg)
+        toast.error(msg)
       }
     } catch (err) {
       setError('Network error submitting cancellation request')
+      toast.error('Network error submitting cancellation request')
     } finally {
       setLoading(false)
     }
