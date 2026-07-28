@@ -6,6 +6,7 @@ import { HowItWorks } from '@/components/home/HowItWorks'
 import { ProductsPreview } from '@/components/home/ProductsPreview'
 import StatsBar from '@/components/home/StatsBar'
 import { OurStoryVideos } from '@/components/our-story/OurStoryVideos'
+import { PricingSection } from '@/components/subscribe/PricingSection'
 
 export default function HomePage() {
   return (
@@ -15,6 +16,7 @@ export default function HomePage() {
         <HeroSection />
         <StatsBar />
         <OurStoryVideos />
+        <PricingSection/>
         <OurStoryPreview />
         <HowItWorks />
         <ProductsPreview />

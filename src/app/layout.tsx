@@ -35,6 +35,7 @@ const playfairDisplay = Playfair_Display({
 
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: 'Amruth Milk — Farm Fresh Milk Subscription · Padil, Mangalore',
   description:
     'Manage your daily milk subscription with one tap. Skip days, order extra, pay bills online. Fresh milk from Amruth Dairy, Padil, Mangalore — delivered to your door every morning.',
@@ -99,7 +100,35 @@ export default function RootLayout({
           <CartProvider>
             <PageLoader />
             {children}
-            <Toaster position="bottom-center" />
+            <Toaster 
+              position="top-right" 
+              gutter={10}
+              toastOptions={{
+                duration: 4500,
+                className: 'amruth-global-toast',
+                style: {
+                  borderRadius: '16px',
+                  padding: '12px 18px',
+                  fontSize: '13.5px',
+                  fontWeight: '600',
+                  maxWidth: '420px',
+                },
+                success: {
+                  duration: 4000,
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#ffffff',
+                  },
+                },
+                error: {
+                  duration: 5000,
+                  iconTheme: {
+                    primary: '#f43f5e',
+                    secondary: '#ffffff',
+                  },
+                },
+              }}
+            />
           </CartProvider>
         </ThemeProvider>
         {/* Global SVG Color Swap Filter for Dark Mode Logo Inversion */}

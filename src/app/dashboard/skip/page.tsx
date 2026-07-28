@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Modal } from '@/components/ui'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
+import toast from 'react-hot-toast'
 
   
 const getLocalISODate = (d: Date) => {
@@ -189,21 +190,26 @@ export default function SkipDayPage() {
       if (results.length > 0) {
         const firstDate = parseLocalISODate(results[0]).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
         const lastDate = parseLocalISODate(results[results.length - 1]).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
-        setSuccessMsg(results.length === 1
+        const msg = results.length === 1
           ? `Successfully skipped delivery for ${firstDate}`
-          : `Successfully skipped ${results.length} delivery dates from ${firstDate} to ${lastDate}`)
+          : `Successfully skipped ${results.length} delivery dates from ${firstDate} to ${lastDate}`
+        setSuccessMsg(msg)
+        toast.success(msg)
         setSelectedDate('')
         setSelectedEndDate('')
         await loadData()
       }
 
       if (errors.length > 0) {
-        setError(errors.join('\n'))
+        const errText = errors.join('\n')
+        setError(errText)
+        toast.error(errors[0])
       }
 
       setIsConfirmOpen(false)
     } catch {
       setError('Network error processing request')
+      toast.error('Network error processing request')
       setIsConfirmOpen(false)
     } finally {
       setLoading(false)
@@ -225,11 +231,15 @@ export default function SkipDayPage() {
       const json = await res.json()
 
       if (json.success) {
-        setSuccessMsg(`Successfully restored delivery for ${new Date(cancelDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}`)
+        const msg = `Successfully restored delivery for ${new Date(cancelDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}`
+        setSuccessMsg(msg)
+        toast.success(msg)
         setCancelDate(null)
         await loadData()
       } else {
-        setError(json.message || 'Failed to cancel skip request')
+        const errMsg = json.message || 'Failed to cancel skip request'
+        setError(errMsg)
+        toast.error(errMsg)
         setCancelDate(null)
       }
     } catch {

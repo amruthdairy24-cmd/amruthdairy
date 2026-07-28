@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, UserPlus, Check } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 interface AddCustomerModalProps {
   isOpen: boolean
@@ -45,10 +46,13 @@ export function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCustomerModa
         throw new Error(data.message || 'Failed to add customer')
       }
 
+      toast.success('Customer added successfully!')
       onSuccess()
       onClose()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to add customer')
+      const msg = err instanceof Error ? err.message : 'Failed to add customer'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }
