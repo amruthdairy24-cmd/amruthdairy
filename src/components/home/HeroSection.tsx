@@ -129,7 +129,7 @@ export function HeroSection() {
 
           {/* Watch Our Story */}
           <Link
-            href="#our-story"
+            href="#our-story-videos"
             id="mobile-hero-watch-story"
             className="inline-flex items-center gap-2 group"
           >
@@ -185,7 +185,7 @@ export function HeroSection() {
               </button>
 
               <Link
-                href="#our-story"
+                href="#our-story-videos"
                 id="desktop-hero-watch-story"
                 className="inline-flex items-center gap-3 bg-transparent font-bold text-xs tracking-wider uppercase group hover:scale-105 transition-all duration-200"
               >
