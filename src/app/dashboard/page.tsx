@@ -576,13 +576,6 @@ export default function CustomerDashboard() {
             </div>
             
             <div className="pt-2 flex flex-wrap items-center gap-3">
-              <Link 
-                href="/dashboard/quantity" 
-                className="inline-flex items-center gap-1.5 px-5 h-10 rounded-xl bg-warm-white dark:bg-slate-950 text-blue-950 dark:text-emerald-400 hover:bg-cream-100 dark:hover:bg-slate-900 font-bold text-xs shadow-sm transition-all duration-150 cursor-pointer"
-              >
-                <span>Manage Subscription</span>
-                <ArrowRight size={13} />
-              </Link>
               <span className="text-[11px] font-bold text-blue-50 dark:text-slate-400 bg-emerald-950/20 dark:bg-slate-950/30 backdrop-blur-sm border border-white/5 dark:border-slate-800/50 py-2 px-3.5 rounded-xl select-none">
                 Zone: Mangalore Metro
               </span>

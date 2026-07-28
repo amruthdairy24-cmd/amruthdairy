@@ -449,12 +449,9 @@ export default function BillsPage() {
               <p className="text-xl font-black font-mono tracking-tight leading-none text-white">₹{subscription?.monthly_amount?.toFixed(0) || '0'}</p>
               <p className="text-[9px] text-blue-200/40 font-semibold mt-1">₹{subscription?.daily_rate?.toFixed(0) || '0'}/day</p>
             </div>
-            <div className="bg-white/8 dark:bg-slate-950/40 backdrop-blur-md border border-white/10 dark:border-slate-800/50 px-4 py-3 rounded-xl min-w-[110px] text-center select-none">
+            <div className="bg-white/8 dark:bg-slate-950/40 backdrop-blur-md border border-white/10 dark:border-slate-800/50 px-4 py-3 rounded-xl min-w-[110px] text-center select-none flex flex-col justify-center">
               <p className="text-[9px] text-blue-200/60 dark:text-slate-500 uppercase tracking-widest font-bold mb-1">Member Since</p>
               <p className="text-sm font-bold font-display tracking-tight leading-none text-white mt-1">{memberSince}</p>
-              <Link href="/dashboard/quantity" className="text-[9px] text-amber-300/80 hover:text-amber-200 font-bold mt-1.5 flex items-center justify-center gap-0.5 transition-colors">
-                Manage <ChevronRight size={9} />
-              </Link>
             </div>
           </div>
         </div>
