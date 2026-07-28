@@ -378,3 +378,21 @@
 .input-icon-right:hover {
   color: #4b5563;
 }
+
+/* ── Global Top-Right Toast Notifications Custom Styling ─────────────────── */
+.amruth-global-toast {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 30px -10px rgba(15, 23, 42, 0.15), 0 8px 12px -6px rgba(15, 23, 42, 0.1) !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.dark .amruth-global-toast {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(51, 65, 85, 0.8) !important;
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.5), 0 8px 12px -6px rgba(0, 0, 0, 0.4) !important;
+}

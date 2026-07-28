@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { cn } from '@/lib/utils'
 import { isCreditAdjustmentType } from '@/lib/billing'
+import toast from 'react-hot-toast'
 
 interface Invoice {
   id: string;
@@ -61,13 +62,13 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       });
       const data = await res.json();
       if (data.success) {
-        alert(`Refund ${action}ed successfully.`);
+        toast.success(`Refund ${action}ed successfully.`);
         window.location.reload();
       } else {
-        alert(data.message || `Failed to ${action} refund`);
+        toast.error(data.message || `Failed to ${action} refund`);
       }
     } catch (err) {
-      alert('Network error');
+      toast.error('Network error. Please try again.');
     } finally {
       setIsProcessing(false);
     }

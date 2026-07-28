@@ -13,6 +13,7 @@ import { isCreditAdjustmentType } from '@/lib/billing'
 import Link from 'next/link'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
+import toast from 'react-hot-toast'
 
 interface BillingData {
   id?: string;
@@ -162,7 +163,7 @@ export default function BillsPage() {
       setPaymentStep('processing');
       const loaded = await loadRazorpayScript();
       if (!loaded) {
-        alert('Failed to load Razorpay SDK. Please check your internet connection.');
+        toast.error('Failed to load Razorpay SDK. Please check your internet connection.');
         setPaymentStep('details');
         return;
       }
@@ -175,7 +176,7 @@ export default function BillsPage() {
       const orderData = await orderRes.json();
 
       if (!orderData.success) {
-        alert(orderData.message || 'Failed to initialize payment order.');
+        toast.error(orderData.message || 'Failed to initialize payment order.');
         setPaymentStep('details');
         return;
       }
@@ -204,14 +205,15 @@ export default function BillsPage() {
             if (verifyData.success) {
               setPaymentStep('success');
               setMockPaid(true);
+              toast.success('Payment verified successfully!');
               loadData();
             } else {
-              alert(verifyData.message || 'Payment verification failed.');
+              toast.error(verifyData.message || 'Payment verification failed.');
               setPaymentStep('details');
             }
           } catch (err) {
             console.error('Verification error:', err);
-            alert('Error verifying payment.');
+            toast.error('Error verifying payment.');
             setPaymentStep('details');
           }
         },
@@ -228,7 +230,7 @@ export default function BillsPage() {
 
     } catch (err: any) {
       console.error('Payment start error:', err);
-      alert('Failed to initiate payment.');
+      toast.error('Failed to initiate payment.');
       setPaymentStep('details');
     }
   }
@@ -293,10 +295,19 @@ export default function BillsPage() {
   // Carry forward amount
   const carryForwardSum = nextMonthSummary?.credit_remaining ?? 0
 
-  // Extra milk upcoming
-  const totalGrossExtraMilk = upcomingExtras.reduce((sum, e) => sum + (e.charge_amount || 0), 0)
-  const totalExtraMilkCharges = upcomingExtras.reduce((sum, e) => sum + Number(e.net_charge_amount !== undefined ? e.net_charge_amount : e.charge_amount || 0), 0)
-  const totalSkipCreditsAppliedToExtra = upcomingExtras.reduce((sum, e) => sum + Number(e.skip_credit_applied || 0), 0)
+  // Extra milk upcoming (filtering out extra orders belonging to already paid statements)
+  const activeUnpaidExtras = upcomingExtras.filter(e => {
+    if (e.status && e.status !== 'confirmed') return false;
+    if (activeBill && isPaid && (activeBill as any).payment_status === 'paid') {
+      const billMonth = activeBill.billing_month;
+      if ((e as any).charge_month === billMonth) return false;
+    }
+    return true;
+  });
+
+  const totalGrossExtraMilk = activeUnpaidExtras.reduce((sum, e) => sum + (e.charge_amount || 0), 0)
+  const totalExtraMilkCharges = activeUnpaidExtras.reduce((sum, e) => sum + Number(e.net_charge_amount !== undefined ? e.net_charge_amount : e.charge_amount || 0), 0)
+  const totalSkipCreditsAppliedToExtra = activeUnpaidExtras.reduce((sum, e) => sum + Number(e.skip_credit_applied || 0), 0)
 
   
   const totalSkipCredits = upcomingSkips.reduce((sum: number, s: any) => sum + (s.credit_amount || 0), 0)
@@ -449,12 +460,9 @@ export default function BillsPage() {
               <p className="text-xl font-black font-mono tracking-tight leading-none text-white">₹{subscription?.monthly_amount?.toFixed(0) || '0'}</p>
               <p className="text-[9px] text-blue-200/40 font-semibold mt-1">₹{subscription?.daily_rate?.toFixed(0) || '0'}/day</p>
             </div>
-            <div className="bg-white/8 dark:bg-slate-950/40 backdrop-blur-md border border-white/10 dark:border-slate-800/50 px-4 py-3 rounded-xl min-w-[110px] text-center select-none">
+            <div className="bg-white/8 dark:bg-slate-950/40 backdrop-blur-md border border-white/10 dark:border-slate-800/50 px-4 py-3 rounded-xl min-w-[110px] text-center select-none flex flex-col justify-center">
               <p className="text-[9px] text-blue-200/60 dark:text-slate-500 uppercase tracking-widest font-bold mb-1">Member Since</p>
               <p className="text-sm font-bold font-display tracking-tight leading-none text-white mt-1">{memberSince}</p>
-              <Link href="/dashboard/quantity" className="text-[9px] text-amber-300/80 hover:text-amber-200 font-bold mt-1.5 flex items-center justify-center gap-0.5 transition-colors">
-                Manage <ChevronRight size={9} />
-              </Link>
             </div>
           </div>
         </div>
@@ -746,11 +754,11 @@ export default function BillsPage() {
           </div>
 
           <div className="p-5 space-y-4">
-            {upcomingExtras.length > 0 ? (
+            {activeUnpaidExtras.length > 0 ? (
               <>
                 {/* Individual extra milk orders */}
                 <div className="space-y-2">
-                  {upcomingExtras.map((extra, idx) => (
+                  {activeUnpaidExtras.map((extra, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100/60 dark:border-amber-900/20 rounded-xl text-[12.5px]">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">

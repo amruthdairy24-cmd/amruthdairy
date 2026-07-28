@@ -310,13 +310,14 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
             <div>Admin Verification: _______________________</div>
             <div>Printed at: ${new Date().toLocaleTimeString('en-IN')}</div>
           </div>
-          <script>
-            window.onload = function() { window.print(); }
-          </script>
         </body>
       </html>
     `)
     printWindow.document.close()
+    printWindow.onload = function() {
+      printWindow.focus()
+      printWindow.print()
+    }
   }
 
   // Send Driver WhatsApp Route List
