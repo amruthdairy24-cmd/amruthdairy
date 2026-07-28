@@ -178,7 +178,7 @@ export default function ProductsPage() {
       {/* Premium Header Banner */}
       <motion.div
         variants={itemVariants}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-700 via-[#014DA4] to-indigo-650 p-6 sm:p-8 text-white shadow-lg border border-blue-600/20"
+        className="relative overflow-hidden rounded-3xl bg-[#014DA4] dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-950 p-6 sm:p-8 text-white shadow-lg border border-white/10 dark:border-slate-800 z-10"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-2xl translate-x-20 -translate-y-20 pointer-events-none" />
         <div className="absolute -bottom-10 left-1/3 w-40 h-40 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />

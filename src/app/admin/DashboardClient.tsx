@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import {
@@ -169,7 +169,7 @@ export default function DashboardClient({
     <div className="space-y-6">
       
       {/* =========================================
-          SECTION 1 â€” HERO WELCOME BANNER
+          SECTION 1 — HERO WELCOME BANNER
       ========================================= */}
       <div className="rounded-3xl p-7 md:p-8 relative overflow-hidden text-white bg-[#014DA4] dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-950 shadow-lg border border-white/5 dark:border-slate-800">
         {/* Decorative background blurs */}
@@ -235,7 +235,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 2 â€” KPI METRIC CARDS
+          SECTION 2 — KPI METRIC CARDS
       ========================================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
@@ -333,7 +333,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 3 â€” TWO COLUMN (60/40 SPLIT)
+          SECTION 3 — TWO COLUMN (60/40 SPLIT)
       ========================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         
@@ -524,7 +524,7 @@ export default function DashboardClient({
       </div>
 
       {/* =========================================
-          SECTION 4 â€” THREE COLUMN BOTTOM
+          SECTION 4 — THREE COLUMN BOTTOM
       ========================================= */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
