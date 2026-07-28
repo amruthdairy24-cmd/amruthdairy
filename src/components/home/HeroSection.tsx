@@ -6,9 +6,16 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+// Static fallback slides shown immediately — replaced by DB banners if API succeeds
+const FALLBACK_SLIDES = [
+  { src: '/images/bg/hero-banner.png', mobileSrc: '/images/bg/amruth-mobile-milk.png', alt: 'Amruth Dairy Premium Farm Fresh Milk Bottles' },
+  { src: '/images/bg/hero-banner-2.png', mobileSrc: '/images/bg/mobile-banner-2.png', alt: 'Amruth Dairy Fresh Cow and Milk' },
+  { src: '/images/bg/amruth-butter.png', mobileSrc: '/images/bg/amruth-mobile-banner.png', alt: 'Amruth Dairy Delicious Fresh Butter and Cheese' },
+]
+
 export function HeroSection() {
   const router = useRouter()
-  const [slides, setSlides] = useState<{ src: string; mobileSrc: string; alt?: string }[]>([])
+  const [slides, setSlides] = useState<{ src: string; mobileSrc: string; alt?: string }[]>(FALLBACK_SLIDES)
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isMounted, setIsMounted] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
@@ -18,12 +25,13 @@ export function HeroSection() {
     fetch('/api/hero-banners')
       .then(r => r.json())
       .then(data => {
-        if (data.success && Array.isArray(data.banners)) {
+        if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
           setSlides(data.banners)
         }
+        // If API fails or returns empty, FALLBACK_SLIDES remain
       })
-      .catch(err => {
-        console.error('HeroSection failed to fetch DB banners:', err)
+      .catch(() => {
+        // Silently keep FALLBACK_SLIDES on error
       })
   }, [])
 
