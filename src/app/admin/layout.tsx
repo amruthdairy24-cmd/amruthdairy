@@ -25,7 +25,8 @@ import {
   ChevronDown,
   MapPin,
   ShoppingBag,
-  MessageSquare
+  MessageSquare,
+  Image as ImageIcon
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/utils/supabase/client'
@@ -51,6 +52,7 @@ const sidebarGroups = [
     items: [
       { href: '/admin/billing', icon: CreditCard, label: 'Billing' },
       { href: '/admin/products', icon: Package, label: 'Products' },
+      { href: '/admin/hero-banners', icon: ImageIcon, label: 'Hero Banners' },
       { href: '/admin/capacity', icon: Layers, label: 'Capacity' },
       { href: '/admin/waitlist', icon: Clock, label: 'Waitlist' },
       { href: '/admin/farm-visits', icon: MapPin, label: 'Farm Visits' },

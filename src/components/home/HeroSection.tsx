@@ -6,25 +6,34 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const slides = [
-  { src: '/images/bg/hero-banner.png', mobileSrc: '/images/bg/amruth-mobile-milk.png', alt: 'Amruth Dairy Premium Farm Fresh Milk Bottles' },
-  { src: '/images/bg/hero-banner-2.png', mobileSrc: '/images/bg/mobile-banner-2.png', alt: 'Amruth Dairy Fresh Cow and Milk' },
-  { src: '/images/bg/amruth-butter.png', mobileSrc: '/images/bg/amruth-mobile-banner.png', alt: 'Amruth Dairy Delicious Fresh Butter and Cheese' },
-]
-
 export function HeroSection() {
   const router = useRouter()
+  const [slides, setSlides] = useState<{ src: string; mobileSrc: string; alt?: string }[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isMounted, setIsMounted] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
 
   useEffect(() => {
     setIsMounted(true)
+    fetch('/api/hero-banners')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.banners)) {
+          setSlides(data.banners)
+        }
+      })
+      .catch(err => {
+        console.error('HeroSection failed to fetch DB banners:', err)
+      })
+  }, [])
+
+  useEffect(() => {
+    if (slides.length <= 1) return
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
     }, 6000)
     return () => clearInterval(interval)
-  }, [])
+  }, [slides.length])
 
   useEffect(() => {
     fetch('/api/customer/dashboard')
