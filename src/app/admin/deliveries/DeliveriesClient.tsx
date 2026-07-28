@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import {
   Truck, CheckCircle2, SkipForward, PlusCircle,
   Calendar, RefreshCw, ChevronLeft, ChevronRight, Package,
-  MapPin, Phone, Droplets, AlertTriangle, Clock, Eye, Search
+  MapPin, Phone, Droplets, AlertTriangle, Clock, Eye, Search,
+  Printer, Download, Share2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
@@ -177,6 +178,171 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
     return true
   })
 
+  // Export CSV Function
+  function exportToCSV() {
+    if (deliveries.length === 0) return
+
+    const headers = ['Customer Name', 'Phone', 'Area', 'Address', 'Landmark', 'Floor Notes', 'Regular Litres', 'Extra Litres', 'Total Litres', 'Status', 'Notes']
+    const rows = filteredDeliveries.map(d => [
+      `"${d.customer_name || ''}"`,
+      `"${d.phone || ''}"`,
+      `"${d.area || ''}"`,
+      `"${(d.address || '').replace(/"/g, '""')}"`,
+      `"${(d.landmark || '').replace(/"/g, '""')}"`,
+      `"${(d.floor_notes || '').replace(/"/g, '""')}"`,
+      d.regular_litres || 0,
+      d.extra_litres || 0,
+      d.total_litres || 0,
+      d.delivery_status || 'pending',
+      `"${(d.notes || '').replace(/"/g, '""')}"`
+    ])
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', `Amruth_Delivery_Sheet_${selectedDate}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  // Print Driver Manifest Function
+  function printDeliveryManifest() {
+    if (filteredDeliveries.length === 0) return
+
+    const grouped: { [key: string]: DeliveryEntry[] } = {}
+    filteredDeliveries.forEach(d => {
+      const area = d.area || 'General / Unspecified Area'
+      if (!grouped[area]) grouped[area] = []
+      grouped[area].push(d)
+    })
+
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+
+    const formattedDate = new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-IN', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    })
+
+    let areaTablesHtml = ''
+    let countIndex = 1
+
+    Object.keys(grouped).forEach(area => {
+      const items = grouped[area]
+      const areaTotalLitres = items.reduce((sum, item) => sum + Number(item.total_litres || 0), 0)
+
+      areaTablesHtml += `
+        <div style="margin-bottom: 24px; page-break-inside: avoid;">
+          <div style="background: #f1f5f9; padding: 10px 14px; font-weight: bold; border-left: 5px solid #014DA4; font-size: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; border-radius: 4px;">
+            <span>📍 ROUTE / AREA: ${area.toUpperCase()} (${items.length} Customers)</span>
+            <span>TOTAL LITRES: ${areaTotalLitres.toFixed(1)}L</span>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px; font-family: sans-serif;">
+            <thead>
+              <tr style="background: #e2e8f0; text-align: left; text-transform: uppercase; font-size: 11px;">
+                <th style="border: 1px solid #cbd5e1; padding: 8px; width: 30px;">#</th>
+                <th style="border: 1px solid #cbd5e1; padding: 8px; width: 150px;">Customer Name</th>
+                <th style="border: 1px solid #cbd5e1; padding: 8px; width: 110px;">Phone</th>
+                <th style="border: 1px solid #cbd5e1; padding: 8px;">Delivery Address & Floor / Landmark Notes</th>
+                <th style="border: 1px solid #cbd5e1; padding: 8px; width: 65px; text-align: center;">Qty (L)</th>
+                <th style="border: 1px solid #cbd5e1; padding: 8px; width: 75px; text-align: center;">Status</th>
+                <th style="border: 1px solid #cbd5e1; padding: 8px; width: 55px; text-align: center;">Done</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(d => `
+                <tr style="background: ${d.delivery_status === 'delivered' ? '#f0fdf4' : '#ffffff'};">
+                  <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">${countIndex++}</td>
+                  <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">
+                    ${d.customer_name || 'Customer'}
+                    ${d.is_extra ? '<br/><span style="color: #7c3aed; font-size: 10px; font-weight: bold;">[EXTRA ORDER]</span>' : ''}
+                  </td>
+                  <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: 600;">${d.phone || '-'}</td>
+                  <td style="border: 1px solid #cbd5e1; padding: 8px;">
+                    <div style="font-weight: 600; color: #0f172a;">${d.address || '-'}</div>
+                    ${d.landmark ? `<div style="font-size: 11px; color: #475569; margin-top: 2px;">🚩 Landmark: ${d.landmark}</div>` : ''}
+                    ${d.floor_notes ? `<div style="font-size: 11px; color: #2563eb; font-weight: 600; margin-top: 2px;">🏢 Gate/Floor: ${d.floor_notes}</div>` : ''}
+                  </td>
+                  <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-size: 15px; font-weight: 900; color: #014DA4;">
+                    ${d.total_litres}L
+                  </td>
+                  <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: bold; font-size: 11px;">
+                    ${d.delivery_status === 'delivered' ? '<span style="color: #059669;">DELIVERED</span>' : '<span style="color: #d97706;">PENDING</span>'}
+                  </td>
+                  <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">
+                    <div style="width: 18px; height: 18px; border: 2px solid #64748b; margin: 0 auto; border-radius: 3px;"></div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `
+    })
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Amruth Dairy Delivery Route Sheet - ${selectedDate}</title>
+          <style>
+            body { font-family: system-ui, -apple-system, sans-serif; padding: 24px; color: #0f172a; background: #fff; }
+            @media print {
+              body { padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #014DA4; padding-bottom: 14px; margin-bottom: 24px;">
+            <div>
+              <h1 style="margin: 0; font-size: 24px; color: #014DA4; font-weight: 900; letter-spacing: -0.5px;">AMRUTH DAIRY</h1>
+              <p style="margin: 4px 0 0 0; font-size: 13px; color: #475569; font-weight: 600;">DAILY MILK DELIVERY ROUTE MANIFEST · MANGALORE</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 15px; font-weight: 900; color: #0f172a;">📅 ${formattedDate}</div>
+              <div style="font-size: 12px; color: #475569; margin-top: 4px;">Total Deliveries: <strong>${filteredDeliveries.length}</strong> | Total Litres: <strong style="color: #014DA4;">${totalLitres.toFixed(1)}L</strong></div>
+            </div>
+          </div>
+          ${areaTablesHtml}
+          <div style="margin-top: 40px; display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 20px; font-size: 12px; color: #64748b;">
+            <div>Delivery Driver Signature: _______________________</div>
+            <div>Admin Verification: _______________________</div>
+            <div>Printed at: ${new Date().toLocaleTimeString('en-IN')}</div>
+          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+  }
+
+  // Send Driver WhatsApp Route List
+  function sendDriverWhatsAppManifest() {
+    if (filteredDeliveries.length === 0) return
+
+    let text = `🥛 *AMRUTH DAIRY — DAILY DELIVERY ROUTE SHEET*\n`
+    text += `📅 Date: ${selectedDate}\n`
+    text += `📦 Total Deliveries: ${filteredDeliveries.length} | 💧 Total Litres: ${totalLitres.toFixed(1)}L\n`
+    text += `------------------------------------\n\n`
+
+    filteredDeliveries.forEach((d, idx) => {
+      text += `${idx + 1}. *${d.customer_name}* (${d.total_litres}L)\n`
+      text += `   📱 ${d.phone}\n`
+      text += `   📍 Area: ${d.area || 'Padil'}\n`
+      text += `   🏠 Address: ${d.address || 'Address not listed'}\n`
+      if (d.landmark) text += `   🚩 Landmark: ${d.landmark}\n`
+      if (d.floor_notes) text += `   🏢 Gate/Floor: ${d.floor_notes}\n`
+      text += `\n`
+    })
+
+    text += `Please complete all fresh milk deliveries before 7:00 AM. Stay fresh!`
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`
+    window.open(url, '_blank')
+  }
+
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto">
 
@@ -192,58 +358,94 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
             <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
               Delivery Management
             </h1>
-            <p className="text-xs text-slate-450 dark:text-slate-400 font-semibold mt-1">
+            <p className="text-xs text-slate-455 dark:text-slate-400 font-semibold mt-1">
               Track, manage, and coordinate daily milk deliveries
             </p>
           </div>
         </div>
 
-        {/* Date Navigation Block */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button 
-            onClick={() => changeDate(-1)} 
-            className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer shadow-2xs text-slate-600 dark:text-slate-300"
-            title="Previous Day"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          
-          <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 flex items-center gap-2 shadow-2xs">
-            <Calendar size={14} className="text-[#014DA4] dark:text-blue-400" />
-            <span className="text-xs font-black text-slate-700 dark:text-slate-200">
-              {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
-            </span>
-            {isToday && (
-              <span className="text-[9px] font-extrabold bg-emerald-500 text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs">
-                Today
-              </span>
-            )}
-          </div>
-          
-          <button 
-            onClick={() => changeDate(1)} 
-            className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer shadow-2xs text-slate-600 dark:text-slate-300"
-            title="Next Day"
-          >
-            <ChevronRight size={16} />
-          </button>
-          
-          {!isToday && (
-            <button 
-              onClick={goToToday} 
-              className="px-3.5 h-9 bg-[#014DA4] hover:bg-[#014DA4]/95 active:scale-95 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
+        {/* Action Controls & Date Navigation */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Driver Manifest Export Buttons */}
+          <div className="flex items-center gap-2 pr-2 border-r border-slate-200 dark:border-slate-800">
+            <button
+              onClick={printDeliveryManifest}
+              disabled={deliveries.length === 0}
+              className="flex items-center gap-1.5 px-3.5 h-9 bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500 active:scale-95 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-50"
+              title="Print Driver Route Manifest"
             >
-              Today
+              <Printer size={15} />
+              <span>Print Sheet</span>
             </button>
-          )}
-          
-          <button 
-            onClick={() => fetchDeliveries(selectedDate)} 
-            className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer shadow-2xs text-slate-600 dark:text-slate-300"
-            title="Reload Sheet"
-          >
-            <RefreshCw size={14} />
-          </button>
+
+            <button
+              onClick={exportToCSV}
+              disabled={deliveries.length === 0}
+              className="flex items-center gap-1.5 px-3.5 h-9 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-50"
+              title="Download CSV / Excel Sheet"
+            >
+              <Download size={15} />
+              <span>Export CSV</span>
+            </button>
+
+            <button
+              onClick={sendDriverWhatsAppManifest}
+              disabled={deliveries.length === 0}
+              className="flex items-center gap-1.5 px-3.5 h-9 bg-[#25D366] hover:bg-[#20bd5a] active:scale-95 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-50"
+              title="Send Route List to Delivery Driver on WhatsApp"
+            >
+              <Share2 size={15} />
+              <span>Driver WhatsApp</span>
+            </button>
+          </div>
+
+          {/* Date Navigation Block */}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => changeDate(-1)} 
+              className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer shadow-2xs text-slate-600 dark:text-slate-300"
+              title="Previous Day"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 flex items-center gap-2 shadow-2xs">
+              <Calendar size={14} className="text-[#014DA4] dark:text-blue-400" />
+              <span className="text-xs font-black text-slate-700 dark:text-slate-200">
+                {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
+              </span>
+              {isToday && (
+                <span className="text-[9px] font-extrabold bg-emerald-500 text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-3xs">
+                  Today
+                </span>
+              )}
+            </div>
+            
+            <button 
+              onClick={() => changeDate(1)} 
+              className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer shadow-2xs text-slate-600 dark:text-slate-300"
+              title="Next Day"
+            >
+              <ChevronRight size={16} />
+            </button>
+            
+            {!isToday && (
+              <button 
+                onClick={goToToday} 
+                className="px-3.5 h-9 bg-[#014DA4] hover:bg-[#014DA4]/95 active:scale-95 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
+              >
+                Today
+              </button>
+            )}
+            
+            <button 
+              onClick={() => fetchDeliveries(selectedDate)} 
+              className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer shadow-2xs text-slate-600 dark:text-slate-300"
+              title="Reload Sheet"
+            >
+              <RefreshCw size={14} />
+            </button>
+          </div>
         </div>
 
       </div>
@@ -399,13 +601,25 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
                         </div>
                       </td>
 
-                      {/* Area */}
+                      {/* Area & Address */}
                       <td className="px-6 py-2.5">
-                        <div className="flex items-center gap-1.5 text-left">
-                          <MapPin size={13} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
-                          <span className="text-[12.5px] font-bold text-slate-600 dark:text-slate-300 truncate max-w-[150px]">
-                            {del.area || 'N/A'}
-                          </span>
+                        <div className="flex items-start gap-1.5 text-left max-w-[240px]">
+                          <MapPin size={13} className="text-slate-400 dark:text-slate-500 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <span className="text-[12.5px] font-bold text-slate-800 dark:text-slate-200 block truncate">
+                              {del.area || 'N/A'}
+                            </span>
+                            {del.address && (
+                              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate leading-tight" title={del.address}>
+                                {del.address}
+                              </p>
+                            )}
+                            {del.landmark && (
+                              <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold truncate leading-none mt-0.5">
+                                🚩 {del.landmark}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </td>
 
