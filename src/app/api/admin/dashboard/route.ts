@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
-import { getTodayIST, isAdminEmail } from '@/lib/utils';
+import { getTodayIST, checkIsAdmin } from '@/lib/utils';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 export async function GET(request: Request) {
@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     }
 
     // Verify Admin
-    if (!isAdminEmail(user.email)) {
+    if (!(await checkIsAdmin(user))) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 

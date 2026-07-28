@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { getTodayIST } from '@/lib/utils';
 import { formatInTimeZone } from 'date-fns-tz';
-import { calculateCarryForwardCreditBalance, calculateNetDueFromCredits, sumCreditAdjustments, sumExtraMilkCreditUsage, sumExtraMilkNetCharges } from '@/lib/billing';
+import { calculateCarryForwardCreditBalance, calculateNetDueFromCredits, sumCreditAdjustments, sumChargeAdjustments, sumExtraMilkCreditUsage, sumExtraMilkNetCharges } from '@/lib/billing';
 
 export async function GET(request: Request) {
   try {
@@ -237,6 +237,9 @@ export async function GET(request: Request) {
     const nextMonthExtraCharges = sumExtraMilkNetCharges(nextMonthExtras);
     const nextMonthEstimatedDue = Math.max(0, calculateNetDueFromCredits(Number(subscription.monthly_amount) || 0, nextMonthCreditRemaining, nextMonthExtraCharges));
 
+    const totalPendingCharges = sumExtraMilkNetCharges(upcoming_extras || []) + sumChargeAdjustments(adjustments);
+    const totalCreditBalance = Math.max(0, sumCreditAdjustments(adjustments) - sumExtraMilkCreditUsage(upcoming_extras || []));
+
     return NextResponse.json({
       success: true,
       profile,
@@ -254,6 +257,8 @@ export async function GET(request: Request) {
         credit_used: nextMonthCreditUsed,
         credit_remaining: nextMonthCreditRemaining,
         extra_charge_total: nextMonthExtraCharges,
+        total_pending_charges: totalPendingCharges,
+        total_credit_balance: totalCreditBalance,
         estimated_due: nextMonthEstimatedDue
       },
       next_month_change: next_month_change ? { 

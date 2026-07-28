@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
   ShoppingBag, Search, Sparkles, Milk, Flame, Award, Leaf, Calendar,
-  Sprout, Activity, Wind, Heart, ShieldCheck, Check, Loader2, ArrowRight
+  Sprout, Activity, Wind, Heart, ShieldCheck, Check, Loader2, ArrowRight, Image as ImageIcon
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
@@ -329,10 +329,11 @@ export default function ProductsPage() {
                         priority
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-7xl select-none opacity-60">
-                          {product.badge_icon || catCfg.emoji}
-                        </span>
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100/70 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500 gap-2">
+                        <div className="w-12 h-12 rounded-2xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-center shadow-3xs">
+                          <ImageIcon size={22} className="text-slate-400 dark:text-slate-500 stroke-[1.5]" />
+                        </div>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">No Image</span>
                       </div>
                     )}
 

@@ -17,6 +17,7 @@ import {
   Heart,
   ChevronRight,
   ChevronLeft,
+  Image as ImageIcon,
 } from 'lucide-react'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { cn } from '@/lib/utils'
@@ -200,11 +201,11 @@ export function ProductsPreview() {
                               priority
                             />
                           ) : (
-                            // Emoji placeholder when no image has been uploaded yet
-                            <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
-                              <span className="text-7xl select-none opacity-60">
-                                {product.badge_icon || '🥛'}
-                              </span>
+                            <div className="w-full h-full bg-slate-100/70 dark:bg-slate-800/40 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2">
+                              <div className="w-12 h-12 rounded-2xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-center shadow-3xs">
+                                <ImageIcon size={22} className="text-slate-400 dark:text-slate-500 stroke-[1.5]" />
+                              </div>
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">No Image</span>
                             </div>
                           )}
                         </div>

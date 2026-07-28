@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   LayoutDashboard, SkipForward, Palmtree, PlusCircle, FileText,
-  Calendar, ArrowRight, AlertTriangle, HelpCircle, Clock, Milk,
+  Calendar, CalendarDays, ArrowRight, AlertTriangle, HelpCircle, Clock, Milk,
   Wallet, CreditCard, CheckCircle, ArrowUpRight, X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -48,14 +48,29 @@ interface DashboardData {
     carry_in_balance: number;
     net_due: number;
     amount_paid: number;
+    payment_status?: string;
   } | null;
   upcoming_skips: Array<{ skip_date: string; credit_amount: number }>;
-
-  next_month_summary?: { billing_month: string; credit_total: number; credit_used: number; credit_remaining: number; extra_charge_total: number; estimated_due: number };
+  upcoming_extras?: Array<{ id: string; order_date: string; charge_month?: string; extra_litres: number; charge_amount: number; skip_credit_applied: number; net_charge_amount: number; status: string }>;
+  next_month_summary?: { billing_month: string; credit_total: number; credit_used: number; credit_remaining: number; extra_charge_total: number; total_pending_charges?: number; total_credit_balance?: number; estimated_due: number };
   next_month_change: { quantity: number; amount: number } | null;
   recent_deliveries: Array<{ delivery_date: string; total_litres: number; delivery_status: string }>;
   upcoming_adjustments?: Array<{ id: string, adjustment_type: string, amount: number, description: string, target_month: string, refund_status?: string }>;
   latest_paid_month: string | null;
+  next_paid_month?: {
+    id: string;
+    billing_month: string;
+    days_delivered: number;
+    days_skipped: number;
+    extra_litres_ordered: number;
+    skip_credit: number;
+    extra_charges: number;
+    carry_in_balance: number;
+    net_due: number;
+    amount_paid: number;
+    monthly_amount: number;
+    payment_status: string;
+  } | null;
 }
 
 // Framer Motion Animation Configurations (with explicit types locked)
@@ -394,10 +409,58 @@ export default function CustomerDashboard() {
   const todayStr = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
-  const accountBalance = subscription.balance || 0
-  const carryForwardCredits = next_month_summary?.credit_remaining ?? 0
-  const totalCredits = accountBalance + carryForwardCredits
-  const totalCreditsText = `\u20B9${Math.abs(totalCredits).toFixed(0)}`
+
+  // ─── Financial & Subscription KPI Card Calculations ───
+  // Card 1: Credit Balance
+  const creditBalance = next_month_summary?.total_credit_balance ?? next_month_summary?.credit_remaining ?? (subscription.balance || 0)
+  const creditBalanceText = `\u20B9${Math.round(creditBalance)} Credit`
+
+  // Card 2: Pending Charges
+  const pendingCharges = next_month_summary?.total_pending_charges ?? 0
+  const pendingChargesText = `\u20B9${Math.round(pendingCharges)} Due`
+
+  // Card 3: Current Plan
+  const qtyLitres = subscription.quantity_litres
+  const planQuantityText = qtyLitres === 0.5 ? '½ Litre / Day' : `${qtyLitres} ${qtyLitres === 1 ? 'Litre' : 'Litres'} / Day`
+  const pricePerLitre = Math.round(subscription.daily_rate / qtyLitres)
+  const planPriceText = `\u20B9${pricePerLitre} per litre`
+
+  // Card 4: Next Bill / Renewal Status
+  const now = new Date()
+  const currentMonthNum = now.getMonth() + 1
+  const currentYearNum = now.getFullYear()
+  const nextMonthNum = currentMonthNum === 12 ? 1 : currentMonthNum + 1
+  const nextMonthYearNum = currentMonthNum === 12 ? currentYearNum + 1 : currentYearNum
+  const formattedNextMonthStr = `${nextMonthYearNum}-${String(nextMonthNum).padStart(2, '0')}-01`
+  const nextMonthDateObj = new Date(nextMonthYearNum, nextMonthNum - 1, 1)
+  const nextMonthShortName = nextMonthDateObj.toLocaleDateString('en-IN', { month: 'short' })
+  const nextMonthLongName = nextMonthDateObj.toLocaleDateString('en-IN', { month: 'long' })
+  const formattedNextBillDate = `1 ${nextMonthShortName} ${nextMonthYearNum}`
+
+  const isNextMonthPaid = data.latest_paid_month === formattedNextMonthStr || 
+    (data.latest_paid_month && data.latest_paid_month > formattedNextMonthStr) ||
+    (data.next_paid_month && data.next_paid_month.payment_status === 'paid')
+
+  const isCurrentMonthPending = subscription.status === 'pending_payment' || 
+    (current_month && current_month.payment_status === 'pending' && !data.latest_paid_month)
+
+  let renewalCardTitle = `Next Bill: ${formattedNextBillDate}`
+  let renewalCardSubtitle = now.getDate() >= 25 ? 'Renewal Pending' : 'Renewal opens on 25th'
+  let renewalBadgeColor = 'bg-sky-500/10 text-sky-600 dark:text-sky-400'
+
+  if (isNextMonthPaid) {
+    renewalCardTitle = `${nextMonthLongName} Subscription Renewed \u2705`
+    renewalCardSubtitle = `Next Bill: 1 ${new Date(nextMonthYearNum, nextMonthNum, 1).toLocaleDateString('en-IN', { month: 'short' })}`
+    renewalBadgeColor = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+  } else if (isCurrentMonthPending) {
+    renewalCardTitle = 'Payment Due'
+    renewalCardSubtitle = 'Renewal Pending'
+    renewalBadgeColor = 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+  } else if (now.getDate() >= 25) {
+    renewalCardTitle = `Next Bill: ${formattedNextBillDate}`
+    renewalCardSubtitle = 'Renewal Pending'
+    renewalBadgeColor = 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+  }
 
   return (
     <motion.div
@@ -543,74 +606,72 @@ export default function CustomerDashboard() {
         <RenewalBanner latest_paid_month={data.latest_paid_month} status={data.subscription.status} />
       </motion.div>
 
-      {/* ─── 2. DASHBOARD STATS ROW (4 Gourmet Cream Cards) ─── */}
+      {/* ─── 2. DASHBOARD STATS ROW (Financial & Subscription Cards) ─── */}
       <motion.div 
         variants={itemVariants} 
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10"
       >
-        {/* Card 1: Total Credits */}
+        {/* Card 1: 💚 Credit Balance */}
         <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Total Credits</p>
-            <p className={cn("text-xl font-black font-mono tracking-tight mt-1 leading-none", totalCredits >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-              {totalCredits >= 0 ? `${totalCreditsText} Credit` : `${totalCreditsText} Due`}
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest">Credit Balance</p>
+            <p className="text-xl font-black font-mono tracking-tight mt-1 leading-none text-emerald-600 dark:text-emerald-400">
+              {creditBalanceText}
             </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 font-semibold mt-1.5 truncate">
-              {carryForwardCredits > 0
-                ? `Incl. ₹${carryForwardCredits.toFixed(0)} skip credits`
-                : 'Adjusted in next bill'}
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 font-semibold mt-1.5 truncate">
+              Will be adjusted in next bill
             </p>
           </div>
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105", totalCredits >= 0 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/10 text-rose-500")}>
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105">
             <Wallet size={18} />
           </div>
         </div>
 
-        {/* Card 2: Deliveries This Month */}
+        {/* Card 2: 🟠 Pending Charges */}
         <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Days Delivered</p>
-            <p className="text-xl font-black text-slate-900 dark:text-blue-95000 tracking-tight mt-1 leading-none font-sans">
-              {current_month?.days_delivered || 0} Days
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest">Pending Charges</p>
+            <p className={cn("text-xl font-black font-mono tracking-tight mt-1 leading-none", pendingCharges > 0 ? "text-amber-600 dark:text-amber-400" : "text-slate-900 dark:text-white")}>
+              {pendingChargesText}
             </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 font-semibold mt-1.5 truncate">
-              Delivered this month
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 font-semibold mt-1.5 truncate">
+              {pendingCharges > 0 ? 'Will be added to next bill' : 'No pending charges'}
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105">
-            <CheckCircle size={18} />
+          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105", pendingCharges > 0 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500")}>
+            <PlusCircle size={18} />
           </div>
         </div>
 
-        {/* Card 3: Skipped Days */}
+        {/* Card 3: 🥛 Current Plan */}
         <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Days Skipped</p>
-            <p className="text-xl font-black text-slate-900 dark:text-blue-95000 tracking-tight mt-1 leading-none font-sans">
-              {current_month?.days_skipped || 0} Days
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest">Current Plan</p>
+            <p className="text-xl font-black text-slate-900 dark:text-white tracking-tight mt-1 leading-none font-sans">
+              {planQuantityText}
             </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 font-semibold mt-1.5 truncate">
-              Refund applied: ₹{((current_month?.skip_credit || 0)).toFixed(0)}
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105">
-            <SkipForward size={17} />
-          </div>
-        </div>
-
-        {/* Card 4: Plan Details */}
-        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-widest">Plan Capacity</p>
-            <p className="text-xl font-black text-slate-900 dark:text-blue-95000 tracking-tight mt-1 leading-none font-sans">
-              {subscription.quantity_litres} Litres
-            </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 font-semibold mt-1.5 truncate">
-              Rate: ₹{subscription.daily_rate.toFixed(2)}/L
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 font-semibold mt-1.5 truncate">
+              {planPriceText}
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105">
             <Milk size={18} />
+          </div>
+        </div>
+
+        {/* Card 4: 📅 Next Bill / Renewal Status */}
+        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest">Renewal Status</p>
+            <p className="text-[15px] font-black text-slate-900 dark:text-white tracking-tight mt-1 leading-tight font-sans truncate">
+              {renewalCardTitle}
+            </p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 font-semibold mt-1.5 truncate">
+              {renewalCardSubtitle}
+            </p>
+          </div>
+          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105", renewalBadgeColor)}>
+            <Calendar size={18} />
           </div>
         </div>
       </motion.div>
@@ -666,9 +727,9 @@ export default function CustomerDashboard() {
         </div>
       </motion.div>
 
-      {/* ─── 3. QUICK SERVICES SECTION ─── */}
+      {/* ─── 3. QUICK ACTIONS SECTION ─── */}
       <motion.div variants={itemVariants} className="space-y-3.5 relative z-10">
-        <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-[2.5px] px-1">Quick Services</h3>
+        <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-[2.5px] px-1">Quick Actions</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
           {/* Skip Day */}
@@ -727,6 +788,26 @@ export default function CustomerDashboard() {
               </div>
             </Link>
           </motion.div>
+
+          {/* Delivery History */}
+          <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.99 }} transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
+            <Link href="/dashboard/history" className="flex flex-col items-center text-center bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-200 group h-full justify-between cursor-pointer">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500/20 transition-colors shadow-sm">
+                <CalendarDays size={20} strokeWidth={2.5} />
+              </div>
+              <div className="mt-5 flex flex-col items-center">
+                <p className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">Delivery History</p>
+                <p className="text-xs text-slate-400 dark:text-slate-555 font-medium leading-relaxed mt-2 max-w-[220px]">
+                  View your recent milk deliveries and delivery history.
+                </p>
+              </div>
+              <div className="mt-4 text-[10.5px] font-bold text-blue-600 dark:text-blue-400 flex items-center justify-center gap-1">
+                <span>View History</span>
+                <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+          </motion.div>
+
         </div>
       </motion.div>
 

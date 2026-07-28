@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { fetchMilkPrices, calculateExtraMilkCharge } from '@/lib/billing';
+import { fetchMilkPrices, calculateExtraMilkCharge, isCreditAdjustmentType } from '@/lib/billing';
 import { getDeadlineForDate } from '@/lib/utils';
 
 const adminSupabase = createAdminClient();
@@ -146,18 +146,23 @@ export async function POST(request: Request) {
     chargeDateObj.setDate(1);
     const charge_month = chargeDateObj.toISOString().split('T')[0];
 
-    // Calculate Available Skip Credit to offset the charge
-    // 1. Get total skip/vacation credits for the month
-    const { data: skipCredits } = await adminSupabase
+    // Calculate Available Credit to offset the charge — include ALL credit types
+    // (skip_credit, vacation_credit, carry_forward, credit)
+    const { data: allAdjustments } = await adminSupabase
       .from('billing_adjustments')
-      .select('amount')
+      .select('adjustment_type, amount')
       .eq('subscription_id', subscription.id)
       .eq('target_month', charge_month)
-      .in('adjustment_type', ['skip_credit']);
+      .eq('is_applied', false);
       
-    const totalCreditsForMonth = (skipCredits || []).reduce((sum, row) => sum + Number(row.amount), 0);
+    const totalCreditsForMonth = (allAdjustments || []).reduce((sum, row) => {
+      if (isCreditAdjustmentType(row.adjustment_type)) {
+        return sum + Number(row.amount || 0);
+      }
+      return sum;
+    }, 0);
     
-    // 2. Get total skip credit already applied to OTHER extra milk orders in the same month
+    // Get total credit already applied to OTHER extra milk orders in the same month
     let query = adminSupabase
       .from('extra_milk_orders')
       .select('skip_credit_applied')
