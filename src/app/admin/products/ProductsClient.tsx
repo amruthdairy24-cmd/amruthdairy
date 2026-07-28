@@ -993,7 +993,7 @@ export function ProductsClient({
                     type="text" value={formData.features}
                     onChange={e => setFormData({...formData, features: e.target.value})}
                     className="w-full p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/15 focus:border-[#014DA4]/45 text-slate-900 dark:text-white text-sm font-semibold transition-all"
-                    placeholder="e.g. 100% Pure, No Additives, A2 Certified"
+                    placeholder="e.g. 100% Pure, No Additives, Pure Cow Milk"
                   />
                   <p className="text-[10px] text-slate-400 mt-1 ml-1">Each comma-separated item becomes a feature pill on the storefront</p>
                 </div>

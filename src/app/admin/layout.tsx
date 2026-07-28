@@ -24,7 +24,8 @@ import {
   X,
   ChevronDown,
   MapPin,
-  ShoppingBag
+  ShoppingBag,
+  MessageSquare
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/utils/supabase/client'
@@ -42,6 +43,7 @@ const sidebarGroups = [
       { href: '/admin/customers', icon: Users, label: 'Customers' },
       { href: '/admin/subscriptions', icon: Repeat, label: 'Subscriptions' },
       { href: '/admin/deliveries', icon: Truck, label: 'Deliveries' },
+      { href: '/admin/leads', icon: MessageSquare, label: 'Leads & WhatsApp' },
     ]
   },
   {
@@ -70,6 +72,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mounted, setMounted] = useState(false)
   const [dateStr, setDateStr] = useState('')
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [leadCount, setLeadCount] = useState<number>(0)
+  const [lastSeenCount, setLastSeenCount] = useState<number>(0)
 
   useEffect(() => {
     setMounted(true)
@@ -77,7 +81,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     setDateStr(`${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`)
+
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('amruth_last_seen_leads_count')
+      if (stored) setLastSeenCount(parseInt(stored, 10) || 0)
+    }
+
+    const fetchLeadCount = async () => {
+      try {
+        const res = await fetch('/api/admin/leads')
+        const data = await res.json()
+        if (data.success && data.stats) {
+          setLeadCount(data.stats.total_subscribers || 0)
+        }
+      } catch {}
+    }
+
+    fetchLeadCount()
+    const interval = setInterval(fetchLeadCount, 6000)
+    return () => clearInterval(interval)
   }, [])
+
+  // Reset unread count when opening /admin/leads
+  useEffect(() => {
+    if (pathname === '/admin/leads' && leadCount > 0) {
+      setLastSeenCount(leadCount)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('amruth_last_seen_leads_count', leadCount.toString())
+      }
+    }
+  }, [pathname, leadCount])
+
+  const unreadLeadsCount = Math.max(0, leadCount - lastSeenCount)
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -141,7 +176,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             isActive ? "text-[#014DA4] dark:text-blue-400" : "text-slate-400 group-hover:text-[#014DA4] dark:group-hover:text-blue-400"
                           )}
                         />
-                        <span className="text-[13px] relative z-10">{item.label}</span>
+                        <span className="text-[13px] relative z-10 flex-1 flex items-center justify-between">
+                          <span>{item.label}</span>
+                          {item.href === '/admin/leads' && unreadLeadsCount > 0 && (
+                            <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[10px] font-black bg-[#02429C] text-white shadow-sm animate-pulse">
+                              {unreadLeadsCount}
+                            </span>
+                          )}
+                        </span>
                       </div>
                     </Link>
                   )
@@ -306,7 +348,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 )}
                                 strokeWidth={isActive ? 2.5 : 2}
                               />
-                              <span className="text-[13px] relative z-10">{item.label}</span>
+                              <span className="text-[13px] relative z-10 flex-1 flex items-center justify-between">
+                                <span>{item.label}</span>
+                                {item.href === '/admin/leads' && unreadLeadsCount > 0 && (
+                                  <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[10px] font-black bg-[#02429C] text-white shadow-sm animate-pulse">
+                                    {unreadLeadsCount}
+                                  </span>
+                                )}
+                              </span>
                             </div>
                           </Link>
                         )

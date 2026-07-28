@@ -47,6 +47,39 @@ export function Footer() {
     'Stay Fresh': false,
   })
 
+  const [newsPhone, setNewsPhone] = useState('')
+  const [newsLoading, setNewsLoading] = useState(false)
+  const [newsMessage, setNewsMessage] = useState('')
+  const [newsSuccess, setNewsSuccess] = useState(false)
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newsPhone.trim()) return
+    setNewsLoading(true)
+    setNewsMessage('')
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: newsPhone.trim() })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setNewsSuccess(true)
+        setNewsMessage(data.message)
+        setNewsPhone('')
+      } else {
+        setNewsSuccess(false)
+        setNewsMessage(data.message || 'Failed to subscribe')
+      }
+    } catch {
+      setNewsSuccess(false)
+      setNewsMessage('Connection error. Please try again.')
+    } finally {
+      setNewsLoading(false)
+    }
+  }
+
   const toggleSection = (section: string) => {
     setActiveAccordion(prev => ({
       ...prev,
@@ -136,19 +169,35 @@ export function Footer() {
               <p className="text-xs md:text-sm text-blue-100/80 leading-relaxed">
                 Get updates on new products, offers & delivery schedules.
               </p>
-              <div className="relative flex items-center w-full">
-                <input
-                  type="tel"
-                  placeholder="Your WhatsApp number"
-                  className="w-full h-10 pl-4 pr-11 rounded-full bg-white/10 border border-white/20 text-xs text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/15 focus:border-white/30"
-                />
-                <button 
-                  className="absolute right-1 w-8 h-8 rounded-full bg-white text-[#013378] hover:bg-blue-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-sm"
-                  aria-label="Subscribe"
-                >
-                  <ArrowRight size={14} />
-                </button>
-              </div>
+              <form onSubmit={handleSubscribe} className="relative flex flex-col gap-2 w-full">
+                <div className="relative flex items-center w-full">
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="Your WhatsApp number"
+                    value={newsPhone}
+                    onChange={e => { setNewsPhone(e.target.value); setNewsMessage(''); }}
+                    className="w-full h-10 pl-4 pr-11 rounded-full bg-white/10 border border-white/20 text-xs text-white placeholder:text-blue-200/50 focus:outline-none focus:bg-white/15 focus:border-white/30"
+                  />
+                  <button
+                    type="submit"
+                    disabled={newsLoading}
+                    className="absolute right-1 w-8 h-8 rounded-full bg-white text-[#013378] hover:bg-blue-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-sm disabled:opacity-50"
+                    aria-label="Subscribe"
+                  >
+                    {newsLoading ? (
+                      <span className="w-3.5 h-3.5 border-2 border-[#013378] border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <ArrowRight size={14} />
+                    )}
+                  </button>
+                </div>
+                {newsMessage && (
+                  <p className={`text-[11px] font-bold px-2 ${newsSuccess ? 'text-emerald-400' : 'text-amber-300'}`}>
+                    {newsMessage}
+                  </p>
+                )}
+              </form>
 
               {/* Freshness card */}
               <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex flex-col gap-3.5 mt-1">
