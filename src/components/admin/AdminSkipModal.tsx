@@ -1,9 +1,10 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, SkipForward, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, CalendarDays } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 interface AdminSkipModalProps {
   isOpen: boolean
@@ -198,11 +199,13 @@ export function AdminSkipModal({ isOpen, onClose, onSuccess, customerId, custome
       setRangeStart(null)
       setRangeEnd(null)
       setExistingSkips(prev => [...prev, ...results])
+      toast.success(`Successfully added ${results.length} skip date(s)`)
       onSuccess()
     }
 
     if (errors.length > 0) {
       setError(errors.join('\n'))
+      toast.error(errors[0])
     }
   }
 

@@ -13,6 +13,7 @@ import { isCreditAdjustmentType } from '@/lib/billing'
 import Link from 'next/link'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
+import toast from 'react-hot-toast'
 
 interface BillingData {
   id?: string;
@@ -162,7 +163,7 @@ export default function BillsPage() {
       setPaymentStep('processing');
       const loaded = await loadRazorpayScript();
       if (!loaded) {
-        alert('Failed to load Razorpay SDK. Please check your internet connection.');
+        toast.error('Failed to load Razorpay SDK. Please check your internet connection.');
         setPaymentStep('details');
         return;
       }
@@ -175,7 +176,7 @@ export default function BillsPage() {
       const orderData = await orderRes.json();
 
       if (!orderData.success) {
-        alert(orderData.message || 'Failed to initialize payment order.');
+        toast.error(orderData.message || 'Failed to initialize payment order.');
         setPaymentStep('details');
         return;
       }
@@ -204,14 +205,15 @@ export default function BillsPage() {
             if (verifyData.success) {
               setPaymentStep('success');
               setMockPaid(true);
+              toast.success('Payment verified successfully!');
               loadData();
             } else {
-              alert(verifyData.message || 'Payment verification failed.');
+              toast.error(verifyData.message || 'Payment verification failed.');
               setPaymentStep('details');
             }
           } catch (err) {
             console.error('Verification error:', err);
-            alert('Error verifying payment.');
+            toast.error('Error verifying payment.');
             setPaymentStep('details');
           }
         },
@@ -228,7 +230,7 @@ export default function BillsPage() {
 
     } catch (err: any) {
       console.error('Payment start error:', err);
-      alert('Failed to initiate payment.');
+      toast.error('Failed to initiate payment.');
       setPaymentStep('details');
     }
   }

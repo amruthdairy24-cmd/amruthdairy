@@ -18,6 +18,7 @@ import {
   HelpCircle
 } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
+import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
@@ -40,17 +41,17 @@ export function SettingsClient({ initialConfigs }: { initialConfigs: Configs }) 
   const [activeTab, setActiveTab] = useState<'general' | 'operations' | 'billing' | 'toggles'>('general')
   const [formState, setFormState] = useState<Configs>(initialConfigs)
   const [isSaving, setIsSaving] = useState(false)
-  const [toast, setToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
 
   const handleInputChange = (key: keyof Configs, value: any) => {
     setFormState(prev => ({ ...prev, [key]: value }))
   }
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
-    setToast({ text, type })
-    setTimeout(() => {
-      setToast(null)
-    }, 3000)
+    if (type === 'success') {
+      toast.success(text)
+    } else {
+      toast.error(text)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,26 +102,7 @@ export function SettingsClient({ initialConfigs }: { initialConfigs: Configs }) 
         icon={SettingsIcon} 
       />
 
-      {/* TOAST ALERT NOTIFICATION */}
-      {toast && (
-        <div className={cn(
-          "fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border transition-all duration-300 animate-slide-up",
-          toast.type === 'success' 
-            ? "bg-emerald-50 dark:bg-emerald-950/90 text-emerald-805 dark:text-emerald-355 border-emerald-200 dark:border-emerald-800" 
-            : "bg-rose-50 dark:bg-rose-950/90 text-rose-805 dark:text-rose-355 border-rose-200 dark:border-rose-800"
-        )}>
-          {toast.type === 'success' ? (
-            <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center">
-              <Check size={12} className="stroke-[3]" />
-            </div>
-          ) : (
-            <div className="w-5 h-5 rounded-full bg-rose-505 text-white flex items-center justify-center">
-              <AlertTriangle size={12} />
-            </div>
-          )}
-          <span className="text-sm font-black tracking-tight">{toast.text}</span>
-        </div>
-      )}
+
 
       {/* TWO-COLUMN SETTINGS GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left">

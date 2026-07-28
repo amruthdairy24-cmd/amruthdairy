@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Settings, Check, ChevronDown } from 'lucide-react'
 import { DELIVERY_AREAS } from '@/lib/constants'
+import toast from 'react-hot-toast'
 
 interface AdminSubscriptionModalProps {
   isOpen: boolean
@@ -64,10 +65,12 @@ export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId,
         throw new Error(data.message || 'Failed to manage subscription')
       }
 
+      toast.success(actionType === 'renew' ? 'Subscription renewed successfully' : 'Subscription updated successfully')
       onSuccess()
       onClose()
     } catch (err: any) {
       setError(err.message)
+      toast.error(err.message || 'Failed to manage subscription')
     } finally {
       setLoading(false)
     }

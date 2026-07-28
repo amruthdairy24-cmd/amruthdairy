@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -13,6 +13,7 @@ import { AdminSkipModal } from '@/components/admin/AdminSkipModal'
 import { AdminExtraMilkModal } from '@/components/admin/AdminExtraMilkModal'
 import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
 import { cn } from '@/lib/utils'
+import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Customer {
@@ -49,14 +50,15 @@ export function CustomersClient({ data }: { data: Customer[] }) {
       
       const data = await res.json()
       if (data.success) {
+        toast.success('Customer deleted successfully')
         router.refresh()
         setCustomerToDelete(null)
       } else {
-        alert(data.message || 'Failed to delete customer')
+        toast.error(data.message || 'Failed to delete customer')
       }
     } catch (error) {
       console.error(error)
-      alert('An error occurred while deleting the customer')
+      toast.error('An error occurred while deleting the customer')
     } finally {
       setIsDeleting(false)
     }

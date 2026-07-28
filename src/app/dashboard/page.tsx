@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { isCreditAdjustmentType } from '@/lib/billing'
 import { motion } from 'framer-motion'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
+import toast from 'react-hot-toast'
 
 interface DashboardData {
   success: boolean;
@@ -219,10 +220,10 @@ export default function CustomerDashboard() {
       if (json.success) {
         window.location.reload()
       } else {
-        alert(json.message || 'Failed to decline slot')
+        toast.error(json.message || 'Failed to decline slot')
       }
     } catch (err) {
-      alert('Network error')
+      toast.error('Network error. Please try again.')
     } finally {
       setDeclining(false)
     }
@@ -697,7 +698,7 @@ export default function CustomerDashboard() {
                   const code = (data.profile as any)?.referral_code || 'AMR-K89X';
                   const link = `${window.location.origin}/onboarding?ref=${code}`;
                   navigator.clipboard.writeText(link);
-                  alert('Referral link copied to clipboard!');
+                  toast.success('Referral link copied to clipboard!');
                 }}
                 className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white text-[#02429C] hover:bg-blue-50 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-md cursor-pointer"
               >
