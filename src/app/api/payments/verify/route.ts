@@ -117,17 +117,63 @@ export async function POST(request: Request) {
     if (subscription && subscription.status === 'pending_payment') {
       await adminSupabase
         .from('subscriptions')
-        .update({
-          status: 'active',
-          updated_at: new Date().toISOString()
-        })
+        .update({ status: 'active' })
         .eq('id', subscription.id);
+
+      // Trigger Referral Reward (Rule: Granted ON FIRST PAYMENT COMPLETION ONLY)
+      try {
+        const { data: referral } = await adminSupabase
+          .from('referrals')
+          .select('*')
+          .eq('referee_id', user.id)
+          .eq('status', 'pending')
+          .maybeSingle();
+
+        if (referral) {
+          const { data: priceSetting } = await adminSupabase
+            .from('system_settings')
+            .select('value')
+            .eq('key', 'price_per_litre')
+            .maybeSingle();
+
+          const pricePerLitre = priceSetting?.value ? Number(priceSetting.value) : 60;
+          const rewardAmount = Math.round((Number(referral.reward_litres) || 2) * pricePerLitre * 100) / 100;
+
+          // 1. Mark referral as completed
+          await adminSupabase
+            .from('referrals')
+            .update({
+              status: 'completed',
+              reward_amount: rewardAmount,
+              completed_at: new Date().toISOString()
+            })
+            .eq('id', referral.id);
+
+          // 2. Insert Carry-forward credit adjustment for Referrer (Customer A)
+          await adminSupabase
+            .from('billing_adjustments')
+            .insert({
+              customer_id: referral.referrer_id,
+              amount: rewardAmount,
+              reason: `Referral Reward: 2L Free Milk (Friend completed 1st payment)`,
+              is_applied: false
+            });
+
+          console.log(`[Referral Reward Triggered] Referrer (${referral.referrer_id}) awarded ₹${rewardAmount} credit for Customer B payment`);
+        }
+      } catch (refErr) {
+        console.error('Referral reward processing exception:', refErr);
+      }
     }
 
-    return NextResponse.json({ success: true, message: 'Payment verified and recorded successfully.' });
+    return NextResponse.json({
+      success: true,
+      message: 'Payment verified successfully! Your subscription is now active.'
+    });
 
-  } catch (err: any) {
-    console.error('Verify payment error:', err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('Payment verification exception:', message);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
   }
 }

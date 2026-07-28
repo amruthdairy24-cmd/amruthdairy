@@ -232,6 +232,38 @@ export async function POST(request: Request) {
       console.error('Waitlist conversion error:', waitlistUpdateError.message);
     }
 
+    // 10. Record pending referral if referral code provided
+    const referralCodeInput = body.referral_code?.trim().toUpperCase();
+    if (referralCodeInput) {
+      try {
+        const { data: referrerProfile } = await adminSupabase
+          .from('profiles')
+          .select('id')
+          .ilike('referral_code', referralCodeInput)
+          .maybeSingle();
+
+        if (referrerProfile && referrerProfile.id !== user.id) {
+          await adminSupabase
+            .from('profiles')
+            .update({ referred_by_code: referralCodeInput })
+            .eq('id', user.id);
+
+          await adminSupabase
+            .from('referrals')
+            .insert({
+              referrer_id: referrerProfile.id,
+              referee_id: user.id,
+              referral_code: referralCodeInput,
+              status: 'pending',
+              reward_litres: 2.0,
+              reward_amount: 120.0
+            });
+        }
+      } catch (refErr) {
+        console.error('Pending referral creation exception:', refErr);
+      }
+    }
+
     if (is_trial) {
       const { error: profileError } = await adminSupabase
         .from('profiles')
