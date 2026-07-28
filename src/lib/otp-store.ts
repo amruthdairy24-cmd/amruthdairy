@@ -9,6 +9,7 @@ interface PendingOtp {
   expiresAt: Date;
   username: string;
   password: string; // held in memory only for 10 min, never written to DB
+  referralCode?: string;
 }
 
 declare global {
