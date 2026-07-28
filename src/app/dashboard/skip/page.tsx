@@ -463,7 +463,7 @@ export default function SkipDayPage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Automatic Bill Credit</p>
-                  <p className="text-slate-455 dark:text-slate-400 dark:text-slate-500 mt-1">Each skipped day generates a credit equal to your subscription&apos;s daily rate of <strong className="text-emerald-650 dark:text-emerald-500 font-extrabold">â‚¹{subscription?.daily_rate.toFixed(2)}</strong>, reducing your next statement.</p>
+                  <p className="text-slate-455 dark:text-slate-400 dark:text-slate-500 mt-1">Each skipped day generates a credit equal to your subscription&apos;s daily rate of <strong className="text-emerald-650 dark:text-emerald-500 font-extrabold">₹{subscription?.daily_rate.toFixed(2)}</strong>, reducing your next statement.</p>
                 </div>
               </div>
             </div>
@@ -534,7 +534,7 @@ export default function SkipDayPage() {
                             Confirmed
                           </span>
                           <p className="text-[11.5px] font-extrabold text-emerald-650 dark:text-emerald-500 font-mono leading-none">
-                            +â‚¹{skip.credit_amount.toFixed(2)}
+                            +₹{skip.credit_amount.toFixed(2)}
                           </p>
                         </div>
                       </div>
