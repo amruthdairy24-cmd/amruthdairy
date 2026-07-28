@@ -15,10 +15,11 @@ const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, username, password } = body as {
+    const { email, username, password, referral_code } = body as {
       email?: string;
       username?: string;
       password?: string;
+      referral_code?: string;
     };
 
     // ── Validate inputs ──────────────────────────────────────────────────────
@@ -111,6 +112,7 @@ export async function POST(request: Request) {
       expiresAt,
       username: usernameTrimmed,
       password,
+      referralCode: referral_code ? referral_code.trim().toUpperCase() : undefined,
     });
 
     console.log(`[send-otp] OTP stored in memory for ${emailLower}, expires at ${expiresAt.toISOString()}`);

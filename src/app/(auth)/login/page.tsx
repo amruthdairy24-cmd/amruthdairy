@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef, useId } from 'react'
 import {
   ChevronRight, Mail, Lock, User, CheckCircle,
-  Eye, EyeOff, AtSign
+  Eye, EyeOff, AtSign, Tag
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -49,6 +49,8 @@ export default function LoginPage() {
   const [regEmail, setRegEmail] = useState('')
   const [regPassword, setRegPassword] = useState('')
   const [showRegPassword, setShowRegPassword] = useState(false)
+  const [regReferralCode, setRegReferralCode] = useState('')
+  const [referralValidationMsg, setReferralValidationMsg] = useState('')
 
   // OTP (registration)
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
@@ -72,6 +74,19 @@ export default function LoginPage() {
     if (params.get('mode') === 'register' || params.get('mode') === 'signup') setStep('register')
     const r = params.get('redirect')
     if (r && r.startsWith('/')) setRedirectTo(r)
+
+    const refParam = params.get('ref') || params.get('referral')
+    if (refParam) {
+      const cleanRef = refParam.trim().toUpperCase()
+      setRegReferralCode(cleanRef)
+      setStep('register')
+      fetch(`/api/referral/validate?code=${cleanRef}`)
+        .then(res => res.json())
+        .then(d => {
+          if (d.success && d.valid) setReferralValidationMsg(d.message)
+        })
+        .catch(() => {})
+    }
 
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [])
@@ -153,6 +168,7 @@ export default function LoginPage() {
           email: regEmail.trim().toLowerCase(),
           username: regUsername.trim(),
           password: regPassword,
+          referral_code: regReferralCode.trim().toUpperCase() || undefined
         }),
       })
       const data = await res.json()
@@ -187,6 +203,7 @@ export default function LoginPage() {
           email: regEmail.trim().toLowerCase(),
           username: regUsername.trim(),
           password: regPassword,
+          referral_code: regReferralCode.trim().toUpperCase() || undefined
         }),
       })
       const data = await res.json()
@@ -254,14 +271,17 @@ export default function LoginPage() {
         body: JSON.stringify({
           email: regEmail.trim().toLowerCase(),
           token: code,
-          password: regPassword
+          password: regPassword,
+          referral_code: regReferralCode.trim().toUpperCase() || undefined
         }),
       })
       const data: ApiResponse = await res.json()
 
       if (data.success) {
         setStep('success')
-        setTimeout(() => { window.location.replace(redirectTo || getRedirectDestination(data)) }, 1400)
+        const targetDest = redirectTo || getRedirectDestination(data);
+        const finalRedirect = regReferralCode && targetDest.includes('/onboarding') ? `${targetDest}?ref=${regReferralCode}` : targetDest;
+        setTimeout(() => { window.location.replace(finalRedirect) }, 1400)
       } else {
         setError(data.message || 'Invalid code. Please try again.')
         setOtp(['', '', '', '', '', ''])
@@ -734,6 +754,42 @@ export default function LoginPage() {
                             {showRegPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
                           </button>
                         </div>
+                      </div>
+
+                      {/* Referral Code (Optional) */}
+                      <div className="flex flex-col gap-1.5">
+                        <div className="group flex items-center rounded-2xl border-2 border-amber-200 focus-within:border-amber-500 focus-within:shadow-lg focus-within:shadow-amber-500/20 bg-amber-50/50 transition-all overflow-hidden h-14">
+                          <span className="flex items-center shrink-0 px-4 h-full text-amber-500 transition-colors">
+                            <Tag size={18} strokeWidth={2.5} />
+                          </span>
+                          <input
+                            id={`${formId}-referral-code`}
+                            type="text"
+                            placeholder="Referral Code (Optional) e.g. AMR-K89X"
+                            value={regReferralCode}
+                            onChange={e => {
+                              const val = e.target.value.trim().toUpperCase()
+                              setRegReferralCode(val)
+                              clearError()
+                              if (val.length >= 6) {
+                                fetch(`/api/referral/validate?code=${val}`)
+                                  .then(r => r.json())
+                                  .then(d => {
+                                    if (d.success && d.valid) setReferralValidationMsg(d.message)
+                                    else setReferralValidationMsg('')
+                                  })
+                              } else {
+                                setReferralValidationMsg('')
+                              }
+                            }}
+                            className="flex-1 min-w-0 h-full pr-4 bg-transparent text-slate-900 placeholder:text-slate-400 text-sm font-semibold outline-none uppercase font-mono"
+                          />
+                        </div>
+                        {referralValidationMsg && (
+                          <p className="text-xs font-bold text-emerald-600 flex items-center gap-1.5 pl-1">
+                            <CheckCircle size={13} /> {referralValidationMsg}
+                          </p>
+                        )}
                         {error && (
                           <motion.p
                             initial={{ opacity: 0, y: -10 }}

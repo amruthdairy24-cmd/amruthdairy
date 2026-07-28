@@ -93,6 +93,9 @@ export async function POST(request: Request) {
       authUserId = newUser.user.id;
     }
 
+    // ── Check referral code if provided ─────────────────────────────────────
+    const refCode = (pending.referralCode || (request as any).referral_code)?.trim().toUpperCase();
+
     // ── Create/update profile in DB ───────────────────────────────────────────
     const { error: profileError } = await adminClient.from('profiles').upsert(
       {
@@ -103,6 +106,7 @@ export async function POST(request: Request) {
         role: 'customer',
         is_active: true,
         email_verified: true,
+        referred_by_code: refCode || null,
       },
       { onConflict: 'id' }
     );
@@ -119,6 +123,33 @@ export async function POST(request: Request) {
         },
         { status: 500 }
       );
+    }
+
+    // ── Create pending referral link if refCode is valid ─────────────────────
+    if (refCode) {
+      try {
+        const { data: referrerProfile } = await adminClient
+          .from('profiles')
+          .select('id')
+          .ilike('referral_code', refCode)
+          .maybeSingle();
+
+        if (referrerProfile && referrerProfile.id !== authUserId) {
+          await adminClient
+            .from('referrals')
+            .upsert({
+              referrer_id: referrerProfile.id,
+              referee_id: authUserId,
+              referral_code: refCode,
+              status: 'pending',
+              reward_litres: 2.0,
+              reward_amount: 120.0
+            }, { onConflict: 'referee_id' });
+          console.log(`[verify-otp] Pending referral record created: Referrer ${referrerProfile.id} -> Referee ${authUserId}`);
+        }
+      } catch (refErr) {
+        console.error('[verify-otp] Referral record exception:', refErr);
+      }
     }
 
     // ── Sign the user in ──────────────────────────────────────────────────────
