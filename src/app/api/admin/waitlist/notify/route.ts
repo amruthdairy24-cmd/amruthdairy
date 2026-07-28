@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { isAdminEmail } from '@/lib/utils';
+import { checkIsAdmin } from '@/lib/utils';
 
 const adminSupabase = createAdminClient();
 
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     // Verify Admin Role
-    if (!isAdminEmail(user.email)) {
+    if (!(await checkIsAdmin(user))) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
