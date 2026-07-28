@@ -21,7 +21,7 @@ import { Navbar } from '@/components/layout/Navbar'
 type OnboardingStep = 1 | 2 | 3 | 'success' | 'waitlist'
 
 const FEATURES = [
-  { icon: ShieldCheck, label: 'Pure & Natural', desc: '100% farm fresh A2 milk' },
+  { icon: ShieldCheck, label: 'Pure & Natural', desc: '100% pure farm fresh cow milk' },
   { icon: Clock, label: 'On-Time Delivery', desc: `${DELIVERY_TIME_PROMISE} everyday` },
   { icon: Leaf, label: 'No Preservatives', desc: 'No chemicals, no compromise' },
 ]

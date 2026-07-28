@@ -46,11 +46,20 @@ export const metadata: Metadata = {
     'milk delivery Mangalore',
   ],
   authors: [{ name: 'EKodrix', url: 'https://ekodrix.com' }],
+  icons: {
+    icon: [
+      { url: '/images/logo/amruth-logo.png', type: 'image/png' },
+      { url: '/favicon.png', type: 'image/png' },
+    ],
+    shortcut: '/images/logo/amruth-logo.png',
+    apple: '/images/logo/amruth-logo.png',
+  },
   openGraph: {
     title: 'Amruth Milk — Farm Fresh Daily Milk Subscription',
     description: 'Fresh milk delivered every morning. Manage subscriptions, skip days, order extra — all online.',
     type: 'website',
     locale: 'en_IN',
+    images: [{ url: '/images/logo/amruth-logo.png', width: 800, height: 600, alt: 'Amruth Dairy Logo' }],
   },
 }
 
