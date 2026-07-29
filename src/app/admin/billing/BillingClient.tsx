@@ -507,10 +507,16 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
 
 
   // Compute summaries
-  const totalBilled = invoices.reduce((sum, inv) => sum + (inv.net_due || 0), 0);
+  const totalBilled = invoices.reduce((sum, inv) => sum + calculateTrueDue(inv), 0);
   const totalCollected = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
   const totalExtraMilk = invoices.reduce((sum, inv) => sum + (inv.extra_charges || 0), 0);
-  const totalCredits = invoices.reduce((sum, inv) => sum + (inv.skip_credit || 0) + (inv.pause_credit || 0), 0);
+  const totalCredits = invoices.reduce((sum, inv) => {
+    const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === inv.profiles?.full_name);
+    const referralCredits = customerAdjustments
+      .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+      .reduce((s, a) => s + Math.abs(a.amount), 0);
+    return sum + (inv.skip_credit || 0) + (inv.pause_credit || 0) + referralCredits;
+  }, 0);
 
   const filterList = (list: any[]) => list.filter(item => {
     if (searchQuery) {
