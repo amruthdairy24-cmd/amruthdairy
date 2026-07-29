@@ -8,7 +8,12 @@ export default async function CustomersPage() {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select(`
+      *,
+      subscriptions (
+        status
+      )
+    `)
     .eq('role', 'customer')
     .order('created_at', { ascending: false })
 
@@ -20,5 +25,19 @@ export default async function CustomersPage() {
     )
   }
 
-  return <CustomersClient data={data || []} />
+  const mappedData = (data || []).map((p: any) => {
+    const subs = Array.isArray(p.subscriptions) ? p.subscriptions : (p.subscriptions ? [p.subscriptions] : [])
+    const activeSub = subs.find((s: any) => s.status === 'active' || s.status === 'pending_payment')
+    
+    return {
+      id: p.id,
+      full_name: p.full_name,
+      phone: p.phone,
+      area: p.area,
+      created_at: p.created_at,
+      subscription_status: activeSub ? activeSub.status : 'inactive'
+    }
+  })
+
+  return <CustomersClient data={mappedData} />
 }

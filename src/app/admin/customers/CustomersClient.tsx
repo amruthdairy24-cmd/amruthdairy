@@ -21,7 +21,7 @@ interface Customer {
   full_name: string;
   phone: string;
   area: string;
-  is_active: boolean;
+  subscription_status: string;
   created_at: string;
 }
 
@@ -37,7 +37,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'subscribed' | 'not_subscribed'>('all')
 
   const confirmDelete = async () => {
     if (!customerToDelete) return
@@ -156,11 +156,14 @@ export function CustomersClient({ data }: { data: Customer[] }) {
     { 
       header: 'Status', 
       align: 'center',
-      cell: (row) => (
-        <div className="flex justify-center">
-          <StatusBadge status={row.is_active ? 'Active' : 'Inactive'} />
-        </div>
-      ) 
+      cell: (row) => {
+        const isSubscribed = row.subscription_status === 'active' || row.subscription_status === 'pending_payment';
+        return (
+          <div className="flex justify-center">
+            <StatusBadge status={isSubscribed ? 'Subscribed' : 'No Subscription'} />
+          </div>
+        );
+      }
     },
   ]
 
@@ -173,8 +176,9 @@ export function CustomersClient({ data }: { data: Customer[] }) {
       const matchesId = customer.id.toLowerCase().includes(q)
       if (!matchesName && !matchesPhone && !matchesArea && !matchesId) return false
     }
-    if (filterStatus === 'active' && !customer.is_active) return false
-    if (filterStatus === 'inactive' && customer.is_active) return false
+    const isSubscribed = customer.subscription_status === 'active' || customer.subscription_status === 'pending_payment';
+    if (filterStatus === 'subscribed' && !isSubscribed) return false
+    if (filterStatus === 'not_subscribed' && isSubscribed) return false
     return true
   })
 
@@ -202,18 +206,22 @@ export function CustomersClient({ data }: { data: Customer[] }) {
         </div>
         
         <div className="flex w-full sm:w-auto bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-1 shadow-2xs transition-colors">
-          {(['all', 'active', 'inactive'] as const).map(status => (
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'subscribed', label: 'Subscribed' },
+            { id: 'not_subscribed', label: 'Not Subscribed' }
+          ].map(status => (
             <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
+              key={status.id}
+              onClick={() => setFilterStatus(status.id as any)}
               className={cn(
-                "flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize cursor-pointer",
-                filterStatus === status 
+                "flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap",
+                filterStatus === status.id 
                   ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" 
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               )}
             >
-              {status}
+              {status.label}
             </button>
           ))}
         </div>

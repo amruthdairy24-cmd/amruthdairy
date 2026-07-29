@@ -10,6 +10,8 @@ import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { cn } from '@/lib/utils'
 import { isCreditAdjustmentType } from '@/lib/billing'
 import toast from 'react-hot-toast'
+import { SelectCustomerModal } from '@/components/admin/SelectCustomerModal'
+import { AdminPaymentModal } from '@/components/admin/AdminPaymentModal'
 
 interface Invoice {
   id: string;
@@ -50,6 +52,13 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
   const [isProcessing, setIsProcessing] = useState(false);
   const [viewingEntry, setViewingEntry] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Payment Modal state
+  const [showSelectCustomer, setShowSelectCustomer] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null);
+  const [paymentDefaultAmount, setPaymentDefaultAmount] = useState<number | undefined>(undefined);
 
   const handleRefundAction = async (id: string, action: 'process' | 'reject') => {
     if (!confirm(`Are you sure you want to ${action} this refund request?`)) return;
@@ -157,6 +166,28 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       cell: (row) => {
         const isPaid = row.payment_status === 'paid' || (row.net_due > 0 && row.amount_paid >= row.net_due)
         return <StatusBadge status={isPaid ? 'Paid' : 'Pending'} />
+      } 
+    },
+    { 
+      header: 'Actions', 
+      align: 'center', 
+      cell: (row) => {
+        const isPaid = row.payment_status === 'paid' || (row.net_due > 0 && row.amount_paid >= row.net_due)
+        if (isPaid) return <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>;
+        
+        return (
+          <button 
+            onClick={() => {
+              setSelectedCustomerId(row.id)
+              setSelectedCustomerName(row.profiles?.full_name || 'Customer')
+              setPaymentDefaultAmount(Math.max(0, row.net_due - row.amount_paid))
+              setShowPaymentModal(true)
+            }}
+            className="px-3 h-7 bg-purple-600 hover:bg-purple-600/95 text-white text-[10.5px] font-bold rounded-lg shadow-3xs cursor-pointer transition-all active:scale-95"
+          >
+            Mark  as Paid
+          </button>
+        )
       } 
     },
   ]
@@ -333,7 +364,13 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
         <AdminHeader 
           title="Billing & Payments" 
           description="Manage customer invoices, adjustments, refund actions, and records." 
-          icon={CreditCard} 
+          icon={CreditCard}
+          actionLabel="Record Payment"
+          onAction={() => {
+            setPaymentDefaultAmount(undefined)
+            setShowSelectCustomer(true)
+          }}
+          hideSearchRow={true}
         />
         
         {/* MONTH PICKER */}
@@ -432,6 +469,40 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
         title="Billing Details"
         data={viewingEntry}
       />
+
+      {/* Select Customer Modal for Record Payment */}
+      <SelectCustomerModal 
+        isOpen={showSelectCustomer}
+        onClose={() => setShowSelectCustomer(false)}
+        actionContext={{ title: 'Record Payment', subtitle: 'Select customer to receive payment' }}
+        filter="unpaid"
+        onSelect={(customerId, customerName) => {
+          setShowSelectCustomer(false)
+          setSelectedCustomerId(customerId)
+          setSelectedCustomerName(customerName)
+          setShowPaymentModal(true)
+        }}
+      />
+
+      {/* Admin Payment Modal */}
+      {selectedCustomerId && selectedCustomerName && (
+        <AdminPaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false)
+            setSelectedCustomerId(null)
+            setSelectedCustomerName(null)
+            setPaymentDefaultAmount(undefined)
+          }}
+          onSuccess={() => {
+            router.refresh()
+          }}
+          customerId={selectedCustomerId}
+          customerName={selectedCustomerName}
+          defaultAmount={paymentDefaultAmount}
+          targetMonth={currentMonth}
+        />
+      )}
     </div>
   )
 }
