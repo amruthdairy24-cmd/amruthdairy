@@ -45,6 +45,7 @@ interface Payment {
   id: string;
   amount: number;
   payment_type: string;
+  method?: string;
   status: string;
   created_at: string;
   profiles: { full_name: string };
@@ -56,6 +57,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
   const [isProcessing, setIsProcessing] = useState(false);
   const [viewingEntry, setViewingEntry] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [adjustmentViewMode, setAdjustmentViewMode] = useState<'log' | 'summary'>('log');
 
   // Payment Modal state
   const [showSelectCustomer, setShowSelectCustomer] = useState(false);
@@ -124,6 +126,27 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
         </div>
       </div>
     )
+  }
+
+  // Helper to calculate true net due for a given invoice
+  const calculateTrueDue = (row: Invoice) => {
+    const d = new Date(row.billing_month);
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    let dailyRate = 0;
+    if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
+      dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
+    } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
+      dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
+    }
+    const baseSubscription = dailyRate * daysInMonth;
+    const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
+    const referralCredits = customerAdjustments
+      .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+      .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+    const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
+    const totalExtra = (row.extra_charges || 0);
+    const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
+    return row.net_due > 0 ? row.net_due : realNetDue;
   }
 
   /* ── INVOICE COLUMNS ── */
@@ -215,28 +238,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       header: 'Net Due', 
       align: 'right', 
       cell: (row) => {
-        // Recalculate true net due dynamically for the UI
-        const d = new Date(row.billing_month);
-        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-        let dailyRate = 0;
-        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
-          dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
-        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
-          dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
-        }
-        
-        const baseSubscription = dailyRate * daysInMonth;
-        const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
-        const referralCredits = customerAdjustments
-          .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
-          .reduce((sum, a) => sum + Math.abs(a.amount), 0);
-          
-        const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
-        const totalExtra = (row.extra_charges || 0);
-
-        // If backend hasn't generated proper net_due, we calculate it on the fly
-        const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
-        const displayDue = row.net_due > 0 ? row.net_due : realNetDue;
+        const displayDue = calculateTrueDue(row);
 
         return (
           <span className="text-[14.5px] font-black text-slate-800 dark:text-slate-200 font-mono">
@@ -263,25 +265,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       header: 'Status', 
       align: 'center', 
       cell: (row) => {
-        // Calculate dynamic true due
-        const d = new Date(row.billing_month);
-        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-        let dailyRate = 0;
-        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
-          dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
-        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
-          dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
-        }
-        const baseSubscription = dailyRate * daysInMonth;
-        const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
-        const referralCredits = customerAdjustments
-          .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
-          .reduce((sum, a) => sum + Math.abs(a.amount), 0);
-        const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
-        const totalExtra = (row.extra_charges || 0);
-        const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
-        const displayDue = row.net_due > 0 ? row.net_due : realNetDue;
-        
+        const displayDue = calculateTrueDue(row);
         const isPaid = row.payment_status === 'paid' || (displayDue > 0 && row.amount_paid >= displayDue) || (displayDue === 0 && row.amount_paid === 0 && row.payment_status === 'paid');
         return <StatusBadge status={isPaid ? 'Paid' : 'Pending'} />
       } 
@@ -290,24 +274,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       header: 'Actions', 
       align: 'center', 
       cell: (row) => {
-        const d = new Date(row.billing_month);
-        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-        let dailyRate = 0;
-        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
-          dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
-        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
-          dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
-        }
-        const baseSubscription = dailyRate * daysInMonth;
-        const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
-        const referralCredits = customerAdjustments
-          .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
-          .reduce((sum, a) => sum + Math.abs(a.amount), 0);
-        const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
-        const totalExtra = (row.extra_charges || 0);
-        const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
-        const displayDue = row.net_due > 0 ? row.net_due : realNetDue;
-        
+        const displayDue = calculateTrueDue(row);
         const isPaid = row.payment_status === 'paid' || (displayDue > 0 && row.amount_paid >= displayDue) || (displayDue === 0 && row.amount_paid === 0 && row.payment_status === 'paid');
         if (isPaid || displayDue === 0) return <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>;
         
@@ -432,6 +399,73 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
     }
   ]
 
+  /* ── ADJUSTMENT SUMMARY COLUMNS ── */
+  interface AdjustmentSummary {
+    id: string;
+    customer_id: string;
+    customer_name: string;
+    skip_credits: number;
+    referral_credits: number;
+    extra_milk: number;
+    verdict_amount: number;
+    is_carry_forward: boolean;
+    is_added_to_bill: boolean;
+  }
+
+  const customerSummaries: AdjustmentSummary[] = invoices.map(inv => {
+    const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === inv.profiles?.full_name);
+    const referralCredits = customerAdjustments
+      .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+      .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+      
+    const skipCredits = (inv.skip_credit || 0) + (inv.pause_credit || 0);
+    const extraMilk = inv.extra_charges || 0;
+    const extraMinusCredits = extraMilk - (skipCredits + referralCredits);
+    
+    return {
+      id: inv.customer_id || inv.id, // DataTable requires an 'id' for React keys
+      customer_id: inv.customer_id || inv.id,
+      customer_name: inv.profiles?.full_name || 'Unknown',
+      skip_credits: skipCredits,
+      referral_credits: referralCredits,
+      extra_milk: extraMilk,
+      verdict_amount: Math.abs(extraMinusCredits),
+      is_carry_forward: extraMinusCredits < 0,
+      is_added_to_bill: extraMinusCredits > 0,
+    }
+  });
+
+  const adjustmentSummaryColumns: ColumnDef<AdjustmentSummary>[] = [
+    { 
+      header: 'Customer', 
+      cell: (row) => renderCustomerCell(row.customer_name, row.customer_id) 
+    },
+    { 
+      header: 'Skip Credits', 
+      align: 'right', 
+      cell: (row) => <span className="text-[13.5px] font-black font-mono text-emerald-600 dark:text-emerald-400">₹{row.skip_credits}</span> 
+    },
+    { 
+      header: 'Referral Credits', 
+      align: 'right', 
+      cell: (row) => <span className="text-[13.5px] font-black font-mono text-emerald-600 dark:text-emerald-400">₹{row.referral_credits}</span> 
+    },
+    { 
+      header: 'Extra Milk', 
+      align: 'right', 
+      cell: (row) => <span className="text-[13.5px] font-black font-mono text-amber-600 dark:text-amber-400">₹{row.extra_milk}</span> 
+    },
+    { 
+      header: 'Verdict', 
+      align: 'center', 
+      cell: (row) => {
+        if (row.is_carry_forward) return <span className="text-[10px] uppercase tracking-wider font-black text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-2.5 py-1.5 rounded-lg shadow-sm">Carry Forward ₹{row.verdict_amount}</span>;
+        if (row.is_added_to_bill) return <span className="text-[10px] uppercase tracking-wider font-black text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50 px-2.5 py-1.5 rounded-lg shadow-sm">Added to Bill ₹{row.verdict_amount}</span>;
+        return <span className="text-[10px] uppercase tracking-wider font-black text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-lg shadow-sm">Balanced ₹0</span>;
+      }
+    }
+  ]
+
   /* ── PAYMENT COLUMNS ── */
   const paymentColumns: ColumnDef<Payment>[] = [
     { 
@@ -451,7 +485,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       cell: (row) => (
         <span className="inline-flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1 text-[11px] font-extrabold text-slate-600 dark:text-slate-300 shadow-3xs">
           <Coins size={11} className="text-slate-400 dark:text-slate-500" />
-          <span>{row.payment_type.replace('_', ' ').toUpperCase()}</span>
+          <span>{(row.method || row.payment_type).replace('_', ' ').toUpperCase()}</span>
         </span>
       )
     },
@@ -473,10 +507,16 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
 
 
   // Compute summaries
-  const totalBilled = invoices.reduce((sum, inv) => sum + (inv.net_due || 0), 0);
+  const totalBilled = invoices.reduce((sum, inv) => sum + calculateTrueDue(inv), 0);
   const totalCollected = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
   const totalExtraMilk = invoices.reduce((sum, inv) => sum + (inv.extra_charges || 0), 0);
-  const totalCredits = invoices.reduce((sum, inv) => sum + (inv.skip_credit || 0) + (inv.pause_credit || 0), 0);
+  const totalCredits = invoices.reduce((sum, inv) => {
+    const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === inv.profiles?.full_name);
+    const referralCredits = customerAdjustments
+      .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+      .reduce((s, a) => s + Math.abs(a.amount), 0);
+    return sum + (inv.skip_credit || 0) + (inv.pause_credit || 0) + referralCredits;
+  }, 0);
 
   const filterList = (list: any[]) => list.filter(item => {
     if (searchQuery) {
@@ -491,6 +531,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
   const filteredInvoices = filterList(invoices)
   const filteredAdjustments = filterList(adjustments)
   const filteredPayments = filterList(payments)
+  const filteredSummaries = filterList(customerSummaries)
 
   return (
     <div className="space-y-6">
@@ -595,7 +636,36 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       {/* RENDER ACTIVE TAB SHEET */}
       <div className="pt-2">
         {activeTab === 'invoices' && <DataTable data={filteredInvoices} columns={invoiceColumns} onView={setViewingEntry} />}
-        {activeTab === 'adjustments' && <DataTable data={filteredAdjustments} columns={adjustmentColumns} onView={setViewingEntry} />}
+        {activeTab === 'adjustments' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl w-fit shadow-inner">
+              <button 
+                onClick={() => setAdjustmentViewMode('log')}
+                className={cn(
+                  "px-4 py-1.5 text-[11px] font-bold rounded-lg transition-all", 
+                  adjustmentViewMode === 'log' ? "bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                )}
+              >
+                Detailed Log
+              </button>
+              <button 
+                onClick={() => setAdjustmentViewMode('summary')}
+                className={cn(
+                  "px-4 py-1.5 text-[11px] font-bold rounded-lg transition-all", 
+                  adjustmentViewMode === 'summary' ? "bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                )}
+              >
+                Customer Summaries
+              </button>
+            </div>
+            
+            {adjustmentViewMode === 'log' ? (
+              <DataTable data={filteredAdjustments} columns={adjustmentColumns} onView={setViewingEntry} />
+            ) : (
+              <DataTable data={filteredSummaries} columns={adjustmentSummaryColumns} onView={setViewingEntry} />
+            )}
+          </div>
+        )}
         {activeTab === 'payments' && <DataTable data={filteredPayments} columns={paymentColumns} onView={setViewingEntry} />}
       </div>
 
@@ -616,6 +686,16 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
           setShowSelectCustomer(false)
           setSelectedCustomerId(customerId)
           setSelectedCustomerName(customerName)
+          
+          // Look up their invoice for the current month to compute default amount
+          const invoice = invoices.find(inv => inv.customer_id === customerId);
+          if (invoice) {
+            const displayDue = calculateTrueDue(invoice);
+            setPaymentDefaultAmount(Math.max(0, displayDue - invoice.amount_paid));
+          } else {
+            setPaymentDefaultAmount(undefined);
+          }
+          
           setShowPaymentModal(true)
         }}
       />
