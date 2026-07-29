@@ -127,6 +127,27 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
     )
   }
 
+  // Helper to calculate true net due for a given invoice
+  const calculateTrueDue = (row: Invoice) => {
+    const d = new Date(row.billing_month);
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    let dailyRate = 0;
+    if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
+      dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
+    } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
+      dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
+    }
+    const baseSubscription = dailyRate * daysInMonth;
+    const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
+    const referralCredits = customerAdjustments
+      .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+      .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+    const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
+    const totalExtra = (row.extra_charges || 0);
+    const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
+    return row.net_due > 0 ? row.net_due : realNetDue;
+  }
+
   /* ── INVOICE COLUMNS ── */
   const invoiceColumns: ColumnDef<Invoice>[] = [
     { 
@@ -216,28 +237,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       header: 'Net Due', 
       align: 'right', 
       cell: (row) => {
-        // Recalculate true net due dynamically for the UI
-        const d = new Date(row.billing_month);
-        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-        let dailyRate = 0;
-        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
-          dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
-        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
-          dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
-        }
-        
-        const baseSubscription = dailyRate * daysInMonth;
-        const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
-        const referralCredits = customerAdjustments
-          .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
-          .reduce((sum, a) => sum + Math.abs(a.amount), 0);
-          
-        const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
-        const totalExtra = (row.extra_charges || 0);
-
-        // If backend hasn't generated proper net_due, we calculate it on the fly
-        const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
-        const displayDue = row.net_due > 0 ? row.net_due : realNetDue;
+        const displayDue = calculateTrueDue(row);
 
         return (
           <span className="text-[14.5px] font-black text-slate-800 dark:text-slate-200 font-mono">
@@ -264,25 +264,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       header: 'Status', 
       align: 'center', 
       cell: (row) => {
-        // Calculate dynamic true due
-        const d = new Date(row.billing_month);
-        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-        let dailyRate = 0;
-        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
-          dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
-        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
-          dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
-        }
-        const baseSubscription = dailyRate * daysInMonth;
-        const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
-        const referralCredits = customerAdjustments
-          .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
-          .reduce((sum, a) => sum + Math.abs(a.amount), 0);
-        const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
-        const totalExtra = (row.extra_charges || 0);
-        const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
-        const displayDue = row.net_due > 0 ? row.net_due : realNetDue;
-        
+        const displayDue = calculateTrueDue(row);
         const isPaid = row.payment_status === 'paid' || (displayDue > 0 && row.amount_paid >= displayDue) || (displayDue === 0 && row.amount_paid === 0 && row.payment_status === 'paid');
         return <StatusBadge status={isPaid ? 'Paid' : 'Pending'} />
       } 
@@ -291,24 +273,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       header: 'Actions', 
       align: 'center', 
       cell: (row) => {
-        const d = new Date(row.billing_month);
-        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-        let dailyRate = 0;
-        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
-          dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
-        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
-          dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
-        }
-        const baseSubscription = dailyRate * daysInMonth;
-        const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
-        const referralCredits = customerAdjustments
-          .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
-          .reduce((sum, a) => sum + Math.abs(a.amount), 0);
-        const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
-        const totalExtra = (row.extra_charges || 0);
-        const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
-        const displayDue = row.net_due > 0 ? row.net_due : realNetDue;
-        
+        const displayDue = calculateTrueDue(row);
         const isPaid = row.payment_status === 'paid' || (displayDue > 0 && row.amount_paid >= displayDue) || (displayDue === 0 && row.amount_paid === 0 && row.payment_status === 'paid');
         if (isPaid || displayDue === 0) return <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>;
         
@@ -714,6 +679,16 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
           setShowSelectCustomer(false)
           setSelectedCustomerId(customerId)
           setSelectedCustomerName(customerName)
+          
+          // Look up their invoice for the current month to compute default amount
+          const invoice = invoices.find(inv => inv.customer_id === customerId);
+          if (invoice) {
+            const displayDue = calculateTrueDue(invoice);
+            setPaymentDefaultAmount(Math.max(0, displayDue - invoice.amount_paid));
+          } else {
+            setPaymentDefaultAmount(undefined);
+          }
+          
           setShowPaymentModal(true)
         }}
       />
