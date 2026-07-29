@@ -51,8 +51,10 @@ export async function POST(request: Request) {
       .insert({
         customer_id: customerId,
         amount: Number(amount),
-        payment_type: paymentType,
-        status: 'completed'
+        payment_type: 'subscription',
+        method: paymentType,
+        status: 'success',
+        is_manual: true
       })
       .select('id')
       .single();

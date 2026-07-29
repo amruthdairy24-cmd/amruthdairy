@@ -52,7 +52,7 @@ export default async function BillingPage(props: {
   // 3. Fetch Payments for selected month
   const { data: paymentsData, error: paymentsError } = await supabase
     .from('payments')
-    .select(`id, amount, payment_type, status, created_at, profiles(full_name)`)
+    .select(`id, amount, payment_type, method, status, created_at, profiles(full_name)`)
     .gte('created_at', startOfMonth)
     .lte('created_at', endOfMonth)
     .order('created_at', { ascending: false })

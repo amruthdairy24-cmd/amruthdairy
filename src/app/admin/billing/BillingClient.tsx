@@ -45,6 +45,7 @@ interface Payment {
   id: string;
   amount: number;
   payment_type: string;
+  method?: string;
   status: string;
   created_at: string;
   profiles: { full_name: string };
@@ -484,7 +485,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       cell: (row) => (
         <span className="inline-flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1 text-[11px] font-extrabold text-slate-600 dark:text-slate-300 shadow-3xs">
           <Coins size={11} className="text-slate-400 dark:text-slate-500" />
-          <span>{row.payment_type.replace('_', ' ').toUpperCase()}</span>
+          <span>{(row.method || row.payment_type).replace('_', ' ').toUpperCase()}</span>
         </span>
       )
     },
