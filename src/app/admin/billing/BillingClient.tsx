@@ -15,6 +15,7 @@ import { AdminPaymentModal } from '@/components/admin/AdminPaymentModal'
 
 interface Invoice {
   id: string;
+  customer_id: string;
   billing_month: string;
   net_due: number;
   amount_paid: number;
@@ -22,7 +23,10 @@ interface Invoice {
   extra_charges: number;
   skip_credit: number;
   pause_credit: number;
-  profiles: { full_name: string };
+  profiles: { 
+    full_name: string;
+    subscriptions: { daily_rate: number }[] | { daily_rate: number };
+  };
 }
 
 interface Adjustment {
@@ -137,23 +141,118 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       cell: (row) => renderCustomerCell(row.profiles?.full_name, row.id) 
     },
     { 
+      header: 'Breakdown / Verdict', 
+      cell: (row) => {
+        // Calculate Base
+        const d = new Date(row.billing_month);
+        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        
+        let dailyRate = 0;
+        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
+          dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
+        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
+          dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
+        }
+
+        const baseSubscription = dailyRate * daysInMonth;
+        
+        // Calculate Credits
+        const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
+        const referralCredits = customerAdjustments
+          .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+          .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+          
+        const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
+        const totalExtra = (row.extra_charges || 0);
+
+        // The verdict logic: Extra Expenses vs Credits
+        const extraMinusCredits = totalExtra - totalCredits;
+        
+        const isCarryForward = extraMinusCredits < 0;
+        const isAddedToBill = extraMinusCredits > 0;
+        const verdictAmount = Math.abs(extraMinusCredits);
+
+        return (
+          <div className="flex flex-col gap-1.5 w-[240px]">
+            {/* Breakdown row */}
+            <div className="flex items-center justify-between text-[10px] font-bold">
+              <span className="text-slate-400">Base Subscription</span>
+              <span className="text-slate-700 dark:text-slate-300 font-mono">₹{baseSubscription}</span>
+            </div>
+            {(totalExtra > 0 || totalCredits > 0) && (
+              <div className="flex items-center justify-between text-[10px] font-bold border-t border-slate-100 dark:border-slate-800 pt-1">
+                <span className="text-slate-400">Extras & Credits</span>
+                <div className="flex gap-2 font-mono">
+                  {totalExtra > 0 && <span className="text-amber-500">+₹{totalExtra}</span>}
+                  {totalCredits > 0 && <span className="text-emerald-500">-₹{totalCredits}</span>}
+                </div>
+              </div>
+            )}
+            
+            {/* Verdict Badge */}
+            {(isCarryForward || isAddedToBill) && (
+              <div className={cn(
+                "mt-0.5 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border flex justify-between items-center",
+                isCarryForward 
+                  ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50"
+                  : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/50"
+              )}>
+                <span>Verdict:</span>
+                <span>{isCarryForward ? `Carry Forward ₹${verdictAmount}` : `Added to Bill +₹${verdictAmount}`}</span>
+              </div>
+            )}
+            {!isCarryForward && !isAddedToBill && (
+                <div className="mt-0.5 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-500 flex justify-between items-center">
+                  <span>Verdict:</span>
+                  <span>Balanced (₹0)</span>
+                </div>
+            )}
+          </div>
+        )
+      }
+    },
+    { 
       header: 'Net Due', 
       align: 'right', 
-      cell: (row) => (
-        <span className="text-[13.5px] font-black text-slate-800 dark:text-slate-200 font-mono">
-          ₹{row.net_due}
-        </span>
-      ) 
+      cell: (row) => {
+        // Recalculate true net due dynamically for the UI
+        const d = new Date(row.billing_month);
+        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        let dailyRate = 0;
+        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
+          dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
+        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
+          dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
+        }
+        
+        const baseSubscription = dailyRate * daysInMonth;
+        const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
+        const referralCredits = customerAdjustments
+          .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+          .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+          
+        const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
+        const totalExtra = (row.extra_charges || 0);
+
+        // If backend hasn't generated proper net_due, we calculate it on the fly
+        const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
+        const displayDue = row.net_due > 0 ? row.net_due : realNetDue;
+
+        return (
+          <span className="text-[14.5px] font-black text-slate-800 dark:text-slate-200 font-mono">
+            ₹{displayDue}
+          </span>
+        )
+      } 
     },
     { 
       header: 'Paid', 
       align: 'right', 
       cell: (row) => {
-        const isPaid = row.payment_status === 'paid' || (row.net_due > 0 && row.amount_paid >= row.net_due)
         return (
           <span className={cn(
-            "text-[13.5px] font-bold font-mono",
-            isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-slate-600 dark:text-slate-400"
+            "text-[14.5px] font-bold font-mono",
+            row.amount_paid > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-600 dark:text-slate-400"
           )}>
             ₹{row.amount_paid}
           </span>
@@ -164,7 +263,26 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       header: 'Status', 
       align: 'center', 
       cell: (row) => {
-        const isPaid = row.payment_status === 'paid' || (row.net_due > 0 && row.amount_paid >= row.net_due)
+        // Calculate dynamic true due
+        const d = new Date(row.billing_month);
+        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        let dailyRate = 0;
+        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
+          dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
+        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
+          dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
+        }
+        const baseSubscription = dailyRate * daysInMonth;
+        const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
+        const referralCredits = customerAdjustments
+          .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+          .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+        const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
+        const totalExtra = (row.extra_charges || 0);
+        const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
+        const displayDue = row.net_due > 0 ? row.net_due : realNetDue;
+        
+        const isPaid = displayDue > 0 && row.amount_paid >= displayDue;
         return <StatusBadge status={isPaid ? 'Paid' : 'Pending'} />
       } 
     },
@@ -172,20 +290,38 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       header: 'Actions', 
       align: 'center', 
       cell: (row) => {
-        const isPaid = row.payment_status === 'paid' || (row.net_due > 0 && row.amount_paid >= row.net_due)
-        if (isPaid) return <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>;
+        const d = new Date(row.billing_month);
+        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        let dailyRate = 0;
+        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
+          dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
+        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
+          dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
+        }
+        const baseSubscription = dailyRate * daysInMonth;
+        const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
+        const referralCredits = customerAdjustments
+          .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+          .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+        const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
+        const totalExtra = (row.extra_charges || 0);
+        const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
+        const displayDue = row.net_due > 0 ? row.net_due : realNetDue;
+        
+        const isPaid = displayDue > 0 && row.amount_paid >= displayDue;
+        if (isPaid || displayDue === 0) return <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>;
         
         return (
           <button 
             onClick={() => {
-              setSelectedCustomerId(row.id)
+              setSelectedCustomerId(row.customer_id) 
               setSelectedCustomerName(row.profiles?.full_name || 'Customer')
-              setPaymentDefaultAmount(Math.max(0, row.net_due - row.amount_paid))
+              setPaymentDefaultAmount(Math.max(0, displayDue - row.amount_paid))
               setShowPaymentModal(true)
             }}
-            className="px-3 h-7 bg-purple-600 hover:bg-purple-600/95 text-white text-[10.5px] font-bold rounded-lg shadow-3xs cursor-pointer transition-all active:scale-95"
+            className="px-3 h-7 bg-purple-600 hover:bg-purple-600/95 text-white text-[10.5px] font-bold rounded-lg shadow-3xs cursor-pointer transition-all active:scale-95 whitespace-nowrap"
           >
-            Mark  as Paid
+            Record Payment
           </button>
         )
       } 
