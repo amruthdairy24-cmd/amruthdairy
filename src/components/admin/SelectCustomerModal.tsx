@@ -17,9 +17,10 @@ interface SelectCustomerModalProps {
   onClose: () => void
   onSelect: (customerId: string, customerName: string) => void
   actionContext?: { title: string; subtitle: string }
+  filter?: 'unpaid' | 'all'
 }
 
-export function SelectCustomerModal({ isOpen, onClose, onSelect, actionContext }: SelectCustomerModalProps) {
+export function SelectCustomerModal({ isOpen, onClose, onSelect, actionContext, filter }: SelectCustomerModalProps) {
   const [query, setQuery] = useState('')
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(false)
@@ -34,7 +35,8 @@ export function SelectCustomerModal({ isOpen, onClose, onSelect, actionContext }
     const fetchCustomers = async () => {
       setLoading(true)
       try {
-        const res = await fetch(`/api/admin/customers/search?q=${encodeURIComponent(query)}`)
+        const url = `/api/admin/customers/search?q=${encodeURIComponent(query)}${filter ? `&filter=${filter}` : ''}`
+        const res = await fetch(url)
         const json = await res.json()
         if (json.data) {
           setCustomers(json.data)

@@ -24,6 +24,7 @@ import { SelectCustomerModal } from '@/components/admin/SelectCustomerModal'
 import { AdminSkipModal } from '@/components/admin/AdminSkipModal'
 import { AdminExtraMilkModal } from '@/components/admin/AdminExtraMilkModal'
 import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
+import { AdminPaymentModal } from '@/components/admin/AdminPaymentModal'
 import { cn } from '@/lib/utils'
 
 interface DashboardClientProps {
@@ -84,7 +85,8 @@ export default function DashboardClient({
   const [showSkipModal, setShowSkipModal] = useState(false)
   const [showExtraMilkModal, setShowExtraMilkModal] = useState(false)
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
-  const [pendingAction, setPendingAction] = useState<'skip' | 'extra' | 'subscription'>('skip')
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'skip' | 'extra' | 'subscription' | 'payment'>('skip')
 
   // Milk Pricing Modal State
   const [showPriceModal, setShowPriceModal] = useState(false)
@@ -292,14 +294,14 @@ export default function DashboardClient({
               Deliveries Today
             </h4>
             <p className="text-2xl sm:text-3xl font-black tracking-tight leading-none font-display text-slate-800 dark:text-white">
-              {stats.deliveriesCount}
+              {stats.deliveriesCount - stats.skippedCount}
             </p>
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-amber-700 bg-amber-500/10 border border-amber-200/20">
                 {stats.skippedCount} Skipped
               </span>
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                out of {stats.deliveriesCount + stats.skippedCount} total
+                out of {stats.deliveriesCount} total
               </span>
             </div>
           </div>
@@ -495,13 +497,13 @@ export default function DashboardClient({
               <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Add Customer</span>
             </Link>
 
-            <Link 
-              href="/admin/billing" 
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-blue-400/50 dark:hover:border-blue-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs h-[78px]"
+            <button 
+              onClick={() => { setPendingAction('payment'); setShowSelectCustomer(true) }}
+              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-purple-400/50 dark:hover:border-purple-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs cursor-pointer h-[78px]"
             >
               <CreditCard size={22} className="text-purple-500 group-hover:scale-110 transition-transform duration-200" />
-              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-[#014DA4] dark:group-hover:text-blue-400 transition-colors">Record Payment</span>
-            </Link>
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-300 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Record Payment</span>
+            </button>
 
             <Link 
               href="/admin/deliveries" 
@@ -736,8 +738,10 @@ export default function DashboardClient({
         actionContext={
           pendingAction === 'skip' ? { title: 'Skip Day', subtitle: 'Select customer to mark skip' }
           : pendingAction === 'extra' ? { title: 'Extra Milk', subtitle: 'Select customer for extra order' }
+          : pendingAction === 'payment' ? { title: 'Record Payment', subtitle: 'Select customer to receive payment' }
           : { title: 'New Subscription', subtitle: 'Select customer to subscribe' }
         }
+        filter={pendingAction === 'payment' ? 'unpaid' : undefined}
         onSelect={(customerId, customerName) => {
           setShowSelectCustomer(false)
           setSelectedCustomerId(customerId)
@@ -745,6 +749,7 @@ export default function DashboardClient({
           if (pendingAction === 'skip') setShowSkipModal(true)
           else if (pendingAction === 'extra') setShowExtraMilkModal(true)
           else if (pendingAction === 'subscription') setShowSubscriptionModal(true)
+          else if (pendingAction === 'payment') setShowPaymentModal(true)
         }}
       />
 
@@ -777,6 +782,17 @@ export default function DashboardClient({
             isOpen={showSubscriptionModal}
             onClose={() => {
               setShowSubscriptionModal(false)
+              setSelectedCustomerId(null)
+              setSelectedCustomerName(null)
+            }}
+            onSuccess={() => router.refresh()}
+            customerId={selectedCustomerId}
+            customerName={selectedCustomerName}
+          />
+          <AdminPaymentModal
+            isOpen={showPaymentModal}
+            onClose={() => {
+              setShowPaymentModal(false)
               setSelectedCustomerId(null)
               setSelectedCustomerName(null)
             }}

@@ -130,7 +130,7 @@ function PaymentBadge({ status }: { status: string }) {
 export function SubscriptionsClient({ data, currentMonth }: { data: SubscriptionData[], currentMonth: string }) {
   const router = useRouter()
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('active')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [viewingEntry, setViewingEntry] = useState<SubscriptionData | null>(null)
   
   // Modals state for New Subscription flow
@@ -259,7 +259,9 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
             className="bg-transparent border-none text-sm font-bold text-slate-700 dark:text-slate-200 outline-none pr-3 py-1 cursor-pointer appearance-none"
           >
             {Array.from({ length: 12 }).map((_, i) => {
-              const d = new Date(); d.setMonth(d.getMonth() - i);
+              const d = new Date();
+              d.setDate(1); // Set to 1st of the month to avoid overflow on 31st
+              d.setMonth(d.getMonth() - i);
               const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
               const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
               return <option key={val} value={val}>{label}</option>
@@ -307,8 +309,8 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
             className="text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
           />
         </div>
-        {(search || statusFilter !== 'active') && (
-          <button onClick={() => { setSearch(''); setStatusFilter('active'); }}
+        {(search || statusFilter !== 'all') && (
+          <button onClick={() => { setSearch(''); setStatusFilter('all'); }}
             className="flex items-center gap-1.5 h-10 px-3.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-450 text-xs font-bold cursor-pointer transition-all hover:bg-rose-100 dark:hover:bg-rose-950/50">
             <XCircle size={13} /> Reset
           </button>
@@ -327,11 +329,11 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
             <Users size={28} className="text-slate-300 dark:text-slate-600" />
           </div>
           <h3 className="text-lg font-black text-slate-700 dark:text-slate-200 mb-1">
-            {statusFilter === 'active' ? `No active subscriptions for ${selectedMonthLabel}` : "No results found"}
+            {statusFilter === 'all' && !search ? `No subscriptions for ${selectedMonthLabel}` : "No results found"}
           </h3>
           <p className="text-sm font-medium text-slate-400 dark:text-slate-500 max-w-sm">
-            {statusFilter === 'active' 
-              ? "No one has paid for this month yet. Change the filter to 'Pending' or 'All Statuses' to see awaiting subscriptions." 
+            {statusFilter === 'all' && !search
+              ? "There are no subscriptions recorded for this month yet." 
               : "Try adjusting your filters or search terms."}
           </p>
         </div>
