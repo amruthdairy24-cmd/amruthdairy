@@ -56,6 +56,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
   const [isProcessing, setIsProcessing] = useState(false);
   const [viewingEntry, setViewingEntry] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [adjustmentViewMode, setAdjustmentViewMode] = useState<'log' | 'summary'>('log');
 
   // Payment Modal state
   const [showSelectCustomer, setShowSelectCustomer] = useState(false);
@@ -432,6 +433,73 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
     }
   ]
 
+  /* ── ADJUSTMENT SUMMARY COLUMNS ── */
+  interface AdjustmentSummary {
+    id: string;
+    customer_id: string;
+    customer_name: string;
+    skip_credits: number;
+    referral_credits: number;
+    extra_milk: number;
+    verdict_amount: number;
+    is_carry_forward: boolean;
+    is_added_to_bill: boolean;
+  }
+
+  const customerSummaries: AdjustmentSummary[] = invoices.map(inv => {
+    const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === inv.profiles?.full_name);
+    const referralCredits = customerAdjustments
+      .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+      .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+      
+    const skipCredits = (inv.skip_credit || 0) + (inv.pause_credit || 0);
+    const extraMilk = inv.extra_charges || 0;
+    const extraMinusCredits = extraMilk - (skipCredits + referralCredits);
+    
+    return {
+      id: inv.customer_id || inv.id, // DataTable requires an 'id' for React keys
+      customer_id: inv.customer_id || inv.id,
+      customer_name: inv.profiles?.full_name || 'Unknown',
+      skip_credits: skipCredits,
+      referral_credits: referralCredits,
+      extra_milk: extraMilk,
+      verdict_amount: Math.abs(extraMinusCredits),
+      is_carry_forward: extraMinusCredits < 0,
+      is_added_to_bill: extraMinusCredits > 0,
+    }
+  });
+
+  const adjustmentSummaryColumns: ColumnDef<AdjustmentSummary>[] = [
+    { 
+      header: 'Customer', 
+      cell: (row) => renderCustomerCell(row.customer_name, row.customer_id) 
+    },
+    { 
+      header: 'Skip Credits', 
+      align: 'right', 
+      cell: (row) => <span className="text-[13.5px] font-black font-mono text-emerald-600 dark:text-emerald-400">₹{row.skip_credits}</span> 
+    },
+    { 
+      header: 'Referral Credits', 
+      align: 'right', 
+      cell: (row) => <span className="text-[13.5px] font-black font-mono text-emerald-600 dark:text-emerald-400">₹{row.referral_credits}</span> 
+    },
+    { 
+      header: 'Extra Milk', 
+      align: 'right', 
+      cell: (row) => <span className="text-[13.5px] font-black font-mono text-amber-600 dark:text-amber-400">₹{row.extra_milk}</span> 
+    },
+    { 
+      header: 'Verdict', 
+      align: 'center', 
+      cell: (row) => {
+        if (row.is_carry_forward) return <span className="text-[10px] uppercase tracking-wider font-black text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-2.5 py-1.5 rounded-lg shadow-sm">Carry Forward ₹{row.verdict_amount}</span>;
+        if (row.is_added_to_bill) return <span className="text-[10px] uppercase tracking-wider font-black text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50 px-2.5 py-1.5 rounded-lg shadow-sm">Added to Bill ₹{row.verdict_amount}</span>;
+        return <span className="text-[10px] uppercase tracking-wider font-black text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-lg shadow-sm">Balanced ₹0</span>;
+      }
+    }
+  ]
+
   /* ── PAYMENT COLUMNS ── */
   const paymentColumns: ColumnDef<Payment>[] = [
     { 
@@ -491,6 +559,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
   const filteredInvoices = filterList(invoices)
   const filteredAdjustments = filterList(adjustments)
   const filteredPayments = filterList(payments)
+  const filteredSummaries = filterList(customerSummaries)
 
   return (
     <div className="space-y-6">
@@ -595,7 +664,36 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       {/* RENDER ACTIVE TAB SHEET */}
       <div className="pt-2">
         {activeTab === 'invoices' && <DataTable data={filteredInvoices} columns={invoiceColumns} onView={setViewingEntry} />}
-        {activeTab === 'adjustments' && <DataTable data={filteredAdjustments} columns={adjustmentColumns} onView={setViewingEntry} />}
+        {activeTab === 'adjustments' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl w-fit shadow-inner">
+              <button 
+                onClick={() => setAdjustmentViewMode('log')}
+                className={cn(
+                  "px-4 py-1.5 text-[11px] font-bold rounded-lg transition-all", 
+                  adjustmentViewMode === 'log' ? "bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                )}
+              >
+                Detailed Log
+              </button>
+              <button 
+                onClick={() => setAdjustmentViewMode('summary')}
+                className={cn(
+                  "px-4 py-1.5 text-[11px] font-bold rounded-lg transition-all", 
+                  adjustmentViewMode === 'summary' ? "bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                )}
+              >
+                Customer Summaries
+              </button>
+            </div>
+            
+            {adjustmentViewMode === 'log' ? (
+              <DataTable data={filteredAdjustments} columns={adjustmentColumns} onView={setViewingEntry} />
+            ) : (
+              <DataTable data={filteredSummaries} columns={adjustmentSummaryColumns} onView={setViewingEntry} />
+            )}
+          </div>
+        )}
         {activeTab === 'payments' && <DataTable data={filteredPayments} columns={paymentColumns} onView={setViewingEntry} />}
       </div>
 
