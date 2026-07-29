@@ -7,14 +7,17 @@ import { Logo } from '@/components/layout/Logo'
 const SESSION_KEY = 'amruth_intro_seen'
 
 export function PageLoader() {
-  const [showLoader, setShowLoader] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  // Start as true so the loader covers the page immediately on first render
+  // This prevents the flash of page content before we check sessionStorage
+  const [showLoader, setShowLoader] = useState(true)
 
   useEffect(() => {
-    setMounted(true)
     const alreadySeen = sessionStorage.getItem(SESSION_KEY)
-    if (!alreadySeen) {
-      setShowLoader(true)
+    if (alreadySeen) {
+      // Already seen — hide loader almost instantly (no flash)
+      setShowLoader(false)
+    } else {
+      // First visit — show the full intro animation
       const timer = setTimeout(() => {
         sessionStorage.setItem(SESSION_KEY, 'true')
         setShowLoader(false)
@@ -23,15 +26,13 @@ export function PageLoader() {
     }
   }, [])
 
-  if (!mounted) return null
-
   return (
     <AnimatePresence>
       {showLoader && (
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          transition={{ duration: 0.45, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] bg-white dark:bg-slate-950 flex flex-col items-center justify-center select-none"
         >
           {/* Subtle Ambient Radial Glow */}
@@ -72,4 +73,3 @@ export function PageLoader() {
     </AnimatePresence>
   )
 }
-

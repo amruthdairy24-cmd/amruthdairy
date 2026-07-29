@@ -10,9 +10,12 @@ import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { cn } from '@/lib/utils'
 import { isCreditAdjustmentType } from '@/lib/billing'
 import toast from 'react-hot-toast'
+import { SelectCustomerModal } from '@/components/admin/SelectCustomerModal'
+import { AdminPaymentModal } from '@/components/admin/AdminPaymentModal'
 
 interface Invoice {
   id: string;
+  customer_id: string;
   billing_month: string;
   net_due: number;
   amount_paid: number;
@@ -20,7 +23,10 @@ interface Invoice {
   extra_charges: number;
   skip_credit: number;
   pause_credit: number;
-  profiles: { full_name: string };
+  profiles: { 
+    full_name: string;
+    subscriptions: { daily_rate: number }[] | { daily_rate: number };
+  };
 }
 
 interface Adjustment {
@@ -39,6 +45,7 @@ interface Payment {
   id: string;
   amount: number;
   payment_type: string;
+  method?: string;
   status: string;
   created_at: string;
   profiles: { full_name: string };
@@ -50,6 +57,14 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
   const [isProcessing, setIsProcessing] = useState(false);
   const [viewingEntry, setViewingEntry] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [adjustmentViewMode, setAdjustmentViewMode] = useState<'log' | 'summary'>('log');
+
+  // Payment Modal state
+  const [showSelectCustomer, setShowSelectCustomer] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null);
+  const [paymentDefaultAmount, setPaymentDefaultAmount] = useState<number | undefined>(undefined);
 
   const handleRefundAction = async (id: string, action: 'process' | 'reject') => {
     if (!confirm(`Are you sure you want to ${action} this refund request?`)) return;
@@ -113,6 +128,27 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
     )
   }
 
+  // Helper to calculate true net due for a given invoice
+  const calculateTrueDue = (row: Invoice) => {
+    const d = new Date(row.billing_month);
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    let dailyRate = 0;
+    if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
+      dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
+    } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
+      dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
+    }
+    const baseSubscription = dailyRate * daysInMonth;
+    const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
+    const referralCredits = customerAdjustments
+      .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+      .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+    const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
+    const totalExtra = (row.extra_charges || 0);
+    const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
+    return row.net_due > 0 ? row.net_due : realNetDue;
+  }
+
   /* ── INVOICE COLUMNS ── */
   const invoiceColumns: ColumnDef<Invoice>[] = [
     { 
@@ -128,23 +164,97 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       cell: (row) => renderCustomerCell(row.profiles?.full_name, row.id) 
     },
     { 
+      header: 'Breakdown / Verdict', 
+      cell: (row) => {
+        // Calculate Base
+        const d = new Date(row.billing_month);
+        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        
+        let dailyRate = 0;
+        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
+          dailyRate = row.profiles.subscriptions[0].daily_rate || 0;
+        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
+          dailyRate = (row.profiles.subscriptions as any).daily_rate || 0;
+        }
+
+        const baseSubscription = dailyRate * daysInMonth;
+        
+        // Calculate Credits
+        const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === row.profiles?.full_name);
+        const referralCredits = customerAdjustments
+          .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+          .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+          
+        const totalCredits = (row.skip_credit || 0) + (row.pause_credit || 0) + referralCredits;
+        const totalExtra = (row.extra_charges || 0);
+
+        // The verdict logic: Extra Expenses vs Credits
+        const extraMinusCredits = totalExtra - totalCredits;
+        
+        const isCarryForward = extraMinusCredits < 0;
+        const isAddedToBill = extraMinusCredits > 0;
+        const verdictAmount = Math.abs(extraMinusCredits);
+
+        return (
+          <div className="flex flex-col gap-1.5 w-[240px]">
+            {/* Breakdown row */}
+            <div className="flex items-center justify-between text-[10px] font-bold">
+              <span className="text-slate-400">Base Subscription</span>
+              <span className="text-slate-700 dark:text-slate-300 font-mono">₹{baseSubscription}</span>
+            </div>
+            {(totalExtra > 0 || totalCredits > 0) && (
+              <div className="flex items-center justify-between text-[10px] font-bold border-t border-slate-100 dark:border-slate-800 pt-1">
+                <span className="text-slate-400">Extras & Credits</span>
+                <div className="flex gap-2 font-mono">
+                  {totalExtra > 0 && <span className="text-amber-500">+₹{totalExtra}</span>}
+                  {totalCredits > 0 && <span className="text-emerald-500">-₹{totalCredits}</span>}
+                </div>
+              </div>
+            )}
+            
+            {/* Verdict Badge */}
+            {(isCarryForward || isAddedToBill) && (
+              <div className={cn(
+                "mt-0.5 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border flex justify-between items-center",
+                isCarryForward 
+                  ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50"
+                  : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/50"
+              )}>
+                <span>Verdict:</span>
+                <span>{isCarryForward ? `Carry Forward ₹${verdictAmount}` : `Added to Bill +₹${verdictAmount}`}</span>
+              </div>
+            )}
+            {!isCarryForward && !isAddedToBill && (
+                <div className="mt-0.5 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-500 flex justify-between items-center">
+                  <span>Verdict:</span>
+                  <span>Balanced (₹0)</span>
+                </div>
+            )}
+          </div>
+        )
+      }
+    },
+    { 
       header: 'Net Due', 
       align: 'right', 
-      cell: (row) => (
-        <span className="text-[13.5px] font-black text-slate-800 dark:text-slate-200 font-mono">
-          ₹{row.net_due}
-        </span>
-      ) 
+      cell: (row) => {
+        const displayDue = calculateTrueDue(row);
+
+        return (
+          <span className="text-[14.5px] font-black text-slate-800 dark:text-slate-200 font-mono">
+            ₹{displayDue}
+          </span>
+        )
+      } 
     },
     { 
       header: 'Paid', 
       align: 'right', 
       cell: (row) => {
-        const isPaid = row.payment_status === 'paid' || (row.net_due > 0 && row.amount_paid >= row.net_due)
         return (
           <span className={cn(
-            "text-[13.5px] font-bold font-mono",
-            isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-slate-600 dark:text-slate-400"
+            "text-[14.5px] font-bold font-mono",
+            row.amount_paid > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-600 dark:text-slate-400"
           )}>
             ₹{row.amount_paid}
           </span>
@@ -155,8 +265,32 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       header: 'Status', 
       align: 'center', 
       cell: (row) => {
-        const isPaid = row.payment_status === 'paid' || (row.net_due > 0 && row.amount_paid >= row.net_due)
+        const displayDue = calculateTrueDue(row);
+        const isPaid = row.payment_status === 'paid' || (displayDue > 0 && row.amount_paid >= displayDue) || (displayDue === 0 && row.amount_paid === 0 && row.payment_status === 'paid');
         return <StatusBadge status={isPaid ? 'Paid' : 'Pending'} />
+      } 
+    },
+    { 
+      header: 'Actions', 
+      align: 'center', 
+      cell: (row) => {
+        const displayDue = calculateTrueDue(row);
+        const isPaid = row.payment_status === 'paid' || (displayDue > 0 && row.amount_paid >= displayDue) || (displayDue === 0 && row.amount_paid === 0 && row.payment_status === 'paid');
+        if (isPaid || displayDue === 0) return <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>;
+        
+        return (
+          <button 
+            onClick={() => {
+              setSelectedCustomerId(row.customer_id) 
+              setSelectedCustomerName(row.profiles?.full_name || 'Customer')
+              setPaymentDefaultAmount(Math.max(0, displayDue - row.amount_paid))
+              setShowPaymentModal(true)
+            }}
+            className="px-3 h-7 bg-purple-600 hover:bg-purple-600/95 text-white text-[10.5px] font-bold rounded-lg shadow-3xs cursor-pointer transition-all active:scale-95 whitespace-nowrap"
+          >
+            Record Payment
+          </button>
+        )
       } 
     },
   ]
@@ -265,6 +399,73 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
     }
   ]
 
+  /* ── ADJUSTMENT SUMMARY COLUMNS ── */
+  interface AdjustmentSummary {
+    id: string;
+    customer_id: string;
+    customer_name: string;
+    skip_credits: number;
+    referral_credits: number;
+    extra_milk: number;
+    verdict_amount: number;
+    is_carry_forward: boolean;
+    is_added_to_bill: boolean;
+  }
+
+  const customerSummaries: AdjustmentSummary[] = invoices.map(inv => {
+    const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === inv.profiles?.full_name);
+    const referralCredits = customerAdjustments
+      .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+      .reduce((sum, a) => sum + Math.abs(a.amount), 0);
+      
+    const skipCredits = (inv.skip_credit || 0) + (inv.pause_credit || 0);
+    const extraMilk = inv.extra_charges || 0;
+    const extraMinusCredits = extraMilk - (skipCredits + referralCredits);
+    
+    return {
+      id: inv.customer_id || inv.id, // DataTable requires an 'id' for React keys
+      customer_id: inv.customer_id || inv.id,
+      customer_name: inv.profiles?.full_name || 'Unknown',
+      skip_credits: skipCredits,
+      referral_credits: referralCredits,
+      extra_milk: extraMilk,
+      verdict_amount: Math.abs(extraMinusCredits),
+      is_carry_forward: extraMinusCredits < 0,
+      is_added_to_bill: extraMinusCredits > 0,
+    }
+  });
+
+  const adjustmentSummaryColumns: ColumnDef<AdjustmentSummary>[] = [
+    { 
+      header: 'Customer', 
+      cell: (row) => renderCustomerCell(row.customer_name, row.customer_id) 
+    },
+    { 
+      header: 'Skip Credits', 
+      align: 'right', 
+      cell: (row) => <span className="text-[13.5px] font-black font-mono text-emerald-600 dark:text-emerald-400">₹{row.skip_credits}</span> 
+    },
+    { 
+      header: 'Referral Credits', 
+      align: 'right', 
+      cell: (row) => <span className="text-[13.5px] font-black font-mono text-emerald-600 dark:text-emerald-400">₹{row.referral_credits}</span> 
+    },
+    { 
+      header: 'Extra Milk', 
+      align: 'right', 
+      cell: (row) => <span className="text-[13.5px] font-black font-mono text-amber-600 dark:text-amber-400">₹{row.extra_milk}</span> 
+    },
+    { 
+      header: 'Verdict', 
+      align: 'center', 
+      cell: (row) => {
+        if (row.is_carry_forward) return <span className="text-[10px] uppercase tracking-wider font-black text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-2.5 py-1.5 rounded-lg shadow-sm">Carry Forward ₹{row.verdict_amount}</span>;
+        if (row.is_added_to_bill) return <span className="text-[10px] uppercase tracking-wider font-black text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50 px-2.5 py-1.5 rounded-lg shadow-sm">Added to Bill ₹{row.verdict_amount}</span>;
+        return <span className="text-[10px] uppercase tracking-wider font-black text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-lg shadow-sm">Balanced ₹0</span>;
+      }
+    }
+  ]
+
   /* ── PAYMENT COLUMNS ── */
   const paymentColumns: ColumnDef<Payment>[] = [
     { 
@@ -284,7 +485,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       cell: (row) => (
         <span className="inline-flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1 text-[11px] font-extrabold text-slate-600 dark:text-slate-300 shadow-3xs">
           <Coins size={11} className="text-slate-400 dark:text-slate-500" />
-          <span>{row.payment_type.replace('_', ' ').toUpperCase()}</span>
+          <span>{(row.method || row.payment_type).replace('_', ' ').toUpperCase()}</span>
         </span>
       )
     },
@@ -306,10 +507,16 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
 
 
   // Compute summaries
-  const totalBilled = invoices.reduce((sum, inv) => sum + (inv.net_due || 0), 0);
+  const totalBilled = invoices.reduce((sum, inv) => sum + calculateTrueDue(inv), 0);
   const totalCollected = invoices.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
   const totalExtraMilk = invoices.reduce((sum, inv) => sum + (inv.extra_charges || 0), 0);
-  const totalCredits = invoices.reduce((sum, inv) => sum + (inv.skip_credit || 0) + (inv.pause_credit || 0), 0);
+  const totalCredits = invoices.reduce((sum, inv) => {
+    const customerAdjustments = adjustments.filter(a => a.profiles?.full_name === inv.profiles?.full_name);
+    const referralCredits = customerAdjustments
+      .filter(a => a.adjustment_type === 'referral_credit' || a.adjustment_type === 'credit')
+      .reduce((s, a) => s + Math.abs(a.amount), 0);
+    return sum + (inv.skip_credit || 0) + (inv.pause_credit || 0) + referralCredits;
+  }, 0);
 
   const filterList = (list: any[]) => list.filter(item => {
     if (searchQuery) {
@@ -324,6 +531,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
   const filteredInvoices = filterList(invoices)
   const filteredAdjustments = filterList(adjustments)
   const filteredPayments = filterList(payments)
+  const filteredSummaries = filterList(customerSummaries)
 
   return (
     <div className="space-y-6">
@@ -333,7 +541,13 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
         <AdminHeader 
           title="Billing & Payments" 
           description="Manage customer invoices, adjustments, refund actions, and records." 
-          icon={CreditCard} 
+          icon={CreditCard}
+          actionLabel="Record Payment"
+          onAction={() => {
+            setPaymentDefaultAmount(undefined)
+            setShowSelectCustomer(true)
+          }}
+          hideSearchRow={true}
         />
         
         {/* MONTH PICKER */}
@@ -349,6 +563,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
             {/* Generate last 12 months as options */}
             {Array.from({ length: 12 }).map((_, i) => {
               const d = new Date();
+              d.setDate(1); // Set to 1st of the month to avoid overflow on 31st
               d.setMonth(d.getMonth() - i);
               const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
               const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -421,7 +636,36 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       {/* RENDER ACTIVE TAB SHEET */}
       <div className="pt-2">
         {activeTab === 'invoices' && <DataTable data={filteredInvoices} columns={invoiceColumns} onView={setViewingEntry} />}
-        {activeTab === 'adjustments' && <DataTable data={filteredAdjustments} columns={adjustmentColumns} onView={setViewingEntry} />}
+        {activeTab === 'adjustments' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl w-fit shadow-inner">
+              <button 
+                onClick={() => setAdjustmentViewMode('log')}
+                className={cn(
+                  "px-4 py-1.5 text-[11px] font-bold rounded-lg transition-all", 
+                  adjustmentViewMode === 'log' ? "bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                )}
+              >
+                Detailed Log
+              </button>
+              <button 
+                onClick={() => setAdjustmentViewMode('summary')}
+                className={cn(
+                  "px-4 py-1.5 text-[11px] font-bold rounded-lg transition-all", 
+                  adjustmentViewMode === 'summary' ? "bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                )}
+              >
+                Customer Summaries
+              </button>
+            </div>
+            
+            {adjustmentViewMode === 'log' ? (
+              <DataTable data={filteredAdjustments} columns={adjustmentColumns} onView={setViewingEntry} />
+            ) : (
+              <DataTable data={filteredSummaries} columns={adjustmentSummaryColumns} onView={setViewingEntry} />
+            )}
+          </div>
+        )}
         {activeTab === 'payments' && <DataTable data={filteredPayments} columns={paymentColumns} onView={setViewingEntry} />}
       </div>
 
@@ -431,6 +675,50 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
         title="Billing Details"
         data={viewingEntry}
       />
+
+      {/* Select Customer Modal for Record Payment */}
+      <SelectCustomerModal 
+        isOpen={showSelectCustomer}
+        onClose={() => setShowSelectCustomer(false)}
+        actionContext={{ title: 'Record Payment', subtitle: 'Select customer to receive payment' }}
+        filter="unpaid"
+        onSelect={(customerId, customerName) => {
+          setShowSelectCustomer(false)
+          setSelectedCustomerId(customerId)
+          setSelectedCustomerName(customerName)
+          
+          // Look up their invoice for the current month to compute default amount
+          const invoice = invoices.find(inv => inv.customer_id === customerId);
+          if (invoice) {
+            const displayDue = calculateTrueDue(invoice);
+            setPaymentDefaultAmount(Math.max(0, displayDue - invoice.amount_paid));
+          } else {
+            setPaymentDefaultAmount(undefined);
+          }
+          
+          setShowPaymentModal(true)
+        }}
+      />
+
+      {/* Admin Payment Modal */}
+      {selectedCustomerId && selectedCustomerName && (
+        <AdminPaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false)
+            setSelectedCustomerId(null)
+            setSelectedCustomerName(null)
+            setPaymentDefaultAmount(undefined)
+          }}
+          onSuccess={() => {
+            router.refresh()
+          }}
+          customerId={selectedCustomerId}
+          customerName={selectedCustomerName}
+          defaultAmount={paymentDefaultAmount}
+          targetMonth={currentMonth}
+        />
+      )}
     </div>
   )
 }
