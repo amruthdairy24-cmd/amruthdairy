@@ -259,7 +259,9 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
             className="bg-transparent border-none text-sm font-bold text-slate-700 dark:text-slate-200 outline-none pr-3 py-1 cursor-pointer appearance-none"
           >
             {Array.from({ length: 12 }).map((_, i) => {
-              const d = new Date(); d.setMonth(d.getMonth() - i);
+              const d = new Date();
+              d.setDate(1); // Set to 1st of the month to avoid overflow on 31st
+              d.setMonth(d.getMonth() - i);
               const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
               const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
               return <option key={val} value={val}>{label}</option>

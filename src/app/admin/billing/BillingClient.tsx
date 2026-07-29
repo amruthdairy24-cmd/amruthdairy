@@ -349,6 +349,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
             {/* Generate last 12 months as options */}
             {Array.from({ length: 12 }).map((_, i) => {
               const d = new Date();
+              d.setDate(1); // Set to 1st of the month to avoid overflow on 31st
               d.setMonth(d.getMonth() - i);
               const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
               const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
