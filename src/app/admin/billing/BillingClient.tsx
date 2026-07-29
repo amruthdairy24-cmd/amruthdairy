@@ -282,7 +282,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
         const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
         const displayDue = row.net_due > 0 ? row.net_due : realNetDue;
         
-        const isPaid = displayDue > 0 && row.amount_paid >= displayDue;
+        const isPaid = row.payment_status === 'paid' || (displayDue > 0 && row.amount_paid >= displayDue) || (displayDue === 0 && row.amount_paid === 0 && row.payment_status === 'paid');
         return <StatusBadge status={isPaid ? 'Paid' : 'Pending'} />
       } 
     },
@@ -308,7 +308,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
         const realNetDue = Math.max(0, baseSubscription + totalExtra - totalCredits);
         const displayDue = row.net_due > 0 ? row.net_due : realNetDue;
         
-        const isPaid = displayDue > 0 && row.amount_paid >= displayDue;
+        const isPaid = row.payment_status === 'paid' || (displayDue > 0 && row.amount_paid >= displayDue) || (displayDue === 0 && row.amount_paid === 0 && row.payment_status === 'paid');
         if (isPaid || displayDue === 0) return <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>;
         
         return (
