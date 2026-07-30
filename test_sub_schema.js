@@ -10,9 +10,9 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function run() {
-  const { data, error } = await supabase.rpc('query_db_schema', {
-    // we don't know if such rpc exists
-  });
+  const { data: subs, error } = await supabase.from('subscriptions').select('*');
+  console.log('Error:', error);
+  console.log('Data:', JSON.stringify(subs, null, 2));
 }
-// since we can't query pg_proc via postgREST easily unless there is an RPC, let's just make an educated guess.
-// we know the deliveries generator is an RPC. Let's see if we can find it in the supabase migrations on the server?
+
+run();
