@@ -35,7 +35,7 @@ export function Modal({
       <Dialog.Portal>
         <Dialog.Overlay
           className={cn(
-            'fixed inset-0 z-50',
+            'fixed inset-0 z-[9999]',
             'bg-teal-900/40 backdrop-blur-sm',
             'data-[state=open]:animate-fade-in',
             'data-[state=closed]:opacity-0'
@@ -44,7 +44,7 @@ export function Modal({
 
         <Dialog.Content
           className={cn(
-            'fixed left-1/2 top-1/2 z-50',
+            'fixed left-1/2 top-1/2 z-[9999]',
             '-translate-x-1/2 -translate-y-1/2',
             'w-[calc(100%-2rem)]',
             sizeStyles[size],

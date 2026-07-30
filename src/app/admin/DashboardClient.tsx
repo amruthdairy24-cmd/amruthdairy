@@ -188,13 +188,13 @@ export default function DashboardClient({
             <p className="text-[12px] font-medium text-blue-200/70 dark:text-slate-400 mt-1">
               {formattedDate}
             </p>
-            <p className="text-[13px] font-medium text-blue-200/60 dark:text-slate-400 mt-1">
+            <p className="hidden lg:block text-[13px] font-medium text-blue-200/60 dark:text-slate-400 mt-1">
               Here&apos;s what&apos;s happening at Amruth Dairy today.
             </p>
           </div>
 
-          {/* Quick Stat Pills */}
-          <div className="flex flex-wrap gap-3">
+          {/* Quick Stat Pills — desktop only */}
+          <div className="hidden lg:flex flex-wrap gap-3">
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-white/8 dark:bg-slate-800/40 border border-white/12 dark:border-slate-800/50 text-white/85 dark:text-slate-300">
               <Droplet size={12} className="text-blue-100" aria-hidden="true" />
               <span>{stats.totalLitresToday}L delivering today</span>
@@ -212,8 +212,8 @@ export default function DashboardClient({
           </div>
         </div>
 
-        {/* Bottom Status bar */}
-        <div className="mt-6 flex flex-wrap gap-2.5 relative z-10">
+        {/* Bottom Status bar — desktop only */}
+        <div className="hidden lg:flex mt-6 flex-wrap gap-2.5 relative z-10">
           <div className="flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-extrabold text-white/70 dark:text-slate-405 bg-white/5 dark:bg-slate-950/40 border border-white/10 dark:border-slate-800/50">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
             <span>SYSTEM HEALTH: EXCELLENT</span>
@@ -239,18 +239,18 @@ export default function DashboardClient({
       {/* =========================================
           SECTION 2 — KPI METRIC CARDS
       ========================================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* KPI 1: Total Customers */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 transition-all duration-200 hover:-translate-y-0.5 border border-slate-150 dark:border-slate-800 shadow-sm hover:shadow-md flex items-center justify-between gap-4 relative overflow-hidden">
-          <div className="space-y-1.5 min-w-0 text-left">
-            <h4 className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[1.5px] text-slate-455 dark:text-slate-400">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl p-3 lg:p-6 transition-all duration-200 hover:-translate-y-0.5 border border-slate-150 dark:border-slate-800 shadow-sm hover:shadow-md flex items-center justify-between gap-2 lg:gap-4 relative overflow-hidden">
+          <div className="space-y-1 lg:space-y-1.5 min-w-0 text-left">
+            <h4 className="text-[9px] lg:text-[11px] font-extrabold uppercase tracking-[1.5px] text-slate-455 dark:text-slate-400">
               Total Customers
             </h4>
-            <p className="text-2xl sm:text-3xl font-black tracking-tight leading-none font-display text-slate-800 dark:text-white">
+            <p className="text-xl lg:text-3xl font-black tracking-tight leading-none font-display text-slate-800 dark:text-white">
               {stats.totalCustomers}
             </p>
-            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+            <div className="hidden lg:flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
                 +{stats.newCustomersThisWeek || 0} New
               </span>
@@ -259,21 +259,22 @@ export default function DashboardClient({
               </span>
             </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-blue-600 bg-blue-500/10 shadow-3xs border border-blue-500/5 flex-shrink-0">
-            <Users size={20} strokeWidth={2.2} />
+          <div className="w-9 h-9 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl flex items-center justify-center text-blue-600 bg-blue-500/10 shadow-3xs border border-blue-500/5 flex-shrink-0">
+            <Users size={16} className="lg:hidden" strokeWidth={2.2} />
+            <Users size={20} className="hidden lg:block" strokeWidth={2.2} />
           </div>
         </div>
 
         {/* KPI 2: Active Subscriptions */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 transition-all duration-200 hover:-translate-y-0.5 border border-slate-150 dark:border-slate-800 shadow-sm hover:shadow-md flex items-center justify-between gap-4 relative overflow-hidden">
-          <div className="space-y-1.5 min-w-0 text-left">
-            <h4 className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[1.5px] text-slate-455 dark:text-slate-400">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl p-3 lg:p-6 transition-all duration-200 hover:-translate-y-0.5 border border-slate-150 dark:border-slate-800 shadow-sm hover:shadow-md flex items-center justify-between gap-2 lg:gap-4 relative overflow-hidden">
+          <div className="space-y-1 lg:space-y-1.5 min-w-0 text-left">
+            <h4 className="text-[9px] lg:text-[11px] font-extrabold uppercase tracking-[1.5px] text-slate-455 dark:text-slate-400">
               Active Subs
             </h4>
-            <p className="text-2xl sm:text-3xl font-black tracking-tight leading-none font-display text-slate-800 dark:text-white">
+            <p className="text-xl lg:text-3xl font-black tracking-tight leading-none font-display text-slate-800 dark:text-white">
               {stats.activeSubscriptions}
             </p>
-            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+            <div className="hidden lg:flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
                 {subOverview.active + subOverview.pending > 0 ? Math.round((subOverview.active / (subOverview.active + subOverview.pending)) * 100) : 0}% Active
               </span>
@@ -282,21 +283,22 @@ export default function DashboardClient({
               </span>
             </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-green-600 bg-green-500/10 shadow-3xs border border-green-500/5 flex-shrink-0">
-            <Wallet size={20} strokeWidth={2.2} />
+          <div className="w-9 h-9 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl flex items-center justify-center text-green-600 bg-green-500/10 shadow-3xs border border-green-500/5 flex-shrink-0">
+            <Wallet size={16} className="lg:hidden" strokeWidth={2.2} />
+            <Wallet size={20} className="hidden lg:block" strokeWidth={2.2} />
           </div>
         </div>
 
         {/* KPI 3: Today's Deliveries */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 transition-all duration-200 hover:-translate-y-0.5 border border-slate-150 dark:border-slate-800 shadow-sm hover:shadow-md flex items-center justify-between gap-4 relative overflow-hidden">
-          <div className="space-y-1.5 min-w-0 text-left">
-            <h4 className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[1.5px] text-slate-455 dark:text-slate-400">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl p-3 lg:p-6 transition-all duration-200 hover:-translate-y-0.5 border border-slate-150 dark:border-slate-800 shadow-sm hover:shadow-md flex items-center justify-between gap-2 lg:gap-4 relative overflow-hidden">
+          <div className="space-y-1 lg:space-y-1.5 min-w-0 text-left">
+            <h4 className="text-[9px] lg:text-[11px] font-extrabold uppercase tracking-[1.5px] text-slate-455 dark:text-slate-400">
               Deliveries Today
             </h4>
-            <p className="text-2xl sm:text-3xl font-black tracking-tight leading-none font-display text-slate-800 dark:text-white">
+            <p className="text-xl lg:text-3xl font-black tracking-tight leading-none font-display text-slate-800 dark:text-white">
               {stats.deliveriesCount - stats.skippedCount}
             </p>
-            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+            <div className="hidden lg:flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-amber-700 bg-amber-500/10 border border-amber-200/20">
                 {stats.skippedCount} Skipped
               </span>
@@ -305,21 +307,22 @@ export default function DashboardClient({
               </span>
             </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-amber-600 bg-amber-500/10 shadow-3xs border border-amber-500/5 flex-shrink-0">
-            <Truck size={20} strokeWidth={2.2} />
+          <div className="w-9 h-9 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl flex items-center justify-center text-amber-600 bg-amber-500/10 shadow-3xs border border-amber-500/5 flex-shrink-0">
+            <Truck size={16} className="lg:hidden" strokeWidth={2.2} />
+            <Truck size={20} className="hidden lg:block" strokeWidth={2.2} />
           </div>
         </div>
 
         {/* KPI 4: Monthly Revenue */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 transition-all duration-200 hover:-translate-y-0.5 border border-slate-150 dark:border-slate-800 shadow-sm hover:shadow-md flex items-center justify-between gap-4 relative overflow-hidden">
-          <div className="space-y-1.5 min-w-0 text-left">
-            <h4 className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-[1.5px] text-slate-455 dark:text-slate-400">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl p-3 lg:p-6 transition-all duration-200 hover:-translate-y-0.5 border border-slate-150 dark:border-slate-800 shadow-sm hover:shadow-md flex items-center justify-between gap-2 lg:gap-4 relative overflow-hidden">
+          <div className="space-y-1 lg:space-y-1.5 min-w-0 text-left">
+            <h4 className="text-[9px] lg:text-[11px] font-extrabold uppercase tracking-[1.5px] text-slate-455 dark:text-slate-400">
               Monthly Revenue
             </h4>
-            <p className="text-2xl sm:text-3xl font-black tracking-tight leading-none font-display text-slate-800 dark:text-white">
+            <p className="text-xl lg:text-3xl font-black tracking-tight leading-none font-display text-slate-800 dark:text-white">
               ₹{stats.totalRevenue.toLocaleString('en-IN')}
             </p>
-            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+            <div className="hidden lg:flex items-center gap-1.5 flex-wrap pt-0.5">
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-500/10 border border-emerald-200/20">
                 Real-Time
               </span>
@@ -328,8 +331,9 @@ export default function DashboardClient({
               </span>
             </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-purple-600 bg-purple-500/10 shadow-3xs border border-purple-500/5 flex-shrink-0">
-            <IndianRupee size={20} strokeWidth={2.2} />
+          <div className="w-9 h-9 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl flex items-center justify-center text-purple-600 bg-purple-500/10 shadow-3xs border border-purple-500/5 flex-shrink-0">
+            <IndianRupee size={16} className="lg:hidden" strokeWidth={2.2} />
+            <IndianRupee size={20} className="hidden lg:block" strokeWidth={2.2} />
           </div>
         </div>
       </div>
@@ -339,8 +343,8 @@ export default function DashboardClient({
       ========================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         
-        {/* LEFT COLUMN: Delivery Summary Table (60%) */}
-        <div className="lg:col-span-3 bg-white dark:bg-slate-900 rounded-3xl p-6 flex flex-col justify-between border border-slate-150 dark:border-slate-800 shadow-sm">
+        {/* LEFT COLUMN: Delivery Summary Table (60%) — desktop only */}
+        <div className="hidden lg:flex lg:col-span-3 bg-white dark:bg-slate-900 rounded-3xl p-6 flex-col justify-between border border-slate-150 dark:border-slate-800 shadow-sm">
           {/* Header */}
           <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
             <div>
@@ -452,19 +456,53 @@ export default function DashboardClient({
         </div>
 
         {/* RIGHT COLUMN: Quick Actions Grid (40%) */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl p-6 flex flex-col justify-between border border-slate-150 dark:border-slate-800 shadow-sm">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl p-5 lg:p-6 flex flex-col justify-between border border-slate-150 dark:border-slate-800 shadow-sm">
           {/* Header */}
-          <div>
-            <h2 className="text-[16px] font-black text-slate-900 dark:text-white">
-              Quick Actions
-            </h2>
-            <p className="text-[11.5px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
-              Admin workflow shortcuts
-            </p>
+          <div className="flex items-center justify-between mb-1 lg:mb-0">
+            <div>
+              <h2 className="text-[16px] font-black text-slate-900 dark:text-white">
+                Quick Actions
+              </h2>
+              <p className="text-[11.5px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
+                Admin workflow shortcuts
+              </p>
+            </div>
           </div>
 
-          {/* Actions Grid */}
-          <div className="grid grid-cols-2 gap-3.5 mt-5 flex-1">
+          {/* MOBILE: attractive list rows */}
+          <div className="flex flex-col gap-2 mt-3 lg:hidden">
+            <button onClick={() => { setPendingAction('skip'); setShowSelectCustomer(true) }} className="flex items-center gap-3.5 w-full rounded-2xl border border-amber-100 dark:border-amber-900/30 bg-amber-50/70 dark:bg-amber-950/20 px-4 py-3 active:scale-[0.98] transition-all cursor-pointer text-left">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0"><SkipForward size={18} className="text-amber-500" /></div>
+              <div><p className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100 leading-none">Mark Skip</p><p className="text-[10.5px] font-semibold text-slate-400 mt-0.5">Pause a delivery</p></div>
+            </button>
+            <button onClick={() => { setPendingAction('extra'); setShowSelectCustomer(true) }} className="flex items-center gap-3.5 w-full rounded-2xl border border-cyan-100 dark:border-cyan-900/30 bg-cyan-50/70 dark:bg-cyan-950/20 px-4 py-3 active:scale-[0.98] transition-all cursor-pointer text-left">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center flex-shrink-0"><Droplet size={18} className="text-cyan-500" /></div>
+              <div><p className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100 leading-none">Add Extra Milk</p><p className="text-[10.5px] font-semibold text-slate-400 mt-0.5">Order extra quantity</p></div>
+            </button>
+            <button onClick={() => { setPendingAction('subscription'); setShowSelectCustomer(true) }} className="flex items-center gap-3.5 w-full rounded-2xl border border-blue-100 dark:border-blue-900/30 bg-blue-50/70 dark:bg-blue-950/20 px-4 py-3 active:scale-[0.98] transition-all cursor-pointer text-left">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0"><Wallet size={18} className="text-blue-500" /></div>
+              <div><p className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100 leading-none">New Subscription</p><p className="text-[10.5px] font-semibold text-slate-400 mt-0.5">Subscribe a customer</p></div>
+            </button>
+            <Link href="/admin/customers" className="flex items-center gap-3.5 w-full rounded-2xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/70 dark:bg-emerald-950/20 px-4 py-3 active:scale-[0.98] transition-all">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0"><UserPlus size={18} className="text-emerald-500" /></div>
+              <div><p className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100 leading-none">Add Customer</p><p className="text-[10.5px] font-semibold text-slate-400 mt-0.5">Register new customer</p></div>
+            </Link>
+            <button onClick={() => { setPendingAction('payment'); setShowSelectCustomer(true) }} className="flex items-center gap-3.5 w-full rounded-2xl border border-purple-100 dark:border-purple-900/30 bg-purple-50/70 dark:bg-purple-950/20 px-4 py-3 active:scale-[0.98] transition-all cursor-pointer text-left">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0"><CreditCard size={18} className="text-purple-500" /></div>
+              <div><p className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100 leading-none">Record Payment</p><p className="text-[10.5px] font-semibold text-slate-400 mt-0.5">Log a payment</p></div>
+            </button>
+            <Link href="/admin/deliveries" className="flex items-center gap-3.5 w-full rounded-2xl border border-indigo-100 dark:border-indigo-900/30 bg-indigo-50/70 dark:bg-indigo-950/20 px-4 py-3 active:scale-[0.98] transition-all">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0"><Truck size={18} className="text-indigo-500" /></div>
+              <div><p className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100 leading-none">Delivery List</p><p className="text-[10.5px] font-semibold text-slate-400 mt-0.5">View today&apos;s deliveries</p></div>
+            </Link>
+            <button onClick={openPriceModal} className="flex items-center justify-center gap-2.5 w-full rounded-2xl bg-gradient-to-r from-[#014DA4] to-blue-500 text-white px-4 py-3.5 active:scale-[0.98] transition-all cursor-pointer shadow-md shadow-blue-500/20 mt-1">
+              <IndianRupee size={17} />
+              <span className="text-[13px] font-extrabold">Update Milk Price</span>
+            </button>
+          </div>
+
+          {/* DESKTOP: original 2-col grid */}
+          <div className="hidden lg:grid grid-cols-2 gap-3.5 mt-5 flex-1">
             <button 
               onClick={() => { setPendingAction('skip'); setShowSelectCustomer(true) }}
               className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-3xs transition-all hover:border-amber-400/50 dark:hover:border-amber-400/30 hover:bg-slate-50/30 dark:hover:bg-slate-800/40 hover:-translate-y-0.5 hover:shadow-2xs cursor-pointer h-[78px]"
@@ -622,8 +660,8 @@ export default function DashboardClient({
           </div>
         </div>
 
-        {/* Bottom Col 3: System Status */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 flex flex-col justify-between border border-slate-150 dark:border-slate-800 shadow-sm">
+        {/* Bottom Col 3: System Status — desktop only */}
+        <div className="hidden lg:flex flex-col justify-between bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-150 dark:border-slate-800 shadow-sm">
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[16px] font-black text-slate-900 dark:text-white">
