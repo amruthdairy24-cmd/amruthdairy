@@ -25,18 +25,18 @@ export default async function AdminDashboardPage() {
     { count: totalSubsCount },
     { count: waitlistCount },
     { data: activeSubsData },
-    { data: allCurrentMonthBilling },
+    { data: allSubscriptionsData },
     { data: deliveriesToday },
     { data: skippedToday },
     { count: newCustomersCount },
     rawMilkPricing
   ] = await Promise.all([
     supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer'),
-    supabase.from('billing_months').select('id', { count: 'exact', head: true }).eq('billing_month', formattedBillingMonth).eq('payment_status', 'paid'),
+    supabase.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
     supabase.from('subscriptions').select('id', { count: 'exact', head: true }),
     supabase.from('waitlist').select('id', { count: 'exact', head: true }).eq('status', 'waiting'),
     supabase.from('billing_months').select('quantity_litres, monthly_amount, id:subscription_id, profiles(full_name, area)').eq('billing_month', formattedBillingMonth).eq('payment_status', 'paid'),
-    supabase.from('billing_months').select('payment_status').eq('billing_month', formattedBillingMonth),
+    supabase.from('subscriptions').select('status'),
     supabase.from('daily_delivery_sheet').select('id, total_litres').eq('delivery_date', todayStr),
     supabase.from('daily_delivery_sheet').select('id', { count: 'exact' }).eq('delivery_date', todayStr).eq('delivery_status', 'skipped'),
     supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer').gte('created_at', (() => { const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7); return sevenDaysAgo.toISOString(); })()),
@@ -108,10 +108,10 @@ export default async function AdminDashboardPage() {
     pending: 0
   }
 
-  if (allCurrentMonthBilling) {
-    allCurrentMonthBilling.forEach(item => {
-      if (item.payment_status === 'paid') subOverview.active++
-      else if (item.payment_status === 'pending') subOverview.pending++
+  if (allSubscriptionsData) {
+    allSubscriptionsData.forEach(item => {
+      if (item.status === 'active') subOverview.active++
+      else if (item.status === 'pending_payment') subOverview.pending++
     })
   } else {
     subOverview.active = activeSubsCount || 0

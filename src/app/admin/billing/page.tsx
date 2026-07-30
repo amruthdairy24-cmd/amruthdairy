@@ -36,7 +36,7 @@ export default async function BillingPage(props: {
       pause_credit, 
       profiles!billing_months_customer_id_fkey(
         full_name,
-        subscriptions(daily_rate)
+        subscriptions(daily_rate, razorpay_subscription_id)
       )
     `)
     .eq('billing_month', selectedMonth)

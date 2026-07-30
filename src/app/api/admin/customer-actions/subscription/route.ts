@@ -72,7 +72,8 @@ export async function POST(request: Request) {
           daily_rate: daily_rate,
           monthly_amount: monthly_amount,
           start_date: start_date,
-          status: mark_as_paid ? 'active' : 'pending_payment'
+          status: 'active',
+          razorpay_subscription_id: mark_as_paid ? 'MANUAL_PAID' : 'MANUAL_UNPAID'
         })
         .select()
         .single();
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
         .select()
         .single();
 
-      if (mark_as_paid && billMonth) {
+      if (billMonth) {
         await adminSupabase.rpc('generate_initial_deliveries', {
           p_subscription_id: newSub.id,
           p_billing_month_id: billMonth.id
@@ -172,13 +173,17 @@ export async function POST(request: Request) {
         .select()
         .single();
 
-      if (mark_as_paid && billMonth) {
-        // Mark adjustments applied
-        const adjIds = (adjustments || []).map(a => a.id);
-        if (adjIds.length > 0) {
-          await adminSupabase.from('billing_adjustments').update({ is_applied: true }).in('id', adjIds);
+      if (billMonth) {
+        // Mark adjustments applied if paid
+        if (mark_as_paid) {
+          const adjIds = (adjustments || []).map(a => a.id);
+          if (adjIds.length > 0) {
+            await adminSupabase.from('billing_adjustments').update({ is_applied: true }).in('id', adjIds);
+          }
         }
+        
         await adminSupabase.from('subscriptions').update({ status: 'active' }).eq('id', existingSub.id);
+        
         await adminSupabase.rpc('generate_initial_deliveries', {
           p_subscription_id: existingSub.id,
           p_billing_month_id: billMonth.id
