@@ -10,12 +10,13 @@ interface Customer {
   phone: string
   area: string
   is_active: boolean
+  has_subscription?: boolean
 }
 
 interface SelectCustomerModalProps {
   isOpen: boolean
   onClose: () => void
-  onSelect: (customerId: string, customerName: string) => void
+  onSelect: (customerId: string, customerName: string, customer: Customer) => void
   actionContext?: { title: string; subtitle: string }
   filter?: 'unpaid' | 'all'
 }
@@ -114,7 +115,7 @@ export function SelectCustomerModal({ isOpen, onClose, onSelect, actionContext, 
                   {customers.map(c => (
                     <button
                       key={c.id}
-                      onClick={() => onSelect(c.id, c.full_name)}
+                      onClick={() => onSelect(c.id, c.full_name, c)}
                       className="flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 transition-colors text-left border border-transparent hover:border-slate-200 dark:hover:border-slate-600"
                     >
                       <div>
