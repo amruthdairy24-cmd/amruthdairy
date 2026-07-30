@@ -232,7 +232,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex-1 flex flex-col min-w-0 relative">
         
         {/* Topbar */}
-        <header className="bg-white dark:bg-slate-900 flex items-center justify-between px-6 z-20 flex-shrink-0 sticky top-0 h-16 border-b border-slate-100 dark:border-slate-800 transition-colors duration-300">
+        <header className="bg-white dark:bg-slate-900 flex items-center justify-between px-3 lg:px-6 z-20 flex-shrink-0 sticky top-0 h-16 border-b border-slate-100 dark:border-slate-800 transition-colors duration-300">
           {/* Mobile Menu Trigger & Breadcrumb */}
           <div className="flex items-center gap-4 w-[240px] flex-shrink-0 min-w-0">
             <button
@@ -252,11 +252,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-3 w-[240px] flex-shrink-0 justify-end">
+          <div className="flex items-center gap-2 lg:gap-3 lg:w-[240px] flex-shrink-0 justify-end pr-1 lg:pr-0">
             <ThemeToggle />
 
-            {/* Notification Bell */}
-            <button className="relative flex items-center justify-center rounded-xl transition-all cursor-pointer border border-slate-100 dark:border-slate-800 w-[38px] h-[38px] bg-slate-50/50 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-900">
+            {/* Notification Bell — desktop only */}
+            <button className="relative hidden lg:flex items-center justify-center rounded-xl transition-all cursor-pointer border border-slate-100 dark:border-slate-800 w-[38px] h-[38px] bg-slate-50/50 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-900">
               <Bell size={18} className="text-slate-500 dark:text-slate-400" />
               {/* Red dot badge */}
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-900" />
@@ -370,7 +370,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="p-4 flex-shrink-0 border-t border-slate-100">
                 {/* Mobile Logout */}
                 <button
-                  onClick={() => setShowLogoutConfirm(true)}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    setTimeout(() => setShowLogoutConfirm(true), 150)
+                  }}
                   className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-bold transition-all border border-red-200/45 bg-red-500/10 text-red-600 hover:bg-red-500/15 cursor-pointer h-9"
                 >
                   <LogOut size={14} />
