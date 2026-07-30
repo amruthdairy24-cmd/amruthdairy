@@ -41,18 +41,26 @@ export async function GET(request: Request) {
 
     let finalData = data;
 
-    // Filter unpaid customers
+    const { data: subs } = await adminSupabase
+      .from('subscriptions')
+      .select('customer_id')
+      .in('customer_id', finalData.map(c => c.id));
+    const subIds = new Set(subs?.map(s => s.customer_id) || []);
+    
+    finalData = finalData.map(c => ({
+      ...c,
+      has_subscription: subIds.has(c.id)
+    }));
+
+    // Filter unpaid manual customers
     if (filter === 'unpaid') {
-      const d = new Date();
-      const currentMonthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
-
-      const { data: unpaidInvoices } = await adminSupabase
-        .from('billing_months')
+      const { data: unpaidSubs } = await adminSupabase
+        .from('subscriptions')
         .select('customer_id')
-        .eq('billing_month', currentMonthStr)
-        .eq('payment_status', 'pending');
+        .eq('status', 'active')
+        .eq('razorpay_subscription_id', 'MANUAL_UNPAID');
 
-      const unpaidCustomerIds = new Set(unpaidInvoices?.map(i => i.customer_id) || []);
+      const unpaidCustomerIds = new Set(unpaidSubs?.map(s => s.customer_id) || []);
       finalData = finalData.filter(customer => unpaidCustomerIds.has(customer.id));
     }
 

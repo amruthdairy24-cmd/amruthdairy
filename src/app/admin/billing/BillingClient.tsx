@@ -12,6 +12,7 @@ import { isCreditAdjustmentType } from '@/lib/billing'
 import toast from 'react-hot-toast'
 import { SelectCustomerModal } from '@/components/admin/SelectCustomerModal'
 import { AdminPaymentModal } from '@/components/admin/AdminPaymentModal'
+import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
 
 interface Invoice {
   id: string;
@@ -25,7 +26,7 @@ interface Invoice {
   pause_credit: number;
   profiles: { 
     full_name: string;
-    subscriptions: { daily_rate: number }[] | { daily_rate: number };
+    subscriptions: { daily_rate: number, razorpay_subscription_id: string }[] | { daily_rate: number, razorpay_subscription_id: string };
   };
 }
 
@@ -62,6 +63,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
   // Payment Modal state
   const [showSelectCustomer, setShowSelectCustomer] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null);
   const [paymentDefaultAmount, setPaymentDefaultAmount] = useState<number | undefined>(undefined);
@@ -239,10 +241,11 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       align: 'right', 
       cell: (row) => {
         const displayDue = calculateTrueDue(row);
+        const remainingDue = row.payment_status === 'paid' ? 0 : Math.max(0, displayDue - row.amount_paid);
 
         return (
           <span className="text-[14.5px] font-black text-slate-800 dark:text-slate-200 font-mono">
-            ₹{displayDue}
+            ₹{remainingDue}
           </span>
         )
       } 
@@ -276,7 +279,15 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
       cell: (row) => {
         const displayDue = calculateTrueDue(row);
         const isPaid = row.payment_status === 'paid' || (displayDue > 0 && row.amount_paid >= displayDue) || (displayDue === 0 && row.amount_paid === 0 && row.payment_status === 'paid');
-        if (isPaid || displayDue === 0) return <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>;
+        
+        let razorpaySubId = null;
+        if (Array.isArray(row.profiles?.subscriptions) && row.profiles.subscriptions.length > 0) {
+          razorpaySubId = row.profiles.subscriptions[0].razorpay_subscription_id;
+        } else if (row.profiles?.subscriptions && !Array.isArray(row.profiles.subscriptions)) {
+          razorpaySubId = (row.profiles.subscriptions as any).razorpay_subscription_id;
+        }
+
+        if (isPaid || displayDue === 0 || razorpaySubId !== 'MANUAL_UNPAID') return <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>;
         
         return (
           <button 
@@ -682,11 +693,16 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
         onClose={() => setShowSelectCustomer(false)}
         actionContext={{ title: 'Record Payment', subtitle: 'Select customer to receive payment' }}
         filter="unpaid"
-        onSelect={(customerId, customerName) => {
+        onSelect={(customerId, customerName, customer) => {
           setShowSelectCustomer(false)
           setSelectedCustomerId(customerId)
           setSelectedCustomerName(customerName)
           
+          if (!customer.has_subscription) {
+            setShowSubscriptionModal(true)
+            return
+          }
+
           // Look up their invoice for the current month to compute default amount
           const invoice = invoices.find(inv => inv.customer_id === customerId);
           if (invoice) {
@@ -717,6 +733,21 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
           customerName={selectedCustomerName}
           defaultAmount={paymentDefaultAmount}
           targetMonth={currentMonth}
+        />
+      )}
+
+      {/* Admin Subscription Modal */}
+      {selectedCustomerId && selectedCustomerName && (
+        <AdminSubscriptionModal 
+          isOpen={showSubscriptionModal}
+          onClose={() => {
+            setShowSubscriptionModal(false)
+            setSelectedCustomerId(null)
+            setSelectedCustomerName(null)
+          }}
+          onSuccess={() => { router.refresh() }}
+          customerId={selectedCustomerId}
+          customerName={selectedCustomerName}
         />
       )}
     </div>
