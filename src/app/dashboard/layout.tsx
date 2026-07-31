@@ -355,7 +355,10 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
               <div className="p-4 flex-shrink-0 border-t border-slate-100 dark:border-slate-800">
                 <button
-                  onClick={() => setShowLogoutConfirm(true)}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    setTimeout(() => setShowLogoutConfirm(true), 150)
+                  }}
                   className="w-full flex items-center justify-center gap-1.5 rounded-lg text-[12px] font-bold transition-all border border-red-200/45 bg-red-500/10 text-red-600 hover:bg-red-500/15 cursor-pointer h-9"
                 >
                   <LogOut size={14} />
