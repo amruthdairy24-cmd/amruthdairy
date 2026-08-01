@@ -93,11 +93,20 @@ export async function POST(request: Request) {
       }, { status: 200 }); // Status 200 because it's a valid business flow
     }
 
+    // Fetch migration_mode setting
+    const { data: migrationSetting } = await adminSupabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'migration_mode')
+      .maybeSingle();
+
+    const isMigrationMode = migrationSetting?.value === 'true' || migrationSetting?.value === true;
+
     // Calculate earliest start date in IST
     const earliestStartStr = getEarliestStartDateStr();
 
-    // If start_date is somehow before earliest allowed date, fallback to earliest allowed date
-    const actualStartDateStr = start_date < earliestStartStr ? earliestStartStr : start_date;
+    // In Migration Mode, allow start_date to be any date in current billing month (e.g. Day 1) without past date cutoff fallback
+    const actualStartDateStr = isMigrationMode ? start_date : (start_date < earliestStartStr ? earliestStartStr : start_date);
     const actualStartDateObj = new Date(actualStartDateStr);
 
     // 5. Calculate amounts using admin-managed pricing
@@ -124,7 +133,9 @@ export async function POST(request: Request) {
     } else {
       for (let i = 1; i <= daysInMonth; i++) {
         const dStr = `${startYear}-${String(startMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-        if (dStr >= actualStartDateStr && !excluded_dates.includes(dStr)) {
+        // If Migration Mode is ON, count all non-excluded dates for the entire billing month (Day 1 through Month End)
+        const isEligibleDate = isMigrationMode ? true : (dStr >= actualStartDateStr);
+        if (isEligibleDate && !excluded_dates.includes(dStr)) {
           deliveryDays++;
         }
       }
