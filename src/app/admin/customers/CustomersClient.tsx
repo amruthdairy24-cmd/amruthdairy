@@ -21,8 +21,16 @@ interface Customer {
   full_name: string;
   phone: string;
   area: string;
+  address: string | null;
+  landmark: string | null;
+  floor_notes: string | null;
   subscription_status: string;
   created_at: string;
+  quantity_litres: number | null;
+  start_date: string | null;
+  monthly_amount: number | null;
+  daily_rate: number | null;
+  delivery_notes: string | null;
 }
 
 export function CustomersClient({ data }: { data: Customer[] }) {

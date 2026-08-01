@@ -401,7 +401,15 @@ CREATE TABLE public.extra_milk_orders (
       'confirmed',
       'delivered',
       'cancelled',
-      'capacity_full'
+      'capacity_full',
+      'pending_payment'
+    )),
+  
+  payment_status TEXT DEFAULT 'pay_later'
+    CHECK (payment_status IN (
+      'pay_later',
+      'paid_instantly',
+      'pending_payment'
     )),
   
   -- Deadline: same 9 PM rule
@@ -637,6 +645,8 @@ CREATE TABLE public.payments (
       'extra_milk',    -- extra milk charge
       'product'        -- ghee/honey/butter
     )),
+    
+  extra_order_id UUID REFERENCES public.extra_milk_orders(id),
   
   method TEXT
     CHECK (method IN (
