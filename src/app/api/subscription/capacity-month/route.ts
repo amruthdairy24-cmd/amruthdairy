@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month'); // YYYY-MM
     const litres = parseFloat(searchParams.get('litres') || '1');
+    const isMigrationMode = searchParams.get('is_migration') === 'true';
 
     if (!month || !/^\d{4}-\d{2}$/.test(month)) {
       return NextResponse.json({ success: false, message: 'Invalid month format, expected YYYY-MM' }, { status: 400 });
@@ -50,15 +51,16 @@ export async function GET(request: Request) {
     // By default, assume all days have capacity unless row exists and says otherwise
     for (let i = 1; i <= endDateObj.getDate(); i++) {
       const dateStr = `${month}-${String(i).padStart(2, '0')}`;
-      // Capacity is only true for tomorrow onwards
-      capacityMap[dateStr] = { has_capacity: dateStr > todayStr };
+      // In Migration Mode, past dates are valid delivery days being configured together
+      const isDateAllowed = isMigrationMode ? true : (dateStr > todayStr);
+      capacityMap[dateStr] = { has_capacity: isDateAllowed };
     }
 
     if (capacityRows) {
       capacityRows.forEach(row => {
-        const isFuture = row.date > todayStr;
-        // A date has capacity if it's in the future AND not marked full AND (available_litres is null OR >= requested litres)
-        const hasCapacity = isFuture && !row.is_full && (row.available_litres == null || row.available_litres >= litres);
+        const isDateAllowed = isMigrationMode ? true : (row.date > todayStr);
+        // A date has capacity if it's allowed AND not marked full AND (available_litres is null OR >= requested litres)
+        const hasCapacity = isDateAllowed && !row.is_full && (row.available_litres == null || row.available_litres >= litres);
         capacityMap[row.date] = { has_capacity: hasCapacity };
       });
     }

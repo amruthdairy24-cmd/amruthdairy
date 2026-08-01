@@ -33,6 +33,7 @@ interface Configs {
   maintenanceMode: boolean;
   razorpayEnabled: boolean;
   whatsappEnabled: boolean;
+  migrationMode: boolean;
 }
 
 export function SettingsClient({ initialConfigs }: { initialConfigs: Configs }) {
@@ -70,7 +71,8 @@ export function SettingsClient({ initialConfigs }: { initialConfigs: Configs }) 
         { key: 'skip_deadline_hour_ist', value: formState.skipDeadlineHourIst },
         { key: 'maintenance_mode', value: formState.maintenanceMode },
         { key: 'razorpay_enabled', value: formState.razorpayEnabled },
-        { key: 'whatsapp_enabled', value: formState.whatsappEnabled }
+        { key: 'whatsapp_enabled', value: formState.whatsappEnabled },
+        { key: 'migration_mode', value: formState.migrationMode }
       ]
 
       const res = await fetch('/api/admin/system-settings', {
@@ -359,6 +361,35 @@ export function SettingsClient({ initialConfigs }: { initialConfigs: Configs }) 
                         className="sr-only peer" 
                       />
                       <div className="w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+
+                  {/* Toggle 4: Migration Mode */}
+                  <div className="flex items-center justify-between p-4 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 rounded-2xl">
+                    <div className="text-left space-y-1 pr-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-emerald-900 dark:text-emerald-300 leading-none">Migration Mode (Offline Onboarding)</span>
+                        <span className={cn(
+                          "px-2 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider",
+                          formState.migrationMode 
+                            ? "bg-emerald-500 text-white animate-pulse" 
+                            : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                        )}>
+                          {formState.migrationMode ? 'ACTIVE (ON)' : 'OFF'}
+                        </span>
+                      </div>
+                      <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400/80 leading-normal">
+                        When ON, onboarding allows date selection & full-month billing for the ENTIRE current billing month without past-date restrictions.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer select-none flex-shrink-0">
+                      <input 
+                        type="checkbox" 
+                        checked={formState.migrationMode} 
+                        onChange={(e) => handleInputChange('migrationMode', e.target.checked)} 
+                        className="sr-only peer" 
+                      />
+                      <div className="w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                     </label>
                   </div>
                 </div>

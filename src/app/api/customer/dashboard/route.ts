@@ -45,11 +45,21 @@ export async function GET(request: Request) {
         .limit(1)
         .maybeSingle();
 
+      // Check system migration_mode
+      const { data: migrationSetting } = await adminSupabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'migration_mode')
+        .maybeSingle();
+
+      const migration_mode = migrationSetting?.value === 'true' || migrationSetting?.value === true;
+
       return NextResponse.json({
         success: true,
         profile,
         subscription: null,
-        waitlist: waitlist || null
+        waitlist: waitlist || null,
+        migration_mode
       });
     }
 

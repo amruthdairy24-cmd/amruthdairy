@@ -45,6 +45,7 @@ export default async function SettingsPage() {
     maintenanceMode: getSetting('maintenance_mode', 'false') === 'true' || getSetting('maintenance_mode', false) === true,
     razorpayEnabled: getSetting('razorpay_enabled', 'true') === 'true' || getSetting('razorpay_enabled', true) === true,
     whatsappEnabled: getSetting('whatsapp_enabled', 'false') === 'true' || getSetting('whatsapp_enabled', false) === true,
+    migrationMode: getSetting('migration_mode', 'false') === 'true' || getSetting('migration_mode', false) === true,
   }
 
   return <SettingsClient initialConfigs={configs} />

@@ -20,6 +20,8 @@ interface SubscriptionCalendarProps {
   onMonthAvailabilityChange?: (isFull: boolean) => void
   /** Callback for when number of delivery days changes */
   onDeliveryDaysChange?: (days: number) => void
+  /** If Migration Mode is active, bypass past-date selection locks */
+  isMigrationMode?: boolean
 }
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -47,9 +49,10 @@ export default function SubscriptionCalendar({
   quantity = 1,
   onMonthAvailabilityChange,
   onDeliveryDaysChange,
+  isMigrationMode = false,
 }: SubscriptionCalendarProps) {
   const startDateObj = useMemo(() => new Date(startDate), [startDate])
-  
+
   const [currentYear, setCurrentYear] = useState(startDateObj.getFullYear())
   const [currentMonth, setCurrentMonth] = useState(startDateObj.getMonth() + 1) // 1-indexed
   const [excludedDates, setExcludedDates] = useState<Set<string>>(
@@ -57,6 +60,9 @@ export default function SubscriptionCalendar({
   )
   const [capacityMap, setCapacityMap] = useState<Record<string, { has_capacity: boolean }>>({})
   const [loadingCapacity, setLoadingCapacity] = useState(false)
+
+
+  console.log('Migration Mode is : ', isMigrationMode)
 
   // Notify parent when excluded dates change
   useEffect(() => {
@@ -74,7 +80,8 @@ export default function SubscriptionCalendar({
       setLoadingCapacity(true)
       try {
         const monthStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}`
-        const res = await fetch(`/api/subscription/capacity-month?month=${monthStr}&litres=${quantity}`)
+        const migrationParam = isMigrationMode ? '&is_migration=true' : ''
+        const res = await fetch(`/api/subscription/capacity-month?month=${monthStr}&litres=${quantity}${migrationParam}`)
         const data = await res.json()
         if (data.success) {
           setCapacityMap(data.capacities)
@@ -86,23 +93,24 @@ export default function SubscriptionCalendar({
       }
     }
     fetchCapacity()
-  }, [currentYear, currentMonth, quantity])
+  }, [currentYear, currentMonth, quantity, isMigrationMode])
 
   useEffect(() => {
     if (loadingCapacity || !onMonthAvailabilityChange) return
     const selectableDates = calendarDates.filter(d => {
+      if (isMigrationMode) return true;
       const dObj = new Date(d)
       const sObj = new Date(startDate)
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       return dObj >= sObj && dObj >= today
     })
-    
+
     if (selectableDates.length === 0) return
 
     const hasAnyAvailableSlot = selectableDates.some(d => capacityMap[d]?.has_capacity !== false)
     onMonthAvailabilityChange(!hasAnyAvailableSlot)
-  }, [capacityMap, loadingCapacity, calendarDates, startDate, onMonthAvailabilityChange])
+  }, [capacityMap, loadingCapacity, calendarDates, startDate, onMonthAvailabilityChange, isMigrationMode])
 
   // First day of month (0 = Sunday)
   const firstDayOfWeek = useMemo(() => {
@@ -111,6 +119,12 @@ export default function SubscriptionCalendar({
 
   // Determine which dates are selectable (>= start date, in current/next month)
   const isDateSelectable = useCallback((dateStr: string): boolean => {
+    if (isMigrationMode) {
+      // In Migration Mode, all dates in the billing month are selectable (unless out of capacity)
+      if (capacityMap[dateStr] && capacityMap[dateStr].has_capacity === false) return false
+      return true
+    }
+
     const d = new Date(dateStr)
     const s = new Date(startDate)
     // Can't select dates before start date
@@ -119,12 +133,12 @@ export default function SubscriptionCalendar({
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     if (d < today) return false
-    
+
     // Check capacity map
     if (capacityMap[dateStr] && capacityMap[dateStr].has_capacity === false) return false
 
     return true
-  }, [startDate, capacityMap])
+  }, [startDate, capacityMap, isMigrationMode])
 
   const toggleDate = useCallback((dateStr: string) => {
     if (!isDateSelectable(dateStr)) return
@@ -308,10 +322,10 @@ export default function SubscriptionCalendar({
                 disabledReason === 'past'
                   ? 'Past date'
                   : disabledReason === 'full'
-                  ? 'No slots available'
-                  : excluded
-                  ? `Click to include ${dateStr}`
-                  : `Click to exclude ${dateStr}`
+                    ? 'No slots available'
+                    : excluded
+                      ? `Click to include ${dateStr}`
+                      : `Click to exclude ${dateStr}`
               }
             >
               <span className="text-[15px]">{day}</span>
@@ -337,30 +351,30 @@ export default function SubscriptionCalendar({
 
       {/* Quick actions */}
       <div className="flex flex-wrap items-center justify-center gap-3 border-t border-border/30 dark:border-slate-800/40 pt-4">
-        <button 
+        <button
           type="button"
-          onClick={selectAllDays} 
+          onClick={selectAllDays}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-green-200/60 dark:border-green-800/40 bg-green-50/40 dark:bg-green-950/20 text-green-600 dark:text-green-400 hover:bg-green-100/50 dark:hover:bg-green-900/30 transition-all cursor-pointer"
         >
           <Check size={12} /> Include all
         </button>
-        <button 
+        <button
           type="button"
-          onClick={clearAllDays} 
+          onClick={clearAllDays}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all cursor-pointer"
         >
           <X size={12} /> Exclude all
         </button>
-        <button 
+        <button
           type="button"
-          onClick={() => excludeDaysOfWeek(0)} 
+          onClick={() => excludeDaysOfWeek(0)}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-orange-200 dark:border-orange-800/40 bg-orange-50/60 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100/80 dark:hover:bg-orange-900/40 transition-all cursor-pointer"
         >
           <X size={12} /> Exclude Sundays
         </button>
-        <button 
+        <button
           type="button"
-          onClick={() => excludeDaysOfWeek(6)} 
+          onClick={() => excludeDaysOfWeek(6)}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-orange-200 dark:border-orange-800/40 bg-orange-50/60 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100/80 dark:hover:bg-orange-900/40 transition-all cursor-pointer"
         >
           <X size={12} /> Exclude Saturdays
