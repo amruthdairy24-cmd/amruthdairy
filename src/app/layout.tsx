@@ -50,7 +50,6 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/images/logo/amruth-logo.png', type: 'image/png' },
-      { url: '/favicon.png', type: 'image/png' },
     ],
     shortcut: '/images/logo/amruth-logo.png',
     apple: '/images/logo/amruth-logo.png',
