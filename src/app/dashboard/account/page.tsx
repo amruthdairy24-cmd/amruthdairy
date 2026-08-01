@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { User, MapPin, Phone, Edit3, Save, AlertCircle, CheckCircle, Milk, FileText, Calendar, Shield, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { DELIVERY_AREAS } from '@/lib/constants'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
+import { useDeliveryAreas } from '@/hooks/useDeliveryAreas'
 import toast from 'react-hot-toast'
 
 interface ProfileData {
@@ -36,6 +36,7 @@ const itemVariants = {
 
 export default function AccountPage() {
   const { data, loading: contextLoading, refetch } = useDashboardData()
+  const { areas: DELIVERY_AREAS, loading: areasLoading } = useDeliveryAreas()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -422,9 +423,13 @@ export default function AccountPage() {
                   className="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 text-sm font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-[#014DA4]/20 focus:border-[#014DA4] shadow-sm appearance-none cursor-pointer"
                 >
                   <option value="">Select area</option>
-                  {DELIVERY_AREAS.map(a => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
+                  {areasLoading ? (
+                    <option value="" disabled>Loading areas...</option>
+                  ) : (
+                    DELIVERY_AREAS.map(a => (
+                      <option key={a} value={a}>{a}</option>
+                    ))
+                  )}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
                   <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">

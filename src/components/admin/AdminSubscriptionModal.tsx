@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Settings, Check, ChevronDown } from 'lucide-react'
-import { DELIVERY_AREAS } from '@/lib/constants'
 import toast from 'react-hot-toast'
+import { useDeliveryAreas } from '@/hooks/useDeliveryAreas'
 
 interface AdminSubscriptionModalProps {
   isOpen: boolean
@@ -23,7 +23,8 @@ export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId,
   
   const [quantity, setQuantity] = useState<number>(1.0)
   const [startDate, setStartDate] = useState('')
-  const [area, setArea] = useState<string>(DELIVERY_AREAS[0])
+  const { areas: DELIVERY_AREAS, loading: areasLoading } = useDeliveryAreas()
+  const [area, setArea] = useState<string>('')
   const [address, setAddress] = useState('')
   const [landmark, setLandmark] = useState('')
   const [floorNotes, setFloorNotes] = useState('')
@@ -175,17 +176,20 @@ export function AdminSubscriptionModal({ isOpen, onClose, onSuccess, customerId,
                     <div>
                       <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5">Delivery Area / Pin</label>
                       <div className="relative">
-                        <select 
-                          required
+                        <select
                           value={area}
-                          onChange={e => setArea(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-white transition-all appearance-none pr-10"
+                          onChange={(e) => setArea(e.target.value)}
+                          className="w-full h-11 pl-4 pr-10 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none text-slate-800 dark:text-slate-100"
+                          required={actionType === 'new'}
                         >
-                          {DELIVERY_AREAS.map((a) => (
-                            <option key={a} value={a}>
-                              {a}
-                            </option>
-                          ))}
+                          <option value="">Select area</option>
+                          {areasLoading ? (
+                            <option value="" disabled>Loading areas...</option>
+                          ) : (
+                            DELIVERY_AREAS.map((a) => (
+                              <option key={a} value={a}>{a}</option>
+                            ))
+                          )}
                         </select>
                         <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                       </div>

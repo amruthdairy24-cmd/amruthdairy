@@ -13,9 +13,10 @@ import {
   MapPin, Star, Milk, RefreshCw, BadgeCheck, CalendarDays,
   Smartphone, X, ChevronDown
 } from 'lucide-react'
-import { DELIVERY_AREAS, DELIVERY_TIME_PROMISE } from '@/lib/constants'
+import { DELIVERY_TIME_PROMISE } from '@/lib/constants'
 import { fetchMilkPricesClient } from '@/lib/billing'
 import { cn } from '@/lib/utils'
+import { useDeliveryAreas } from '@/hooks/useDeliveryAreas'
 
 // ─── Testimonials ──────────────────────────────────────────────────────────────
 const TESTIMONIALS = [
@@ -69,6 +70,7 @@ export default function SubscribePage() {
   const [priceLoading, setPriceLoading] = useState(true)
   const [faqOpen, setFaqOpen] = useState<number | null>(null)
   const [showAllAreas, setShowAllAreas] = useState(false)
+  const { areas: DELIVERY_AREAS, loading: areasLoading } = useDeliveryAreas()
 
   // ── Check auth ─────────────────────────────────────────────────────────────
   useEffect(() => {

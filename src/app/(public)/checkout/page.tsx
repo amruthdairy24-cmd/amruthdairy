@@ -6,11 +6,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { DELIVERY_AREAS, DELIVERY_TIME_PROMISE } from '@/lib/constants'
+import { DELIVERY_TIME_PROMISE } from '@/lib/constants'
 import {
   ShoppingBag, Plus, Minus, CheckCircle2, ArrowRight,
   Truck, ShieldCheck, MapPin, Phone, User, Clock, AlertCircle, Sparkles, Loader2, Image as ImageIcon
 } from 'lucide-react'
+import { useDeliveryAreas } from '@/hooks/useDeliveryAreas'
 
 declare global {
   interface Window {
@@ -43,7 +44,15 @@ function CheckoutContent() {
   // Customer Details Form
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
-  const [area, setArea] = useState<string>(DELIVERY_AREAS[0])
+  const { areas: DELIVERY_AREAS, loading: areasLoading } = useDeliveryAreas()
+  const [area, setArea] = useState<string>('')
+
+  // Set default area when areas load
+  useEffect(() => {
+    if (DELIVERY_AREAS.length > 0 && !area) {
+      setArea(DELIVERY_AREAS[0])
+    }
+  }, [DELIVERY_AREAS, area])
   const [address, setAddress] = useState('')
   const [landmark, setLandmark] = useState('')
   const [deliveryNotes, setDeliveryNotes] = useState('')
@@ -66,7 +75,7 @@ function CheckoutContent() {
           if (data.profile.full_name) setFullName(data.profile.full_name)
           if (data.profile.phone) setPhone(data.profile.phone)
           if (data.profile.address) setAddress(data.profile.address)
-          if (data.profile.area && DELIVERY_AREAS.includes(data.profile.area)) {
+          if (data.profile.area) {
             setArea(data.profile.area)
           }
         }
@@ -405,9 +414,13 @@ function CheckoutContent() {
                     onChange={e => setArea(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#02429C] focus:border-transparent text-sm text-slate-900 font-bold bg-white"
                   >
-                    {DELIVERY_AREAS.map(a => (
-                      <option key={a} value={a}>{a} Area</option>
-                    ))}
+                    {areasLoading ? (
+                    <option value="" disabled>Loading areas...</option>
+                  ) : (
+                    DELIVERY_AREAS.map(a => (
+                      <option key={a} value={a}>{a}</option>
+                    ))
+                  )}
                   </select>
                 </div>
                 <p className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
