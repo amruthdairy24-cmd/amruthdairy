@@ -16,7 +16,7 @@ export async function GET() {
     const auth = await checkAdmin()
     if (auth.error) return NextResponse.json({ success: false, message: auth.error }, { status: auth.error === 'Unauthorized' ? 401 : 403 })
 
-    const { data, error } = await auth.supabase
+    const { data, error } = await auth.supabase!
       .from('delivery_areas')
       .select('*')
       .order('name', { ascending: true })
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     const { name, is_active } = body
     if (!name) return NextResponse.json({ success: false, message: 'Name is required' }, { status: 400 })
 
-    const { data, error } = await auth.supabase
+    const { data, error } = await auth.supabase!
       .from('delivery_areas')
       .insert([{ name, is_active: is_active ?? true }])
       .select()
@@ -67,7 +67,7 @@ export async function PUT(req: Request) {
     if (name !== undefined) updateData.name = name
     if (is_active !== undefined) updateData.is_active = is_active
 
-    const { data, error } = await auth.supabase
+    const { data, error } = await auth.supabase!
       .from('delivery_areas')
       .update(updateData)
       .eq('id', id)
@@ -92,7 +92,7 @@ export async function DELETE(req: Request) {
     const id = searchParams.get('id')
     if (!id) return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 })
 
-    const { error } = await auth.supabase
+    const { error } = await auth.supabase!
       .from('delivery_areas')
       .delete()
       .eq('id', id)
