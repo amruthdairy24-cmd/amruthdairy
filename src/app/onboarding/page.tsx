@@ -11,12 +11,13 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { DELIVERY_AREAS, QUANTITY_OPTIONS, DELIVERY_TIME_PROMISE } from '@/lib/constants'
+import { QUANTITY_OPTIONS, DELIVERY_TIME_PROMISE } from '@/lib/constants'
 import { fetchMilkPricesClient, calculateDailyRate, calculateMonthlyAmount, getDaysInMonth } from '@/lib/billing'
 import SubscriptionCalendar from '@/components/SubscriptionCalendar'
 import { getEarliestStartDateStr } from "@/lib/utils"
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
+import { useDeliveryAreas } from '@/hooks/useDeliveryAreas'
 
 type OnboardingStep = 1 | 2 | 3 | 'success' | 'waitlist'
 
@@ -30,12 +31,13 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<OnboardingStep>(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const { areas: DELIVERY_AREAS, loading: areasLoading } = useDeliveryAreas()
 
   // Step 1
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
-  const [area, setArea] = useState('Padil')
+  const [area, setArea] = useState('')
   const [areaOpen, setAreaOpen] = useState(false)
   const [areaSearch, setAreaSearch] = useState('')
   const areaRef = useRef<HTMLDivElement>(null)
@@ -181,7 +183,7 @@ export default function OnboardingPage() {
             const cleanPhone = (data.profile.phone || '').replace(/\D/g, '')
             setPhone(cleanPhone.length === 12 && cleanPhone.startsWith('91') ? cleanPhone.slice(2) : cleanPhone)
             setAddress(data.profile.address || '')
-            setArea(data.profile.area || 'Padil')
+            setArea(data.profile.area || '')
             setLandmark(data.profile.landmark || '')
             setFloorNotes(data.profile.floor_notes || '')
             if (data.profile.referred_by_code) {
@@ -202,6 +204,7 @@ export default function OnboardingPage() {
     if (!fullName.trim()) { setError('Please enter your full name.'); return }
     if (phone.length !== 10) { setError('Please enter a valid 10-digit mobile number.'); return }
     if (!address.trim()) { setError('Please enter your delivery address.'); return }
+    if (!area) { setError('Please select a delivery area.'); return }
     setError(''); setLoading(true)
     try {
       const res = await fetch('/api/customer/profile', {
@@ -523,7 +526,7 @@ export default function OnboardingPage() {
                               className="w-full h-11 pl-11 pr-10 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer text-left flex items-center"
                             >
                               <MapPin size={14} className="absolute left-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
-                              <span className="truncate">{area}</span>
+                              <span className="truncate">{area || 'Select Area'}</span>
                               <ChevronDown
                                 size={14}
                                 className={`absolute right-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${areaOpen ? 'rotate-180' : ''}`}
@@ -570,6 +573,9 @@ export default function OnboardingPage() {
                                         {a}
                                       </button>
                                     ))
+                                  )}
+                                  {areasLoading && (
+                                    <p className="px-4 py-3 text-xs text-slate-400 text-center">Loading areas...</p>
                                   )}
                                 </div>
                               </div>
