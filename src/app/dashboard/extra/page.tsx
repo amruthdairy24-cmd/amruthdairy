@@ -374,6 +374,20 @@ export default function ExtraMilkPage() {
     setIsConfirmOpen(true)
   }
 
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (typeof window !== 'undefined' && (window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   async function executeSubmit() {
     setIsConfirmOpen(false)
     setError(''); setSuccessMsg(''); setLoading(true)
@@ -392,7 +406,56 @@ export default function ExtraMilkPage() {
           })
         })
         const json = await res.json()
-        if (json.success) {
+        
+        if (json.requires_payment) {
+          const loaded = await loadRazorpayScript();
+          if (!loaded) {
+            toast.error('Failed to load Razorpay SDK. Payment cancelled.');
+            return;
+          }
+          
+          const options = {
+            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+            amount: json.amount,
+            currency: json.currency,
+            name: 'Amruth Milk',
+            description: `Extra Milk Payment - ${orderDate}`,
+            order_id: json.razorpay_order_id,
+            handler: async function (response: any) {
+              try {
+                const verifyRes = await fetch('/api/extra-milk/verify-payment', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                    extra_order_id: json.extra_order_id
+                  })
+                });
+                const verifyData = await verifyRes.json();
+                if (verifyData.success) {
+                  setSuccessMsg('Extra milk payment successful!')
+                  toast.success('Extra milk payment successful!')
+                  await loadData(true)
+                  setEditingOrderId(null)
+                  setExtraLitres(0.5)
+                } else {
+                  setError(verifyData.message || 'Payment verification failed');
+                  toast.error(verifyData.message || 'Payment verification failed');
+                }
+              } catch (e) {
+                setError('Payment verification error');
+                toast.error('Payment verification error');
+              }
+            },
+            theme: { color: '#014DA4' },
+            modal: { ondismiss: function () { setError('Payment cancelled'); toast.error('Payment cancelled'); } }
+          };
+          const rzp = new (window as any).Razorpay(options);
+          rzp.open();
+          
+        } else if (json.success) {
           setSuccessMsg(json.message)
           toast.success(json.message || 'Extra milk order updated successfully!')
           await loadData(true)
@@ -427,7 +490,52 @@ export default function ExtraMilkPage() {
           })
         })
         const json = await res.json()
-        if (json.success) {
+        if (json.requires_payment) {
+          const loaded = await loadRazorpayScript();
+          if (!loaded) {
+            toast.error('Failed to load Razorpay SDK. Payment cancelled.');
+            break; // Stop bulk processing
+          }
+          await new Promise<void>((resolve, reject) => {
+            const options = {
+              key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+              amount: json.amount,
+              currency: json.currency,
+              name: 'Amruth Milk',
+              description: `Extra Milk Payment - ${dateStr}`,
+              order_id: json.razorpay_order_id,
+              handler: async function (response: any) {
+                try {
+                  const verifyRes = await fetch('/api/extra-milk/verify-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      razorpay_order_id: response.razorpay_order_id,
+                      razorpay_payment_id: response.razorpay_payment_id,
+                      razorpay_signature: response.razorpay_signature,
+                      extra_order_id: json.extra_order_id
+                    })
+                  });
+                  const verifyData = await verifyRes.json();
+                  if (verifyData.success) {
+                    successCount++;
+                    resolve();
+                  } else {
+                    lastError = verifyData.message || 'Payment verification failed';
+                    resolve(); // continue loop but mark as failed for this date
+                  }
+                } catch (e) {
+                  lastError = 'Payment verification error';
+                  resolve();
+                }
+              },
+              theme: { color: '#014DA4' },
+              modal: { ondismiss: function () { lastError = 'Payment cancelled by user'; resolve(); } }
+            };
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+          });
+        } else if (json.success) {
           successCount++
         } else {
           lastError = json.message || `Failed for ${dateStr}`
