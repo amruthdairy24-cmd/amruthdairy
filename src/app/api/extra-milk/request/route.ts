@@ -187,6 +187,13 @@ export async function POST(request: Request) {
     if (extra_litres === 0) {
       // Cancellation logic
       if (order_id) {
+        // Fetch order details before deleting to check if it needs refund
+        const { data: orderToCancel } = await adminSupabase
+          .from('extra_milk_orders')
+          .select('payment_status, charge_amount, skip_credit_applied, charge_month')
+          .eq('id', order_id)
+          .single();
+
         // Revert daily_delivery_sheet first to release foreign key reference
         await adminSupabase
           .from('daily_delivery_sheet')
@@ -200,11 +207,118 @@ export async function POST(request: Request) {
 
         // Delete the extra milk order now that it is no longer referenced
         await adminSupabase.from('extra_milk_orders').delete().eq('id', order_id);
+
+        // Issue refund if it was paid instantly
+        if (orderToCancel && orderToCancel.payment_status === 'paid_instantly') {
+          const net_charge = orderToCancel.charge_amount - orderToCancel.skip_credit_applied;
+          if (net_charge > 0) {
+            await adminSupabase.from('billing_adjustments').insert({
+              subscription_id: subscription.id,
+              customer_id: user.id,
+              amount: net_charge,
+              adjustment_type: 'credit',
+              description: `Refund for cancelled extra milk order on ${order_date}`,
+              target_month: orderToCancel.charge_month,
+              is_applied: false
+            });
+          }
+        }
       }
       return NextResponse.json({
         success: true,
         message: 'Extra milk order cancelled successfully.'
       });
+    }
+
+    let query2 = adminSupabase
+      .from('extra_milk_orders')
+      .select('id')
+      .eq('subscription_id', subscription.id)
+      .eq('charge_month', charge_month)
+      .eq('payment_status', 'pay_later')
+      .neq('status', 'cancelled');
+
+    if (order_id) {
+      query2 = query2.neq('id', order_id);
+    }
+    const { data: previousPayLaterOrders } = await query2;
+    const payLaterCount = previousPayLaterOrders?.length || 0;
+    
+    const requiresInstantPayment = payLaterCount >= 2 && net_charge_amount > 0;
+
+    if (requiresInstantPayment) {
+        const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+        const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+        if (!keyId || !keySecret) {
+          return NextResponse.json({ success: false, message: 'Payment gateway is not configured.' }, { status: 500 });
+        }
+        
+        let pendingOrderId = order_id;
+        if (order_id) {
+           const { error: updateError } = await adminSupabase
+            .from('extra_milk_orders')
+            .update({
+              order_date,
+              extra_litres,
+              total_litres_that_day: subscription.quantity_litres + extra_litres,
+              charge_amount,
+              charge_month,
+              skip_credit_applied,
+              deadline: deadlineObj.toISOString(),
+              status: 'pending_payment',
+              payment_status: 'pending_payment'
+            })
+            .eq('id', order_id);
+          if (updateError) throw updateError;
+        } else {
+           const { data: newOrder, error: insertError } = await adminSupabase
+            .from('extra_milk_orders')
+            .insert({
+              subscription_id: subscription.id,
+              customer_id: user.id,
+              order_date,
+              extra_litres,
+              total_litres_that_day: subscription.quantity_litres + extra_litres,
+              charge_amount,
+              charge_month,
+              skip_credit_applied,
+              deadline: deadlineObj.toISOString(),
+              status: 'pending_payment',
+              payment_status: 'pending_payment'
+            })
+            .select()
+            .single();
+           if (insertError) {
+             await adminSupabase.rpc('book_capacity_single_day', { p_date: order_date, p_litres: -extra_litres });
+             throw insertError;
+           }
+           pendingOrderId = newOrder.id;
+        }
+        
+        const Razorpay = (await import('razorpay')).default;
+        const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
+        const amountInPaise = Math.round(net_charge_amount * 100);
+        const options = {
+          amount: amountInPaise,
+          currency: 'INR',
+          receipt: `receipt_em_${pendingOrderId}`,
+          notes: {
+            extra_order_id: pendingOrderId,
+            customer_id: user.id
+          }
+        };
+        const rzpOrder = await razorpay.orders.create(options);
+        
+        return NextResponse.json({
+          success: true,
+          requires_payment: true,
+          razorpay_order_id: rzpOrder.id,
+          amount: rzpOrder.amount,
+          currency: rzpOrder.currency,
+          extra_order_id: pendingOrderId,
+          message: `Pay ₹${net_charge_amount} to confirm your extra milk order.`
+        });
     }
 
     if (order_id) {
@@ -219,7 +333,9 @@ export async function POST(request: Request) {
           charge_month,
           skip_credit_applied,
           // net_charge_amount is GENERATED ALWAYS AS
-          deadline: deadlineObj.toISOString()
+          deadline: deadlineObj.toISOString(),
+          status: 'confirmed',
+          payment_status: 'pay_later'
         })
         .eq('id', order_id);
         
@@ -238,7 +354,8 @@ export async function POST(request: Request) {
           charge_month,
           skip_credit_applied,
           deadline: deadlineObj.toISOString(),
-          status: 'confirmed'
+          status: 'confirmed',
+          payment_status: 'pay_later'
         })
         .select()
         .single();

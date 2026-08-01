@@ -175,6 +175,7 @@ export interface ExtraMilkOrderLike {
   net_charge_amount?: number | string | null
   skip_credit_applied?: number | string | null
   status?: string | null
+  payment_status?: string | null
 }
 
 function toMoneyValue(value: number | string | null | undefined): number {
@@ -258,6 +259,10 @@ export function sumExtraMilkNetCharges(
     }
 
     if (order.status && order.status !== 'confirmed') {
+      return sum
+    }
+
+    if (order.payment_status === 'paid_instantly') {
       return sum
     }
 
