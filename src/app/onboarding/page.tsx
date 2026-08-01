@@ -51,10 +51,11 @@ export default function OnboardingPage() {
   const [excludedDates, setExcludedDates] = useState<string[]>([])
   const [isTrial, setIsTrial] = useState(false)
 
-  // Admin-managed pricing
+  // Admin-managed pricing & system settings
   const [milkPrices, setMilkPrices] = useState<Record<string, number>>({})
   const [trialPricing, setTrialPricing] = useState<{enabled: boolean, prices: Record<string, number>}>({enabled: false, prices: {}})
   const [priceLoading, setPriceLoading] = useState(true)
+  const [isMigrationMode, setIsMigrationMode] = useState(false)
 
   const [monthlyAmount, setMonthlyAmount] = useState(0)
   const [dailyRate, setDailyRate] = useState(0)
@@ -157,6 +158,19 @@ export default function OnboardingPage() {
       .then(r => r.json())
       .then(data => {
         if (data.success) {
+          if (data.migration_mode) {
+            setIsMigrationMode(true)
+            
+            // Set start date and min allowed date to 1st of current month
+            const now = new Date()
+            const year = now.getFullYear()
+            const month = String(now.getMonth() + 1).padStart(2, '0')
+            const monthFirst = `${year}-${month}-01`
+            
+            setStartDate(monthFirst)
+            setMinAllowedDate(monthFirst)
+          }
+
           if (data.subscription) {
             window.location.href = '/dashboard'
             return
@@ -212,7 +226,7 @@ export default function OnboardingPage() {
 
   async function handlePlanSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (new Date(startDate) < new Date(minAllowedDate)) { setError(`Start date must be ${new Date(minAllowedDate).toLocaleDateString('en-IN')} or later.`); return }
+    if (!isMigrationMode && new Date(startDate) < new Date(minAllowedDate)) { setError(`Start date must be ${new Date(minAllowedDate).toLocaleDateString('en-IN')} or later.`); return }
     
     if (isMonthFull) {
       // Direct to waitlist
@@ -768,7 +782,7 @@ export default function OnboardingPage() {
                             <input
                               type="date"
                               value={startDate}
-                              min={minAllowedDate}
+                              min={isMigrationMode ? `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01` : minAllowedDate}
                               onChange={e => setStartDate(e.target.value)}
                               className="w-full h-11 pl-11 pr-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                               required
@@ -839,6 +853,7 @@ export default function OnboardingPage() {
                                 quantity={quantity}
                                 onMonthAvailabilityChange={setIsMonthFull}
                                 onDeliveryDaysChange={setDeliveryDays}
+                                isMigrationMode={isMigrationMode}
                               />
                             </div>
                           </motion.div>
