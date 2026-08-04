@@ -148,9 +148,6 @@ export default function LoginPage() {
     if (!regUsername.trim() || !regEmail.trim() || !regPassword) {
       setError('Please fill in all fields.'); return
     }
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(regUsername.trim())) {
-      setError('Username: 3–20 chars, letters, numbers, and underscore only.'); return
-    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(regEmail.trim())) {
       setError('Please enter a valid email address.'); return
     }
