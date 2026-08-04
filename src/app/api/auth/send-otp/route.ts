@@ -41,14 +41,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-    if (!usernameRegex.test(usernameTrimmed)) {
-      return NextResponse.json(
-        { success: false, message: 'Username must be 3–20 characters (letters, numbers, underscore only).' },
-        { status: 400 }
-      );
-    }
-
     if (password.length < 8) {
       return NextResponse.json(
         { success: false, message: 'Password must be at least 8 characters.' },
