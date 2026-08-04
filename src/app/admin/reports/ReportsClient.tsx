@@ -1,289 +1,176 @@
-'use client'
+'use client';
 
-import { BarChart2, TrendingUp, Users, Wallet, Activity, Calendar, Download } from 'lucide-react'
-import { AdminHeader } from '@/components/admin/AdminHeader'
-import { StatusBadge } from '@/components/admin/StatusBadge'
-import { cn } from '@/lib/utils'
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  Legend
-} from 'recharts'
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
+import { format, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfDay, endOfDay } from 'date-fns';
+import { Download, Wallet, Activity, ArrowUpRight, Users } from 'lucide-react';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { MetricCard } from '@/components/admin/reports/MetricCard';
+import { DateRangeFilter } from '@/components/admin/reports/DateRangeFilter';
+import AreaTrendChart from '@/components/admin/reports/AreaTrendChart';
+import StackedBarChart from '@/components/admin/reports/StackedBarChart';
+import { MonthlyComparisonChart } from '@/components/admin/reports/MonthlyComparisonChart';
+import { ExceptionTable } from '@/components/admin/reports/ExceptionTable';
+import { ReportsResponse } from '@/lib/reports/types';
 
-interface KPIs {
-  currentRevenue: number;
-  revenueGrowth: number;
-  currentOutstanding: number;
-  lastOutstanding: number;
-  activeSubsCount: number;
-}
+// No dynamic imports needed since components use 'use client'
 
-interface ChartData {
-  revenueTrend: { day: string, amount: number }[];
-  subscriptionMix: { name: string, value: number }[];
-  paymentMethods: { name: string, amount: number }[];
-}
+const fetchReports = async (startDate: string, endDate: string, targetMonth: string): Promise<ReportsResponse> => {
+  const res = await fetch(`/api/admin/reports?startDate=${startDate}&endDate=${endDate}&targetMonth=${targetMonth}`);
+  if (!res.ok) throw new Error('Failed to fetch reports');
+  return res.json();
+};
 
-interface PaymentRow {
-  id: string;
-  amount: number;
-  method?: string;
-  status: string;
-  created_at: string;
-  profiles: { full_name: string };
-}
+export function ReportsClient() {
+  const searchParams = useSearchParams();
+  const range = searchParams.get('range') || 'month';
+  const now = new Date();
 
-const COLORS = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'];
+  // Compute dates based on range
+  let startDate = '';
+  let endDate = '';
+  let targetMonth = format(now, 'yyyy-MM-01');
 
-export function ReportsClient({ 
-  kpis, 
-  charts,
-  recentPayments
-}: { 
-  kpis: KPIs;
-  charts: ChartData;
-  recentPayments: PaymentRow[];
-}) {
+  if (range === 'today') {
+    startDate = format(startOfDay(now), 'yyyy-MM-dd');
+    endDate = format(endOfDay(now), 'yyyy-MM-dd');
+  } else if (range === 'week') {
+    startDate = format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+    endDate = format(endOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+  } else {
+    startDate = format(startOfMonth(now), 'yyyy-MM-dd');
+    endDate = format(endOfMonth(now), 'yyyy-MM-dd');
+  }
 
-  const formatCurrency = (val: number) => `₹${val.toLocaleString('en-IN')}`;
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['admin-reports', startDate, endDate, targetMonth],
+    queryFn: () => fetchReports(startDate, endDate, targetMonth),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const handleExport = (formatType: 'csv' | 'excel') => {
+    window.location.href = `/api/admin/reports/export?startDate=${startDate}&endDate=${endDate}&targetMonth=${targetMonth}&format=${formatType}`;
+  };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-8 pb-12 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <AdminHeader 
-          title="Analytics & Reports" 
-          description="Business intelligence, revenue trends, and operational metrics." 
-          icon={BarChart2}
-          actionLabel="Export CSV"
-          hideSearchRow={true}
-        />
-        <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2 shadow-sm">
-          <Calendar size={16} className="text-slate-400 ml-1" />
-          <span className="text-sm font-bold text-slate-700 dark:text-slate-200 px-2">This Month</span>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">Reports</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Operational intelligence and financial health.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <DateRangeFilter />
+          <button 
+            onClick={() => handleExport('csv')}
+            className="flex items-center gap-2 px-3 py-1.5 bg-black dark:bg-white text-white dark:text-black rounded-md text-sm font-medium hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors"
+          >
+            <Download size={16} />
+            Export
+          </button>
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {error ? (
+        <div className="p-4 bg-red-50 text-red-600 rounded-lg text-sm border border-red-200">
+          Failed to load dashboard data. Please try refreshing.
+        </div>
+      ) : null}
+
+      {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Revenue */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Wallet size={48} className="text-emerald-500" />
-          </div>
-          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">Total Revenue</p>
-          <p className="text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400 mt-2">
-            {formatCurrency(kpis.currentRevenue)}
-          </p>
-          <div className="mt-3 flex items-center gap-1.5">
-            <span className={cn(
-              "text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1",
-              kpis.revenueGrowth >= 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-            )}>
-              <TrendingUp size={10} className={kpis.revenueGrowth < 0 ? "rotate-180" : ""} />
-              {Math.abs(kpis.revenueGrowth).toFixed(1)}%
-            </span>
-            <span className="text-[10px] font-bold text-slate-400">vs last month</span>
-          </div>
-        </div>
-
-        {/* Outstanding */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Activity size={48} className="text-amber-500" />
-          </div>
-          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">Pending Dues</p>
-          <p className="text-3xl font-black font-mono tracking-tight text-amber-600 dark:text-amber-400 mt-2">
-            {formatCurrency(kpis.currentOutstanding)}
-          </p>
-          <div className="mt-3 flex items-center gap-1.5">
-            <span className="text-[10px] font-bold text-slate-400">Last month: {formatCurrency(kpis.lastOutstanding)}</span>
-          </div>
-        </div>
-
-        {/* Active Subs */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Users size={48} className="text-blue-500" />
-          </div>
-          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">Active Subs</p>
-          <p className="text-3xl font-black font-mono tracking-tight text-blue-600 dark:text-blue-400 mt-2">
-            {kpis.activeSubsCount}
-          </p>
-          <div className="mt-3 flex items-center gap-1.5">
-            <span className="text-[10px] font-bold text-slate-400">Currently delivering</span>
-          </div>
-        </div>
+        <MetricCard 
+          title="Realized Revenue" 
+          value={data ? `₹${data.data.financials.realizedRevenue.toLocaleString('en-IN')}` : '₹0'} 
+          icon={Wallet}
+          loading={isLoading}
+          trendPercentage={data?.data.financials.collectionRate}
+          subtitle="collection rate"
+        />
+        <MetricCard 
+          title="Pending Dues" 
+          value={data ? `₹${data.data.financials.outstandingDue.toLocaleString('en-IN')}` : '₹0'} 
+          icon={Activity}
+          loading={isLoading}
+          action={<button className="text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline">Remind all</button>}
+        />
+        <MetricCard 
+          title="Net Milk Delivered" 
+          value={data ? `${data.data.operations.netMilkDelivered.toLocaleString()} L` : '0 L'} 
+          icon={ArrowUpRight}
+          loading={isLoading}
+          trendPercentage={data?.data.operations.deliverySuccessRate}
+          subtitle="success rate"
+        />
+        <MetricCard 
+          title="Active Customers" 
+          value={data?.data.customers.activeCustomers || 0} 
+          icon={Users}
+          loading={isLoading}
+          subtitle={`${data?.data.customers.newCustomers || 0} new this period`}
+        />
       </div>
 
-      {/* Charts Grid */}
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Main Area Chart - Revenue Trend */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6">Revenue Trend (This Month)</h3>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={charts.revenueTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:stroke-slate-800" />
-                <XAxis 
-                  dataKey="day" 
-                  tickLine={false} 
-                  axisLine={false} 
-                  tick={{ fontSize: 11, fill: '#94a3b8' }}
-                  tickFormatter={(val) => val.replace('Day ', '')}
-                />
-                <YAxis 
-                  tickLine={false} 
-                  axisLine={false} 
-                  tick={{ fontSize: 11, fill: '#94a3b8' }}
-                  tickFormatter={(val) => `₹${val}`}
-                />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: any) => [`₹${Number(value).toLocaleString()}`, 'Revenue']}
-                  labelStyle={{ fontWeight: 'bold', color: '#64748b' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="amount" 
-                  stroke="#10B981" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorRevenue)" 
-                  activeDot={{ r: 6, strokeWidth: 0, fill: '#10B981' }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] rounded-xl p-5 shadow-sm">
+          <h3 className="text-sm font-medium text-slate-900 dark:text-slate-50 mb-6">Revenue Pacing</h3>
+          <AreaTrendChart data={data?.data.trends.daily || []} />
         </div>
-
-        {/* Donut Chart - Subscription Mix */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col">
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">Subscription Mix</h3>
-          <div className="flex-1 h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={charts.subscriptionMix}
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {charts.subscriptionMix.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ fontWeight: 'bold' }}
-                />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }}/>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] rounded-xl p-5 shadow-sm">
+          <h3 className="text-sm font-medium text-slate-900 dark:text-slate-50 mb-6">Volume Logistics</h3>
+          <StackedBarChart data={data?.data.trends.daily || []} />
         </div>
-
-        {/* Bar Chart - Payment Methods */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6">Revenue by Payment Method</h3>
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={charts.paymentMethods} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" className="dark:stroke-slate-800" />
-                <XAxis 
-                  type="number"
-                  tickLine={false} 
-                  axisLine={false} 
-                  tick={{ fontSize: 11, fill: '#94a3b8' }}
-                />
-                <YAxis 
-                  type="category"
-                  dataKey="name" 
-                  tickLine={false} 
-                  axisLine={false} 
-                  tick={{ fontSize: 11, fill: '#64748b', fontWeight: 'bold' }}
-                  width={80}
-                />
-                <Tooltip 
-                  cursor={{ fill: 'transparent' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: any) => [`₹${Number(value).toLocaleString()}`, 'Volume']}
-                />
-                <Bar dataKey="amount" fill="#3B82F6" radius={[0, 4, 4, 0]}>
-                  {charts.paymentMethods.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] rounded-xl p-5 shadow-sm">
+          <h3 className="text-sm font-medium text-slate-900 dark:text-slate-50 mb-6">Monthly Comparison</h3>
+          <MonthlyComparisonChart data={data?.data.trends.monthly || []} />
         </div>
-
-        {/* Recent Transactions Table */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-          <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Recent High-Value Collections</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/50">
-                  <th className="px-5 py-3 text-[10px] font-black uppercase tracking-wider text-slate-500">Date</th>
-                  <th className="px-5 py-3 text-[10px] font-black uppercase tracking-wider text-slate-500">Customer</th>
-                  <th className="px-5 py-3 text-[10px] font-black uppercase tracking-wider text-slate-500">Method</th>
-                  <th className="px-5 py-3 text-[10px] font-black uppercase tracking-wider text-slate-500 text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {recentPayments.length > 0 ? recentPayments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
-                    <td className="px-5 py-3 text-[12px] font-bold text-slate-600 dark:text-slate-400">
-                      {new Date(payment.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                    </td>
-                    <td className="px-5 py-3 text-[13px] font-bold text-slate-800 dark:text-slate-200">
-                      {payment.profiles?.full_name || 'Unknown Customer'}
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className="inline-flex text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                        {payment.method || 'Unknown'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <span className="text-[13.5px] font-black font-mono text-emerald-600 dark:text-emerald-400">
-                        ₹{payment.amount}
-                      </span>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={4} className="px-5 py-8 text-center text-sm text-slate-400">No recent collections found.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
       </div>
-    </div>
-  )
-}
 
+      {/* Exception Tables */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] rounded-xl overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-slate-200 dark:border-[#27272A] flex justify-between items-center">
+            <h3 className="text-sm font-medium text-slate-900 dark:text-slate-50">Top Defaulters</h3>
+          </div>
+          {isLoading ? (
+            <div className="h-[200px] flex items-center justify-center"><div className="w-6 h-6 border-2 border-slate-900 dark:border-white border-t-transparent rounded-full animate-spin"></div></div>
+          ) : (
+            <ExceptionTable data={data?.data.exceptions.topDefaulters || []} />
+          )}
+        </div>
+
+        <div className="bg-white dark:bg-[#18181B] border border-slate-200 dark:border-[#27272A] rounded-xl overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-slate-200 dark:border-[#27272A] flex justify-between items-center">
+            <h3 className="text-sm font-medium text-slate-900 dark:text-slate-50">Business Health</h3>
+          </div>
+          {isLoading ? (
+            <div className="h-[200px] flex items-center justify-center"><div className="w-6 h-6 border-2 border-slate-900 dark:border-white border-t-transparent rounded-full animate-spin"></div></div>
+          ) : (
+            <div className="p-5 space-y-4">
+               <div className="flex justify-between text-sm">
+                 <span className="text-slate-500">Revenue Leakage (Skips/Vacations)</span>
+                 <span className="font-medium text-red-600">₹{data?.data.financials.revenueLeakage.toLocaleString('en-IN')}</span>
+               </div>
+               <div className="flex justify-between text-sm">
+                 <span className="text-slate-500">Extra Milk Revenue</span>
+                 <span className="font-medium text-emerald-600">₹{data?.data.financials.extraMilkRevenue.toLocaleString('en-IN')}</span>
+               </div>
+               <div className="flex justify-between text-sm border-t border-slate-100 dark:border-slate-800 pt-4">
+                 <span className="text-slate-500">Waitlist Size</span>
+                 <span className="font-medium text-amber-600">{data?.data.customers.waitlistSize}</span>
+               </div>
+               <div className="flex justify-between text-sm">
+                 <span className="text-slate-500">Recent Cancellations</span>
+                 <span className="font-medium text-red-600">{data?.data.customers.cancelledCustomers}</span>
+               </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+    </div>
+  );
+}

@@ -56,6 +56,7 @@ const sidebarGroups = [
       { href: '/admin/capacity', icon: Layers, label: 'Capacity' },
       { href: '/admin/waitlist', icon: Clock, label: 'Waitlist' },
       { href: '/admin/farm-visits', icon: MapPin, label: 'Farm Visits' },
+      { href: '/admin/delivery-areas', icon: MapPin, label: 'Delivery Areas' },
     ]
   },
   {
