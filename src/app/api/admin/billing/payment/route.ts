@@ -95,15 +95,14 @@ export async function POST(request: Request) {
       if (updateError) {
         console.error('[admin/billing/payment] Update invoice error:', updateError.message);
       } else if (newStatus === 'paid') {
-        // Step C: Update razorpay_subscription_id to MANUAL_PAID and auto-activate pending subs
+        // Step C: Auto-activate pending subs for this customer
         const { error: activeError } = await adminClient
           .from('subscriptions')
           .update({ 
-            status: 'active',
-            razorpay_subscription_id: 'MANUAL_PAID'
+            status: 'active'
           })
           .eq('customer_id', customerId)
-          .eq('razorpay_subscription_id', 'MANUAL_UNPAID');
+          .eq('status', 'pending_payment');
           
         if (activeError) {
           console.error('[admin/billing/payment] Activate subscription error:', activeError.message);

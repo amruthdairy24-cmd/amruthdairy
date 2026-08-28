@@ -449,23 +449,23 @@ export default function SkipDayPage() {
           </form>
 
           {/* Skip Day Guide Card */}
-          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5 text-[12.5px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">
-            <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] pl-0.5 select-none">Skip Day Guide</h3>
+          <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5 text-[12.5px] font-semibold text-slate-500 dark:text-slate-400">
+            <h3 className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[2.5px] pl-0.5 select-none">Skip Delivery Rules</h3>
             
             <div className="space-y-4 text-left leading-relaxed">
               <div className="flex gap-3">
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">1</div>
                 <div>
-                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Select Your Date</p>
-                  <p className="text-slate-450 dark:text-slate-400 dark:text-slate-500 mt-1">Identify which day you want to skip. You have the flexibility to schedule skips up to 14 days in advance, <strong className="text-emerald-600 dark:text-emerald-500 font-bold">within your paid subscription period</strong>.</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Next-Day Delivery Cutoff</p>
+                  <p className="text-slate-450 dark:text-slate-400 mt-1">Need to pause tomorrow morning&apos;s milk? Simply select tomorrow&apos;s date and confirm before <strong className="text-rose-500 font-bold">9:00 PM tonight</strong>.</p>
                 </div>
               </div>
 
               <div className="flex gap-3">
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">2</div>
                 <div>
-                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Observe the Cut-off</p>
-                  <p className="text-slate-450 dark:text-slate-400 dark:text-slate-500 mt-1">To ensure farm operations are adjusted, skips must be submitted before the <strong className="text-rose-500 dark:text-rose-455 font-black">9:00 PM</strong> deadline on the preceding evening.</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Flexible Advance Planning</p>
+                  <p className="text-slate-450 dark:text-slate-400 mt-1">Planning a trip? You can also schedule skips for any future dates up to <strong className="text-emerald-600 dark:text-emerald-500 font-bold">14 days ahead</strong> in your paid monthly period.</p>
                 </div>
               </div>
 
@@ -473,7 +473,7 @@ export default function SkipDayPage() {
                 <div className="w-6 h-6 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center text-[#014DA4] dark:text-blue-400 flex-shrink-0 mt-0.5 font-mono font-black text-[10px]">3</div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">Automatic Bill Credit</p>
-                  <p className="text-slate-455 dark:text-slate-400 dark:text-slate-500 mt-1">Each skipped day generates a credit equal to your subscription&apos;s daily rate of <strong className="text-emerald-650 dark:text-emerald-500 font-extrabold">₹{subscription?.daily_rate.toFixed(2)}</strong>, reducing your next statement.</p>
+                  <p className="text-slate-455 dark:text-slate-400 mt-1">Each skipped day generates a statement credit equal to your daily rate of <strong className="text-emerald-650 dark:text-emerald-500 font-extrabold">₹{subscription?.daily_rate?.toFixed(2) || '0.00'}</strong>, automatically discounted from your next bill.</p>
                 </div>
               </div>
             </div>
@@ -482,8 +482,8 @@ export default function SkipDayPage() {
               <div className="p-3 bg-rose-50/10 dark:bg-rose-950/20 border border-rose-100/40 dark:border-rose-900/30 rounded-xl flex gap-2.5">
                 <AlertCircle className="text-rose-500 flex-shrink-0 mt-0.5" size={16} />
                 <div className="text-left">
-                  <h4 className="text-[10px] font-black text-rose-700 dark:text-rose-400 uppercase tracking-wide">Cut-off Deadline Passed</h4>
-                  <p className="text-[10.5px] text-rose-900 dark:text-rose-300 font-semibold leading-normal mt-0.5">It is past 9:00 PM. Skips for tomorrow&apos;s morning slot are closed. You can schedule skips for any subsequent dates.</p>
+                  <h4 className="text-[10px] font-black text-rose-700 dark:text-rose-400 uppercase tracking-wide">Tonight&apos;s 9:00 PM Cutoff Passed</h4>
+                  <p className="text-[10.5px] text-rose-900 dark:text-rose-300 font-semibold leading-normal mt-0.5">Tomorrow morning&apos;s delivery dispatch is locked. You can pause or skip starting from the day after tomorrow.</p>
                 </div>
               </div>
             )}
