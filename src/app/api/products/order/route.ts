@@ -40,21 +40,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Missing required customer address or contact information' }, { status: 400 });
     }
 
-    // Verify Razorpay signature if payment IDs provided and not dev bypass
+    // Verify Razorpay signature if payment details provided
     if (razorpay_order_id && razorpay_payment_id && razorpay_signature) {
-      const isDevBypass = razorpay_signature === 'dev_bypass_signature' || process.env.NODE_ENV === 'development';
+      const keySecret = process.env.RAZORPAY_KEY_SECRET;
+      if (!keySecret) {
+        console.error('[products/order] RAZORPAY_KEY_SECRET is missing');
+        return NextResponse.json({ success: false, message: 'Server payment configuration error' }, { status: 500 });
+      }
 
-      if (!isDevBypass) {
-        const keySecret = process.env.RAZORPAY_KEY_SECRET || 'rzp_test_secret_placeholder';
-        const body = razorpay_order_id + '|' + razorpay_payment_id;
-        const expectedSignature = crypto
-          .createHmac('sha256', keySecret)
-          .update(body)
-          .digest('hex');
+      const body = razorpay_order_id + '|' + razorpay_payment_id;
+      const expectedSignature = crypto
+        .createHmac('sha256', keySecret)
+        .update(body)
+        .digest('hex');
 
-        if (expectedSignature !== razorpay_signature) {
-          return NextResponse.json({ success: false, message: 'Invalid payment signature' }, { status: 400 });
-        }
+      if (expectedSignature !== razorpay_signature) {
+        return NextResponse.json({ success: false, message: 'Invalid payment signature' }, { status: 400 });
       }
     }
 

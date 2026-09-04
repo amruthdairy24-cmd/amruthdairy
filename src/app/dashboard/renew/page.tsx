@@ -252,33 +252,8 @@ function RenewContent() {
         const razorpay = new (window as any).Razorpay(options)
         razorpay.open()
       } else {
-        // Development mode bypass
-        try {
-          const verifyRes = await fetch('/api/payments/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              razorpay_payment_id: "dev_bypass_payment",
-              razorpay_order_id: "dev_bypass_order",
-              razorpay_signature: "dev_bypass_signature",
-              billing_month_id: json.billing_month_id,
-              adjustment_ids: json.adjustment_ids,
-              target_month: formattedTargetMonth
-            })
-          });
-          const verifyData = await verifyRes.json();
-          if (verifyData.success) {
-            toast.success('Subscription renewed (Development Bypass).')
-            await refetch()
-            router.push('/dashboard')
-          } else {
-            toast.error(verifyData.message || 'Bypass processing failed.')
-            setIsProcessing(false)
-          }
-        } catch (err) {
-          toast.error('Bypass verification request failed.')
-          setIsProcessing(false)
-        }
+        toast.error('Payment gateway SDK failed to load. Please check your internet connection and refresh the page.')
+        setIsProcessing(false)
       }
       
     } catch (err) {
