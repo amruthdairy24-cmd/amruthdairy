@@ -21,26 +21,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Missing payment details' }, { status: 400 });
     }
 
-    // Verify signature — NEVER use placeholder secrets in production
-    const isDevBypass = process.env.NODE_ENV === 'development' && razorpay_signature === 'dev_bypass_signature';
+    // Verify signature — strictly enforce HMAC SHA256 verification
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keySecret) {
+      console.error('[payments/verify] RAZORPAY_KEY_SECRET is not set — cannot verify payment.');
+      return NextResponse.json({ success: false, message: 'Payment verification service is not configured.' }, { status: 500 });
+    }
+    const body = razorpay_order_id + '|' + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac('sha256', keySecret)
+      .update(body)
+      .digest('hex');
 
-    if (!isDevBypass) {
-      const keySecret = process.env.RAZORPAY_KEY_SECRET;
-      if (!keySecret) {
-        console.error('[payments/verify] RAZORPAY_KEY_SECRET is not set — cannot verify payment.');
-        return NextResponse.json({ success: false, message: 'Payment verification service is not configured.' }, { status: 500 });
-      }
-      const body = razorpay_order_id + '|' + razorpay_payment_id;
-      const expectedSignature = crypto
-        .createHmac('sha256', keySecret)
-        .update(body)
-        .digest('hex');
+    const isValid = expectedSignature === razorpay_signature;
 
-      const isValid = expectedSignature === razorpay_signature;
-
-      if (!isValid) {
-        return NextResponse.json({ success: false, message: 'Invalid payment signature' }, { status: 400 });
-      }
+    if (!isValid) {
+      return NextResponse.json({ success: false, message: 'Invalid payment signature' }, { status: 400 });
     }
 
     // Fetch the billing month
@@ -100,24 +96,29 @@ export async function POST(request: Request) {
     // Mark billing_adjustments as applied NOW (payment confirmed — prevents credit burn on abandoned checkout)
     const monthToSettle = target_month || bMonth.billing_month;
 
-    if (adjustment_ids && adjustment_ids.length > 0) {
+    if (adjustment_ids && Array.isArray(adjustment_ids) && adjustment_ids.length > 0) {
       await adminSupabase
         .from('billing_adjustments')
         .update({
-          is_applied: true,
-          target_month: monthToSettle
+          is_applied: true
         })
         .in('id', adjustment_ids);
-    } else {
-      // Fallback: mark any unapplied credit adjustments for this customer as applied
-      await adminSupabase
+    } else if (monthToSettle) {
+      // Fallback: mark unapplied credit adjustments targeting THIS month as applied
+      let fallbackQuery = adminSupabase
         .from('billing_adjustments')
         .update({
-          is_applied: true,
-          target_month: monthToSettle
+          is_applied: true
         })
-        .or(`customer_id.eq.${user.id},subscription_id.eq.${bMonth.subscription_id}`)
+        .eq('target_month', monthToSettle)
         .eq('is_applied', false);
+
+      if (bMonth.subscription_id) {
+        fallbackQuery = fallbackQuery.or(`customer_id.eq.${user.id},subscription_id.eq.${bMonth.subscription_id}`);
+      } else {
+        fallbackQuery = fallbackQuery.eq('customer_id', user.id);
+      }
+      await fallbackQuery;
     }
 
     // Mark extra_milk_orders for this charge_month as paid NOW
