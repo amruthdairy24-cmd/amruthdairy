@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { getDeadlineForDate } from '@/lib/utils';
+import { resolveSubscriptionStateForDate } from '@/lib/billing';
 
 const adminSupabase = createAdminClient();
 
@@ -37,23 +38,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Active subscription not found' }, { status: 400 });
     }
 
-    // CHECK PAID MONTH
+    // CHECK PAID MONTH COVERAGE USING CANONICAL RESOLVER FOR TARGET DATE
     const skipMonthDate = new Date(skip_date);
     const skipBillingMonth = `${skipMonthDate.getFullYear()}-${String(skipMonthDate.getMonth() + 1).padStart(2, '0')}-01`;
     
-    const { data: paidMonth } = await adminSupabase
+    const { data: targetMonthBilling } = await adminSupabase
       .from('billing_months')
-      .select('id')
+      .select('id, payment_status')
       .eq('subscription_id', subscription.id)
       .eq('billing_month', skipBillingMonth)
-      .eq('payment_status', 'paid')
       .maybeSingle();
 
-    if (!paidMonth) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'You cannot skip dates in a month you have not paid for yet.' 
-      }, { status: 400 });
+    const coverage = resolveSubscriptionStateForDate({
+      subscription,
+      targetMonthBilling,
+      targetBillingMonthStr: skipBillingMonth,
+      targetDateStr: skip_date
+    });
+
+    if (!coverage.isCovered) {
+      const msg = (coverage.state === 'UNRENEWED_ELIGIBLE' || coverage.state === 'PAYMENT_PENDING')
+        ? 'Your subscription is pending renewal for this month. Please renew your subscription to manage delivery skips.'
+        : 'You cannot skip delivery dates for an un-covered or inactive subscription period.';
+      return NextResponse.json({ success: false, message: msg }, { status: 400 });
     }
 
     // DEADLINE CHECK (server-side, uses DB function — Rule #6)

@@ -39,8 +39,8 @@ export default async function SubscriptionsPage(props: {
       (bm: any) => bm.billing_month === selectedMonth
     );
     
-    // If no bill exists for this month (e.g. they start next month), show as N/A or default pending
-    let payment_status = currentBill ? currentBill.payment_status : 'N/A';
+    // If no bill exists for this month, indicate 'unrenewed' if subscription is active, else 'N/A'
+    let payment_status = currentBill ? currentBill.payment_status : (row.status === 'active' ? 'unrenewed' : 'N/A');
     
     // If they start next month, we might want to say "Starts Next Month" instead of N/A, but we'll use N/A
     

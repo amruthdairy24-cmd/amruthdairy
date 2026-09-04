@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { SubscriptionStateDetails } from '@/lib/billing'
 
 export interface DashboardData {
   success: boolean;
@@ -20,6 +21,7 @@ export interface DashboardData {
     plan_type?: string;
     end_date?: string | null;
   } | null;
+  subscription_state?: SubscriptionStateDetails;
   waitlist?: {
     id: string;
     quantity_litres: number;
@@ -71,7 +73,7 @@ interface DashboardDataContextType {
   refetch: () => Promise<void>;
 }
 
-const DashboardDataContext = createContext<DashboardDataContextType | undefined>(undefined)
+export const DashboardDataContext = createContext<DashboardDataContextType | undefined>(undefined)
 
 export function DashboardDataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<DashboardData | null>(null)

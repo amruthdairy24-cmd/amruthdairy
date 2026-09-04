@@ -4,7 +4,7 @@ import { createAdminClient } from '@/utils/supabase/admin';
 
 const adminSupabase = createAdminClient();
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -24,7 +24,33 @@ export async function GET() {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
-    // Fetch subscribers
+    const { searchParams } = new URL(request.url);
+    const countOnly = searchParams.get('count_only') === 'true';
+
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    if (countOnly) {
+      const [totalRes, thisMonthRes] = await Promise.all([
+        adminSupabase
+          .from('newsletter_subscribers')
+          .select('*', { count: 'exact', head: true }),
+        adminSupabase
+          .from('newsletter_subscribers')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', firstDayOfMonth)
+      ]);
+
+      return NextResponse.json({
+        success: true,
+        stats: {
+          total_subscribers: totalRes.count || 0,
+          new_this_month: thisMonthRes.count || 0
+        }
+      });
+    }
+
+    // Fetch full subscribers list when requested
     const { data: subscribers, error } = await adminSupabase
       .from('newsletter_subscribers')
       .select('*')
@@ -36,9 +62,6 @@ export async function GET() {
 
     const list = subscribers || [];
     const total = list.length;
-    
-    const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const thisMonth = list.filter(s => s.created_at >= firstDayOfMonth).length;
 
     return NextResponse.json({

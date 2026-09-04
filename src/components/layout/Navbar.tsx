@@ -1,9 +1,10 @@
 'use client'
 
+import React, { useState, useEffect, useContext } from 'react'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
 import { Menu, X, User, LogOut, ShoppingCart, Plus, Minus, Trash2, Bell, ChevronDown } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
+import { DashboardDataContext } from '@/contexts/DashboardDataContext'
 import { createClient } from '@/utils/supabase/client'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -32,6 +33,8 @@ export function Navbar() {
   const cartItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
+  const dashboardContext = useContext(DashboardDataContext)
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -49,19 +52,37 @@ export function Navbar() {
   }, [supabase])
 
   useEffect(() => {
-    if (user) {
-      fetch('/api/customer/dashboard')
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            setProfile(data)
-          }
-        })
-        .catch(err => console.error('Failed to load profile in navbar', err))
-    } else {
-      setProfile(null)
+    // If inside DashboardDataProvider, consume shared dashboard data directly (0 extra fetches)
+    if (dashboardContext?.data) {
+      setProfile(dashboardContext.data)
+      return
     }
-  }, [user])
+
+    const isAuthPage = pathname === '/login' || pathname === '/signup'
+    if (!user || isAuthPage) {
+      if (!user) setProfile(null)
+      return
+    }
+
+    const controller = new AbortController()
+
+    // On public pages outside DashboardDataProvider, fetch lightweight profile info
+    fetch('/api/customer/profile', { signal: controller.signal })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.profile) {
+          setProfile({ success: true, profile: data.profile })
+        }
+      })
+      .catch(err => {
+        if (err.name === 'AbortError') return
+        console.error('Failed to load profile in navbar', err)
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [user, pathname, dashboardContext?.data])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -152,29 +173,52 @@ export function Navbar() {
                 {/* Active Plan Badge */}
                 {profile && (
                   <div>
-                    {profile.subscription ? (
-                      profile.subscription.status === 'active' ? (
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-green-500/10 text-green-700 border-green-200/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                          <span>Active Plan</span>
-                        </div>
-                      ) : profile.subscription.status === 'paused' ? (
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-amber-500/10 text-amber-700 border-amber-200/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                          <span>Paused</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-red-500/10 text-red-700 border-red-200/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                          <span>Payment Due</span>
-                        </div>
-                      )
-                    ) : (
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-slate-100 text-slate-600 border-slate-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                        <span>Pending Plan</span>
-                      </div>
-                    )}
+                    {(() => {
+                      const state = profile.subscription_state?.state || (profile.subscription?.status === 'active' ? 'SUBSCRIBED_ACTIVE' : 'NOT_SUBSCRIBED')
+                      if (state === 'SUBSCRIBED_ACTIVE') {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-green-500/10 text-green-700 border-green-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            <span>Active Plan</span>
+                          </div>
+                        )
+                      } else if (state === 'TRIAL_ACTIVE') {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-blue-500/10 text-blue-700 border-blue-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            <span>Trial Active</span>
+                          </div>
+                        )
+                      } else if (state === 'UNRENEWED_ELIGIBLE') {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-amber-500/10 text-amber-700 border-amber-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Renewal Due</span>
+                          </div>
+                        )
+                      } else if (state === 'PAYMENT_PENDING') {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-amber-500/10 text-amber-700 border-amber-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Payment Pending</span>
+                          </div>
+                        )
+                      } else if (state === 'PAUSED') {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-amber-500/10 text-amber-700 border-amber-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Paused</span>
+                          </div>
+                        )
+                      } else {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-red-500/10 text-red-700 border-red-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                            <span>No Active Plan</span>
+                          </div>
+                        )
+                      }
+                    })()}
                   </div>
                 )}
 
