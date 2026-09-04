@@ -62,14 +62,14 @@ export function DataTable<T extends { id: string | number }>({
     <div 
       className="rounded-3xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden flex flex-col"
     >
-      <div className="overflow-x-auto hide-scrollbar">
+      <div className="overflow-x-auto max-h-[65vh] overflow-y-auto hide-scrollbar relative">
         <table className="w-full text-left min-w-[800px] border-collapse">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 shadow-xs">
             <tr 
-              className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/20"
+              className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900"
             >
               {/* Checkbox column */}
-              <th className="py-4 px-4 w-12 text-center">
+              <th className="py-4 px-4 w-12 text-center bg-slate-50 dark:bg-slate-900">
                 <div 
                   className="w-4 h-4 rounded border border-slate-300 dark:border-slate-700 hover:border-[#014DA4] dark:hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-colors mx-auto cursor-pointer flex items-center justify-center"
                 />
@@ -79,7 +79,7 @@ export function DataTable<T extends { id: string | number }>({
                 <th 
                   key={idx} 
                   className={cn(
-                    "py-4 px-4 text-[10.5px] uppercase font-black tracking-wider text-slate-400 dark:text-slate-500",
+                    "py-4 px-4 text-[10.5px] uppercase font-black tracking-wider text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900",
                     col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
                   )}
                 >
@@ -87,7 +87,7 @@ export function DataTable<T extends { id: string | number }>({
                 </th>
               ))}
               {(onEdit || onDelete || onView || renderActions) && (
-                <th className="py-4 px-4 text-[10.5px] uppercase font-black tracking-wider text-right text-slate-400 dark:text-slate-500">
+                <th className="py-4 px-4 text-[10.5px] uppercase font-black tracking-wider text-right text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900">
                   Actions
                 </th>
               )}
