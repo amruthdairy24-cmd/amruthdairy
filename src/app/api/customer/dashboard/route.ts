@@ -3,7 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { getTodayIST } from '@/lib/utils';
 import { formatInTimeZone } from 'date-fns-tz';
-import { calculateCarryForwardCreditBalance, calculateNetDueFromCredits, sumCreditAdjustments, sumChargeAdjustments, sumExtraMilkCreditUsage, sumExtraMilkNetCharges } from '@/lib/billing';
+import { calculateCarryForwardCreditBalance, calculateNetDueFromCredits, sumCreditAdjustments, sumChargeAdjustments, sumExtraMilkCreditUsage, sumExtraMilkNetCharges, resolveSubscriptionState } from '@/lib/billing';
 import { processPendingReferralReward } from '@/lib/referral';
 
 export async function GET(request: Request) {
@@ -332,10 +332,19 @@ export async function GET(request: Request) {
     const totalPendingCharges = sumExtraMilkNetCharges(unpaidUpcomingExtras) + sumChargeAdjustments(adjustments);
     const totalCreditBalance = Math.max(0, sumCreditAdjustments(adjustments) - sumExtraMilkCreditUsage(unpaidUpcomingExtras));
 
+    const subscription_state = resolveSubscriptionState({
+      subscription,
+      currentMonthBilling: currentMonthRes.data,
+      latestPaidMonth: latest_paid_month?.billing_month || null,
+      currentBillingMonthStr: formattedBillingMonth,
+      currentDateStr: todayStr
+    });
+
     return NextResponse.json({
       success: true,
       profile,
       subscription,
+      subscription_state,
       current_month: current_month ? {
         ...current_month,
         net_due: live_net_due

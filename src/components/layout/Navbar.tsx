@@ -152,29 +152,52 @@ export function Navbar() {
                 {/* Active Plan Badge */}
                 {profile && (
                   <div>
-                    {profile.subscription ? (
-                      profile.subscription.status === 'active' ? (
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-green-500/10 text-green-700 border-green-200/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                          <span>Active Plan</span>
-                        </div>
-                      ) : profile.subscription.status === 'paused' ? (
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-amber-500/10 text-amber-700 border-amber-200/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                          <span>Paused</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-red-500/10 text-red-700 border-red-200/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                          <span>Payment Due</span>
-                        </div>
-                      )
-                    ) : (
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-slate-100 text-slate-600 border-slate-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                        <span>Pending Plan</span>
-                      </div>
-                    )}
+                    {(() => {
+                      const state = profile.subscription_state?.state || (profile.subscription?.status === 'active' ? 'SUBSCRIBED_ACTIVE' : 'NOT_SUBSCRIBED')
+                      if (state === 'SUBSCRIBED_ACTIVE') {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-green-500/10 text-green-700 border-green-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            <span>Active Plan</span>
+                          </div>
+                        )
+                      } else if (state === 'TRIAL_ACTIVE') {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-blue-500/10 text-blue-700 border-blue-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            <span>Trial Active</span>
+                          </div>
+                        )
+                      } else if (state === 'UNRENEWED_ELIGIBLE') {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-amber-500/10 text-amber-700 border-amber-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Renewal Due</span>
+                          </div>
+                        )
+                      } else if (state === 'PAYMENT_PENDING') {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-amber-500/10 text-amber-700 border-amber-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Payment Pending</span>
+                          </div>
+                        )
+                      } else if (state === 'PAUSED') {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-amber-500/10 text-amber-700 border-amber-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Paused</span>
+                          </div>
+                        )
+                      } else {
+                        return (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-red-500/10 text-red-700 border-red-200/40">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                            <span>No Active Plan</span>
+                          </div>
+                        )
+                      }
+                    })()}
                   </div>
                 )}
 

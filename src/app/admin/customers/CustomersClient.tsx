@@ -45,7 +45,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterStatus, setFilterStatus] = useState<'all' | 'subscribed' | 'not_subscribed'>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'subscribed' | 'unrenewed' | 'pending' | 'not_subscribed'>('all')
 
   const confirmDelete = async () => {
     if (!customerToDelete) return
@@ -89,6 +89,26 @@ export function CustomersClient({ data }: { data: Customer[] }) {
     if (isNaN(d.getTime())) return 'N/A'
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+  }
+
+  const getStatusBadgeConfig = (status: string) => {
+    switch (status) {
+      case 'SUBSCRIBED_ACTIVE':
+        return { label: 'Active Plan', type: 'success' as const }
+      case 'TRIAL_ACTIVE':
+        return { label: 'Trial Active', type: 'info' as const }
+      case 'PAYMENT_PENDING':
+        return { label: 'Payment Pending', type: 'warning' as const }
+      case 'UNRENEWED_ELIGIBLE':
+        return { label: 'Renewal Due', type: 'warning' as const }
+      case 'PAUSED':
+        return { label: 'Paused', type: 'info' as const }
+      case 'CANCELLED':
+        return { label: 'Cancelled', type: 'danger' as const }
+      case 'NOT_SUBSCRIBED':
+      default:
+        return { label: 'Not Subscribed', type: 'danger' as const }
+    }
   }
 
   const columns: ColumnDef<Customer>[] = [
@@ -165,10 +185,10 @@ export function CustomersClient({ data }: { data: Customer[] }) {
       header: 'Status', 
       align: 'center',
       cell: (row) => {
-        const isSubscribed = row.subscription_status === 'active' || row.subscription_status === 'pending_payment';
+        const badgeConfig = getStatusBadgeConfig(row.subscription_status);
         return (
           <div className="flex justify-center">
-            <StatusBadge status={isSubscribed ? 'Subscribed' : 'No Subscription'} />
+            <StatusBadge status={badgeConfig.label} type={badgeConfig.type} />
           </div>
         );
       }
@@ -184,9 +204,20 @@ export function CustomersClient({ data }: { data: Customer[] }) {
       const matchesId = customer.id.toLowerCase().includes(q)
       if (!matchesName && !matchesPhone && !matchesArea && !matchesId) return false
     }
-    const isSubscribed = customer.subscription_status === 'active' || customer.subscription_status === 'pending_payment';
-    if (filterStatus === 'subscribed' && !isSubscribed) return false
-    if (filterStatus === 'not_subscribed' && isSubscribed) return false
+
+    if (filterStatus === 'subscribed') {
+      return customer.subscription_status === 'SUBSCRIBED_ACTIVE' || customer.subscription_status === 'TRIAL_ACTIVE'
+    }
+    if (filterStatus === 'unrenewed') {
+      return customer.subscription_status === 'UNRENEWED_ELIGIBLE'
+    }
+    if (filterStatus === 'pending') {
+      return customer.subscription_status === 'PAYMENT_PENDING'
+    }
+    if (filterStatus === 'not_subscribed') {
+      return ['NOT_SUBSCRIBED', 'CANCELLED', 'PAUSED'].includes(customer.subscription_status)
+    }
+
     return true
   })
 
@@ -213,10 +244,12 @@ export function CustomersClient({ data }: { data: Customer[] }) {
           />
         </div>
         
-        <div className="flex w-full sm:w-auto bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-1 shadow-2xs transition-colors">
+        <div className="flex w-full sm:w-auto bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-1 shadow-2xs transition-colors overflow-x-auto">
           {[
             { id: 'all', label: 'All' },
-            { id: 'subscribed', label: 'Subscribed' },
+            { id: 'subscribed', label: 'Active Plan' },
+            { id: 'unrenewed', label: 'Renewal Due' },
+            { id: 'pending', label: 'Payment Pending' },
             { id: 'not_subscribed', label: 'Not Subscribed' }
           ].map(status => (
             <button

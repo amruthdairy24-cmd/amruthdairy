@@ -99,7 +99,7 @@ const itemVariants = {
   },
 } as const
 
-function RenewalBanner({ latest_paid_month, status }: { latest_paid_month: string | null, status?: string }) {
+function RenewalBanner({ latest_paid_month, status, subscription_state }: { latest_paid_month: string | null, status?: string, subscription_state?: any }) {
   const [showPopup, setShowPopup] = useState(false);
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
@@ -112,25 +112,23 @@ function RenewalBanner({ latest_paid_month, status }: { latest_paid_month: strin
 
   const isPast25th = currentDate.getDate() >= 25;
 
-  let renewalTargetMonth = formattedCurrentMonth;
-  let isRenewingNextMonth = false;
+  const stateName = subscription_state?.state;
+  const isCurrentUnpaid = stateName === 'UNRENEWED_ELIGIBLE' || stateName === 'PAYMENT_PENDING' || (latest_paid_month && latest_paid_month < formattedCurrentMonth);
 
-  // Logic: 
-  // If they have already paid for current month, or if it's past the 25th, they are renewing for next month.
-  if (latest_paid_month === formattedCurrentMonth || isPast25th) {
-    renewalTargetMonth = formattedNextMonth;
-    isRenewingNextMonth = true;
-  }
+  let renewalTargetMonth = isCurrentUnpaid ? formattedCurrentMonth : formattedNextMonth;
+  let isRenewingNextMonth = !isCurrentUnpaid;
 
   if (latest_paid_month === formattedNextMonth || (latest_paid_month && latest_paid_month > formattedNextMonth)) {
     // Already paid for next month (or beyond), don't show button
     return null;
   }
 
-  // If customer is in active subscription and it's not past the 25th, hide the badge.
-  if (status === 'active' && !isPast25th) {
+  // If customer is in active subscription and current month is paid and it's not past the 25th, hide the badge.
+  if (status === 'active' && !isCurrentUnpaid && !isPast25th) {
     return null;
   }
+
+  const currentMonthName = currentDate.toLocaleDateString('en-IN', { month: 'long' });
 
   const handleRenewClick = () => {
     if (isRenewingNextMonth && !isPast25th) {
@@ -150,11 +148,11 @@ function RenewalBanner({ latest_paid_month, status }: { latest_paid_month: strin
           </div>
           <div>
             <h3 className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">
-              {isRenewingNextMonth ? "Renew for Next Month" : "Renew Subscription"}
+              {isCurrentUnpaid ? `Renew for ${currentMonthName}` : isRenewingNextMonth ? "Renew for Next Month" : "Renew Subscription"}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-              {!isRenewingNextMonth
-                ? "Your subscription for this month is pending. Renew now to resume deliveries."
+              {isCurrentUnpaid
+                ? `Your subscription for ${currentMonthName} is pending. Renew now to resume deliveries.`
                 : isPast25th
                   ? "It's time to renew your milk subscription for next month."
                   : "Next month's renewals open on the 25th."}
@@ -442,25 +440,23 @@ export default function CustomerDashboard() {
     (data.latest_paid_month && data.latest_paid_month > formattedNextMonthStr) ||
     (data.next_paid_month && data.next_paid_month.payment_status === 'paid')
 
-  const isCurrentMonthPending = subscription.status === 'pending_payment' ||
-    (current_month && current_month.payment_status === 'pending' && !data.latest_paid_month)
+  const formattedCurrentMonthStr = `${currentYearNum}-${String(currentMonthNum).padStart(2, '0')}-01`
+  const isCurrentUnpaidCard = data.subscription_state?.state === 'UNRENEWED_ELIGIBLE' ||
+    data.subscription_state?.state === 'PAYMENT_PENDING' ||
+    (!data.subscription_state && data.latest_paid_month && data.latest_paid_month < formattedCurrentMonthStr);
 
-  let renewalCardTitle = `Next Bill: ${formattedNextBillDate}`
-  let renewalCardSubtitle = now.getDate() >= 25 ? 'Renewal Pending' : 'Renewal opens on 25th'
-  let renewalBadgeColor = 'bg-sky-500/10 text-sky-600 dark:text-sky-400'
+  const isCurrentMonthPending = subscription.status === 'pending_payment' ||
+    (current_month && current_month.payment_status === 'pending' && !data.latest_paid_month) ||
+    isCurrentUnpaidCard;
+
+  let renewalCardTitle = isCurrentUnpaidCard ? 'Renewal Due' : `Next Bill: ${formattedNextBillDate}`
+  let renewalCardSubtitle = isCurrentUnpaidCard ? 'Renewal Pending' : now.getDate() >= 25 ? 'Renewal Pending' : 'Renewal opens on 25th'
+  let renewalBadgeColor = isCurrentUnpaidCard ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-sky-500/10 text-sky-600 dark:text-sky-400'
 
   if (isNextMonthPaid) {
     renewalCardTitle = `${nextMonthLongName} Subscription Renewed \u2705`
     renewalCardSubtitle = `Next Bill: 1 ${new Date(nextMonthYearNum, nextMonthNum, 1).toLocaleDateString('en-IN', { month: 'short' })}`
     renewalBadgeColor = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-  } else if (isCurrentMonthPending) {
-    renewalCardTitle = 'Payment Due'
-    renewalCardSubtitle = 'Renewal Pending'
-    renewalBadgeColor = 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-  } else if (now.getDate() >= 25) {
-    renewalCardTitle = `Next Bill: ${formattedNextBillDate}`
-    renewalCardSubtitle = 'Renewal Pending'
-    renewalBadgeColor = 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
   }
 
   return (
@@ -478,12 +474,21 @@ export default function CustomerDashboard() {
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 relative z-10">
         <div>
           <h1 className="text-[26px] sm:text-[32px] font-bold text-slate-900 dark:text-white font-display tracking-tight leading-tight">
-            {greeting}, {profile.full_name.split(' ')[0]}!
+            Welcome back, <span className="gradient-text">{data.profile.full_name.split(' ')[0]}</span>
           </h1>
-          <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-1.5">
-            <Calendar size={14} className="text-brand-secondary" />
-            <span>{todayStr}</span>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
+            Fresh milk delivered daily. Manage skips, extra milk & billing below.
           </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 font-bold text-xs">
+            <Milk size={15} className="text-[#014DA4]" />
+            <span>{planQuantityText}</span>
+          </div>
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Active Subscription</span>
+          </div>
         </div>
       </motion.div>
 

@@ -60,22 +60,16 @@ export default function AccountPage() {
     const curMonth = currentDate.getMonth() + 1
     const currentYear = currentDate.getFullYear()
 
-    let baseMonthStr = latestPaidMonthStr
-
-    const currentMonthStr = `${currentYear}-${String(curMonth).padStart(2, '0')}-01`
-    if ((subStatus === 'active' || subStatus === 'paused') && (!baseMonthStr || baseMonthStr < currentMonthStr)) {
-      baseMonthStr = currentMonthStr
-    }
-
-    if (!baseMonthStr) {
+    if (!latestPaidMonthStr) {
       const currentMonthDate = new Date(currentYear, curMonth - 1, 1)
       return currentMonthDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
     }
 
-    const parts = baseMonthStr.split('-')
+    const parts = latestPaidMonthStr.split('-')
     if (parts.length < 2) return 'N/A'
     const year = parseInt(parts[0], 10)
     const month = parseInt(parts[1], 10)
+    // Next renewal is 1st of the month following the latest paid month
     const nextMonthDate = new Date(year, month, 1)
     return nextMonthDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
   }
