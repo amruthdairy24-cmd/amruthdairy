@@ -1,9 +1,10 @@
 'use client'
 
+import React, { useState, useEffect, useContext } from 'react'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
 import { Menu, X, User, LogOut, ShoppingCart, Plus, Minus, Trash2, Bell, ChevronDown } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
+import { DashboardDataContext } from '@/contexts/DashboardDataContext'
 import { createClient } from '@/utils/supabase/client'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -32,6 +33,8 @@ export function Navbar() {
   const cartItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
+  const dashboardContext = useContext(DashboardDataContext)
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -49,19 +52,37 @@ export function Navbar() {
   }, [supabase])
 
   useEffect(() => {
-    if (user) {
-      fetch('/api/customer/dashboard')
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            setProfile(data)
-          }
-        })
-        .catch(err => console.error('Failed to load profile in navbar', err))
-    } else {
-      setProfile(null)
+    // If inside DashboardDataProvider, consume shared dashboard data directly (0 extra fetches)
+    if (dashboardContext?.data) {
+      setProfile(dashboardContext.data)
+      return
     }
-  }, [user])
+
+    const isAuthPage = pathname === '/login' || pathname === '/signup'
+    if (!user || isAuthPage) {
+      if (!user) setProfile(null)
+      return
+    }
+
+    const controller = new AbortController()
+
+    // On public pages outside DashboardDataProvider, fetch lightweight profile info
+    fetch('/api/customer/profile', { signal: controller.signal })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.profile) {
+          setProfile({ success: true, profile: data.profile })
+        }
+      })
+      .catch(err => {
+        if (err.name === 'AbortError') return
+        console.error('Failed to load profile in navbar', err)
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [user, pathname, dashboardContext?.data])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()

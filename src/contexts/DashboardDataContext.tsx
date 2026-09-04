@@ -73,7 +73,7 @@ interface DashboardDataContextType {
   refetch: () => Promise<void>;
 }
 
-const DashboardDataContext = createContext<DashboardDataContextType | undefined>(undefined)
+export const DashboardDataContext = createContext<DashboardDataContextType | undefined>(undefined)
 
 export function DashboardDataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<DashboardData | null>(null)

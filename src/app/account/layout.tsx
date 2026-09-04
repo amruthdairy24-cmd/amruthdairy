@@ -2,11 +2,12 @@
 import { Milk, SkipForward, PalmtreeIcon, Plus, FileText, ShoppingBag, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTheme } from 'next-themes'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { createClient } from '@/utils/supabase/client'
 import { ConfirmModal } from '@/components/ui'
+import { DashboardDataProvider, useDashboardData } from '@/contexts/DashboardDataContext'
 
 const navItems = [
   { href: '/dashboard', icon: '📊', label: 'Dashboard' },
@@ -18,11 +19,9 @@ const navItems = [
   { href: '/account', icon: '👤', label: 'Account' },
 ]
 
-export default function AccountLayout({ children }: { children: React.ReactNode }) {
+function AccountLayoutContent({ children }: { children: React.ReactNode }) {
   const { setTheme } = useTheme()
-  const [profileName, setProfileName] = useState('Customer')
-  const [profilePhone, setProfilePhone] = useState('')
-  const [status, setStatus] = useState<string>('active')
+  const { data } = useDashboardData()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   async function handleLogout() {
@@ -31,22 +30,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     window.location.href = '/login'
   }
 
-  useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const res = await fetch('/api/customer/dashboard')
-        const data = await res.json()
-        if (data.success && data.profile) {
-          setProfileName(data.profile.full_name || 'Customer')
-          setProfilePhone(data.profile.phone || '')
-          if (data.subscription) {
-            setStatus(data.subscription.status)
-          }
-        }
-      } catch (err) {}
-    }
-    fetchProfile()
-  }, [])
+  const profileName = data?.profile?.full_name || 'Customer'
+  const profilePhone = data?.profile?.phone || ''
+  const status = data?.subscription?.status || 'active'
   return (
     <div className="min-h-screen flex bg-[#FDFBF7] dark:bg-slate-950 transition-colors duration-300">
       {/* Sidebar */}
@@ -190,5 +176,13 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         danger
       />
     </div>
+  )
+}
+
+export default function AccountLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <DashboardDataProvider>
+      <AccountLayoutContent>{children}</AccountLayoutContent>
+    </DashboardDataProvider>
   )
 }

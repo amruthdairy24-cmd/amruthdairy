@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { User, MapPin, Phone, Edit3, Save, AlertCircle, CheckCircle, Milk, FileText, Calendar, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDeliveryAreas } from '@/hooks/useDeliveryAreas'
+import { useDashboardData } from '@/contexts/DashboardDataContext'
 
 interface ProfileData {
   full_name: string
@@ -15,6 +16,7 @@ interface ProfileData {
 }
 
 export default function AccountPage() {
+  const { data: dashData } = useDashboardData()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -29,8 +31,8 @@ export default function AccountPage() {
     full_name: '', phone: '', address: '', area: '', landmark: '', floor_notes: ''
   })
 
-  const [subscription, setSubscription] = useState<any>(null)
-  const [currentMonth, setCurrentMonth] = useState<any>(null)
+  const subscription = dashData?.subscription || null
+  const currentMonth = dashData?.current_month || null
 
   async function loadData() {
     try {
@@ -44,13 +46,6 @@ export default function AccountPage() {
           area: p.area || '', landmark: p.landmark || '', floor_notes: p.floor_notes || ''
         }
         setProfile(pData); setEditForm(pData);
-      }
-
-      const dashRes = await fetch('/api/customer/dashboard')
-      const dashJson = await dashRes.json()
-      if (dashJson.success) {
-        setSubscription(dashJson.subscription || null)
-        setCurrentMonth(dashJson.current_month || null)
       }
     } catch (err) {
       setError('Failed to load account details')
