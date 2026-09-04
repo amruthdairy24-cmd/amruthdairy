@@ -35,6 +35,15 @@ export async function GET(request: Request) {
     const profile = profileRes.data;
     const subscription = subscriptionRes.data;
 
+    // Check system migration_mode
+    const { data: migrationSetting } = await adminSupabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'migration_mode')
+      .maybeSingle();
+
+    const migration_mode = migrationSetting?.value === 'true' || migrationSetting?.value === true;
+
     if (!subscription) {
       const { data: waitlist } = await supabase
         .from('waitlist')
@@ -44,15 +53,6 @@ export async function GET(request: Request) {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-
-      // Check system migration_mode
-      const { data: migrationSetting } = await adminSupabase
-        .from('system_settings')
-        .select('value')
-        .eq('key', 'migration_mode')
-        .maybeSingle();
-
-      const migration_mode = migrationSetting?.value === 'true' || migrationSetting?.value === true;
 
       return NextResponse.json({
         success: true,
@@ -369,7 +369,8 @@ export async function GET(request: Request) {
       upcoming_adjustments: adjustments,
       recent_deliveries: recent_deliveries || [],
       latest_paid_month: latest_paid_month?.billing_month || null,
-      excluded_dates: excluded_dates ? excluded_dates.map(e => e.excluded_date) : []
+      excluded_dates: excluded_dates ? excluded_dates.map(e => e.excluded_date) : [],
+      migration_mode
     });
 
   } catch (err: any) {

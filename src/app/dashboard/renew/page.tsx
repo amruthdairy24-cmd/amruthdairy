@@ -115,10 +115,16 @@ function RenewContent() {
     }
   }, [dashboardData, contextLoading, router, targetMonth])
 
+  const isMigrationMode = dashboardData?.migration_mode || false;
+
   const calendarStartDate = useMemo(() => {
     const start = new Date(targetDate);
     let startDateForCalculation = new Date(start.getFullYear(), start.getMonth(), 1);
     
+    if (isMigrationMode) {
+      return startDateForCalculation;
+    }
+
     if (dashboardData?.subscription?.plan_type === 'trial' && dashboardData?.subscription?.end_date) {
       const trialEnd = new Date(dashboardData.subscription.end_date);
       startDateForCalculation = new Date(trialEnd);
@@ -133,7 +139,7 @@ function RenewContent() {
       }
     }
     return startDateForCalculation;
-  }, [targetDate, dashboardData]);
+  }, [targetDate, dashboardData, isMigrationMode]);
 
   const calculateRemainingDays = () => {
     const start = new Date(targetDate);
@@ -374,6 +380,7 @@ function RenewContent() {
                       quantity={quantity}
                       onMonthAvailabilityChange={() => {}}
                       onDeliveryDaysChange={() => {}}
+                      isMigrationMode={isMigrationMode}
                     />
                   </div>
                 </motion.div>
