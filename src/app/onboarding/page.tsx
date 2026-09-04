@@ -173,9 +173,19 @@ export default function OnboardingPage() {
             setMinAllowedDate(monthFirst)
           }
 
-          if (data.subscription) {
-            window.location.href = '/dashboard'
-            return
+          if (data.subscription_state) {
+            const state = data.subscription_state.state;
+            if (state === 'UNRENEWED_ELIGIBLE' || state === 'PAYMENT_PENDING') {
+              window.location.href = `/dashboard/renew?month=${data.subscription_state.targetMonth}`;
+              return;
+            }
+            if (state === 'SUBSCRIBED_ACTIVE' || state === 'TRIAL_ACTIVE' || state === 'PAUSED') {
+              window.location.href = '/dashboard';
+              return;
+            }
+          } else if (data.subscription) {
+            window.location.href = '/dashboard';
+            return;
           }
           if (data.profile) {
             setHasUsedTrial(data.profile.has_used_trial || false)

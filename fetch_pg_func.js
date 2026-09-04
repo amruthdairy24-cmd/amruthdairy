@@ -24,17 +24,9 @@ envFile.split(/\r?\n/).forEach(line => {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function run() {
-  const res = await fetch(`${supabaseUrl}/rest/v1/rpc/get_function_def`, {
-    method: 'POST',
-    headers: {
-      'apikey': supabaseKey,
-      'Authorization': `Bearer ${supabaseKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ function_name: 'populate_daily_delivery_sheet' })
-  });
-  const text = await res.text();
-  console.log("RESULT:", text);
+  // Let's call rpc populate_daily_delivery_sheet or check what RPCs exist or test rpc call
+  const { data, error } = await supabase.rpc('populate_daily_delivery_sheet', { p_date: '2026-09-04' });
+  console.log("RPC Exec result:", { data, error });
 }
 
 run();

@@ -197,22 +197,41 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-3 flex-shrink-0">
             {/* Status Badge */}
-            <div
-              className={cn(
-                "hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border",
-                status === 'active'
-                  ? "bg-green-500/10 text-green-700 border-green-200/40"
-                  : "bg-amber-500/10 text-amber-700 border-amber-200/40"
-              )}
-            >
-              <span
-                className={cn(
-                  "w-1.5 h-1.5 rounded-full",
-                  status === 'active' ? "bg-green-500" : "bg-amber-500"
-                )}
-              />
-              {status === 'active' ? 'Active Plan' : status === 'paused' ? 'Paused' : 'Payment Due'}
-            </div>
+            {(() => {
+              const subState = data?.subscription_state?.state;
+              let label = 'Active Plan';
+              let badgeStyle = 'bg-green-500/10 text-green-700 border-green-200/40';
+              let dotStyle = 'bg-green-500';
+
+              if (subState === 'TRIAL_ACTIVE') {
+                label = 'Trial Active';
+                badgeStyle = 'bg-sky-500/10 text-sky-700 border-sky-200/40';
+                dotStyle = 'bg-sky-500';
+              } else if (subState === 'UNRENEWED_ELIGIBLE') {
+                label = 'Renewal Due';
+                badgeStyle = 'bg-amber-500/10 text-amber-700 border-amber-200/40';
+                dotStyle = 'bg-amber-500 animate-pulse';
+              } else if (subState === 'PAYMENT_PENDING' || status === 'pending_payment') {
+                label = 'Payment Pending';
+                badgeStyle = 'bg-amber-500/10 text-amber-700 border-amber-200/40';
+                dotStyle = 'bg-amber-500';
+              } else if (subState === 'PAUSED' || status === 'paused') {
+                label = 'Paused';
+                badgeStyle = 'bg-amber-500/10 text-amber-700 border-amber-200/40';
+                dotStyle = 'bg-amber-500';
+              } else if (subState === 'CANCELLED' || status === 'cancelled') {
+                label = 'Cancelled';
+                badgeStyle = 'bg-slate-500/10 text-slate-700 border-slate-200/40';
+                dotStyle = 'bg-slate-500';
+              }
+
+              return (
+                <div className={cn("hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border", badgeStyle)}>
+                  <span className={cn("w-1.5 h-1.5 rounded-full", dotStyle)} />
+                  {label}
+                </div>
+              );
+            })()}
 
             <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-800" />
 

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { fetchMilkPrices, calculateDailyRate, calculateMonthlyAmount } from '@/lib/billing';
+import { fetchMilkPrices, calculateDailyRate, calculateMonthlyAmount, resolveSubscriptionState } from '@/lib/billing';
+import { formatInTimeZone } from 'date-fns-tz';
 
 const adminSupabase = createAdminClient();
 
@@ -24,16 +25,53 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Invalid quantity amount' }, { status: 400 });
     }
 
-    // 4. Get active subscription
-    const { data: subscription, error: subError } = await supabase
+    // Get subscription
+    const { data: subscription } = await adminSupabase
       .from('subscriptions')
       .select('*')
       .eq('customer_id', user.id)
-      .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
-    if (subError || !subscription) {
+    if (!subscription) {
       return NextResponse.json({ success: false, message: 'Active subscription not found' }, { status: 400 });
+    }
+
+    // CHECK CURRENT MONTH COVERAGE USING CANONICAL RESOLVER
+    const now = new Date();
+    const istYear = parseInt(formatInTimeZone(now, 'Asia/Kolkata', 'yyyy'));
+    const istMonth = parseInt(formatInTimeZone(now, 'Asia/Kolkata', 'MM'));
+    const formattedCurrentMonth = `${istYear}-${String(istMonth).padStart(2, '0')}-01`;
+    const todayStr = formatInTimeZone(now, 'Asia/Kolkata', 'yyyy-MM-dd');
+
+    const { data: currentMonthBilling } = await adminSupabase
+      .from('billing_months')
+      .select('id, payment_status')
+      .eq('subscription_id', subscription.id)
+      .eq('billing_month', formattedCurrentMonth)
+      .maybeSingle();
+
+    const { data: latestPaidMonth } = await adminSupabase
+      .from('billing_months')
+      .select('billing_month')
+      .eq('subscription_id', subscription.id)
+      .eq('payment_status', 'paid')
+      .order('billing_month', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const coverage = resolveSubscriptionState({
+      subscription,
+      currentMonthBilling,
+      latestPaidMonth: latestPaidMonth?.billing_month || null,
+      currentBillingMonthStr: formattedCurrentMonth,
+      currentDateStr: todayStr
+    });
+
+    if (!coverage.isCovered) {
+      const msg = (coverage.state === 'UNRENEWED_ELIGIBLE' || coverage.state === 'PAYMENT_PENDING')
+        ? 'Your subscription is pending renewal for this month. Please renew your subscription to update daily quantity.'
+        : 'You cannot update daily quantity for an un-covered or inactive subscription period.';
+      return NextResponse.json({ success: false, message: msg }, { status: 400 });
     }
 
     // 5. VALIDATE

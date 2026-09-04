@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { fetchMilkPrices, calculateExtraMilkCharge, isCreditAdjustmentType } from '@/lib/billing';
+import { fetchMilkPrices, calculateExtraMilkCharge, isCreditAdjustmentType, resolveSubscriptionStateForDate } from '@/lib/billing';
 import { getDeadlineForDate } from '@/lib/utils';
 
 const adminSupabase = createAdminClient();
@@ -13,11 +13,6 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'customer') {
-      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
     const { order_id, order_date, extra_litres } = await request.json();
@@ -52,6 +47,31 @@ export async function POST(request: Request) {
 
     if (subError || !subscription) {
       return NextResponse.json({ success: false, message: 'Active subscription not found' }, { status: 400 });
+    }
+
+    // CHECK PAID MONTH COVERAGE USING CANONICAL RESOLVER FOR TARGET DATE
+    const orderDateObj = new Date(order_date);
+    const chargeMonthStr = `${orderDateObj.getFullYear()}-${String(orderDateObj.getMonth() + 1).padStart(2, '0')}-01`;
+
+    const { data: targetMonthBilling } = await adminSupabase
+      .from('billing_months')
+      .select('id, payment_status')
+      .eq('subscription_id', subscription.id)
+      .eq('billing_month', chargeMonthStr)
+      .maybeSingle();
+
+    const coverage = resolveSubscriptionStateForDate({
+      subscription,
+      targetMonthBilling,
+      targetBillingMonthStr: chargeMonthStr,
+      targetDateStr: order_date
+    });
+
+    if (!coverage.isCovered) {
+      const msg = (coverage.state === 'UNRENEWED_ELIGIBLE' || coverage.state === 'PAYMENT_PENDING')
+        ? 'Your subscription is pending renewal for this month. Please renew your subscription to order extra milk.'
+        : 'You cannot order extra milk for an un-covered or inactive subscription period.';
+      return NextResponse.json({ success: false, message: msg }, { status: 400 });
     }
 
     let existingOrderToEdit = null;

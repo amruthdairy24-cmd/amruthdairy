@@ -52,7 +52,7 @@ export default function LeadsClient({
   const [refreshing, setRefreshing] = useState(false)
   const [newLeadNotification, setNewLeadNotification] = useState<string | null>(null)
 
-  // Real-time polling for new leads every 6 seconds
+  // Real-time polling for new leads every 60 seconds
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -73,9 +73,9 @@ export default function LeadsClient({
           if (data.stats) setStats(data.stats)
         }
       } catch (err) {
-        console.error('Polling error', err)
+        console.error('Leads polling error:', err)
       }
-    }, 6000)
+    }, 60000)
 
     return () => clearInterval(interval)
   }, [])

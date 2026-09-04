@@ -477,4 +477,258 @@ export async function fetchTrialPricingClient(): Promise<TrialPricingValue> {
   return { enabled: false, prices: DEFAULT_TIER_PRICES };
 }
 
+// ─────────────────────────────────────────
+// Canonical Subscription State Resolver
+// ─────────────────────────────────────────
+
+export type SubscriptionState =
+  | 'NOT_SUBSCRIBED'
+  | 'CANCELLED'
+  | 'PAUSED'
+  | 'TRIAL_ACTIVE'
+  | 'SUBSCRIBED_ACTIVE'
+  | 'UNRENEWED_ELIGIBLE'
+  | 'PAYMENT_PENDING';
+
+export interface SubscriptionStateDetails {
+  state: SubscriptionState;
+  canRenew: boolean;
+  targetMonth: string; // YYYY-MM-01
+  currentMonthPaid: boolean;
+  isCovered: boolean;
+}
+
+export interface ResolveSubscriptionInput {
+  subscription: {
+    id: string;
+    status: string; // 'active' | 'paused' | 'cancelled' | 'pending_payment'
+    plan_type?: string | null;
+    end_date?: string | null;
+    start_date?: string | null;
+  } | null;
+  currentMonthBilling: {
+    id?: string;
+    billing_month?: string;
+    payment_status?: string | null; // 'paid' | 'pending' | 'carry_forward'
+  } | null;
+  latestPaidMonth: string | null;
+  currentBillingMonthStr: string; // YYYY-MM-01
+  currentDateStr?: string; // YYYY-MM-DD
+}
+
+/**
+ * Single Canonical Business Rule Resolver for Subscription State.
+ */
+export function resolveSubscriptionState(input: ResolveSubscriptionInput): SubscriptionStateDetails {
+  const {
+    subscription,
+    currentMonthBilling,
+    latestPaidMonth,
+    currentBillingMonthStr,
+    currentDateStr
+  } = input;
+
+  if (!subscription) {
+    return {
+      state: 'NOT_SUBSCRIBED',
+      canRenew: false,
+      targetMonth: currentBillingMonthStr,
+      currentMonthPaid: false,
+      isCovered: false
+    };
+  }
+
+  const subStatus = (subscription.status || '').toLowerCase();
+
+  if (subStatus === 'cancelled') {
+    return {
+      state: 'CANCELLED',
+      canRenew: true,
+      targetMonth: currentBillingMonthStr,
+      currentMonthPaid: false,
+      isCovered: false
+    };
+  }
+
+  if (subStatus === 'paused') {
+    return {
+      state: 'PAUSED',
+      canRenew: false,
+      targetMonth: currentBillingMonthStr,
+      currentMonthPaid: false,
+      isCovered: false
+    };
+  }
+
+  // Active Trial Check
+  if (subscription.plan_type === 'trial' && subscription.end_date) {
+    const today = currentDateStr || new Date().toISOString().split('T')[0];
+    if (today <= subscription.end_date) {
+      return {
+        state: 'TRIAL_ACTIVE',
+        canRenew: true,
+        targetMonth: currentBillingMonthStr,
+        currentMonthPaid: true,
+        isCovered: true
+      };
+    }
+  }
+
+  // Check if current month is paid via currentMonthBilling
+  const isCurrentBillingPaid = currentMonthBilling?.payment_status === 'paid';
+
+  // Check if latestPaidMonth >= currentBillingMonthStr
+  const isLatestPaidCurrentOrFuture = Boolean(
+    latestPaidMonth && latestPaidMonth >= currentBillingMonthStr
+  );
+
+  const isCurrentPaid = isCurrentBillingPaid || isLatestPaidCurrentOrFuture;
+
+  if (isCurrentPaid) {
+    // Current month is paid! Compute next target month for renewal if customer wants to renew advance
+    const parts = (latestPaidMonth || currentBillingMonthStr).split('-');
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const nextM = month === 12 ? 1 : month + 1;
+    const nextY = month === 12 ? year + 1 : year;
+    const targetMonth = `${nextY}-${String(nextM).padStart(2, '0')}-01`;
+
+    const dayOfMonth = currentDateStr ? parseInt(currentDateStr.split('-')[2], 10) : new Date().getDate();
+    const canRenew = dayOfMonth >= 25;
+
+    return {
+      state: 'SUBSCRIBED_ACTIVE',
+      canRenew,
+      targetMonth,
+      currentMonthPaid: true,
+      isCovered: true
+    };
+  }
+
+  // Pending payment state
+  if (
+    subStatus === 'pending_payment' ||
+    currentMonthBilling?.payment_status === 'pending'
+  ) {
+    return {
+      state: 'PAYMENT_PENDING',
+      canRenew: true,
+      targetMonth: currentBillingMonthStr,
+      currentMonthPaid: false,
+      isCovered: false
+    };
+  }
+
+  // Unrenewed / Eligible for renewal
+  return {
+    state: 'UNRENEWED_ELIGIBLE',
+    canRenew: true,
+    targetMonth: currentBillingMonthStr,
+    currentMonthPaid: false,
+    isCovered: false
+  };
+}
+
+export interface ResolveSubscriptionForDateInput {
+  subscription: {
+    id: string;
+    status: string;
+    plan_type?: string | null;
+    end_date?: string | null;
+    start_date?: string | null;
+  } | null;
+  targetMonthBilling: {
+    id?: string;
+    billing_month?: string;
+    payment_status?: string | null;
+  } | null;
+  targetBillingMonthStr: string; // YYYY-MM-01
+  targetDateStr: string; // YYYY-MM-DD
+}
+
+/**
+ * Resolves subscription state and delivery coverage for a specific target date (e.g. skip date or extra milk date).
+ */
+export function resolveSubscriptionStateForDate(input: ResolveSubscriptionForDateInput): SubscriptionStateDetails {
+  const { subscription, targetMonthBilling, targetBillingMonthStr, targetDateStr } = input;
+
+  if (!subscription) {
+    return {
+      state: 'NOT_SUBSCRIBED',
+      canRenew: false,
+      targetMonth: targetBillingMonthStr,
+      currentMonthPaid: false,
+      isCovered: false
+    };
+  }
+
+  const subStatus = (subscription.status || '').toLowerCase();
+
+  if (subStatus === 'cancelled') {
+    return {
+      state: 'CANCELLED',
+      canRenew: true,
+      targetMonth: targetBillingMonthStr,
+      currentMonthPaid: false,
+      isCovered: false
+    };
+  }
+
+  if (subStatus === 'paused') {
+    return {
+      state: 'PAUSED',
+      canRenew: false,
+      targetMonth: targetBillingMonthStr,
+      currentMonthPaid: false,
+      isCovered: false
+    };
+  }
+
+  // Active Trial Check for target date
+  if (subscription.plan_type === 'trial' && subscription.end_date) {
+    if (targetDateStr <= subscription.end_date) {
+      return {
+        state: 'TRIAL_ACTIVE',
+        canRenew: true,
+        targetMonth: targetBillingMonthStr,
+        currentMonthPaid: true,
+        isCovered: true
+      };
+    }
+  }
+
+  // Check if target month is specifically paid
+  const isTargetPaid = targetMonthBilling?.payment_status === 'paid';
+
+  if (isTargetPaid) {
+    return {
+      state: 'SUBSCRIBED_ACTIVE',
+      canRenew: false,
+      targetMonth: targetBillingMonthStr,
+      currentMonthPaid: true,
+      isCovered: true
+    };
+  }
+
+  if (subStatus === 'pending_payment' || targetMonthBilling?.payment_status === 'pending') {
+    return {
+      state: 'PAYMENT_PENDING',
+      canRenew: true,
+      targetMonth: targetBillingMonthStr,
+      currentMonthPaid: false,
+      isCovered: false
+    };
+  }
+
+  return {
+    state: 'UNRENEWED_ELIGIBLE',
+    canRenew: true,
+    targetMonth: targetBillingMonthStr,
+    currentMonthPaid: false,
+    isCovered: false
+  };
+}
+
+
+
 

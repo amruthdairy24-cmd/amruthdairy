@@ -92,7 +92,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const fetchLeadCount = async () => {
       try {
-        const res = await fetch('/api/admin/leads')
+        const res = await fetch('/api/admin/leads?count_only=true')
         const data = await res.json()
         if (data.success && data.stats) {
           setLeadCount(data.stats.total_subscribers || 0)
@@ -101,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     fetchLeadCount()
-    const interval = setInterval(fetchLeadCount, 6000)
+    const interval = setInterval(fetchLeadCount, 60000)
     return () => clearInterval(interval)
   }, [])
 
