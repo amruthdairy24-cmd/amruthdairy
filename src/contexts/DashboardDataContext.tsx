@@ -50,6 +50,7 @@ export interface DashboardData {
   upcoming_adjustments?: Array<{ id: string; adjustment_type: string; amount: number; description: string; target_month: string; refund_status?: string }>;
   latest_paid_month: string | null;
   excluded_dates?: string[];
+  migration_mode?: boolean;
   next_paid_month?: {
     id: string;
     billing_month: string;
