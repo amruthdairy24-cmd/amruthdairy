@@ -155,24 +155,32 @@ export async function POST(request: Request) {
           .eq('id', targetBillingMonthId);
       }
 
-      // 4. Mark billing adjustments as applied
+      // 4. Mark billing adjustments as applied for this specific billing month
       if (targetCustomerId && targetBillingMonthStr) {
-        await adminClient
+        let adjQuery = adminClient
           .from('billing_adjustments')
           .update({
-            is_applied: true,
-            target_month: targetBillingMonthStr
+            is_applied: true
           })
-          .or(`customer_id.eq.${targetCustomerId},subscription_id.eq.${targetSubscriptionId}`)
+          .eq('target_month', targetBillingMonthStr)
           .eq('is_applied', false);
 
+        if (targetSubscriptionId) {
+          adjQuery = adjQuery.or(`customer_id.eq.${targetCustomerId},subscription_id.eq.${targetSubscriptionId}`);
+        } else {
+          adjQuery = adjQuery.eq('customer_id', targetCustomerId);
+        }
+        await adjQuery;
+
         // Mark extra milk orders as paid
-        await adminClient
-          .from('extra_milk_orders')
-          .update({ status: 'paid' })
-          .eq('subscription_id', targetSubscriptionId)
-          .eq('charge_month', targetBillingMonthStr)
-          .eq('status', 'confirmed');
+        if (targetSubscriptionId) {
+          await adminClient
+            .from('extra_milk_orders')
+            .update({ status: 'paid' })
+            .eq('subscription_id', targetSubscriptionId)
+            .eq('charge_month', targetBillingMonthStr)
+            .eq('status', 'confirmed');
+        }
       }
 
       // 5. Generate initial deliveries for new subscription if RPC is available
