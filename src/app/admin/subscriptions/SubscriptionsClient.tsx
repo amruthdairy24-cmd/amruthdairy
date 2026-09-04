@@ -18,11 +18,19 @@ import { cn } from '@/lib/utils'
 
 interface SubscriptionData {
   id: string
+  subscription_id?: string
+  customer_id?: string
   start_date: string
+  end_date?: string | null
   status: string
   payment_status: string
   quantity_litres: number
-  profiles: { full_name: string }
+  daily_rate?: number
+  monthly_amount?: number
+  amount_paid?: number
+  plan_type?: string
+  is_trial?: boolean
+  profiles: { full_name: string; phone?: string }
 }
 
 /* ── STAT CARD ── */
@@ -57,9 +65,8 @@ function StatCard({
 
 /* ── QUANTITY BREAKDOWN ── */
 function QuantityBreakdown({ data }: { data: SubscriptionData[] }) {
-  const activeData = data.filter((d) => d.status.toLowerCase() === 'active')
   const qtyMap: Record<number, number> = {}
-  activeData.forEach((d) => {
+  data.forEach((d) => {
     qtyMap[d.quantity_litres] = (qtyMap[d.quantity_litres] || 0) + 1
   })
   const entries = Object.entries(qtyMap).sort((a, b) => Number(a[0]) - Number(b[0]))
@@ -75,11 +82,11 @@ function QuantityBreakdown({ data }: { data: SubscriptionData[] }) {
       <div>
         <div className="mb-4">
           <h3 className="text-[16px] font-black text-slate-900 dark:text-white mb-0.5">Quantity Breakdown</h3>
-          <p className="text-[11.5px] font-semibold text-slate-400 dark:text-slate-500">Daily demand grouped by volume</p>
+          <p className="text-[11.5px] font-semibold text-slate-400 dark:text-slate-500">Daily demand grouped by volume for selected month</p>
         </div>
         {entries.length === 0 ? (
           <div className="flex items-center justify-center py-8 text-slate-400 dark:text-slate-500">
-            <p className="text-sm font-semibold">No subscribers this month</p>
+            <p className="text-sm font-semibold">No active subscribers for this month</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3.5 mt-2">
@@ -102,7 +109,7 @@ function QuantityBreakdown({ data }: { data: SubscriptionData[] }) {
       <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
         <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Total daily output</span>
         <span className="text-lg font-black text-slate-800 dark:text-white font-display">
-          {activeData.reduce((s, d) => s + d.quantity_litres, 0).toFixed(1)}
+          {data.reduce((s, d) => s + d.quantity_litres, 0).toFixed(1)}
           <span className="text-xs font-semibold text-slate-455 dark:text-slate-555 ml-1">L / day</span>
         </span>
       </div>
@@ -140,12 +147,12 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
 
   const stats = useMemo(() => {
-    const activeData = data.filter(d => d.status.toLowerCase() === 'active')
-    const activeCount = activeData.length
-    const totalLitres = activeData.reduce((s, d) => s + d.quantity_litres, 0)
+    const total = data.length
+    const totalLitres = data.reduce((s, d) => s + d.quantity_litres, 0)
     const paidCount = data.filter(d => d.payment_status === 'paid').length
-    const avgQty = activeCount ? (totalLitres / activeCount).toFixed(1) : '0'
-    return { total: activeCount, totalLitres, paidCount, avgQty }
+    const avgQty = total ? (totalLitres / total).toFixed(1) : '0'
+    const totalRevenue = data.reduce((s, d) => s + (d.amount_paid || d.monthly_amount || 0), 0)
+    return { total, totalLitres, paidCount, avgQty, totalRevenue }
   }, [data])
 
   const filtered = useMemo(() => {
@@ -155,7 +162,7 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
     return d
   }, [data, search, statusFilter])
 
-  const uniqueStatuses = Array.from(new Set(['active', 'pending', ...data.map(d => d.status.toLowerCase())]))
+  const uniqueStatuses = Array.from(new Set(['active', 'trial', 'paused', ...data.map(d => d.status.toLowerCase())]))
 
   const columns: ColumnDef<SubscriptionData>[] = [
     {
@@ -188,12 +195,22 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
     },
     {
       header: 'Plan',
-      cell: () => (
-        <div className="inline-flex items-center gap-1.5 bg-sky-50 dark:bg-sky-950/25 border border-sky-100 dark:border-sky-900/30 rounded-xl px-2.5 py-1 text-sky-750 dark:text-sky-300 font-extrabold text-[11px] shadow-3xs">
-          <Droplets size={11} className="text-sky-500 dark:text-sky-400 flex-shrink-0" />
-          <span>Standard Plan</span>
-        </div>
-      ),
+      cell: (row) => {
+        if (row.is_trial || row.plan_type === 'trial') {
+          return (
+            <div className="inline-flex items-center gap-1.5 bg-purple-50 dark:bg-purple-950/25 border border-purple-200 dark:border-purple-900/30 rounded-xl px-2.5 py-1 text-purple-750 dark:text-purple-300 font-extrabold text-[11px] shadow-3xs">
+              <Droplets size={11} className="text-purple-500 dark:text-purple-400 flex-shrink-0" />
+              <span>3-Day Trial</span>
+            </div>
+          )
+        }
+        return (
+          <div className="inline-flex items-center gap-1.5 bg-sky-50 dark:bg-sky-950/25 border border-sky-100 dark:border-sky-900/30 rounded-xl px-2.5 py-1 text-sky-750 dark:text-sky-300 font-extrabold text-[11px] shadow-3xs">
+            <Droplets size={11} className="text-sky-500 dark:text-sky-400 flex-shrink-0" />
+            <span>Standard Plan</span>
+          </div>
+        )
+      },
     },
     {
       header: 'Daily Qty',
@@ -230,7 +247,16 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
     {
       header: 'Status',
       align: 'center',
-      cell: (row) => <StatusBadge status={row.status} />,
+      cell: (row) => {
+        if (row.is_trial || row.status === 'trial') {
+          return (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wide border bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/40">
+              ● TRIAL
+            </span>
+          )
+        }
+        return <StatusBadge status={row.status} />
+      },
     },
   ]
 
