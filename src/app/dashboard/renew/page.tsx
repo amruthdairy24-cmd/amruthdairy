@@ -201,9 +201,15 @@ function RenewContent() {
       }
 
       if (json.razorpay_order_id) {
+        if (typeof window === 'undefined' || !(window as any).Razorpay) {
+          toast.error('Payment gateway SDK failed to load. Please check your internet connection and refresh the page.')
+          setIsProcessing(false)
+          return
+        }
+
         const options = {
           key: json.key_id,
-          amount: Math.round(netDue * 100),
+          amount: Math.round((json.net_due !== undefined ? json.net_due : netDue) * 100),
           currency: "INR",
           name: "Amruth Dairy Farm",
           description: `Renewal for ${monthName}`,
@@ -252,8 +258,14 @@ function RenewContent() {
         const razorpay = new (window as any).Razorpay(options)
         razorpay.open()
       } else {
-        toast.error('Payment gateway SDK failed to load. Please check your internet connection and refresh the page.')
-        setIsProcessing(false)
+        // If razorpay_order_id is null (e.g. net_due is ₹0 or running in test mode without gateway credentials)
+        if (json.net_due === 0) {
+          toast.success('Subscription renewed using available credits!')
+        } else {
+          toast.success('Subscription renewed successfully!')
+        }
+        await refetch()
+        router.push('/dashboard')
       }
       
     } catch (err) {
