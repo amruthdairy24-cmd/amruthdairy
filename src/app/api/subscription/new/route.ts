@@ -105,8 +105,19 @@ export async function POST(request: Request) {
     // Calculate earliest start date in IST
     const earliestStartStr = getEarliestStartDateStr();
 
-    // In Migration Mode, allow start_date to be any date in current billing month (e.g. Day 1) without past date cutoff fallback
-    const actualStartDateStr = isMigrationMode ? start_date : (start_date < earliestStartStr ? earliestStartStr : start_date);
+    // In Migration Mode, allow start_date to be any date in current billing month (e.g. Day 1) without past date cutoff fallback.
+    // If Migration Mode is ON, normalize actualStartDateStr to 1st of month so full month is covered.
+    let actualStartDateStr = start_date;
+    if (isMigrationMode) {
+      const parsedStart = new Date(start_date);
+      if (!isNaN(parsedStart.getTime())) {
+        const y = parsedStart.getFullYear();
+        const m = String(parsedStart.getMonth() + 1).padStart(2, '0');
+        actualStartDateStr = `${y}-${m}-01`;
+      }
+    } else if (start_date < earliestStartStr) {
+      actualStartDateStr = earliestStartStr;
+    }
     const actualStartDateObj = new Date(actualStartDateStr);
 
     // 5. Calculate amounts using admin-managed pricing
@@ -154,14 +165,10 @@ export async function POST(request: Request) {
     const net_due = Math.max(0, monthly_amount - creditBalance);
     const adjustment_ids = (unappliedAdjustments || []).map((a: any) => a.id);
 
-    // 6. Create Razorpay order
+    // 6. Create Razorpay order if gateway is configured and net_due > 0
     let razorpay_order_id = null;
     
-    // Only try to create Razorpay order if keys are present AND we are not in development mode
-    const isDev = process.env.NODE_ENV === 'development';
-    if (!isDev && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
-      console.log("Key ID:", process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
-      console.log("Secret exists:", !!process.env.RAZORPAY_KEY_SECRET);
+    if (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && net_due > 0) {
       const razorpay = new Razorpay({
         key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_KEY_SECRET,
