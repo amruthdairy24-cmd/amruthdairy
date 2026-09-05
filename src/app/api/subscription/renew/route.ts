@@ -51,6 +51,15 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
+    // Fetch migration_mode setting
+    const { data: migrationSetting } = await adminSupabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'migration_mode')
+      .maybeSingle();
+
+    const isMigrationMode = migrationSetting?.value === 'true' || migrationSetting?.value === true;
+
     // 3. Calculate amounts
     const prices = await fetchMilkPrices(adminSupabase, target_month);
     const daily_rate = calculateDailyRate(quantity, prices);
@@ -63,7 +72,10 @@ export async function POST(request: Request) {
 
     let startDateForCalculationStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth()+1).padStart(2, '0')}-01`;
 
-    if (existingSub.plan_type === 'trial' && existingSub.end_date) {
+    if (isMigrationMode) {
+      // In Migration Mode, full-month billing applies for the entire billing month (Day 1 to Month End)
+      startDateForCalculationStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth()+1).padStart(2, '0')}-01`;
+    } else if (existingSub.plan_type === 'trial' && existingSub.end_date) {
       // Upgrade from trial: start from day after trial ends
       const trialEnd = new Date(existingSub.end_date);
       const standardStart = new Date(trialEnd);
@@ -105,11 +117,10 @@ export async function POST(request: Request) {
     const extraMilkCharges = sumExtraMilkNetCharges(extraMilkOrders || [], target_month);
     const net_due = Math.max(0, calculateNetDueFromCredits(monthly_amount, carryInBalance, extraMilkCharges));
 
-    // 4. Create Razorpay order
+    // 4. Create Razorpay order if gateway is configured and net_due > 0
     let razorpay_order_id = null;
     
-    const isDev = process.env.NODE_ENV === 'development';
-    if (!isDev && process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    if (process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && net_due > 0) {
       const razorpay = new Razorpay({
         key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_KEY_SECRET,
