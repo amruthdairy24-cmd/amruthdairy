@@ -8,7 +8,7 @@ import {
   Wallet, CreditCard, CheckCircle, ArrowUpRight, X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { isCreditAdjustmentType } from '@/lib/billing'
+import { isCreditAdjustmentType, getDaysInMonth } from '@/lib/billing'
 import { motion } from 'framer-motion'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
 import toast from 'react-hot-toast'
@@ -49,6 +49,7 @@ interface DashboardData {
     carry_in_balance: number;
     net_due: number;
     amount_paid: number;
+    monthly_amount?: number;
     payment_status?: string;
   } | null;
   upcoming_skips: Array<{ skip_date: string; credit_amount: number }>;
@@ -113,7 +114,7 @@ function RenewalBanner({ latest_paid_month, status, subscription_state }: { late
   const isPast25th = currentDate.getDate() >= 25;
 
   const stateName = subscription_state?.state;
-  const isCurrentUnpaid = stateName === 'UNRENEWED_ELIGIBLE' || stateName === 'PAYMENT_PENDING' || (latest_paid_month && latest_paid_month < formattedCurrentMonth);
+  const isCurrentUnpaid = stateName === 'UNRENEWED_ELIGIBLE' || stateName === 'PAYMENT_PENDING' || (latest_paid_month && latest_paid_month < formattedCurrentMonth) || (!latest_paid_month && status !== 'trial');
 
   let renewalTargetMonth = isCurrentUnpaid ? formattedCurrentMonth : formattedNextMonth;
   let isRenewingNextMonth = !isCurrentUnpaid;
@@ -168,7 +169,7 @@ function RenewalBanner({ latest_paid_month, status, subscription_state }: { late
               : "bg-amber-500 hover:bg-amber-600 text-white"
           )}
         >
-          <span>Renew Now</span>
+          <span>{isCurrentUnpaid ? "Pay & Start Deliveries" : "Renew Now"}</span>
           <ArrowRight size={14} />
         </button>
       </div>
@@ -428,6 +429,9 @@ export default function CustomerDashboard() {
   const now = new Date()
   const currentMonthNum = now.getMonth() + 1
   const currentYearNum = now.getFullYear()
+  const currentMonthBaseAmount = (current_month?.monthly_amount !== undefined && current_month?.monthly_amount !== null)
+    ? Number(current_month.monthly_amount)
+    : (getDaysInMonth(currentYearNum, currentMonthNum) * (subscription.daily_rate || 0))
   const nextMonthNum = currentMonthNum === 12 ? 1 : currentMonthNum + 1
   const nextMonthYearNum = currentMonthNum === 12 ? currentYearNum + 1 : currentYearNum
   const formattedNextMonthStr = `${nextMonthYearNum}-${String(nextMonthNum).padStart(2, '0')}-01`
@@ -443,7 +447,8 @@ export default function CustomerDashboard() {
   const formattedCurrentMonthStr = `${currentYearNum}-${String(currentMonthNum).padStart(2, '0')}-01`
   const isCurrentUnpaidCard = data.subscription_state?.state === 'UNRENEWED_ELIGIBLE' ||
     data.subscription_state?.state === 'PAYMENT_PENDING' ||
-    (!data.subscription_state && data.latest_paid_month && data.latest_paid_month < formattedCurrentMonthStr);
+    (!data.subscription_state && data.latest_paid_month && data.latest_paid_month < formattedCurrentMonthStr) ||
+    (!data.latest_paid_month && subscription.plan_type !== 'trial');
 
   const isCurrentMonthPending = subscription.status === 'pending_payment' ||
     (current_month && current_month.payment_status === 'pending' && !data.latest_paid_month) ||
@@ -602,7 +607,7 @@ export default function CustomerDashboard() {
 
       {/* ─── RENEWAL BANNER ─── */}
       <motion.div variants={itemVariants} className="relative z-50">
-        <RenewalBanner latest_paid_month={data.latest_paid_month} status={data.subscription.status} />
+        <RenewalBanner latest_paid_month={data.latest_paid_month} status={data.subscription.status} subscription_state={data.subscription_state} />
       </motion.div>
 
       {/* ─── 2. DASHBOARD STATS ROW (Financial & Subscription Cards) ─── */}
@@ -659,20 +664,31 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Card 4: 📅 Next Bill / Renewal Status */}
-        <div className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group">
+        <Link
+          href={isCurrentUnpaidCard ? `/dashboard/renew?month=${formattedCurrentMonthStr}` : isNextMonthPaid ? '/dashboard/bills' : (now.getDate() >= 25 ? `/dashboard/renew?month=${formattedNextMonthStr}` : '/dashboard/bills')}
+          className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group no-underline text-inherit cursor-pointer"
+        >
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest">Renewal Status</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest">Renewal Status</p>
+              {isCurrentUnpaidCard && (
+                <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-amber-500 text-white animate-pulse">
+                  Action Needed
+                </span>
+              )}
+            </div>
             <p className="text-[15px] font-black text-slate-900 dark:text-white tracking-tight mt-1 leading-tight font-sans truncate">
               {renewalCardTitle}
             </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-400 font-semibold mt-1.5 truncate">
-              {renewalCardSubtitle}
+            <p className="text-[10px] text-slate-400 dark:text-slate-400 font-semibold mt-1.5 truncate flex items-center gap-1">
+              <span>{renewalCardSubtitle}</span>
+              {isCurrentUnpaidCard && <span className="text-amber-600 font-bold underline ml-1">Pay Now &rarr;</span>}
             </p>
           </div>
           <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105", renewalBadgeColor)}>
             <Calendar size={18} />
           </div>
-        </div>
+        </Link>
       </motion.div>
 
       {/* ─── REFERRAL CARD ─── */}
@@ -835,7 +851,7 @@ export default function CustomerDashboard() {
                       </div>
                       <span>Base Plan Amount</span>
                     </span>
-                    <span className="font-bold text-slate-800 dark:text-slate-900 dark:text-white font-mono text-sm">₹{subscription.monthly_amount.toFixed(2)}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-900 dark:text-white font-mono text-sm">₹{currentMonthBaseAmount.toFixed(2)}</span>
                   </div>
 
                   {/* Skips Credit */}

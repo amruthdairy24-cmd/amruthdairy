@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { calculateCarryForwardCreditBalance, calculateNetDueFromCredits, fetchMilkPrices, calculateDailyRate, calculateProRataAmount, sumCreditAdjustments, sumExtraMilkNetCharges } from '@/lib/billing';
+import { getEarliestStartDateStr } from '@/lib/utils';
 import Razorpay from 'razorpay';
 
 const adminSupabase = createAdminClient();
@@ -87,7 +88,13 @@ export async function POST(request: Request) {
          startDateForCalculationStr = `${standardStart.getFullYear()}-${String(standardStart.getMonth()+1).padStart(2, '0')}-${String(standardStart.getDate()).padStart(2, '0')}`;
       }
     } else if (today > targetDate && today <= endOfMonth) {
-      startDateForCalculationStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const earliestStr = getEarliestStartDateStr();
+      const earliestDate = new Date(earliestStr);
+      if (earliestDate <= endOfMonth) {
+        startDateForCalculationStr = earliestStr;
+      } else {
+        startDateForCalculationStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      }
     }
 
     const excludedDatesSet = new Set<string>(excluded_dates || []);
@@ -156,6 +163,8 @@ export async function POST(request: Request) {
       const standardStart = new Date(trialEnd);
       standardStart.setDate(standardStart.getDate() + 1);
       updatePayload.start_date = standardStart.toISOString().split('T')[0];
+    } else if (today > targetDate && today <= endOfMonth) {
+      updatePayload.start_date = startDateForCalculationStr;
     }
 
     await adminSupabase

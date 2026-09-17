@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, Phone, MapPin, AlertTriangle, Trash2, Search, MessageCircleMore } from 'lucide-react'
+import { Users, Phone, MapPin, AlertTriangle, Trash2, Search, MessageCircleMore, History } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
@@ -12,6 +12,7 @@ import { CustomerActionsMenu } from '@/components/admin/CustomerActionsMenu'
 import { AdminSkipModal } from '@/components/admin/AdminSkipModal'
 import { AdminExtraMilkModal } from '@/components/admin/AdminExtraMilkModal'
 import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
+import { AdminCustomerHistoryModal } from '@/components/admin/AdminCustomerHistoryModal'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -41,6 +42,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
   // Actions Modals State
   const [actionCustomer, setActionCustomer] = useState<Customer | null>(null)
   const [activeModal, setActiveModal] = useState<'subscription' | 'skip' | 'extra' | 'vacation' | null>(null)
+  const [historyCustomer, setHistoryCustomer] = useState<Customer | null>(null)
 
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -277,6 +279,17 @@ export function CustomersClient({ data }: { data: Customer[] }) {
           const whatsappUrl = buildWhatsAppUrl(row)
           return (
             <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setHistoryCustomer(row)
+                }}
+                className="flex items-center justify-center rounded-lg text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/50 border border-transparent hover:border-blue-200 dark:hover:border-blue-900/40 transition-colors cursor-pointer w-[30px] h-[30px]"
+                title="View Full Customer History & Ledger"
+              >
+                <History size={14} />
+              </button>
               {whatsappUrl && (
                 <a
                   href={whatsappUrl}
@@ -293,6 +306,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
                 onManageSubscription={() => { setActionCustomer(row); setActiveModal('subscription') }}
                 onMarkSkip={() => { setActionCustomer(row); setActiveModal('skip') }}
                 onAddExtraMilk={() => { setActionCustomer(row); setActiveModal('extra') }}
+                onViewHistory={() => setHistoryCustomer(row)}
               />
             </div>
           )
@@ -339,6 +353,15 @@ export function CustomersClient({ data }: { data: Customer[] }) {
             customerName={actionCustomer.full_name}
           />
         </>
+      )}
+
+      {historyCustomer && (
+        <AdminCustomerHistoryModal
+          isOpen={!!historyCustomer}
+          onClose={() => setHistoryCustomer(null)}
+          customerId={historyCustomer.id}
+          customerName={historyCustomer.full_name}
+        />
       )}
 
       <AnimatePresence>

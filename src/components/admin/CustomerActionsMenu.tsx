@@ -1,18 +1,20 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { MoreVertical, Settings, SkipForward, Droplet } from 'lucide-react'
+import { MoreVertical, Settings, SkipForward, Droplet, History } from 'lucide-react'
 
 interface CustomerActionsMenuProps {
   onManageSubscription: () => void
   onMarkSkip: () => void
   onAddExtraMilk: () => void
+  onViewHistory?: () => void
 }
 
 export function CustomerActionsMenu({
   onManageSubscription,
   onMarkSkip,
-  onAddExtraMilk
+  onAddExtraMilk,
+  onViewHistory
 }: CustomerActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -64,6 +66,16 @@ export function CustomerActionsMenu({
             <Droplet size={14} className="text-cyan-500" />
             Add Extra Milk
           </button>
+
+          {onViewHistory && (
+            <button
+              onClick={() => { setIsOpen(false); onViewHistory() }}
+              className="w-full text-left px-4 py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 cursor-pointer border-t border-slate-100 dark:border-slate-800"
+            >
+              <History size={14} className="text-indigo-500" />
+              View Full History
+            </button>
+          )}
         </div>
       )}
     </div>

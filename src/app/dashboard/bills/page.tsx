@@ -91,7 +91,7 @@ export default function BillsPage() {
   const [nextMonthSummary, setNextMonthSummary] = useState<any>(null)
 
   const [nextPaidMonth, setNextPaidMonth] = useState<BillingData | null>(null)
-  const [selectedMonthKey, setSelectedMonthKey] = useState<'current' | 'next'>('current')
+  const [selectedMonthKey, setSelectedMonthKey] = useState<string>('current')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
 
@@ -269,9 +269,47 @@ export default function BillsPage() {
     )
   }
 
-  // ─── Derived Values ───
-  // If user switched to next month view, use that data instead
-  const activeBill = (selectedMonthKey === 'next' && nextPaidMonth) ? nextPaidMonth : bill
+  // ─── Unified Month & Statement Resolution ───
+  const allMonthsMap = new Map<string, { key: string; label: string; paid: boolean; billData: BillingData }>();
+
+  if (bill) {
+    const d = new Date(bill.billing_month);
+    const isPaidStatus = bill.payment_status === 'paid' || mockPaid || (bill.amount_paid > 0 && bill.amount_paid >= bill.net_due);
+    allMonthsMap.set(bill.billing_month, {
+      key: bill.billing_month,
+      label: `${d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })} (Current)`,
+      paid: isPaidStatus,
+      billData: bill
+    });
+  }
+
+  if (nextPaidMonth) {
+    const d = new Date(nextPaidMonth.billing_month);
+    allMonthsMap.set(nextPaidMonth.billing_month, {
+      key: nextPaidMonth.billing_month,
+      label: `${d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })} (Advance)`,
+      paid: true,
+      billData: nextPaidMonth
+    });
+  }
+
+  const histMonths = ((data as any)?.all_billing_months || []) as BillingData[];
+  histMonths.forEach(m => {
+    if (!allMonthsMap.has(m.billing_month)) {
+      const d = new Date(m.billing_month);
+      const isPaidStatus = m.payment_status === 'paid' || (m.amount_paid > 0 && m.amount_paid >= m.net_due);
+      allMonthsMap.set(m.billing_month, {
+        key: m.billing_month,
+        label: d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
+        paid: isPaidStatus,
+        billData: m
+      });
+    }
+  });
+
+  const availableMonths = Array.from(allMonthsMap.values()).sort((a, b) => b.key.localeCompare(a.key));
+  const activeMonthItem = availableMonths.find(m => m.key === selectedMonthKey || (selectedMonthKey === 'current' && m.billData === bill) || (selectedMonthKey === 'next' && m.billData === nextPaidMonth)) || (availableMonths.length > 0 ? availableMonths[0] : null);
+  const activeBill = activeMonthItem ? activeMonthItem.billData : bill;
 
   const monthName = new Date(activeBill.billing_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
   // Payment status: check payment_status field first, then fall back to amount_paid check
@@ -333,49 +371,51 @@ export default function BillsPage() {
       <div className="absolute -top-32 -right-32 w-[340px] h-[340px] bg-gradient-to-br from-blue-500/5 to-emerald-500/5 blur-[90px] rounded-full pointer-events-none" />
       <div className="absolute top-[50%] -left-32 w-[260px] h-[260px] bg-gradient-to-tr from-amber-400/5 to-blue-400/5 blur-[80px] rounded-full pointer-events-none" />
 
-      {/* ─── Month Selector Dropdown (only visible when next month is pre-paid) ─── */}
-      {nextPaidMonth && (() => {
-        const months = [
-          { key: 'current' as const, label: new Date(bill!.billing_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), paid: activeBill.payment_status === 'paid' || mockPaid },
-          { key: 'next' as const, label: new Date(nextPaidMonth.billing_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), paid: true },
-        ]
-        const selected = months.find(m => m.key === selectedMonthKey)!
+      {/* ─── Month Selector Dropdown (all months history) ─── */}
+      {availableMonths.length > 0 && (() => {
+        const selected = activeMonthItem || availableMonths[0];
         return (
           <motion.div variants={itemVariants} className="relative z-20 w-fit">
             <div className="group relative" ref={dropdownRef}>
               {/* Trigger */}
               <button
                 onClick={() => setDropdownOpen(o => !o)}
-                className="flex items-center gap-2.5 h-10 pl-3.5 pr-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md hover:border-[#014DA4]/30 dark:hover:border-blue-700/40 transition-all text-sm font-bold text-slate-700 dark:text-slate-200 select-none"
+                className="flex items-center gap-2.5 h-10 pl-3.5 pr-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md hover:border-[#014DA4]/30 dark:hover:border-blue-700/40 transition-all text-sm font-bold text-slate-700 dark:text-slate-200 select-none cursor-pointer"
               >
                 <Calendar size={13} className="text-[#014DA4] dark:text-blue-400 flex-shrink-0" />
                 <span>{selected.label}</span>
-                {selected.paid && (
+                {selected.paid ? (
                   <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">Paid</span>
+                ) : (
+                  <span className="text-[9px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">Pending</span>
                 )}
-                <svg className={cn('w-3.5 h-3.5 text-slate-400 dark:text-slate-500 ml-0.5 transition-transform duration-200', dropdownOpen && 'rotate-180')} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                {availableMonths.length > 1 && (
+                  <svg className={cn('w-3.5 h-3.5 text-slate-400 dark:text-slate-500 ml-0.5 transition-transform duration-200', dropdownOpen && 'rotate-180')} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                )}
               </button>
 
               {/* Dropdown panel */}
-              {dropdownOpen && (
-                <div className="absolute top-full left-0 mt-1.5 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden z-30">
-                  {months.map((m) => (
+              {dropdownOpen && availableMonths.length > 1 && (
+                <div className="absolute top-full left-0 mt-1.5 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden z-30">
+                  {availableMonths.map((m) => (
                     <button
                       key={m.key}
                       onClick={() => { setSelectedMonthKey(m.key); setDropdownOpen(false); }}
                       className={cn(
-                        'w-full flex items-center justify-between px-4 py-3 text-[13px] font-semibold transition-colors',
-                        m.key === selectedMonthKey
+                        'w-full flex items-center justify-between px-4 py-3 text-[13px] font-semibold transition-colors cursor-pointer border-none text-left',
+                        m.key === selected.key
                           ? 'bg-blue-50 dark:bg-blue-950/30 text-[#014DA4] dark:text-blue-400'
                           : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                       )}
                     >
                       <span className="flex items-center gap-2">
-                        <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', m.key === selectedMonthKey ? 'bg-[#014DA4] dark:bg-blue-400' : 'bg-slate-300 dark:bg-slate-600')} />
+                        <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', m.key === selected.key ? 'bg-[#014DA4] dark:bg-blue-400' : 'bg-slate-300 dark:bg-slate-600')} />
                         {m.label}
                       </span>
-                      {m.paid && (
+                      {m.paid ? (
                         <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-full flex-shrink-0">Paid</span>
+                      ) : (
+                        <span className="text-[9px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full flex-shrink-0">Pending</span>
                       )}
                     </button>
                   ))}

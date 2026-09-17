@@ -36,7 +36,9 @@ export async function POST(request: Request) {
     if (existingSub) {
       return NextResponse.json({ 
         success: false, 
-        message: 'You already have an active or pending subscription.' 
+        existing: true,
+        redirect: '/dashboard/renew',
+        message: 'You already have an existing subscription. Please renew or pay to start deliveries.' 
       }, { status: 400 });
     }
 

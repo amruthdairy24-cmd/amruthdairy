@@ -9,7 +9,7 @@ import { ArrowLeft, CheckCircle, Calendar, ShieldCheck, ChevronDown } from 'luci
 import { motion, AnimatePresence } from 'framer-motion'
 import SubscriptionCalendar from '@/components/SubscriptionCalendar'
 import { calculateDailyRate, fetchMilkPricesClient, calculateNetDueFromCredits } from '@/lib/billing'
-import { cn } from '@/lib/utils'
+import { cn, getEarliestStartDateStr } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { useDashboardData } from '@/contexts/DashboardDataContext'
 
@@ -135,7 +135,14 @@ function RenewContent() {
       today.setHours(0, 0, 0, 0);
       const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
       if (today >= start && today <= end) {
-        startDateForCalculation = today;
+        const earliestStr = getEarliestStartDateStr();
+        const earliest = new Date(earliestStr);
+        earliest.setHours(0, 0, 0, 0);
+        if (earliest <= end) {
+          startDateForCalculation = earliest;
+        } else {
+          startDateForCalculation = today;
+        }
       }
     }
     return startDateForCalculation;

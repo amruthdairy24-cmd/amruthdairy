@@ -125,6 +125,20 @@ export function PricingSection({
       const res = await fetch('/api/customer/dashboard')
       const data = await res.json()
       if (data.success) {
+        if (data.subscription_state) {
+          const state = data.subscription_state.state;
+          if (state === 'UNRENEWED_ELIGIBLE' || state === 'PAYMENT_PENDING') {
+            router.push(`/dashboard/renew?month=${data.subscription_state.targetMonth}`);
+            return;
+          }
+          if (state === 'SUBSCRIBED_ACTIVE' || state === 'TRIAL_ACTIVE' || state === 'PAUSED') {
+            router.push('/dashboard');
+            return;
+          }
+        } else if (data.subscription) {
+          router.push('/dashboard');
+          return;
+        }
         router.push(targetPath)
       } else {
         router.push(`/login?redirect=${encodeURIComponent(targetPath)}`)

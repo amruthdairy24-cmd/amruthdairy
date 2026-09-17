@@ -18,6 +18,7 @@ import { getEarliestStartDateStr } from "@/lib/utils"
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { useDeliveryAreas } from '@/hooks/useDeliveryAreas'
+import toast from 'react-hot-toast'
 
 type OnboardingStep = 1 | 2 | 3 | 'success' | 'waitlist'
 
@@ -342,6 +343,9 @@ export default function OnboardingPage() {
         setWaitlistPosition(data.position)
         setStep('waitlist')
         setTimeout(() => { window.location.href = '/dashboard' }, 4000)
+      } else if (data.existing) {
+        toast.error(data.message || 'You already have an active subscription. Redirecting to your dashboard...')
+        setTimeout(() => { window.location.href = data.redirect || '/dashboard' }, 1800)
       } else {
         setError(data.message || 'Failed to create subscription.')
         setLoading(false)

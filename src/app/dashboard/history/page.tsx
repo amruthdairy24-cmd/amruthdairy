@@ -58,14 +58,29 @@ export default function DeliveryHistoryPage() {
   const [viewMonth, setViewMonth] = useState(new Date().getMonth())
 
   useEffect(() => {
-    if (data) {
-      if (data.subscription) setSubQty(data.subscription.quantity_litres)
-      setDeliveries(data.recent_deliveries || [])
-      setLoading(false)
-    } else if (!contextLoading) {
-      setLoading(false)
+    if (data?.subscription) {
+      setSubQty(data.subscription.quantity_litres)
     }
-  }, [data, contextLoading])
+  }, [data])
+
+  useEffect(() => {
+    let isMounted = true
+    async function fetchMonthDeliveries() {
+      try {
+        const res = await fetch(`/api/customer/deliveries?year=${viewYear}&month=${viewMonth + 1}`)
+        const json = await res.json()
+        if (isMounted && json.success) {
+          setDeliveries(json.deliveries || [])
+        }
+      } catch (err) {
+        console.error('Error fetching deliveries:', err)
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+    fetchMonthDeliveries()
+    return () => { isMounted = false }
+  }, [viewYear, viewMonth])
 
   async function loadData() {
     await refetch()

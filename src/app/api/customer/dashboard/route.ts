@@ -281,15 +281,17 @@ export async function GET(request: Request) {
       live_net_due = (current_month as any).net_due;
     }
 
-    // 12. All Paid Months
-    const { data: allPaidMonthsData } = await supabase
+    // 12. All Billing Months & Paid Months History
+    const { data: allBillingMonthsData } = await supabase
       .from('billing_months')
-      .select('billing_month')
+      .select('id, billing_month, days_in_month, days_delivered, days_skipped, days_paused, extra_litres_ordered, skip_credit, extra_charges, carry_in_balance, net_due, amount_paid, monthly_amount, payment_status, created_at')
       .eq('subscription_id', subId)
-      .eq('payment_status', 'paid');
+      .order('billing_month', { ascending: false });
 
     const paidMonthsSet = new Set<string>(
-      allPaidMonthsData ? allPaidMonthsData.map(m => m.billing_month) : []
+      allBillingMonthsData
+        ? allBillingMonthsData.filter(m => m.payment_status === 'paid').map(m => m.billing_month)
+        : []
     );
     if (current_month && current_month.payment_status === 'paid') {
       paidMonthsSet.add(current_month.billing_month);
@@ -370,6 +372,7 @@ export async function GET(request: Request) {
       recent_deliveries: recent_deliveries || [],
       latest_paid_month: latest_paid_month?.billing_month || null,
       excluded_dates: excluded_dates ? excluded_dates.map(e => e.excluded_date) : [],
+      all_billing_months: allBillingMonthsData || [],
       migration_mode
     });
 

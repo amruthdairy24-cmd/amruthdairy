@@ -40,6 +40,7 @@ export interface DashboardData {
     carry_in_balance: number;
     net_due: number;
     amount_paid: number;
+    monthly_amount?: number;
     payment_status?: string;
   } | null;
   upcoming_skips: Array<{ skip_date: string; credit_amount: number }>;
@@ -50,6 +51,7 @@ export interface DashboardData {
   upcoming_adjustments?: Array<{ id: string; adjustment_type: string; amount: number; description: string; target_month: string; refund_status?: string }>;
   latest_paid_month: string | null;
   excluded_dates?: string[];
+  all_billing_months?: Array<any>;
   migration_mode?: boolean;
   next_paid_month?: {
     id: string;
