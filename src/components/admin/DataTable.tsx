@@ -18,6 +18,7 @@ interface DataTableProps<T> {
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   onView?: (row: T) => void;
+  onRowClick?: (row: T) => void;
   renderActions?: (row: T) => ReactNode;
 }
 
@@ -28,6 +29,7 @@ export function DataTable<T extends { id: string | number }>({
   onEdit, 
   onDelete, 
   onView,
+  onRowClick,
   renderActions
 }: DataTableProps<T>) {
   
@@ -98,11 +100,16 @@ export function DataTable<T extends { id: string | number }>({
             {data.map((row) => (
               <tr 
                 key={row.id} 
-                className="transition-colors group h-[60px] hover:bg-slate-50/35 dark:hover:bg-slate-800/20"
+                onClick={() => onRowClick?.(row)}
+                className={cn(
+                  "transition-colors group h-[60px] hover:bg-slate-50/50 dark:hover:bg-slate-800/40",
+                  onRowClick && "cursor-pointer"
+                )}
               >
                 {/* Row Checkbox */}
                 <td className="py-3 px-4 text-center">
                   <div 
+                    onClick={(e) => e.stopPropagation()}
                     className="w-4 h-4 rounded border border-slate-200 dark:border-slate-855 hover:border-[#014DA4] dark:hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-all mx-auto cursor-pointer"
                   />
                 </td>
@@ -122,12 +129,12 @@ export function DataTable<T extends { id: string | number }>({
 
                 {/* Actions */}
                 {(onEdit || onDelete || onView || renderActions) && (
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1.5 transition-opacity duration-150">
                       {renderActions && renderActions(row)}
                       {onView && (
                         <button 
-                          onClick={() => onView(row)} 
+                          onClick={(e) => { e.stopPropagation(); onView(row) }} 
                           className="flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 border border-transparent hover:border-blue-200 dark:hover:border-blue-900 transition-colors cursor-pointer w-[30px] h-[30px]" 
                           title="View Details"
                         >
@@ -136,7 +143,7 @@ export function DataTable<T extends { id: string | number }>({
                       )}
                       {onEdit && (
                         <button 
-                          onClick={() => onEdit(row)} 
+                          onClick={(e) => { e.stopPropagation(); onEdit(row) }} 
                           className="flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-900/40 transition-colors cursor-pointer w-[30px] h-[30px]" 
                           title="Edit"
                         >

@@ -7,6 +7,7 @@ import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
+import { AdminCustomerHistoryModal } from '@/components/admin/AdminCustomerHistoryModal'
 import { cn } from '@/lib/utils'
 import { isCreditAdjustmentType } from '@/lib/billing'
 import toast from 'react-hot-toast'
@@ -57,8 +58,20 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
   const [activeTab, setActiveTab] = useState<'invoices' | 'adjustments' | 'payments'>('invoices')
   const [isProcessing, setIsProcessing] = useState(false);
   const [viewingEntry, setViewingEntry] = useState<any | null>(null);
+  const [historyCustomer, setHistoryCustomer] = useState<{ id: string; name: string; tab?: any } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [adjustmentViewMode, setAdjustmentViewMode] = useState<'log' | 'summary'>('log');
+
+  const handleInspectRow = (row: any) => {
+    const custId = row.customer_id
+    const custName = row.profiles?.full_name || 'Customer'
+    if (custId) {
+      const tab = activeTab === 'invoices' ? 'bills' : activeTab === 'payments' ? 'payments' : 'adjustments'
+      setHistoryCustomer({ id: custId, name: custName, tab })
+    } else {
+      setViewingEntry(row)
+    }
+  };
 
   // Payment Modal state
   const [showSelectCustomer, setShowSelectCustomer] = useState(false);
@@ -646,7 +659,7 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
 
       {/* RENDER ACTIVE TAB SHEET */}
       <div className="pt-2">
-        {activeTab === 'invoices' && <DataTable data={filteredInvoices} columns={invoiceColumns} onView={setViewingEntry} />}
+        {activeTab === 'invoices' && <DataTable data={filteredInvoices} columns={invoiceColumns} onView={handleInspectRow} />}
         {activeTab === 'adjustments' && (
           <div className="space-y-4">
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl w-fit shadow-inner">
@@ -671,13 +684,13 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
             </div>
             
             {adjustmentViewMode === 'log' ? (
-              <DataTable data={filteredAdjustments} columns={adjustmentColumns} onView={setViewingEntry} />
+              <DataTable data={filteredAdjustments} columns={adjustmentColumns} onView={handleInspectRow} />
             ) : (
-              <DataTable data={filteredSummaries} columns={adjustmentSummaryColumns} onView={setViewingEntry} />
+              <DataTable data={filteredSummaries} columns={adjustmentSummaryColumns} onView={handleInspectRow} />
             )}
           </div>
         )}
-        {activeTab === 'payments' && <DataTable data={filteredPayments} columns={paymentColumns} onView={setViewingEntry} />}
+        {activeTab === 'payments' && <DataTable data={filteredPayments} columns={paymentColumns} onView={handleInspectRow} />}
       </div>
 
       <RowDetailsModal
@@ -686,6 +699,16 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
         title="Billing Details"
         data={viewingEntry}
       />
+
+      {historyCustomer && (
+        <AdminCustomerHistoryModal
+          isOpen={!!historyCustomer}
+          onClose={() => setHistoryCustomer(null)}
+          customerId={historyCustomer.id}
+          customerName={historyCustomer.name}
+          initialTab={historyCustomer.tab || 'bills'}
+        />
+      )}
 
       {/* Select Customer Modal for Record Payment */}
       <SelectCustomerModal 

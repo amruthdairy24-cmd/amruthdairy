@@ -8,7 +8,7 @@ import {
   Printer, Download, Share2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
+import { AdminCustomerHistoryModal } from '@/components/admin/AdminCustomerHistoryModal'
 
 interface DeliveryEntry {
   id: string
@@ -55,7 +55,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
   const [markingId, setMarkingId] = useState<string | null>(null)
   const [markingAll, setMarkingAll] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
-  const [viewingEntry, setViewingEntry] = useState<DeliveryEntry | null>(null)
+  const [historyCustomer, setHistoryCustomer] = useState<{ id: string; name: string } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'delivered'>('all')
 
@@ -664,9 +664,9 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
                       <td className="px-6 py-2.5 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => setViewingEntry(del)}
+                            onClick={() => setHistoryCustomer({ id: del.customer_id, name: del.customer_name })}
                             className="inline-flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-[#014DA4] dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 border border-transparent hover:border-blue-200 dark:hover:border-blue-900 transition-colors cursor-pointer w-8 h-8" 
-                            title="View Details"
+                            title="View Full Customer History & Delivery Journal"
                           >
                             <Eye size={14}/>
                           </button>
@@ -702,12 +702,15 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
         )}
       </div>
 
-      <RowDetailsModal
-        isOpen={!!viewingEntry}
-        onClose={() => setViewingEntry(null)}
-        title="Delivery Details"
-        data={viewingEntry}
-      />
+      {historyCustomer && (
+        <AdminCustomerHistoryModal
+          isOpen={!!historyCustomer}
+          onClose={() => setHistoryCustomer(null)}
+          customerId={historyCustomer.id}
+          customerName={historyCustomer.name}
+          initialTab="deliveries"
+        />
+      )}
     </div>
   )
 }

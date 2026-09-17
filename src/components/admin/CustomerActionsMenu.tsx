@@ -1,20 +1,22 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { MoreVertical, Settings, SkipForward, Droplet, History } from 'lucide-react'
+import { MoreVertical, Settings, SkipForward, Droplet, History, CheckCircle2 } from 'lucide-react'
 
 interface CustomerActionsMenuProps {
   onManageSubscription: () => void
   onMarkSkip: () => void
   onAddExtraMilk: () => void
   onViewHistory?: () => void
+  onMarkPaid?: () => void
 }
 
 export function CustomerActionsMenu({
   onManageSubscription,
   onMarkSkip,
   onAddExtraMilk,
-  onViewHistory
+  onViewHistory,
+  onMarkPaid
 }: CustomerActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -66,6 +68,16 @@ export function CustomerActionsMenu({
             <Droplet size={14} className="text-cyan-500" />
             Add Extra Milk
           </button>
+
+          {onMarkPaid && (
+            <button
+              onClick={() => { setIsOpen(false); onMarkPaid() }}
+              className="w-full text-left px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors flex items-center gap-2 cursor-pointer border-t border-slate-100 dark:border-slate-800"
+            >
+              <CheckCircle2 size={14} className="text-emerald-500" />
+              Mark as Paid
+            </button>
+          )}
 
           {onViewHistory && (
             <button

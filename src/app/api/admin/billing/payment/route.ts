@@ -54,7 +54,8 @@ export async function POST(request: Request) {
         payment_type: 'subscription',
         method: paymentType,
         status: 'success',
-        is_manual: true
+        is_manual: true,
+        manual_note: body.notes || body.manual_note || 'Manually verified and marked paid by Admin'
       })
       .select('id')
       .single();
@@ -82,13 +83,16 @@ export async function POST(request: Request) {
 
     if (invoice) {
       const newAmountPaid = (invoice.amount_paid || 0) + Number(amount);
-      const newStatus = newAmountPaid >= (invoice.net_due || 0) ? 'paid' : 'pending';
+      const newNetDue = Math.max(0, (invoice.net_due || 0) - Number(amount));
+      const newStatus = newNetDue === 0 ? 'paid' : (newAmountPaid >= (invoice.net_due || 0) ? 'paid' : 'pending');
 
       const { error: updateError } = await adminClient
         .from('billing_months')
         .update({
           amount_paid: newAmountPaid,
-          payment_status: newStatus
+          net_due: newNetDue,
+          payment_status: newStatus,
+          updated_at: new Date().toISOString()
         })
         .eq('id', invoice.id);
 

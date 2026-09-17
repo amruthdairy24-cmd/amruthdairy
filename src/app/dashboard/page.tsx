@@ -490,10 +490,17 @@ export default function CustomerDashboard() {
             <Milk size={15} className="text-[#014DA4]" />
             <span>{planQuantityText}</span>
           </div>
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Active Subscription</span>
-          </div>
+          {isCurrentUnpaidCard ? (
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 text-amber-700 dark:text-amber-400 font-bold text-xs">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span>Renewal Due (Unpaid)</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Active Subscription</span>
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -576,12 +583,14 @@ export default function CustomerDashboard() {
             </span>
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold font-display tracking-tight leading-tight mt-1">
-                Welcome to your morning harvest! 🌾
+                {isCurrentUnpaidCard ? "Resume your milk delivery! 🌾" : "Welcome to your morning harvest! 🌾"}
               </h2>
               <p className="text-xs sm:text-sm font-medium text-emerald-100/90 dark:text-slate-300 mt-2 leading-relaxed">
-                {subscription.status === 'active'
-                  ? 'Your raw, farm-fresh milk subscription is active. Delivered daily before 7:00 AM straight to your home.'
-                  : 'Your subscription is currently paused. Resume your milk delivery anytime below.'
+                {isCurrentUnpaidCard
+                  ? 'Your milk subscription is currently on hold awaiting September payment. Renew below to start receiving deliveries.'
+                  : subscription.status === 'active'
+                    ? 'Your raw, farm-fresh milk subscription is active. Delivered daily before 7:00 AM straight to your home.'
+                    : 'Your subscription is currently paused. Resume your milk delivery anytime below.'
                 }
               </p>
             </div>
@@ -596,10 +605,12 @@ export default function CustomerDashboard() {
           <div className="flex-shrink-0 self-start md:self-center pr-6 flex flex-col items-end">
             <div className="bg-white dark:bg-slate-900/12 dark:bg-slate-950/40 border border-white/10 dark:border-slate-800/50 backdrop-blur-md px-4 py-3.5 rounded-2xl min-w-[170px] text-left md:text-right shadow-sm select-none">
               <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-blue-950/70 dark:text-slate-400 uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                <span>Next Delivery</span>
+                <span className={cn("w-1.5 h-1.5 rounded-full", isCurrentUnpaidCard ? "bg-amber-400" : "bg-emerald-400", "animate-pulse")} />
+                <span>{isCurrentUnpaidCard ? "Delivery Status" : "Next Delivery"}</span>
               </span>
-              <p className="text-sm font-bold text-blue-950 dark:text-white font-display mt-1.5">Tomorrow, 7:00 AM</p>
+              <p className="text-sm font-bold text-blue-950 dark:text-white font-display mt-1.5">
+                {isCurrentUnpaidCard ? "On Hold (Unpaid)" : "Tomorrow, 7:00 AM"}
+              </p>
             </div>
           </div>
         </div>

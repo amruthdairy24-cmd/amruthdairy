@@ -114,13 +114,34 @@ export async function GET(
       .filter(p => p.status === 'success')
       .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
+    const billingMonths = billingMonthsRes.data || [];
+    const now = new Date();
+    const currentBillingMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    const currentMonthRecord = billingMonths.find(m => m.billing_month === currentBillingMonthStr);
+
+    const paidMonths = billingMonths.filter(m => m.payment_status === 'paid');
+    const latestPaidMonth = paidMonths.length > 0 ? paidMonths[0].billing_month : null;
+    const isCurrentPaid = currentMonthRecord ? currentMonthRecord.payment_status === 'paid' : false;
+    const totalDueAcrossAllMonths = billingMonths
+      .filter(m => m.payment_status !== 'paid')
+      .reduce((sum, m) => sum + Math.max(0, Number(m.net_due) || 0), 0);
+
     return NextResponse.json({
       success: true,
       profile,
       subscriptions: subscriptionsRes.data || [],
-      billing_months: billingMonthsRes.data || [],
+      billing_months: billingMonths,
       payments: payments,
       deliveries: deliveries,
+      payment_overview: {
+        is_current_paid: isCurrentPaid,
+        current_month: currentBillingMonthStr,
+        current_month_due: currentMonthRecord ? Number(currentMonthRecord.net_due) : 0,
+        total_due: totalDueAcrossAllMonths,
+        total_paid: totalAmountPaid,
+        latest_paid_month: latestPaidMonth,
+        joined_date: profile.created_at
+      },
       delivery_summary: {
         total_delivered_days: deliveredCount,
         total_skipped_days: skippedCount,

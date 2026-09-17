@@ -24,7 +24,10 @@ export default async function CustomersPage() {
         billing_months (
           id,
           billing_month,
-          payment_status
+          payment_status,
+          monthly_amount,
+          amount_paid,
+          net_due
         )
       )
     `)
@@ -50,9 +53,26 @@ export default async function CustomersPage() {
     let subscriptionState = 'NOT_SUBSCRIBED'
     let isCovered = false
 
+    // Collect all billing months across all subscriptions of this customer
+    const allBillingMonths = subs.flatMap((s: any) => Array.isArray(s.billing_months) ? s.billing_months : [])
+    const currentMonthBilling = allBillingMonths.find((b: any) => b.billing_month === currentBillingMonthStr) || null
+    const isCurrentPaid = currentMonthBilling ? currentMonthBilling.payment_status === 'paid' : false
+    
+    // Total pending dues across all months
+    const totalPendingDues = allBillingMonths
+      .filter((b: any) => b.payment_status !== 'paid')
+      .reduce((sum: number, b: any) => sum + Math.max(0, Number(b.net_due ?? b.monthly_amount ?? 0)), 0)
+
+    const currentMonthDue = currentMonthBilling 
+      ? Math.max(0, Number(currentMonthBilling.net_due ?? currentMonthBilling.monthly_amount ?? 0))
+      : 0
+
+    const joinedDaysAgo = p.created_at
+      ? Math.max(0, Math.floor((now.getTime() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24)))
+      : 0
+
     if (activeSub) {
       const bMonths = Array.isArray(activeSub.billing_months) ? activeSub.billing_months : []
-      const currentMonthBilling = bMonths.find((b: any) => b.billing_month === currentBillingMonthStr) || null
       const paidMonths = bMonths
         .filter((b: any) => b.payment_status === 'paid')
         .map((b: any) => b.billing_month)
@@ -88,6 +108,11 @@ export default async function CustomersPage() {
       created_at: p.created_at,
       subscription_status: subscriptionState,
       is_covered: isCovered,
+      is_paid: isCurrentPaid,
+      pending_dues: totalPendingDues,
+      current_month_due: currentMonthDue,
+      joined_days_ago: joinedDaysAgo,
+      has_billing_record: allBillingMonths.length > 0,
       quantity_litres: activeSub ? activeSub.quantity_litres : null,
       start_date: activeSub ? activeSub.start_date : null,
       monthly_amount: activeSub ? activeSub.monthly_amount : null,

@@ -2,17 +2,17 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, Phone, MapPin, AlertTriangle, Trash2, Search, MessageCircleMore, History } from 'lucide-react'
+import { Users, Phone, MapPin, AlertTriangle, Trash2, Search, MessageCircleMore, History, CheckCircle2, Calendar } from 'lucide-react'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
-import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
 import { AddCustomerModal } from '@/components/admin/AddCustomerModal'
 import { CustomerActionsMenu } from '@/components/admin/CustomerActionsMenu'
 import { AdminSkipModal } from '@/components/admin/AdminSkipModal'
 import { AdminExtraMilkModal } from '@/components/admin/AdminExtraMilkModal'
 import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
 import { AdminCustomerHistoryModal } from '@/components/admin/AdminCustomerHistoryModal'
+import { AdminMarkPaidModal } from '@/components/admin/AdminMarkPaidModal'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -32,22 +32,27 @@ interface Customer {
   monthly_amount: number | null;
   daily_rate: number | null;
   delivery_notes: string | null;
+  is_paid?: boolean;
+  pending_dues?: number;
+  current_month_due?: number;
+  joined_days_ago?: number;
+  has_billing_record?: boolean;
 }
 
 export function CustomersClient({ data }: { data: Customer[] }) {
   const router = useRouter()
-  const [viewingEntry, setViewingEntry] = useState<Customer | null>(null)
   const [showAddCustomer, setShowAddCustomer] = useState(false)
   
   // Actions Modals State
   const [actionCustomer, setActionCustomer] = useState<Customer | null>(null)
   const [activeModal, setActiveModal] = useState<'subscription' | 'skip' | 'extra' | 'vacation' | null>(null)
   const [historyCustomer, setHistoryCustomer] = useState<Customer | null>(null)
+  const [markPaidCustomer, setMarkPaidCustomer] = useState<Customer | null>(null)
 
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterStatus, setFilterStatus] = useState<'all' | 'subscribed' | 'unrenewed' | 'pending' | 'not_subscribed'>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'subscribed' | 'pending' | 'paid' | 'unrenewed' | 'not_subscribed'>('all')
 
   const confirmDelete = async () => {
     if (!customerToDelete) return
@@ -115,7 +120,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
 
   const columns: ColumnDef<Customer>[] = [
     { 
-      header: 'Name', 
+      header: 'Customer', 
       cell: (row) => {
         // Generate beautiful gradient avatars based on name initials
         const nameParts = row.full_name ? row.full_name.trim().split(/\s+/) : [];
@@ -167,33 +172,85 @@ export function CustomersClient({ data }: { data: Customer[] }) {
       )
     },
     { 
-      header: 'Area/Pin', 
-      cell: (row) => (
-        <div className="flex items-center gap-1.5 text-[12.5px] font-extrabold text-slate-600 dark:text-slate-300">
-          <MapPin size={13} className="text-slate-400 dark:text-slate-550 flex-shrink-0" />
-          <span>{row.area || 'N/A'}</span>
-        </div>
-      )
-    },
-    { 
       header: 'Joined', 
-      cell: (row) => (
-        <span className="text-[12px] font-bold text-slate-500 dark:text-slate-400">
-          {formatDate(row.created_at)}
-        </span>
-      ) 
+      cell: (row) => {
+        const days = row.joined_days_ago ?? 0
+        const tenureText = days === 0 ? 'Today' : days === 1 ? 'Yesterday' : `${days}d ago`
+        return (
+          <div className="flex flex-col items-start">
+            <span className="text-[12px] font-bold text-slate-700 dark:text-slate-200">
+              {formatDate(row.created_at)}
+            </span>
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+              {tenureText}
+            </span>
+          </div>
+        )
+      } 
     },
     { 
-      header: 'Status', 
-      align: 'center',
+      header: 'Payment & Dues', 
+      cell: (row) => {
+        const pending = row.pending_dues ?? 0
+        if (row.is_paid) {
+          return (
+            <div className="flex flex-col items-start">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                <CheckCircle2 size={12} />
+                Paid
+              </span>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5">
+                ₹0 Due
+              </span>
+            </div>
+          )
+        }
+        if (pending > 0) {
+          return (
+            <div className="flex flex-col items-start">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                <AlertTriangle size={12} />
+                ₹{pending.toLocaleString('en-IN')} Due
+              </span>
+              {row.current_month_due && row.current_month_due > 0 ? (
+                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 mt-0.5">
+                  Current: ₹{row.current_month_due.toLocaleString('en-IN')}
+                </span>
+              ) : null}
+            </div>
+          )
+        }
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+            No Dues
+          </span>
+        )
+      } 
+    },
+    { 
+      header: 'Plan & Status', 
       cell: (row) => {
         const badgeConfig = getStatusBadgeConfig(row.subscription_status);
         return (
-          <div className="flex justify-center">
+          <div className="flex flex-col items-start gap-1">
             <StatusBadge status={badgeConfig.label} type={badgeConfig.type} />
+            {row.quantity_litres && (
+              <span className="text-[10.5px] font-bold font-mono text-slate-500 dark:text-slate-400">
+                {row.quantity_litres}L/day {row.daily_rate ? `• ₹${row.daily_rate}/L` : ''}
+              </span>
+            )}
           </div>
         );
       }
+    },
+    { 
+      header: 'Area', 
+      cell: (row) => (
+        <div className="flex items-center gap-1.5 text-[12px] font-bold text-slate-600 dark:text-slate-300">
+          <MapPin size={13} className="text-slate-400 dark:text-slate-550 flex-shrink-0" />
+          <span>{row.area || 'Padil'}</span>
+        </div>
+      )
     },
   ]
 
@@ -210,11 +267,14 @@ export function CustomersClient({ data }: { data: Customer[] }) {
     if (filterStatus === 'subscribed') {
       return customer.subscription_status === 'SUBSCRIBED_ACTIVE' || customer.subscription_status === 'TRIAL_ACTIVE'
     }
+    if (filterStatus === 'pending') {
+      return customer.subscription_status === 'PAYMENT_PENDING' || (customer.pending_dues ?? 0) > 0
+    }
+    if (filterStatus === 'paid') {
+      return customer.is_paid === true
+    }
     if (filterStatus === 'unrenewed') {
       return customer.subscription_status === 'UNRENEWED_ELIGIBLE'
-    }
-    if (filterStatus === 'pending') {
-      return customer.subscription_status === 'PAYMENT_PENDING'
     }
     if (filterStatus === 'not_subscribed') {
       return ['NOT_SUBSCRIBED', 'CANCELLED', 'PAUSED'].includes(customer.subscription_status)
@@ -227,7 +287,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
     <div className="space-y-6">
       <AdminHeader 
         title="Customers" 
-        description="Manage your customer database and profiles." 
+        description="Inspect customer details, joined date, payment status, and full daily delivery history." 
         icon={Users} 
         actionLabel="Add Customer"
         onAction={() => setShowAddCustomer(true)}
@@ -250,15 +310,16 @@ export function CustomersClient({ data }: { data: Customer[] }) {
           {[
             { id: 'all', label: 'All' },
             { id: 'subscribed', label: 'Active Plan' },
+            { id: 'pending', label: 'Pending Dues' },
+            { id: 'paid', label: 'Paid in Full' },
             { id: 'unrenewed', label: 'Renewal Due' },
-            { id: 'pending', label: 'Payment Pending' },
             { id: 'not_subscribed', label: 'Not Subscribed' }
           ].map(status => (
             <button
               key={status.id}
               onClick={() => setFilterStatus(status.id as any)}
               className={cn(
-                "flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap",
+                "flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap",
                 filterStatus === status.id 
                   ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" 
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
@@ -273,7 +334,8 @@ export function CustomersClient({ data }: { data: Customer[] }) {
       <DataTable 
         data={filteredData} 
         columns={columns} 
-        onView={(row) => setViewingEntry(row)} 
+        onView={(row) => setHistoryCustomer(row)} 
+        onRowClick={(row) => setHistoryCustomer(row)}
         onDelete={(row) => setCustomerToDelete(row)}
         renderActions={(row) => {
           const whatsappUrl = buildWhatsAppUrl(row)
@@ -307,17 +369,11 @@ export function CustomersClient({ data }: { data: Customer[] }) {
                 onMarkSkip={() => { setActionCustomer(row); setActiveModal('skip') }}
                 onAddExtraMilk={() => { setActionCustomer(row); setActiveModal('extra') }}
                 onViewHistory={() => setHistoryCustomer(row)}
+                onMarkPaid={() => setMarkPaidCustomer(row)}
               />
             </div>
           )
         }}
-      />
-
-      <RowDetailsModal
-        isOpen={!!viewingEntry}
-        onClose={() => setViewingEntry(null)}
-        title="Customer Details"
-        data={viewingEntry}
       />
 
       <AddCustomerModal 
@@ -361,6 +417,21 @@ export function CustomersClient({ data }: { data: Customer[] }) {
           onClose={() => setHistoryCustomer(null)}
           customerId={historyCustomer.id}
           customerName={historyCustomer.full_name}
+          initialTab="subscription"
+        />
+      )}
+
+      {markPaidCustomer && (
+        <AdminMarkPaidModal
+          isOpen={!!markPaidCustomer}
+          onClose={() => setMarkPaidCustomer(null)}
+          onSuccess={() => {
+            router.refresh()
+            setMarkPaidCustomer(null)
+          }}
+          customerId={markPaidCustomer.id}
+          customerName={markPaidCustomer.full_name}
+          defaultAmount={markPaidCustomer.pending_dues || markPaidCustomer.monthly_amount || 1200}
         />
       )}
 

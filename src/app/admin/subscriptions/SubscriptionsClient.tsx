@@ -10,7 +10,7 @@ import {
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { DataTable, ColumnDef } from '@/components/admin/DataTable'
 import { StatusBadge } from '@/components/admin/StatusBadge'
-import { RowDetailsModal } from '@/components/admin/RowDetailsModal'
+import { AdminCustomerHistoryModal } from '@/components/admin/AdminCustomerHistoryModal'
 import { SelectCustomerModal } from '@/components/admin/SelectCustomerModal'
 import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
 import { toast } from 'react-hot-toast'
@@ -138,7 +138,7 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [viewingEntry, setViewingEntry] = useState<SubscriptionData | null>(null)
+  const [historyCustomer, setHistoryCustomer] = useState<{ id: string; name: string } | null>(null)
   
   // Modals state for New Subscription flow
   const [showSelectCustomer, setShowSelectCustomer] = useState(false)
@@ -364,10 +364,31 @@ export function SubscriptionsClient({ data, currentMonth }: { data: Subscription
           </p>
         </div>
       ) : (
-        <DataTable data={filtered} columns={columns} onView={(row) => setViewingEntry(row)} />
+        <DataTable
+          data={filtered}
+          columns={columns}
+          onView={(row) => {
+            const custId = row.customer_id || row.id
+            const custName = row.profiles?.full_name || 'Customer'
+            setHistoryCustomer({ id: custId, name: custName })
+          }}
+          onRowClick={(row) => {
+            const custId = row.customer_id || row.id
+            const custName = row.profiles?.full_name || 'Customer'
+            setHistoryCustomer({ id: custId, name: custName })
+          }}
+        />
       )}
 
-      <RowDetailsModal isOpen={!!viewingEntry} onClose={() => setViewingEntry(null)} title="Subscription Details" data={viewingEntry} />
+      {historyCustomer && (
+        <AdminCustomerHistoryModal
+          isOpen={!!historyCustomer}
+          onClose={() => setHistoryCustomer(null)}
+          customerId={historyCustomer.id}
+          customerName={historyCustomer.name}
+          initialTab="subscription"
+        />
+      )}
 
       {/* Select Customer Modal */}
       <SelectCustomerModal 
