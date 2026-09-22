@@ -51,12 +51,40 @@ export async function PUT(request: Request) {
     const cleanRefCode = referral_code ? referral_code.trim().toUpperCase() : null;
     const finalRefCode = cleanRefCode || existing?.referred_by_code || null;
 
+    const rawPhone = phone || existing?.phone || user.phone || null;
+    const cleanPhone = rawPhone ? String(rawPhone).replace(/\D/g, '') : null;
+    const normalizedPhone = cleanPhone && cleanPhone.length === 10 
+      ? cleanPhone 
+      : (cleanPhone && cleanPhone.length === 12 && cleanPhone.startsWith('91') ? cleanPhone.slice(2) : cleanPhone);
+
+    // Check if phone number is already registered to another user
+    if (normalizedPhone) {
+      const { data: phoneConflict } = await adminSupabase
+        .from('profiles')
+        .select('id, email, full_name')
+        .eq('phone', normalizedPhone)
+        .neq('id', user.id)
+        .maybeSingle();
+
+      if (phoneConflict) {
+        const maskedEmail = phoneConflict.email 
+          ? phoneConflict.email.replace(/^(.{2})(.*)(@.*)$/, (_: string, a: string, b: string, c: string) => a + '*'.repeat(Math.max(b.length, 3)) + c)
+          : null;
+        return NextResponse.json({
+          success: false,
+          message: maskedEmail
+            ? `This mobile number is already registered to another account (${maskedEmail}). Please sign in using that email or enter a different phone number.`
+            : 'This mobile number is already registered with another account. Please sign in with your registered account or enter a different phone number.'
+        }, { status: 400 });
+      }
+    }
+
     const { data: profile, error: updateError } = await adminSupabase
       .from('profiles')
       .upsert({
         id: user.id,
         email: user.email || existing?.email || null,
-        phone: phone || existing?.phone || user.phone || null,
+        phone: normalizedPhone || null,
         full_name,
         address,
         area,
@@ -71,7 +99,13 @@ export async function PUT(request: Request) {
 
     if (updateError) {
       console.error('Profile update error:', updateError.message);
-      return NextResponse.json({ success: false, message: updateError.message || 'Failed to update profile details' }, { status: 500 });
+      if (updateError.message.includes('profiles_phone_key') || updateError.code === '23505') {
+        return NextResponse.json({
+          success: false,
+          message: 'This mobile number is already registered with another account. Please sign in with your registered account or enter a different phone number.'
+        }, { status: 400 });
+      }
+      return NextResponse.json({ success: false, message: 'Failed to update profile details. Please try again.' }, { status: 500 });
     }
 
     // Create pending referral record if referral code was provided

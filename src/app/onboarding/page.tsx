@@ -680,9 +680,20 @@ export default function OnboardingPage() {
                       </div>
 
                       {error && (
-                        <p className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-xs font-bold text-rose-700 flex items-center gap-1.5">
-                          <AlertCircle size={14} /> {error}
-                        </p>
+                        <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-xs font-bold text-rose-700 flex flex-col gap-2">
+                          <div className="flex items-start gap-1.5">
+                            <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                            <span>{error}</span>
+                          </div>
+                          {error.toLowerCase().includes('already registered') && (
+                            <a
+                              href="/login"
+                              className="text-xs font-extrabold text-blue-700 hover:text-blue-800 underline ml-5 inline-flex items-center gap-1"
+                            >
+                              Go to Sign In page &rarr;
+                            </a>
+                          )}
+                        </div>
                       )}
 
                       <button type="submit" disabled={loading} className="w-full h-12 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all border-none flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">

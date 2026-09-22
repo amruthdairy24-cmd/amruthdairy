@@ -95,6 +95,12 @@ export async function POST(request: Request) {
       if (!existingAuthUser) {
         await adminClient.auth.admin.deleteUser(authUserId);
       }
+      if (profileError.message.includes('profiles_phone_key') || profileError.code === '23505') {
+        return NextResponse.json(
+          { success: false, message: 'This mobile number is already assigned to another customer.' },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
         { success: false, message: 'Failed to create customer profile.' },
         { status: 500 }
