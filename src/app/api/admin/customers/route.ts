@@ -26,10 +26,10 @@ export async function DELETE(request: Request) {
     }
 
     // Step 1: Clean up child records in dependency order to prevent FK violations
-    // A. Payments (foreign keys: billing_month_id, subscription_id, customer_id)
+    // A. Payments (foreign keys: billing_month_id, subscription_id, customer_id, extra_order_id)
     await adminClient.from('payments').delete().eq('customer_id', id);
 
-    // B. Daily deliveries
+    // B. Daily deliveries (foreign keys: customer_id, subscription_id, skip_id, vacation_id, extra_order_id)
     await adminClient.from('daily_delivery_sheet').delete().eq('customer_id', id);
 
     // C. Billing adjustments
@@ -41,20 +41,37 @@ export async function DELETE(request: Request) {
     // E. Skip requests
     await adminClient.from('skip_requests').delete().eq('customer_id', id);
 
-    // F. Extra milk orders
+    // F. Vacation pauses
+    await adminClient.from('vacation_pauses').delete().eq('customer_id', id);
+
+    // G. Extra milk orders
     await adminClient.from('extra_milk_orders').delete().eq('customer_id', id);
 
-    // G. Product orders
+    // H. Product orders & product order items
+    const { data: customerOrders } = await adminClient.from('product_orders').select('id').eq('customer_id', id);
+    if (customerOrders && customerOrders.length > 0) {
+      const orderIds = customerOrders.map(o => o.id);
+      await adminClient.from('product_order_items').delete().in('order_id', orderIds);
+    }
     await adminClient.from('product_orders').delete().eq('customer_id', id);
 
-    // H. Subscriptions
+    // I. Quantity changes
+    await adminClient.from('quantity_changes').delete().eq('customer_id', id);
+
+    // J. Subscription excluded dates
+    await adminClient.from('subscription_excluded_dates').delete().eq('customer_id', id);
+
+    // K. Subscriptions
     await adminClient.from('subscriptions').delete().eq('customer_id', id);
 
-    // I. Referrals
+    // L. Referrals (both as referrer and referee)
     await adminClient.from('referrals').delete().or(`referrer_id.eq.${id},referee_id.eq.${id}`);
 
-    // J. Farm visits
+    // M. Farm visits
     await adminClient.from('farm_visits').delete().eq('customer_id', id);
+
+    // N. Waitlist
+    await adminClient.from('waitlist').delete().eq('customer_id', id);
 
     // Step 2: Delete from profiles table
     const { error: profileDeleteError } = await adminClient.from('profiles').delete().eq('id', id);
