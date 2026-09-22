@@ -7,7 +7,7 @@ import {
   FileText, CheckCircle2, Clock, Milk, Gift, ChevronRight,
   ArrowUpRight, RefreshCw, Layers, Phone, MapPin, UserCheck,
   MessageCircle, SkipForward, AlertTriangle, ChevronLeft, CalendarDays,
-  Settings, Droplets
+  Settings, Droplets, Trash2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AdminMarkPaidModal } from './AdminMarkPaidModal'
@@ -21,6 +21,7 @@ interface AdminCustomerHistoryModalProps {
   customerId: string
   customerName: string
   initialTab?: 'subscription' | 'deliveries' | 'bills' | 'payments' | 'adjustments'
+  onDeleteCustomer?: (customer: { id: string; full_name: string }) => void
 }
 
 export function AdminCustomerHistoryModal({
@@ -28,7 +29,8 @@ export function AdminCustomerHistoryModal({
   onClose,
   customerId,
   customerName,
-  initialTab = 'subscription'
+  initialTab = 'subscription',
+  onDeleteCustomer
 }: AdminCustomerHistoryModalProps) {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'subscription' | 'deliveries' | 'bills' | 'payments' | 'adjustments'>(initialTab || 'subscription')
@@ -1065,9 +1067,22 @@ export function AdminCustomerHistoryModal({
 
         {/* Modal Footer */}
         <div className="p-4 bg-slate-50 dark:bg-slate-950/40 border-t border-slate-150 dark:border-slate-800 flex justify-between items-center text-xs">
-          <span className="text-slate-400 font-medium">
-            Customer ID: <strong className="font-mono text-slate-600 dark:text-slate-300">{customerId}</strong>
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-slate-400 font-medium">
+              Customer ID: <strong className="font-mono text-slate-600 dark:text-slate-300">{customerId}</strong>
+            </span>
+            {onDeleteCustomer && (
+              <button
+                type="button"
+                onClick={() => onDeleteCustomer({ id: customerId, full_name: customerName })}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-900/40 transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Delete customer and all associated data"
+              >
+                <Trash2 size={13} />
+                Delete Customer
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="px-5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold transition-colors cursor-pointer border-none"

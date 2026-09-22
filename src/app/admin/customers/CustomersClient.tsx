@@ -370,6 +370,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
                 onAddExtraMilk={() => { setActionCustomer(row); setActiveModal('extra') }}
                 onViewHistory={() => setHistoryCustomer(row)}
                 onMarkPaid={() => setMarkPaidCustomer(row)}
+                onDelete={() => setCustomerToDelete(row)}
               />
             </div>
           )
@@ -418,6 +419,10 @@ export function CustomersClient({ data }: { data: Customer[] }) {
           customerId={historyCustomer.id}
           customerName={historyCustomer.full_name}
           initialTab="subscription"
+          onDeleteCustomer={(c) => {
+            setHistoryCustomer(null)
+            setCustomerToDelete(c as Customer)
+          }}
         />
       )}
 

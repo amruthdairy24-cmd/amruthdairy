@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { MoreVertical, Settings, SkipForward, Droplet, History, CheckCircle2 } from 'lucide-react'
+import { MoreVertical, Settings, SkipForward, Droplet, History, CheckCircle2, Trash2 } from 'lucide-react'
 
 interface CustomerActionsMenuProps {
   onManageSubscription: () => void
@@ -9,6 +9,7 @@ interface CustomerActionsMenuProps {
   onAddExtraMilk: () => void
   onViewHistory?: () => void
   onMarkPaid?: () => void
+  onDelete?: () => void
 }
 
 export function CustomerActionsMenu({
@@ -16,7 +17,8 @@ export function CustomerActionsMenu({
   onMarkSkip,
   onAddExtraMilk,
   onViewHistory,
-  onMarkPaid
+  onMarkPaid,
+  onDelete
 }: CustomerActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -86,6 +88,16 @@ export function CustomerActionsMenu({
             >
               <History size={14} className="text-indigo-500" />
               View Full History
+            </button>
+          )}
+
+          {onDelete && (
+            <button
+              onClick={() => { setIsOpen(false); onDelete() }}
+              className="w-full text-left px-4 py-2.5 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors flex items-center gap-2 cursor-pointer border-t border-slate-100 dark:border-slate-800"
+            >
+              <Trash2 size={14} className="text-red-500" />
+              Delete Customer
             </button>
           )}
         </div>
