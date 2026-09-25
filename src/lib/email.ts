@@ -15,14 +15,11 @@ function getTransporter() {
 }
 
 /**
- * Returns a list of admin emails to notify for new orders and subscriptions
+ * Returns a list of admin emails to notify for new orders and subscriptions (Client only)
  */
 export function getAdminNotificationEmails(): string[] {
-  const emails = new Set<string>();
-  if (process.env.ADMIN_EMAIL) emails.add(process.env.ADMIN_EMAIL.trim());
-  emails.add('amruthdairy24@gmail.com');
-  if (process.env.SMTP_USER) emails.add(process.env.SMTP_USER.trim());
-  return Array.from(emails).filter(Boolean);
+  const clientEmail = (process.env.ADMIN_EMAIL || 'amruthdairy24@gmail.com').trim();
+  return [clientEmail];
 }
 
 /**
