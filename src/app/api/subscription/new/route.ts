@@ -4,6 +4,7 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { fetchMilkPrices, fetchTrialPricing, calculateDailyRate, calculateMonthlyAmount, calculateProRataAmount, getDaysInMonth, sumCreditAdjustments } from '@/lib/billing';
 import { processPendingReferralReward } from '@/lib/referral';
 import { getEarliestStartDateStr } from '@/lib/utils';
+import { sendAdminNewSubscriptionEmail } from '@/lib/email';
 import Razorpay from 'razorpay';
 
 // Admin client bypasses RLS for all DB writes
@@ -310,6 +311,33 @@ export async function POST(request: Request) {
       if (profileError) {
         console.error('Profile update error:', profileError.message);
       }
+
+      // Trigger Admin Email Notification for Trial Activation (non-blocking)
+      (async () => {
+        try {
+          const { data: profile } = await adminSupabase
+            .from('profiles')
+            .select('full_name, phone, area, address, email')
+            .eq('id', user.id)
+            .single();
+
+          await sendAdminNewSubscriptionEmail({
+            subscriptionId: subscription.id,
+            customerName: profile?.full_name || 'Customer',
+            customerPhone: profile?.phone || '',
+            customerEmail: profile?.email || user.email || undefined,
+            customerArea: profile?.area || 'Mangaluru',
+            deliveryAddress: profile?.address || 'Address on profile',
+            quantity: Number(quantity) || 1,
+            monthlyAmount: Number(monthly_amount) || 0,
+            startDate: actualStartDateStr,
+            planType: 'trial',
+            paymentStatus: 'Trial Activated'
+          });
+        } catch (err) {
+          console.error('[subscription/new] Trial email notification error:', err);
+        }
+      })();
     }
 
     // 9. Return Razorpay order details for payment modal

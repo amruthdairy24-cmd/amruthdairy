@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { processPendingReferralReward } from '@/lib/referral';
+import { sendAdminNewSubscriptionEmail } from '@/lib/email';
 import crypto from 'crypto';
 
 const adminSupabase = createAdminClient();
@@ -143,6 +144,34 @@ export async function POST(request: Request) {
         .from('subscriptions')
         .update({ status: 'active' })
         .eq('id', subscription.id);
+
+      // Trigger Admin Email Notification (non-blocking)
+      (async () => {
+        try {
+          const { data: profile } = await adminSupabase
+            .from('profiles')
+            .select('full_name, phone, area, address, email')
+            .eq('id', user.id)
+            .single();
+
+          await sendAdminNewSubscriptionEmail({
+            subscriptionId: subscription.id,
+            customerName: profile?.full_name || 'Customer',
+            customerPhone: profile?.phone || '',
+            customerEmail: profile?.email || user.email || undefined,
+            customerArea: profile?.area || 'Mangaluru',
+            deliveryAddress: profile?.address || 'Address on profile',
+            quantity: Number(subscription.quantity_litres) || 1,
+            monthlyAmount: Number(subscription.monthly_amount) || Number(bMonth.monthly_amount) || 0,
+            startDate: subscription.start_date,
+            planType: subscription.plan_type || 'standard',
+            paymentStatus: 'paid',
+            razorpayPaymentId: razorpay_payment_id || undefined
+          });
+        } catch (err) {
+          console.error('[payments/verify] Email notification error:', err);
+        }
+      })();
     }
 
     // Process & award referral credit reward if pending

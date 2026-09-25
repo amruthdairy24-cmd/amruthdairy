@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { sendAdminNewProductOrderEmail } from '@/lib/email';
 import crypto from 'crypto';
 
 const adminSupabase = createAdminClient();
@@ -199,6 +200,23 @@ export async function POST(request: Request) {
         paid_at: new Date().toISOString()
       });
     }
+
+    // Trigger Admin Email Notification (non-blocking)
+    sendAdminNewProductOrderEmail({
+      orderId: order.id,
+      totalAmount,
+      customerName: customer_info.full_name,
+      customerPhone: customer_info.phone,
+      customerArea: customer_info.area,
+      deliveryAddress: customer_info.delivery_address,
+      landmark: customer_info.landmark,
+      deliveryNotes: customer_info.delivery_notes,
+      deliveryDate,
+      paymentId: razorpay_payment_id || undefined,
+      items: orderItems
+    }).catch(err => {
+      console.error('[products/order] Email notification error:', err);
+    });
 
     return NextResponse.json({
       success: true,
