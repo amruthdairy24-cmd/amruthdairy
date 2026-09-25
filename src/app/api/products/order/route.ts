@@ -192,6 +192,9 @@ export async function POST(request: Request) {
         payment_type: 'product',
         method: 'upi',
         status: 'success',
+        razorpay_order_id: razorpay_order_id || null,
+        razorpay_payment_id: razorpay_payment_id || null,
+        razorpay_signature: razorpay_signature || null,
         is_manual: false,
         paid_at: new Date().toISOString()
       });

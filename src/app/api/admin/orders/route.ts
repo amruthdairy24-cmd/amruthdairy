@@ -38,8 +38,6 @@ export async function GET(request: Request) {
         delivery_date,
         delivery_notes,
         payment_status,
-        razorpay_order_id,
-        razorpay_payment_id,
         created_at,
         updated_at,
         profiles (
@@ -78,14 +76,21 @@ export async function GET(request: Request) {
       let phone = order.profiles?.phone || '';
       let area = order.profiles?.area || 'Mangaluru';
       let address = order.profiles?.address || '';
+      let paymentId: string | null = null;
 
-      if (order.delivery_notes && order.delivery_notes.includes('Name:')) {
-        const parts = order.delivery_notes.split(' | ');
-        for (const p of parts) {
-          if (p.startsWith('Name: ')) name = p.replace('Name: ', '');
-          if (p.startsWith('Phone: ')) phone = p.replace('Phone: ', '');
-          if (p.startsWith('Area: ')) area = p.replace('Area: ', '');
-          if (p.startsWith('Address: ')) address = p.replace('Address: ', '');
+      if (order.delivery_notes) {
+        if (order.delivery_notes.includes('Name:')) {
+          const parts = order.delivery_notes.split(' | ');
+          for (const p of parts) {
+            if (p.startsWith('Name: ')) name = p.replace('Name: ', '');
+            if (p.startsWith('Phone: ')) phone = p.replace('Phone: ', '');
+            if (p.startsWith('Area: ')) area = p.replace('Area: ', '');
+            if (p.startsWith('Address: ')) address = p.replace('Address: ', '');
+            if (p.startsWith('Payment ID: ')) paymentId = p.replace('Payment ID: ', '');
+          }
+        } else if (order.delivery_notes.includes('Payment ID:')) {
+          const pMatch = order.delivery_notes.match(/Payment ID:\s*([^\s|]+)/);
+          if (pMatch) paymentId = pMatch[1];
         }
       }
 
@@ -102,8 +107,8 @@ export async function GET(request: Request) {
         payment_status: order.payment_status || 'paid',
         delivery_date: order.delivery_date,
         delivery_notes: order.delivery_notes,
-        razorpay_order_id: order.razorpay_order_id,
-        razorpay_payment_id: order.razorpay_payment_id,
+        razorpay_order_id: null,
+        razorpay_payment_id: paymentId,
         created_at: order.created_at,
         items: order.product_order_items || []
       };

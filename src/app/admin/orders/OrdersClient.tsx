@@ -7,6 +7,7 @@ import {
   Calendar, Check, X, ShieldCheck, IndianRupee
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 interface OrderItem {
   id: string
@@ -53,9 +54,12 @@ export function OrdersClient() {
       const data = await res.json()
       if (data.success && data.orders) {
         setOrders(data.orders)
+      } else {
+        toast.error(data.message || 'Failed to load orders')
       }
     } catch (err) {
       console.error('Failed to load admin orders', err)
+      toast.error('Network error loading orders')
     } finally {
       setLoading(false)
     }
@@ -76,9 +80,13 @@ export function OrdersClient() {
       const data = await res.json()
       if (data.success) {
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus as Order['status'] } : o))
+        toast.success(`Order status updated to ${newStatus}`)
+      } else {
+        toast.error(data.message || 'Failed to update order status')
       }
     } catch (err) {
       console.error('Failed to update order status', err)
+      toast.error('Network error updating status')
     } finally {
       setUpdatingId(null)
     }
@@ -236,15 +244,21 @@ export function OrdersClient() {
                 {filteredOrders.map(order => (
                   <tr key={order.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
                     
-                    {/* Order ID & Date */}
+                    {/* Order ID & Dates */}
                     <td className="py-4 px-4 align-top">
                       <div className="font-mono font-bold text-slate-800 dark:text-slate-200">
                         #{order.id.slice(0, 8)}
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-                        <Calendar size={12} />
-                        {new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1" title="Order Created Date & Time">
+                        <Calendar size={12} className="text-slate-400 shrink-0" />
+                        <span>{new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
+                      {order.delivery_date && (
+                        <div className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-1 flex items-center gap-1" title="Scheduled Delivery Date">
+                          <Truck size={11} className="shrink-0" />
+                          <span>Delivery: {new Date(order.delivery_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                        </div>
+                      )}
                     </td>
 
                     {/* Customer Info */}
