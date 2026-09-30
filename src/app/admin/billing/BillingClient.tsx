@@ -584,14 +584,18 @@ export function BillingClient({ invoices, adjustments, payments, currentMonth }:
             onChange={(e) => router.push(`/admin/billing?month=${e.target.value}`)}
             className="bg-transparent border-none text-sm font-bold text-slate-700 dark:text-slate-200 outline-none pr-3 py-1 cursor-pointer appearance-none"
           >
-            {/* Generate last 12 months as options */}
-            {Array.from({ length: 12 }).map((_, i) => {
+            {/* Generate next month, current month, and past 11 months as options */}
+            {[-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((offset) => {
               const d = new Date();
               d.setDate(1); // Set to 1st of the month to avoid overflow on 31st
-              d.setMonth(d.getMonth() - i);
+              d.setMonth(d.getMonth() - offset);
               const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
               const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-              return <option key={val} value={val}>{label}</option>
+              return (
+                <option key={val} value={val}>
+                  {label}{offset === -1 ? ' (Next Month)' : offset === 0 ? ' (Current)' : ''}
+                </option>
+              );
             })}
           </select>
         </div>
