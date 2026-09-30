@@ -226,7 +226,7 @@ export async function POST(request: Request) {
     // 8. INSERT billing_months for current month
     const formattedBillingMonth = `${startYear}-${String(startMonth).padStart(2, '0')}-01`;
 
-    const { error: billingError } = await adminSupabase
+    const { data: newBillingMonth, error: billingError } = await adminSupabase
       .from('billing_months')
       .insert({
         subscription_id: subscription.id,
@@ -239,7 +239,7 @@ export async function POST(request: Request) {
         days_in_month: daysInMonth,
         payment_status: initialStatus === 'active' ? 'paid' : 'pending'
       })
-      .select()
+      .select('id')
       .single();
 
     if (billingError) {
@@ -349,7 +349,7 @@ export async function POST(request: Request) {
       daily_rate: daily_rate,
       razorpay_order_id: razorpay_order_id,
       key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      billing_month_id: billingMonthId ?? null,
+      billing_month_id: newBillingMonth?.id ?? null,
       adjustment_ids: adjustment_ids
     });
 

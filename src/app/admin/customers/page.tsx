@@ -56,7 +56,10 @@ export default async function CustomersPage() {
     // Collect all billing months across all subscriptions of this customer
     const allBillingMonths = subs.flatMap((s: any) => Array.isArray(s.billing_months) ? s.billing_months : [])
     const currentMonthBilling = allBillingMonths.find((b: any) => b.billing_month === currentBillingMonthStr) || null
-    const isCurrentPaid = currentMonthBilling ? currentMonthBilling.payment_status === 'paid' : false
+    const isCurrentPaid = Boolean(
+      (currentMonthBilling && currentMonthBilling.payment_status === 'paid') ||
+      allBillingMonths.some((b: any) => b.payment_status === 'paid' && b.billing_month >= currentBillingMonthStr)
+    )
     
     // Total pending dues across all months
     const totalPendingDues = allBillingMonths

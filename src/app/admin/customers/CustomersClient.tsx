@@ -437,6 +437,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
           customerId={markPaidCustomer.id}
           customerName={markPaidCustomer.full_name}
           defaultAmount={markPaidCustomer.pending_dues || markPaidCustomer.monthly_amount || 1200}
+          billingMonth={markPaidCustomer.start_date ? `${markPaidCustomer.start_date.slice(0, 7)}-01` : undefined}
         />
       )}
 

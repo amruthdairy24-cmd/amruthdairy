@@ -16,10 +16,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, billing_month_id, adjustment_ids, target_month } = await request.json();
+    let { razorpay_order_id, razorpay_payment_id, razorpay_signature, billing_month_id, adjustment_ids, target_month } = await request.json();
 
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !billing_month_id) {
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return NextResponse.json({ success: false, message: 'Missing payment details' }, { status: 400 });
+    }
+
+    // Resilient fallback: If billing_month_id was not provided, look it up via razorpay_order_id
+    if (!billing_month_id && razorpay_order_id) {
+      const { data: matchedSub } = await adminSupabase
+        .from('subscriptions')
+        .select('id')
+        .eq('razorpay_subscription_id', razorpay_order_id)
+        .maybeSingle();
+
+      if (matchedSub) {
+        const { data: matchedBm } = await adminSupabase
+          .from('billing_months')
+          .select('id')
+          .eq('subscription_id', matchedSub.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (matchedBm) {
+          billing_month_id = matchedBm.id;
+        }
+      }
+    }
+
+    if (!billing_month_id) {
+      return NextResponse.json({ success: false, message: 'Billing month not found for payment' }, { status: 400 });
     }
 
     // Verify signature — strictly enforce HMAC SHA256 verification
