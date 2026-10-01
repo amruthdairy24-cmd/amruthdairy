@@ -197,7 +197,40 @@ function runTests() {
     console.log('✔ TEST 10 PASSED: Delivery check for paid customer (isCovered = true)');
   }
 
-  console.log('\n🎉 ALL 10 SUBSCRIPTION STATE TEST CASES PASSED SUCCESSFULLY!');
+  // TEST 11: Future starting subscription (unpaid) - customer joins Sept 30 for Oct 1
+  {
+    const res = resolveSubscriptionState({
+      subscription: { id: 'sub_future', status: 'pending_payment', start_date: '2026-10-01' },
+      currentMonthBilling: null,
+      latestPaidMonth: null,
+      currentBillingMonthStr: '2026-09-01',
+      currentDateStr: '2026-09-30',
+    });
+    assert.strictEqual(res.state, 'PAYMENT_PENDING');
+    assert.strictEqual(res.targetMonth, '2026-10-01');
+    assert.strictEqual(res.canRenew, true);
+    assert.strictEqual(res.currentMonthPaid, false);
+    assert.strictEqual(res.isCovered, false);
+    console.log('✔ TEST 11 PASSED: Future starting subscription unpaid (targetMonth = 2026-10-01)');
+  }
+
+  // TEST 12: Future starting subscription (paid) - customer joins Sept 30 for Oct 1 and paid
+  {
+    const res = resolveSubscriptionState({
+      subscription: { id: 'sub_future', status: 'active', start_date: '2026-10-01' },
+      currentMonthBilling: null,
+      latestPaidMonth: '2026-10-01',
+      currentBillingMonthStr: '2026-09-01',
+      currentDateStr: '2026-09-30',
+    });
+    assert.strictEqual(res.state, 'SUBSCRIBED_ACTIVE');
+    assert.strictEqual(res.targetMonth, '2026-10-01');
+    assert.strictEqual(res.currentMonthPaid, true);
+    assert.strictEqual(res.isCovered, true);
+    console.log('✔ TEST 12 PASSED: Future starting subscription paid (targetMonth = 2026-10-01, isCovered = true)');
+  }
+
+  console.log('\n🎉 ALL 12 SUBSCRIPTION STATE TEST CASES PASSED SUCCESSFULLY!');
 }
 
 runTests();

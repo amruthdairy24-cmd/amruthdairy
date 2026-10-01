@@ -157,8 +157,9 @@ export default function BillsPage() {
     });
   };
 
-  async function startPayment() {
-    if (!bill) return;
+  async function startPayment(billToPay?: BillingData) {
+    const targetBill = billToPay || bill;
+    if (!targetBill) return;
     try {
       setPaymentStep('processing');
       const loaded = await loadRazorpayScript();
@@ -171,7 +172,7 @@ export default function BillsPage() {
       const orderRes = await fetch('/api/payments/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: bill.net_due, billingMonthId: bill.id })
+        body: JSON.stringify({ amount: targetBill.net_due, billingMonthId: targetBill.id })
       });
       const orderData = await orderRes.json();
 
@@ -198,7 +199,7 @@ export default function BillsPage() {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                billing_month_id: bill.id
+                billing_month_id: targetBill.id
               })
             });
             const verifyData = await verifyRes.json();
@@ -1053,11 +1054,11 @@ export default function BillsPage() {
                   <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800 p-4.5 rounded-xl text-[13px] font-semibold text-slate-500 dark:text-slate-400 space-y-2.5">
                     <div className="flex justify-between">
                       <span>Statement Amount</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">₹{bill.net_due.toFixed(2)}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">₹{activeBill.net_due.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between font-black text-slate-900 dark:text-white border-t border-slate-150 dark:border-slate-800 pt-2.5 mt-2.5 text-sm">
                       <span>Paying Total</span>
-                      <span className="text-[#014DA4] dark:text-blue-400 font-mono">₹{bill.net_due.toFixed(2)}</span>
+                      <span className="text-[#014DA4] dark:text-blue-400 font-mono">₹{activeBill.net_due.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -1069,7 +1070,7 @@ export default function BillsPage() {
                       Cancel
                     </button>
                     <button
-                      onClick={startPayment}
+                      onClick={() => startPayment(activeBill)}
                       className="w-2/3 h-10 rounded-xl bg-[#014DA4] hover:bg-[#014DA4]/95 active:scale-[0.98] text-white font-extrabold text-xs shadow-sm border-none cursor-pointer transition-all"
                     >
                       Pay Securely
@@ -1097,7 +1098,7 @@ export default function BillsPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-slate-800 dark:text-white font-display">Payment Successful!</h3>
-                    <p className="text-[12.5px] font-bold text-slate-400 dark:text-slate-500 mt-1.5">₹{bill.net_due.toFixed(2)} has been successfully credited to your account.</p>
+                    <p className="text-[12.5px] font-bold text-slate-400 dark:text-slate-500 mt-1.5">₹{activeBill.net_due.toFixed(2)} has been successfully credited to your account.</p>
                   </div>
                   <button
                     onClick={() => setShowPayModal(false)}

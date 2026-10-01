@@ -574,6 +574,33 @@ export function resolveSubscriptionState(input: ResolveSubscriptionInput): Subsc
     }
   }
 
+  // Future Subscription Check (Customer subscribed for a future month, e.g. signed up on 30th for 1st of next month)
+  const subStartMonthStr = subscription.start_date ? subscription.start_date.slice(0, 7) + '-01' : null;
+  if (subStartMonthStr && subStartMonthStr > currentBillingMonthStr) {
+    const isFuturePaid = Boolean(
+      (latestPaidMonth && latestPaidMonth >= subStartMonthStr) ||
+      (currentMonthBilling?.billing_month === subStartMonthStr && currentMonthBilling?.payment_status === 'paid')
+    );
+
+    if (isFuturePaid) {
+      return {
+        state: 'SUBSCRIBED_ACTIVE',
+        canRenew: false,
+        targetMonth: subStartMonthStr,
+        currentMonthPaid: true,
+        isCovered: true
+      };
+    }
+
+    return {
+      state: 'PAYMENT_PENDING',
+      canRenew: true,
+      targetMonth: subStartMonthStr,
+      currentMonthPaid: false,
+      isCovered: false
+    };
+  }
+
   // Check if current month is paid via currentMonthBilling
   const isCurrentBillingPaid = currentMonthBilling?.payment_status === 'paid';
 

@@ -163,8 +163,6 @@ export async function POST(request: Request) {
       const standardStart = new Date(trialEnd);
       standardStart.setDate(standardStart.getDate() + 1);
       updatePayload.start_date = standardStart.toISOString().split('T')[0];
-    } else if (today > targetDate && today <= endOfMonth) {
-      updatePayload.start_date = startDateForCalculationStr;
     }
 
     await adminSupabase
