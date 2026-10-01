@@ -136,7 +136,12 @@ export async function POST(request: Request) {
       const orderOptions = {
         amount: Math.round(net_due * 100),
         currency: "INR",
-        receipt: `rcpt_rnw_${user.id.slice(0, 8)}_${Date.now()}`
+        receipt: `rcpt_rnw_${user.id.slice(0, 8)}_${Date.now()}`,
+        notes: {
+          customer_id: user.id,
+          subscription_id: existingSub.id,
+          target_month: target_month
+        }
       };
 
       const order = await razorpay.orders.create(orderOptions);
@@ -157,6 +162,10 @@ export async function POST(request: Request) {
       end_date: null,
       updated_at: new Date().toISOString()
     };
+
+    if (razorpay_order_id) {
+      updatePayload.razorpay_subscription_id = razorpay_order_id;
+    }
 
     if (existingSub.plan_type === 'trial' && existingSub.end_date) {
       const trialEnd = new Date(existingSub.end_date);
