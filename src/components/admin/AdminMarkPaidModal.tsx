@@ -1,9 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle2, CreditCard, AlertCircle, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
+
+interface MonthOption {
+  billing_month: string
+  net_due?: number
+  monthly_amount?: number
+  amount_paid?: number
+  payment_status?: string
+}
 
 interface AdminMarkPaidModalProps {
   isOpen: boolean
@@ -13,6 +21,7 @@ interface AdminMarkPaidModalProps {
   customerName: string
   defaultAmount?: number
   billingMonth?: string
+  availableMonths?: MonthOption[]
 }
 
 export function AdminMarkPaidModal({
@@ -22,18 +31,72 @@ export function AdminMarkPaidModal({
   customerId,
   customerName,
   defaultAmount = 1200,
-  billingMonth
+  billingMonth,
+  availableMonths: propAvailableMonths
 }: AdminMarkPaidModalProps) {
+  const [monthsList, setMonthsList] = useState<MonthOption[]>(propAvailableMonths || [])
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    if (billingMonth) return billingMonth
+    if (propAvailableMonths && propAvailableMonths.length > 0) {
+      const pending = propAvailableMonths
+        .filter(m => m.payment_status === 'pending' || ((m.net_due || 0) > 0 && (m.amount_paid || 0) < (m.net_due || 0)))
+        .sort((a, b) => a.billing_month.localeCompare(b.billing_month))[0]
+      if (pending) return pending.billing_month
+    }
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  })
+
   const [amount, setAmount] = useState<number>(defaultAmount || 1200)
   const [paymentType, setPaymentType] = useState<'upi' | 'cash' | 'bank_transfer'>('upi')
   const [notes, setNotes] = useState<string>('Payment confirmed by Admin')
   const [loading, setLoading] = useState(false)
 
+  // Sync when propAvailableMonths or billingMonth updates
+  useEffect(() => {
+    if (propAvailableMonths && propAvailableMonths.length > 0) {
+      setMonthsList(propAvailableMonths)
+    } else if (customerId && isOpen) {
+      // Auto-fetch if not provided
+      fetch(`/api/admin/customers/${customerId}/history`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.billing_months)) {
+            setMonthsList(data.billing_months)
+            if (!billingMonth) {
+              const pending = data.billing_months
+                .filter((m: any) => m.payment_status === 'pending' || ((m.net_due || 0) > 0 && (m.amount_paid || 0) < (m.net_due || 0)))
+                .sort((a: any, b: any) => a.billing_month.localeCompare(b.billing_month))[0]
+              if (pending) {
+                setSelectedMonth(pending.billing_month)
+                const due = pending.payment_status === 'paid' ? 0 : Math.max(0, (pending.net_due || pending.monthly_amount || 0) - (pending.amount_paid || 0))
+                if (due > 0) setAmount(due)
+              }
+            }
+          }
+        })
+        .catch(() => {})
+    }
+  }, [propAvailableMonths, customerId, isOpen, billingMonth])
+
+  useEffect(() => {
+    if (billingMonth) {
+      setSelectedMonth(billingMonth)
+    }
+  }, [billingMonth])
+
   if (!isOpen) return null
 
-  const now = new Date()
-  const targetMonthStr = billingMonth || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-  const monthLabel = new Date(targetMonthStr).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+  const monthLabel = new Date(selectedMonth).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+
+  const handleMonthChange = (newMonth: string) => {
+    setSelectedMonth(newMonth)
+    const target = monthsList.find(m => m.billing_month === newMonth)
+    if (target) {
+      const due = target.payment_status === 'paid' ? 0 : Math.max(0, (target.net_due || target.monthly_amount || 0) - (target.amount_paid || 0))
+      if (due > 0) setAmount(due)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,14 +114,14 @@ export function AdminMarkPaidModal({
           customerId,
           amount,
           paymentType,
-          billingMonth: targetMonthStr,
+          billingMonth: selectedMonth,
           notes
         })
       })
 
       const data = await res.json()
       if (data.success) {
-        toast.success(`Payment recorded! ${customerName}'s subscription is now Active.`)
+        toast.success(`Payment recorded for ${monthLabel}!`)
         onSuccess()
         onClose()
       } else {
@@ -114,6 +177,35 @@ export function AdminMarkPaidModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {monthsList.length > 0 ? (
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Target Billing Month</span>
+                <span className="text-[10px] text-emerald-600 font-semibold lowercase">selected</span>
+              </label>
+              <select
+                value={selectedMonth}
+                onChange={(e) => handleMonthChange(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              >
+                {monthsList.map((m) => {
+                  const label = new Date(m.billing_month).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+                  const remDue = m.payment_status === 'paid' ? 0 : Math.max(0, (m.net_due || m.monthly_amount || 0) - (m.amount_paid || 0))
+                  const statusText = m.payment_status === 'paid' ? '• Paid' : `• Due: ₹${remDue}`
+                  return (
+                    <option key={m.billing_month} value={m.billing_month}>
+                      {label} ({statusText})
+                    </option>
+                  )
+                })}
+              </select>
+            </div>
+          ) : (
+            <div className="p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 font-medium">
+              Target Month: <span className="font-bold text-slate-900 dark:text-white">{monthLabel}</span>
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
               Amount Received (₹)

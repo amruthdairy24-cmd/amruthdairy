@@ -336,7 +336,10 @@ export function AdminCustomerHistoryModal({
               <button
                 type="button"
                 onClick={() => {
-                  setMarkPaidTargetMonth(undefined)
+                  const oldestPending = billingMonths
+                    .filter((bm: any) => bm.payment_status === 'pending' || (bm.net_due > 0 && (bm.amount_paid || 0) < bm.net_due))
+                    .sort((a: any, b: any) => a.billing_month.localeCompare(b.billing_month))[0]
+                  setMarkPaidTargetMonth(oldestPending ? oldestPending.billing_month : undefined)
                   setShowMarkPaid(true)
                 }}
                 className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer shadow-xs border-none"
@@ -543,7 +546,10 @@ export function AdminCustomerHistoryModal({
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setMarkPaidTargetMonth(undefined)
+                                  const oldestPending = billingMonths
+                                    .filter((bm: any) => bm.payment_status === 'pending' || (bm.net_due > 0 && (bm.amount_paid || 0) < bm.net_due))
+                                    .sort((a: any, b: any) => a.billing_month.localeCompare(b.billing_month))[0]
+                                  setMarkPaidTargetMonth(oldestPending ? oldestPending.billing_month : undefined)
                                   setShowMarkPaid(true)
                                 }}
                                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition-colors cursor-pointer border-none"
@@ -1102,8 +1108,13 @@ export function AdminCustomerHistoryModal({
           }}
           customerId={customerId}
           customerName={customerName}
-          defaultAmount={totalDue || 1200}
+          defaultAmount={
+            markPaidTargetMonth
+              ? (billingMonths.find((b: any) => b.billing_month === markPaidTargetMonth)?.net_due || totalDue || 1200)
+              : (totalDue || 1200)
+          }
           billingMonth={markPaidTargetMonth}
+          availableMonths={billingMonths}
         />
       )}
 
