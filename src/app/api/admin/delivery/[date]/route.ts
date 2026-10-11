@@ -26,12 +26,9 @@ export async function GET(
       return NextResponse.json({ success: false, message: 'Invalid date format (YYYY-MM-DD)' }, { status: 400 });
     }
 
-    // Populate daily delivery sheet for the given date (Rule: no background cron, so trigger here)
-    const { error: rpcError } = await supabase.rpc('populate_daily_delivery_sheet', { p_date: date });
-    if (rpcError) {
-      console.warn('Populate delivery sheet warning:', rpcError.message);
-      // We log the warning but don't fail, in case the RPC doesn't exist or is not fully tested
-    }
+    // Ensure daily delivery sheet is populated for the given date (on-demand auto-generation)
+    const adminSupabase = createAdminClient();
+    await ensureDailyDeliverySheetPopulated(adminSupabase, date);
 
     // Get daily summary
     const { data: summary } = await supabase.rpc('get_daily_summary', { p_date: date });
@@ -286,5 +283,131 @@ export async function PUT(
   } catch (err: any) {
     console.error('Batch mark delivered exception:', err);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+/**
+ * ensureDailyDeliverySheetPopulated
+ * Guarantees that all active, covered subscribers (including skips and extra milk)
+ * are populated into daily_delivery_sheet for targetDate on-demand.
+ * This enables the operations team to view tomorrow's full delivery sheet immediately
+ * after the 9:00 PM cutoff (e.g. at 10:00 PM - 10:15 PM) without waiting for midnight.
+ */
+async function ensureDailyDeliverySheetPopulated(adminClient: any, targetDate: string) {
+  try {
+    const targetMonthStr = `${targetDate.slice(0, 7)}-01`;
+
+    // 1. Fetch existing delivery sheet records for targetDate
+    const { data: existingRows } = await adminClient
+      .from('daily_delivery_sheet')
+      .select('subscription_id')
+      .eq('delivery_date', targetDate);
+
+    const existingSubIds = new Set((existingRows || []).map((r: any) => r.subscription_id));
+
+    // 2. Fetch paid standard subscriptions for this month
+    const { data: paidBms, error: bmErr } = await adminClient
+      .from('billing_months')
+      .select('subscription_id, subscriptions!inner(id, customer_id, quantity_litres, status, plan_type, start_date, end_date)')
+      .eq('billing_month', targetMonthStr)
+      .eq('payment_status', 'paid')
+      .eq('subscriptions.status', 'active');
+
+    if (bmErr) {
+      console.error('[ensureDailyDeliverySheetPopulated] Error fetching billing months:', bmErr.message);
+      return;
+    }
+
+    // 3. Fetch active trial subscriptions covering this date
+    const { data: trialSubs, error: trialErr } = await adminClient
+      .from('subscriptions')
+      .select('id, customer_id, quantity_litres, status, plan_type, start_date, end_date')
+      .eq('plan_type', 'trial')
+      .eq('status', 'active')
+      .lte('start_date', targetDate);
+
+    if (trialErr) {
+      console.error('[ensureDailyDeliverySheetPopulated] Error fetching trial subscriptions:', trialErr.message);
+    }
+
+    const activeTrials = (trialSubs || []).filter((t: any) => !t.end_date || t.end_date >= targetDate);
+
+    // Merge eligible subscribers
+    const allEligibleSubs: any[] = [];
+    const seenSubIds = new Set<string>();
+
+    (paidBms || []).forEach((b: any) => {
+      if (b.subscriptions && !seenSubIds.has(b.subscriptions.id)) {
+        seenSubIds.add(b.subscriptions.id);
+        allEligibleSubs.push(b.subscriptions);
+      }
+    });
+
+    activeTrials.forEach((t: any) => {
+      if (!seenSubIds.has(t.id)) {
+        seenSubIds.add(t.id);
+        allEligibleSubs.push(t);
+      }
+    });
+
+    // Identify subscribers missing from daily_delivery_sheet
+    const missingSubs = allEligibleSubs.filter(s => !existingSubIds.has(s.id));
+    if (missingSubs.length === 0) {
+      return;
+    }
+
+    // 4. Batch fetch skips, vacations, and extra milk orders for targetDate
+    const [skipsRes, vacationsRes, extrasRes] = await Promise.all([
+      adminClient.from('skip_requests').select('id, subscription_id').eq('skip_date', targetDate).eq('status', 'confirmed'),
+      adminClient.from('vacation_pauses').select('id, subscription_id').lte('pause_start', targetDate).gte('pause_end', targetDate).in('status', ['confirmed', 'active']),
+      adminClient.from('extra_milk_orders').select('id, subscription_id, extra_litres').eq('order_date', targetDate).eq('status', 'confirmed')
+    ]);
+
+    const skipMap = new Map<string, string>((skipsRes.data || []).map((s: any) => [s.subscription_id, s.id]));
+    const vacationMap = new Map<string, string>((vacationsRes.data || []).map((v: any) => [v.subscription_id, v.id]));
+    const extraMap = new Map<string, any>((extrasRes.data || []).map((e: any) => [e.subscription_id, e]));
+
+    // 5. Construct insert records
+    const rowsToInsert = missingSubs.map(s => {
+      const isSkip = skipMap.has(s.id);
+      const isVacation = vacationMap.has(s.id);
+      const extraOrder = extraMap.get(s.id);
+      const extraLitres = extraOrder ? Number(extraOrder.extra_litres || 0) : 0;
+      const regularLitres = (isSkip || isVacation) ? 0 : Number(s.quantity_litres || 0);
+      const totalLitres = regularLitres + extraLitres;
+      const deliveryStatus = (isSkip || isVacation) ? 'skipped' : 'pending';
+
+      return {
+        delivery_date: targetDate,
+        customer_id: s.customer_id,
+        subscription_id: s.id,
+        regular_litres: regularLitres,
+        extra_litres: extraLitres,
+        total_litres: totalLitres,
+        is_skip: isSkip,
+        is_vacation: isVacation,
+        is_extra: extraLitres > 0,
+        delivery_status: deliveryStatus,
+        skip_id: skipMap.get(s.id) || null,
+        vacation_id: vacationMap.get(s.id) || null,
+        extra_order_id: extraOrder ? extraOrder.id : null
+      };
+    });
+
+    // 6. Bulk insert using onConflict ignoreDuplicates
+    if (rowsToInsert.length > 0) {
+      for (let i = 0; i < rowsToInsert.length; i += 100) {
+        const chunk = rowsToInsert.slice(i, i + 100);
+        const { error: insertErr } = await adminClient
+          .from('daily_delivery_sheet')
+          .upsert(chunk, { onConflict: 'delivery_date,subscription_id', ignoreDuplicates: true });
+
+        if (insertErr) {
+          console.error('[ensureDailyDeliverySheetPopulated] Batch upsert error:', insertErr.message);
+        }
+      }
+    }
+  } catch (err: any) {
+    console.error('[ensureDailyDeliverySheetPopulated] Exception:', err.message);
   }
 }

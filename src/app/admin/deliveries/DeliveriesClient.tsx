@@ -57,7 +57,7 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [historyCustomer, setHistoryCustomer] = useState<{ id: string; name: string } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'delivered'>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'delivered' | 'extra' | 'skipped'>('all')
 
   async function fetchDeliveries(date: string) {
     setLoading(true)
@@ -150,17 +150,17 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
   }
 
   const pendingCount = deliveries.filter(d => d.delivery_status === 'pending' && !d.is_skip).length
-  const deliveredCount = deliveries.filter(d => d.delivery_status === 'delivered').length
+  const deliveredCount = deliveries.filter(d => d.delivery_status === 'delivered' && !d.is_skip).length
   const skippedCount = deliveries.filter(d => d.is_skip).length
-
-  const extraCount = deliveries.filter(d => d.is_extra).length
-  const totalLitres = deliveries.reduce((sum, d) => sum + Number(d.total_litres || 0), 0)
+  const extraCount = deliveries.filter(d => (d.is_extra || Number(d.extra_litres || 0) > 0) && !d.is_skip).length
+  const activeDeliveriesCount = deliveries.filter(d => !d.is_skip).length
+  const totalLitres = deliveries
+    .filter(d => !d.is_skip)
+    .reduce((sum, d) => sum + Number(d.total_litres || 0), 0)
 
   const isToday = selectedDate === initialDate
 
   const filteredDeliveries = deliveries.filter(d => {
-    if (d.is_skip) return false;
-
     // text search
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
@@ -169,11 +169,23 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
       const matchesPhone = d.phone?.includes(q)
       if (!matchesName && !matchesArea && !matchesPhone) return false
     }
+
     // status filter
+    if (filterStatus === 'skipped') {
+      return d.is_skip
+    }
+
+    if (filterStatus === 'extra') {
+      return (d.is_extra || Number(d.extra_litres || 0) > 0) && !d.is_skip
+    }
+
+    // For all, pending, delivered: exclude skips from the active route list
+    if (d.is_skip) return false
+
     if (filterStatus === 'pending') {
-      if (d.delivery_status !== 'pending') return false
+      return d.delivery_status === 'pending'
     } else if (filterStatus === 'delivered') {
-      if (d.delivery_status !== 'delivered') return false
+      return d.delivery_status === 'delivered'
     }
     return true
   })
@@ -453,12 +465,58 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
 
       {/* SUMMARY CARDS */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <SummaryCard icon={<Package size={18} />} label="Total Deliveries" value={deliveries.length} color="text-blue-600 dark:text-blue-400" bg="bg-blue-500/10" />
-        <SummaryCard icon={<Droplets size={18} />} label="Total Litres" value={`${totalLitres.toFixed(1)}L`} color="text-cyan-600 dark:text-cyan-400" bg="bg-cyan-500/10" />
-        <SummaryCard icon={<Clock size={18} />} label="Pending" value={pendingCount} color="text-amber-600 dark:text-amber-400" bg="bg-amber-500/10" />
-        <SummaryCard icon={<CheckCircle2 size={18} />} label="Delivered" value={deliveredCount} color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-500/10" />
-        <SummaryCard icon={<SkipForward size={18} />} label="Skipped" value={skippedCount} color="text-rose-550 dark:text-rose-400" bg="bg-rose-500/10" />
-        <SummaryCard icon={<PlusCircle size={18} />} label="Extra Orders" value={extraCount} color="text-purple-600 dark:text-purple-400" bg="bg-purple-500/10" />
+        <SummaryCard 
+          icon={<Package size={18} />} 
+          label="Total Deliveries" 
+          value={activeDeliveriesCount} 
+          color="text-blue-600 dark:text-blue-400" 
+          bg="bg-blue-500/10" 
+          active={filterStatus === 'all'}
+          onClick={() => setFilterStatus('all')}
+        />
+        <SummaryCard 
+          icon={<Droplets size={18} />} 
+          label="Total Litres" 
+          value={`${totalLitres.toFixed(1)}L`} 
+          color="text-cyan-600 dark:text-cyan-400" 
+          bg="bg-cyan-500/10" 
+        />
+        <SummaryCard 
+          icon={<Clock size={18} />} 
+          label="Pending" 
+          value={pendingCount} 
+          color="text-amber-600 dark:text-amber-400" 
+          bg="bg-amber-500/10" 
+          active={filterStatus === 'pending'}
+          onClick={() => setFilterStatus('pending')}
+        />
+        <SummaryCard 
+          icon={<CheckCircle2 size={18} />} 
+          label="Delivered" 
+          value={deliveredCount} 
+          color="text-emerald-600 dark:text-emerald-400" 
+          bg="bg-emerald-500/10" 
+          active={filterStatus === 'delivered'}
+          onClick={() => setFilterStatus('delivered')}
+        />
+        <SummaryCard 
+          icon={<SkipForward size={18} />} 
+          label="Skipped" 
+          value={skippedCount} 
+          color="text-rose-550 dark:text-rose-400" 
+          bg="bg-rose-500/10" 
+          active={filterStatus === 'skipped'}
+          onClick={() => setFilterStatus('skipped')}
+        />
+        <SummaryCard 
+          icon={<PlusCircle size={18} />} 
+          label="Extra Orders" 
+          value={extraCount} 
+          color="text-purple-600 dark:text-purple-400" 
+          bg="bg-purple-500/10" 
+          active={filterStatus === 'extra'}
+          onClick={() => setFilterStatus('extra')}
+        />
       </div>
 
       {/* MESSAGE STATUS */}
@@ -501,21 +559,69 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
             </div>
 
             {/* FILTER */}
-            <div className="flex bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-0.5 shadow-2xs">
-              {(['all', 'pending', 'delivered'] as const).map(status => (
-                <button
-                  key={status}
-                  onClick={() => setFilterStatus(status)}
-                  className={cn(
-                    "px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all capitalize cursor-pointer",
-                    filterStatus === status 
-                      ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white" 
-                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                  )}
-                >
-                  {status}
-                </button>
-              ))}
+            <div className="flex flex-wrap bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-0.5 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setFilterStatus('all')}
+                className={cn(
+                  "px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all capitalize cursor-pointer",
+                  filterStatus === 'all' 
+                    ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white" 
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                )}
+              >
+                All ({activeDeliveriesCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatus('pending')}
+                className={cn(
+                  "px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all capitalize cursor-pointer",
+                  filterStatus === 'pending' 
+                    ? "bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-extrabold" 
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                )}
+              >
+                Pending ({pendingCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatus('delivered')}
+                className={cn(
+                  "px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all capitalize cursor-pointer",
+                  filterStatus === 'delivered' 
+                    ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-extrabold" 
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                )}
+              >
+                Delivered ({deliveredCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatus('extra')}
+                className={cn(
+                  "px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1",
+                  filterStatus === 'extra' 
+                    ? "bg-purple-100 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 font-extrabold shadow-3xs" 
+                    : "text-purple-600/80 hover:text-purple-700 dark:hover:text-purple-300"
+                )}
+              >
+                <PlusCircle size={12} />
+                <span>Extra Milk ({extraCount})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatus('skipped')}
+                className={cn(
+                  "px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1",
+                  filterStatus === 'skipped' 
+                    ? "bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 font-extrabold shadow-3xs" 
+                    : "text-rose-500/80 hover:text-rose-700 dark:hover:text-rose-300"
+                )}
+              >
+                <SkipForward size={12} />
+                <span>Skipped ({skippedCount})</span>
+              </button>
             </div>
 
             {pendingCount > 0 && (
@@ -589,8 +695,18 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
                             {del.customer_name?.charAt(0) || 'C'}
                           </div>
                           <div className="min-w-0 text-left">
-                            <p className="text-[13.5px] font-bold text-slate-800 dark:text-slate-100 leading-none">
-                              {del.customer_name || 'Unknown'}
+                            <p className="text-[13.5px] font-bold text-slate-800 dark:text-slate-100 leading-none flex items-center gap-1.5">
+                              <span>{del.customer_name || 'Unknown'}</span>
+                              {isSkipped && (
+                                <span className="text-[9.5px] font-extrabold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-900/50">
+                                  SKIPPED
+                                </span>
+                              )}
+                              {!isSkipped && del.is_extra && (
+                                <span className="text-[9.5px] font-extrabold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-900/50">
+                                  EXTRA
+                                </span>
+                              )}
                             </p>
                             {del.phone && (
                               <p className="text-[10.5px] font-semibold text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1">
@@ -717,11 +833,20 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
 
 /* ─── HELPER COMPONENTS ─── */
 
-function SummaryCard({ icon, label, value, color, bg }: {
-  icon: React.ReactNode; label: string; value: string | number; color: string; bg: string
+function SummaryCard({ icon, label, value, color, bg, active, onClick }: {
+  icon: React.ReactNode; label: string; value: string | number; color: string; bg: string; active?: boolean; onClick?: () => void
 }) {
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl p-4.5 shadow-2xs hover:shadow-xs transition-all duration-250 flex items-center gap-3.5 group">
+    <div 
+      onClick={onClick}
+      className={cn(
+        "bg-white dark:bg-slate-900 border rounded-2xl p-4.5 shadow-2xs transition-all duration-250 flex items-center gap-3.5 group select-none",
+        onClick && "cursor-pointer active:scale-95 hover:shadow-xs",
+        active 
+          ? "border-[#014DA4] dark:border-blue-500 ring-2 ring-[#014DA4]/10 dark:ring-blue-500/20 bg-blue-50/20 dark:bg-blue-950/20" 
+          : "border-slate-150 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+      )}
+    >
       <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105", bg, color)}>
         {icon}
       </div>
