@@ -2,27 +2,9 @@
 // Verifies forgot-password OTP and resets the user's password.
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import * as crypto from 'crypto';
+import { forgotOtpStore, hashOtp, getAuthUserByEmail } from '@/lib/auth-utils';
 
 const adminClient = createAdminClient();
-
-// Shared in-memory store for forgot-password OTPs (keyed by email)
-// Uses globalThis so it is shared across Next.js route modules.
-interface ForgotOtp {
-  otpHash: string;
-  expiresAt: Date;
-}
-
-declare global {
-  // eslint-disable-next-line no-var
-  var __forgotOtpStore: Map<string, ForgotOtp> | undefined;
-}
-
-if (!globalThis.__forgotOtpStore) {
-  globalThis.__forgotOtpStore = new Map<string, ForgotOtp>();
-}
-
-export const forgotOtpStore = globalThis.__forgotOtpStore;
 
 export async function POST(request: Request) {
   try {
@@ -78,10 +60,7 @@ export async function POST(request: Request) {
     forgotOtpStore.delete(emailLower);
 
     // ── Find the user and reset their password ────────────────────────────────
-    const { data: listData } = await adminClient.auth.admin.listUsers();
-    const authUser = listData?.users?.find(
-      (u) => u.email?.toLowerCase() === emailLower
-    );
+    const authUser = await getAuthUserByEmail(adminClient, emailLower);
 
     if (!authUser) {
       return NextResponse.json(
@@ -117,9 +96,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
-
-function hashOtp(otp: string): string {
-  const salt = process.env.SUPABASE_SERVICE_ROLE_KEY!.slice(0, 16);
-  return crypto.createHmac('sha256', salt).update(otp).digest('hex');
 }

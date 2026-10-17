@@ -7,6 +7,7 @@ import { createClient } from '@/utils/supabase/server';
 import * as crypto from 'crypto';
 import { pendingOtpStore } from '@/lib/otp-store';
 import { isAdminEmail } from '@/lib/utils';
+import { getAuthUserByEmail } from '@/lib/auth-utils';
 
 const adminClient = createAdminClient();
 
@@ -61,12 +62,8 @@ export async function POST(request: Request) {
 
     // ── NOW create the Supabase Auth user ─────────────────────────────────────
     // Check if an unverified auth user already exists (e.g., from a previous attempt)
-    const { data: listData } = await adminClient.auth.admin.listUsers();
+    const existingAuthUser = await getAuthUserByEmail(adminClient, emailLower);
     let authUserId: string;
-
-    const existingAuthUser = listData?.users?.find(
-      (u) => u.email?.toLowerCase() === emailLower
-    );
 
     if (existingAuthUser) {
       // Update password and confirm email

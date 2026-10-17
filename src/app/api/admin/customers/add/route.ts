@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { checkIsAdmin } from '@/lib/utils';
+import { getAuthUserByEmail } from '@/lib/auth-utils';
 
 export async function POST(request: Request) {
   try {
@@ -37,12 +38,8 @@ export async function POST(request: Request) {
     const adminClient = createAdminClient();
 
     // Check if auth user already exists
-    const { data: listData } = await adminClient.auth.admin.listUsers();
+    const existingAuthUser = await getAuthUserByEmail(adminClient, emailLower);
     let authUserId: string;
-
-    const existingAuthUser = listData?.users?.find(
-      (u) => u.email?.toLowerCase() === emailLower
-    );
 
     if (existingAuthUser) {
       // Update password and confirm email if they want to skip OTP

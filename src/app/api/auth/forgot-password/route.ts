@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import * as crypto from 'crypto';
 import { sendOtpEmail } from '@/lib/email';
-import { forgotOtpStore } from '../reset-password/route';
+import { forgotOtpStore, hashOtp, getAuthUserByEmail } from '@/lib/auth-utils';
 
 const adminClient = createAdminClient();
 
@@ -52,12 +52,9 @@ export async function POST(request: Request) {
     // ── Verify account exists ─────────────────────────────────────────────────
     // We don't reveal whether the email exists (security best practice),
     // but we only send the OTP if the account is confirmed.
-    const { data: listData } = await adminClient.auth.admin.listUsers();
-    const authUser = listData?.users?.find(
-      (u) => u.email?.toLowerCase() === emailLower && u.email_confirmed_at
-    );
+    const authUser = await getAuthUserByEmail(adminClient, emailLower);
 
-    if (!authUser) {
+    if (!authUser || !authUser.email_confirmed_at) {
       // Return success to avoid user enumeration, but don't actually send
       console.log(`[forgot-password] No confirmed account for ${emailLower} — silent skip`);
       return NextResponse.json({
@@ -91,9 +88,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
-
-function hashOtp(otp: string): string {
-  const salt = process.env.SUPABASE_SERVICE_ROLE_KEY!.slice(0, 16);
-  return crypto.createHmac('sha256', salt).update(otp).digest('hex');
 }

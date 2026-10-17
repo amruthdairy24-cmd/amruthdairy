@@ -1,7 +1,6 @@
 // api/auth/verify-forgot-otp/route.ts
 import { NextResponse } from 'next/server';
-import * as crypto from 'crypto';
-import { forgotOtpStore } from '../reset-password/route';
+import { forgotOtpStore, hashOtp } from '@/lib/auth-utils';
 
 export async function POST(request: Request) {
   try {
@@ -57,9 +56,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
-
-function hashOtp(otp: string): string {
-  const salt = process.env.SUPABASE_SERVICE_ROLE_KEY!.slice(0, 16);
-  return crypto.createHmac('sha256', salt).update(otp).digest('hex');
 }

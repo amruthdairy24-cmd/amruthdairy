@@ -6,6 +6,7 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import * as crypto from 'crypto';
 import { sendOtpEmail } from '@/lib/email';
 import { pendingOtpStore } from '@/lib/otp-store';
+import { getAuthUserByEmail } from '@/lib/auth-utils';
 
 const adminClient = createAdminClient();
 
@@ -68,12 +69,9 @@ export async function POST(request: Request) {
 
     // ── Check for existing verified account (email or username already taken) ─
     // Only check Supabase Auth for already-confirmed users
-    const { data: listData } = await adminClient.auth.admin.listUsers();
-    const existingConfirmedUser = listData?.users?.find(
-      (u) => u.email?.toLowerCase() === emailLower && u.email_confirmed_at
-    );
+    const existingConfirmedUser = await getAuthUserByEmail(adminClient, emailLower);
 
-    if (existingConfirmedUser) {
+    if (existingConfirmedUser?.email_confirmed_at) {
       return NextResponse.json(
         { success: false, message: 'This email is already registered. Please sign in.' },
         { status: 409 }
