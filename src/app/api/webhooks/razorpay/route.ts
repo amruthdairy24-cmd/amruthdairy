@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { processPendingReferralReward } from '@/lib/referral';
+import { sendAdminNewProductOrderEmail } from '@/lib/email';
 
 // Instantiate admin client with service role key to bypass RLS in unauthenticated webhooks
 const adminClient = createAdminClient();
@@ -96,7 +97,118 @@ export async function POST(request: Request) {
       }
 
       if (!targetSubscriptionId && !targetBillingMonthId) {
-        console.warn(`[Razorpay Webhook] Unhandled order ID: ${orderId}. No matching subscription or billing record found.`);
+        // Check if this payment is for a standalone product order
+        const { data: productOrder } = await adminClient
+          .from('product_orders')
+          .select('*, product_order_items(*)')
+          .ilike('delivery_notes', `%${orderId}%`)
+          .maybeSingle();
+
+        if (productOrder) {
+          if (productOrder.payment_status === 'paid') {
+            console.log(`[Razorpay Webhook] Product order ${productOrder.id} already marked paid`);
+            return NextResponse.json({ success: true, message: 'Product order already paid' });
+          }
+
+          // 1. Update product_orders to paid and confirmed
+          const updatedNotes = productOrder.delivery_notes?.includes('Payment ID:')
+            ? productOrder.delivery_notes
+            : `${productOrder.delivery_notes || ''} | Payment ID: ${paymentId}`;
+
+          await adminClient
+            .from('product_orders')
+            .update({
+              payment_status: 'paid',
+              status: 'confirmed',
+              delivery_notes: updatedNotes,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', productOrder.id);
+
+          // 2. Insert payment record
+          if (productOrder.customer_id) {
+            await adminClient.from('payments').insert({
+              customer_id: productOrder.customer_id,
+              amount: productOrder.total_amount,
+              payment_type: 'product',
+              method: method,
+              status: 'success',
+              razorpay_order_id: orderId,
+              razorpay_payment_id: paymentId,
+              paid_at: new Date().toISOString(),
+              is_manual: false
+            });
+          }
+
+          // 3. Decrement product stock
+          const orderItems = productOrder.product_order_items || [];
+          for (const item of orderItems) {
+            if (item.product_id) {
+              const { data: prod } = await adminClient
+                .from('products')
+                .select('stock')
+                .eq('id', item.product_id)
+                .single();
+              if (prod) {
+                await adminClient
+                  .from('products')
+                  .update({ stock: Math.max(0, prod.stock - (item.quantity || 1)) })
+                  .eq('id', item.product_id);
+              }
+            }
+          }
+
+          // 4. Send email notification to admin
+          let custName = 'Customer';
+          let custPhone = '';
+          let custArea = '';
+          let custAddress = '';
+          let custLandmark = '';
+          let custNotes = '';
+          if (productOrder.delivery_notes) {
+            const parts = productOrder.delivery_notes.split(' | ');
+            for (const p of parts) {
+              if (p.startsWith('Name: ')) custName = p.replace('Name: ', '');
+              if (p.startsWith('Phone: ')) custPhone = p.replace('Phone: ', '');
+              if (p.startsWith('Area: ')) custArea = p.replace('Area: ', '');
+              if (p.startsWith('Address: ')) {
+                const addrPart = p.replace('Address: ', '');
+                custAddress = addrPart.split(' (Landmark: ')[0];
+                if (addrPart.includes('(Landmark: ')) {
+                  custLandmark = addrPart.split('(Landmark: ')[1].replace(')', '');
+                }
+              }
+              if (p.startsWith('Notes: ')) custNotes = p.replace('Notes: ', '');
+            }
+          }
+
+          sendAdminNewProductOrderEmail({
+            orderId: productOrder.id,
+            totalAmount: Number(productOrder.total_amount),
+            customerName: custName,
+            customerPhone: custPhone,
+            customerArea: custArea,
+            deliveryAddress: custAddress,
+            landmark: custLandmark,
+            deliveryNotes: custNotes,
+            deliveryDate: productOrder.delivery_date,
+            paymentId: paymentId,
+            items: orderItems.map((it: any) => ({
+              product_id: it.product_id,
+              product_name: it.product_name,
+              unit_price: Number(it.unit_price),
+              quantity: it.quantity,
+              subtotal: Number(it.subtotal)
+            }))
+          }).catch(err => {
+            console.error('[Razorpay Webhook] Email notification error for product order:', err);
+          });
+
+          console.log(`[Razorpay Webhook] Successfully processed product order ${productOrder.id} for order ${orderId}`);
+          return NextResponse.json({ success: true, message: 'Product order processed successfully' });
+        }
+
+        console.warn(`[Razorpay Webhook] Unhandled order ID: ${orderId}. No matching subscription, billing, or product record found.`);
         return NextResponse.json({ success: true, message: 'Unhandled order ID' });
       }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import Razorpay from 'razorpay';
 
@@ -9,9 +10,21 @@ interface CartItemInput {
   quantity: number;
 }
 
+interface CustomerInfoInput {
+  full_name: string;
+  phone: string;
+  delivery_address: string;
+  area: string;
+  landmark?: string;
+  delivery_notes?: string;
+}
+
 export async function POST(request: Request) {
   try {
-    const { items } = await request.json();
+    const { items, customer_info } = await request.json() as {
+      items?: CartItemInput[];
+      customer_info?: CustomerInfoInput;
+    };
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ success: false, message: 'Cart is empty' }, { status: 400 });
@@ -28,6 +41,7 @@ export async function POST(request: Request) {
     }
 
     let totalAmount = 0;
+    const validatedItems: { product_id: string; product_name: string; unit_price: number; quantity: number; subtotal: number }[] = [];
 
     for (const item of items as CartItemInput[]) {
       const product = products.find(p => p.id === item.product_id);
@@ -41,7 +55,16 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: `Only ${product.stock} units of ${product.name} available` }, { status: 400 });
       }
 
-      totalAmount += Math.round(product.price * item.quantity * 100) / 100;
+      const subtotal = Math.round(product.price * item.quantity * 100) / 100;
+      totalAmount += subtotal;
+
+      validatedItems.push({
+        product_id: product.id,
+        product_name: product.name,
+        unit_price: product.price,
+        quantity: item.quantity,
+        subtotal
+      });
     }
 
     if (totalAmount <= 0) {
@@ -74,18 +97,85 @@ export async function POST(request: Request) {
       receipt: `rcpt_prod_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       notes: {
         order_type: 'standalone_product',
-        items_count: items.length
+        items_count: items.length,
+        customer_name: (customer_info?.full_name || '').slice(0, 40),
+        customer_phone: (customer_info?.phone || '').slice(0, 15),
+        customer_area: (customer_info?.area || '').slice(0, 40)
       }
     };
 
     const razorpayOrder = await razorpay.orders.create(options);
+
+    // If customer details are provided, pre-create a pending order in DB
+    // This guarantees the order is tracked even if the customer's mobile browser closes after payment
+    let pendingOrderId: string | null = null;
+    if (customer_info && customer_info.full_name && customer_info.phone) {
+      try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        let customerId = user ? user.id : null;
+        if (!customerId) {
+          const cleanPhone = customer_info.phone.trim();
+          const { data: existingProfile } = await adminSupabase
+            .from('profiles')
+            .select('id')
+            .eq('phone', cleanPhone)
+            .maybeSingle();
+
+          if (existingProfile) {
+            customerId = existingProfile.id;
+          } else {
+            const { data: firstProfile } = await adminSupabase
+              .from('profiles')
+              .select('id')
+              .limit(1)
+              .single();
+            if (firstProfile) customerId = firstProfile.id;
+          }
+        }
+
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const deliveryDate = tomorrow.toISOString().split('T')[0];
+
+        const fullNotes = `Name: ${customer_info.full_name} | Phone: ${customer_info.phone} | Area: ${customer_info.area} | Address: ${customer_info.delivery_address}${customer_info.landmark ? ` (Landmark: ${customer_info.landmark})` : ''}${customer_info.delivery_notes ? ` | Notes: ${customer_info.delivery_notes}` : ''} | Razorpay Order ID: ${razorpayOrder.id}`;
+
+        const { data: orderRecord, error: orderInsertErr } = await adminSupabase
+          .from('product_orders')
+          .insert({
+            customer_id: customerId,
+            total_amount: totalAmount,
+            item_count: validatedItems.length,
+            status: 'pending',
+            delivery_date: deliveryDate,
+            delivery_notes: fullNotes,
+            payment_status: 'pending'
+          })
+          .select()
+          .single();
+
+        if (!orderInsertErr && orderRecord) {
+          pendingOrderId = orderRecord.id;
+          const orderItemsWithId = validatedItems.map(item => ({
+            order_id: orderRecord.id,
+            ...item
+          }));
+
+          await adminSupabase.from('product_order_items').insert(orderItemsWithId);
+        }
+      } catch (dbErr) {
+        console.warn('[create-razorpay-order] Could not pre-create pending order:', dbErr);
+      }
+    }
 
     return NextResponse.json({
       success: true,
       order_id: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
-      key_id: keyId
+      key_id: keyId,
+      db_order_id: pendingOrderId
     });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

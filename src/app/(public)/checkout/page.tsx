@@ -144,7 +144,15 @@ function CheckoutContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: [{ product_id: product.id, quantity }]
+          items: [{ product_id: product.id, quantity }],
+          customer_info: {
+            full_name: fullName.trim(),
+            phone: phone.trim(),
+            delivery_address: address.trim(),
+            area: area.trim(),
+            landmark: landmark.trim(),
+            delivery_notes: deliveryNotes.trim()
+          }
         })
       })
 

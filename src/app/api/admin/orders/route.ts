@@ -59,6 +59,9 @@ export async function GET(request: Request) {
 
     if (statusFilter && statusFilter !== 'all') {
       query = query.eq('status', statusFilter);
+    } else {
+      // By default show all paid orders (exclude unpaid abandoned checkout attempts)
+      query = query.neq('payment_status', 'pending');
     }
 
     const { data: orders, error } = await query;

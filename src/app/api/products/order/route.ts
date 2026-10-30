@@ -60,6 +60,103 @@ export async function POST(request: Request) {
       }
     }
 
+    // If this order was already pre-created at checkout initialization, confirm it idempotently
+    if (razorpay_order_id) {
+      const { data: existingOrder } = await adminSupabase
+        .from('product_orders')
+        .select('*')
+        .ilike('delivery_notes', `%${razorpay_order_id}%`)
+        .maybeSingle();
+
+      if (existingOrder) {
+        if (existingOrder.payment_status === 'paid') {
+          return NextResponse.json({
+            success: true,
+            order_id: existingOrder.id,
+            total_amount: existingOrder.total_amount,
+            item_count: existingOrder.item_count,
+            delivery_date: existingOrder.delivery_date,
+            message: `Order confirmed! Total ₹${existingOrder.total_amount}. Delivery scheduled for tomorrow morning.`
+          });
+        }
+
+        const updatedNotes = existingOrder.delivery_notes?.includes('Payment ID:')
+          ? existingOrder.delivery_notes
+          : `${existingOrder.delivery_notes || ''} | Payment ID: ${razorpay_payment_id || ''}`;
+
+        await adminSupabase
+          .from('product_orders')
+          .update({
+            payment_status: 'paid',
+            status: 'confirmed',
+            delivery_notes: updatedNotes,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingOrder.id);
+
+        if (existingOrder.customer_id) {
+          await adminSupabase.from('payments').insert({
+            customer_id: existingOrder.customer_id,
+            amount: existingOrder.total_amount,
+            payment_type: 'product',
+            method: 'upi',
+            status: 'success',
+            razorpay_order_id: razorpay_order_id,
+            razorpay_payment_id: razorpay_payment_id || null,
+            razorpay_signature: razorpay_signature || null,
+            is_manual: false,
+            paid_at: new Date().toISOString()
+          });
+        }
+
+        // Decrement stock
+        for (const item of items as CartItem[]) {
+          const { data: prod } = await adminSupabase
+            .from('products')
+            .select('stock')
+            .eq('id', item.product_id)
+            .single();
+          if (prod) {
+            await adminSupabase
+              .from('products')
+              .update({ stock: Math.max(0, prod.stock - item.quantity) })
+              .eq('id', item.product_id);
+          }
+        }
+
+        sendAdminNewProductOrderEmail({
+          orderId: existingOrder.id,
+          totalAmount: Number(existingOrder.total_amount),
+          customerName: customer_info.full_name,
+          customerPhone: customer_info.phone,
+          customerArea: customer_info.area,
+          deliveryAddress: customer_info.delivery_address,
+          landmark: customer_info.landmark,
+          deliveryNotes: customer_info.delivery_notes,
+          deliveryDate: existingOrder.delivery_date,
+          paymentId: razorpay_payment_id || undefined,
+          items: items.map(it => ({
+            product_id: it.product_id,
+            product_name: 'Product',
+            unit_price: 0,
+            quantity: it.quantity,
+            subtotal: 0
+          }))
+        }).catch(err => {
+          console.error('[products/order] Email notification error:', err);
+        });
+
+        return NextResponse.json({
+          success: true,
+          order_id: existingOrder.id,
+          total_amount: existingOrder.total_amount,
+          item_count: existingOrder.item_count,
+          delivery_date: existingOrder.delivery_date,
+          message: `Order confirmed! Total ₹${existingOrder.total_amount}. Delivery scheduled for tomorrow morning.`
+        });
+      }
+    }
+
     // Validate products and pricing
     const productIds = items.map((item: CartItem) => item.product_id);
     const { data: products, error: productsError } = await adminSupabase
