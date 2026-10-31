@@ -44,6 +44,19 @@ function RenewContent() {
   const toastShownRef = useRef(false)
   const [milkPrices, setMilkPrices] = useState<Record<string, number>>({})
 
+  const now = useMemo(() => new Date(), []);
+  const currentMonthNum = now.getMonth() + 1;
+  const currentYearNum = now.getFullYear();
+  const nextMonthNum = currentMonthNum === 12 ? 1 : currentMonthNum + 1;
+  const nextMonthYearNum = currentMonthNum === 12 ? currentYearNum + 1 : currentYearNum;
+
+  const currentMonthStr = `${currentYearNum}-${String(currentMonthNum).padStart(2, '0')}-01`;
+  const nextMonthStr = `${nextMonthYearNum}-${String(nextMonthNum).padStart(2, '0')}-01`;
+
+  const currentMonthName = useMemo(() => new Date(currentYearNum, currentMonthNum - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), [currentYearNum, currentMonthNum]);
+  const nextMonthName = useMemo(() => new Date(nextMonthYearNum, nextMonthNum - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), [nextMonthYearNum, nextMonthNum]);
+  const nextMonthShortName = useMemo(() => new Date(nextMonthYearNum, nextMonthNum - 1, 1).toLocaleDateString('en-IN', { month: 'short' }), [nextMonthYearNum, nextMonthNum]);
+
   // Parse the target month for display
   const targetDate = useMemo(() => {
     if (targetMonth) return new Date(targetMonth);
@@ -54,7 +67,8 @@ function RenewContent() {
     }
     return d;
   }, [targetMonth]);
-  const monthName = targetDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+  const monthName = targetDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+  const isTargetNextMonth = getLocalYYYYMMDD(targetDate).slice(0, 7) === nextMonthStr.slice(0, 7);
 
   useEffect(() => {
     async function loadPrice() {
@@ -304,9 +318,44 @@ function RenewContent() {
         <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
           {searchParams.get('upgrade') === 'true' ? 'Upgrade to Standard Monthly Plan' : `Renew for ${monthName}`}
         </h1>
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8">
-          Review your plan details for the upcoming month. You can adjust your daily quantity below.
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">
+          Review your plan details for {monthName}. You can adjust your daily quantity below.
         </p>
+
+        {/* Month Selector: Active from 25th of month */}
+        {now.getDate() >= 25 && (
+          <div className="mb-8 p-1.5 bg-slate-100 dark:bg-slate-800/70 rounded-2xl flex items-center gap-2 border border-slate-200/80 dark:border-slate-700/60 shadow-xs">
+            <button
+              type="button"
+              onClick={() => router.replace(`/dashboard/renew?month=${nextMonthStr}${searchParams.get('upgrade') ? '&upgrade=true' : ''}`)}
+              className={cn(
+                "flex-1 py-3 px-3.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 cursor-pointer border-none",
+                isTargetNextMonth
+                  ? "bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm ring-1 ring-amber-500/20"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              )}
+            >
+              <span className="font-extrabold flex items-center gap-1.5">
+                {nextMonthName}
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 uppercase tracking-wider font-black">Next Month</span>
+              </span>
+              <span className="text-[10px] font-medium opacity-75">Deliveries start 1st {nextMonthShortName}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => router.replace(`/dashboard/renew?month=${currentMonthStr}${searchParams.get('upgrade') ? '&upgrade=true' : ''}`)}
+              className={cn(
+                "flex-1 py-3 px-3.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 cursor-pointer border-none",
+                !isTargetNextMonth
+                  ? "bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm ring-1 ring-amber-500/20"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              )}
+            >
+              <span className="font-extrabold">{currentMonthName}</span>
+              <span className="text-[10px] font-medium opacity-75">Remaining days of current month</span>
+            </button>
+          </div>
+        )}
 
         {/* Quantity Selector */}
         <div className="space-y-4 mb-8">

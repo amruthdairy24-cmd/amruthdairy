@@ -116,8 +116,10 @@ function RenewalBanner({ latest_paid_month, status, subscription_state }: { late
   const stateName = subscription_state?.state;
   const isCurrentUnpaid = stateName === 'UNRENEWED_ELIGIBLE' || stateName === 'PAYMENT_PENDING' || (latest_paid_month && latest_paid_month < formattedCurrentMonth) || (!latest_paid_month && status !== 'trial');
 
-  let renewalTargetMonth = isCurrentUnpaid ? formattedCurrentMonth : formattedNextMonth;
-  let isRenewingNextMonth = !isCurrentUnpaid;
+  // When past 25th, primary renewal action is for the upcoming month (e.g. November)
+  let renewalTargetMonth = isPast25th ? formattedNextMonth : (isCurrentUnpaid ? formattedCurrentMonth : formattedNextMonth);
+  let isRenewingNextMonth = isPast25th || !isCurrentUnpaid;
+  const nextMonthName = new Date(nextMonthYear, nextMonth - 1, 1).toLocaleDateString('en-IN', { month: 'long' });
 
   if (latest_paid_month === formattedNextMonth || (latest_paid_month && latest_paid_month > formattedNextMonth)) {
     // Already paid for next month (or beyond), don't show button
@@ -149,15 +151,27 @@ function RenewalBanner({ latest_paid_month, status, subscription_state }: { late
           </div>
           <div>
             <h3 className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight">
-              {isCurrentUnpaid ? `Renew for ${currentMonthName}` : isRenewingNextMonth ? "Renew for Next Month" : "Renew Subscription"}
+              {isPast25th
+                ? `Renew for ${nextMonthName}`
+                : isCurrentUnpaid
+                  ? `Renew for ${currentMonthName}`
+                  : `Renew for ${nextMonthName}`}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-              {isCurrentUnpaid
-                ? `Your subscription for ${currentMonthName} is pending. Renew now to resume deliveries.`
-                : isPast25th
-                  ? "It's time to renew your milk subscription for next month."
+              {isPast25th
+                ? `It's time to renew your milk subscription for ${nextMonthName}.`
+                : isCurrentUnpaid
+                  ? `Your subscription for ${currentMonthName} is pending. Renew now to resume deliveries.`
                   : "Next month's renewals open on the 25th."}
             </p>
+            {isPast25th && isCurrentUnpaid && (
+              <a
+                href={`/dashboard/renew?month=${formattedCurrentMonth}`}
+                className="text-[11px] font-semibold text-amber-700/80 hover:text-amber-900 dark:text-amber-400/80 dark:hover:text-amber-300 underline mt-1 inline-block"
+              >
+                Or renew for remaining days of {currentMonthName}
+              </a>
+            )}
           </div>
         </div>
         <button
@@ -169,7 +183,7 @@ function RenewalBanner({ latest_paid_month, status, subscription_state }: { late
               : "bg-amber-500 hover:bg-amber-600 text-white"
           )}
         >
-          <span>{isCurrentUnpaid ? "Pay & Start Deliveries" : "Renew Now"}</span>
+          <span>{isPast25th ? `Renew for ${nextMonthName}` : isCurrentUnpaid ? "Pay & Start Deliveries" : "Renew Now"}</span>
           <ArrowRight size={14} />
         </button>
       </div>
@@ -454,8 +468,8 @@ export default function CustomerDashboard() {
     (current_month && current_month.payment_status === 'pending' && !data.latest_paid_month) ||
     isCurrentUnpaidCard;
 
-  let renewalCardTitle = isCurrentUnpaidCard ? 'Renewal Due' : `Next Bill: ${formattedNextBillDate}`
-  let renewalCardSubtitle = isCurrentUnpaidCard ? 'Renewal Pending' : now.getDate() >= 25 ? 'Renewal Pending' : 'Renewal opens on 25th'
+  let renewalCardTitle = isCurrentUnpaidCard ? (now.getDate() >= 25 ? `Renew for ${nextMonthShortName}` : 'Renewal Due') : `Next Bill: ${formattedNextBillDate}`
+  let renewalCardSubtitle = isCurrentUnpaidCard ? (now.getDate() >= 25 ? 'Start Next Month' : 'Renewal Pending') : now.getDate() >= 25 ? `${nextMonthShortName} Renewal Open` : 'Renewal opens on 25th'
   let renewalBadgeColor = isCurrentUnpaidCard ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-sky-500/10 text-sky-600 dark:text-sky-400'
 
   if (isNextMonthPaid) {
@@ -587,7 +601,7 @@ export default function CustomerDashboard() {
               </h2>
               <p className="text-xs sm:text-sm font-medium text-emerald-100/90 dark:text-slate-300 mt-2 leading-relaxed">
                 {isCurrentUnpaidCard
-                  ? 'Your milk subscription is currently on hold awaiting September payment. Renew below to start receiving deliveries.'
+                  ? 'Your milk subscription is currently on hold. Renew below to start receiving deliveries.'
                   : subscription.status === 'active'
                     ? 'Your raw, farm-fresh milk subscription is active. Delivered daily before 7:00 AM straight to your home.'
                     : 'Your subscription is currently paused. Resume your milk delivery anytime below.'
@@ -676,7 +690,7 @@ export default function CustomerDashboard() {
 
         {/* Card 4: 📅 Next Bill / Renewal Status */}
         <Link
-          href={isCurrentUnpaidCard ? `/dashboard/renew?month=${formattedCurrentMonthStr}` : isNextMonthPaid ? '/dashboard/bills' : (now.getDate() >= 25 ? `/dashboard/renew?month=${formattedNextMonthStr}` : '/dashboard/bills')}
+          href={isCurrentUnpaidCard ? (now.getDate() >= 25 ? `/dashboard/renew?month=${formattedNextMonthStr}` : `/dashboard/renew?month=${formattedCurrentMonthStr}`) : isNextMonthPaid ? '/dashboard/bills' : (now.getDate() >= 25 ? `/dashboard/renew?month=${formattedNextMonthStr}` : '/dashboard/bills')}
           className="bg-white dark:bg-slate-900 border border-border/50 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between group no-underline text-inherit cursor-pointer"
         >
           <div className="min-w-0">
