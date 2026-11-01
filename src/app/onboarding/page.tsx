@@ -323,6 +323,28 @@ export default function OnboardingPage() {
             theme: {
               color: "#0f2e5c"
             },
+            config: {
+              display: {
+                blocks: {
+                  upi: {
+                    name: "Pay via UPI (GPay / PhonePe / Paytm)",
+                    instruments: [{ method: "upi" }]
+                  },
+                  other: {
+                    name: "Other Payment Modes",
+                    instruments: [
+                      { method: "card" },
+                      { method: "netbanking" },
+                      { method: "wallet" }
+                    ]
+                  }
+                },
+                sequence: ["block.upi", "block.other"],
+                preferences: {
+                  show_default_blocks: true
+                }
+              }
+            },
             modal: {
               ondismiss: function() {
                 setLoading(false)

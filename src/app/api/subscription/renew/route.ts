@@ -87,13 +87,23 @@ export async function POST(request: Request) {
       if (standardStart > targetDate) {
          startDateForCalculationStr = `${standardStart.getFullYear()}-${String(standardStart.getMonth()+1).padStart(2, '0')}-${String(standardStart.getDate()).padStart(2, '0')}`;
       }
-    } else if (today > targetDate && today <= endOfMonth) {
+    } else {
       const earliestStr = getEarliestStartDateStr();
-      const earliestDate = new Date(earliestStr);
-      if (earliestDate <= endOfMonth) {
+      const endOfMonthStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth()+1).padStart(2, '0')}-${String(endOfMonth.getDate()).padStart(2, '0')}`;
+      if (earliestStr >= target_month && earliestStr <= endOfMonthStr) {
         startDateForCalculationStr = earliestStr;
-      } else {
-        startDateForCalculationStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      }
+    }
+
+    // Safety net (covers trial upgrades too): never bill days before the earliest deliverable date
+    if (!isMigrationMode) {
+      const earliestAllStr = getEarliestStartDateStr();
+      const monthEndStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth()+1).padStart(2, '0')}-${String(endOfMonth.getDate()).padStart(2, '0')}`;
+      if (earliestAllStr > startDateForCalculationStr && earliestAllStr <= monthEndStr) {
+        startDateForCalculationStr = earliestAllStr;
+      } else if (earliestAllStr > monthEndStr) {
+        // Target month already over → no deliverable days left (matches client: 0 days)
+        startDateForCalculationStr = earliestAllStr;
       }
     }
 

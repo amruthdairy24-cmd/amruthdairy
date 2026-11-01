@@ -132,8 +132,8 @@ function RenewContent() {
   const isMigrationMode = dashboardData?.migration_mode || false;
 
   const calendarStartDate = useMemo(() => {
-    const start = new Date(targetDate);
-    let startDateForCalculation = new Date(start.getFullYear(), start.getMonth(), 1);
+    const [y, m] = getLocalYYYYMMDD(targetDate).split('-').map(Number);
+    let startDateForCalculation = new Date(y, m - 1, 1);
     
     if (isMigrationMode) {
       return startDateForCalculation;
@@ -144,35 +144,41 @@ function RenewContent() {
       startDateForCalculation = new Date(trialEnd);
       startDateForCalculation.setDate(startDateForCalculation.getDate() + 1);
       startDateForCalculation.setHours(0, 0, 0, 0);
+      // Never bill days before month start or before the earliest deliverable date
+      const monthStartTrial = new Date(y, m - 1, 1);
+      if (startDateForCalculation < monthStartTrial) startDateForCalculation = monthStartTrial;
+      const [ety, etm, etd] = getEarliestStartDateStr().split('-').map(Number);
+      const earliestTrial = new Date(ety, etm - 1, etd);
+      if (startDateForCalculation < earliestTrial) startDateForCalculation = earliestTrial;
     } else {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
-      if (today >= start && today <= end) {
-        const earliestStr = getEarliestStartDateStr();
-        const earliest = new Date(earliestStr);
-        earliest.setHours(0, 0, 0, 0);
-        if (earliest <= end) {
-          startDateForCalculation = earliest;
-        } else {
-          startDateForCalculation = today;
-        }
+      const earliestStr = getEarliestStartDateStr(); // YYYY-MM-DD in IST
+      const targetMonthStr = `${y}-${String(m).padStart(2, '0')}-01`;
+      const endOfMonthStr = `${y}-${String(m).padStart(2, '0')}-${new Date(y, m, 0).getDate()}`;
+      
+      // If earliest delivery start date falls in target month, calculation MUST start from earliestStr!
+      if (earliestStr >= targetMonthStr && earliestStr <= endOfMonthStr) {
+        const [ey, em, ed] = earliestStr.split('-').map(Number);
+        startDateForCalculation = new Date(ey, em - 1, ed);
+      } else if (earliestStr > endOfMonthStr) {
+        // Target month has completely passed
+        const [ey, em, ed] = endOfMonthStr.split('-').map(Number);
+        startDateForCalculation = new Date(ey, em - 1, ed + 1);
       }
     }
     return startDateForCalculation;
   }, [targetDate, dashboardData, isMigrationMode]);
 
   const calculateRemainingDays = () => {
-    const start = new Date(targetDate);
-    const end = new Date(start.getFullYear(), start.getMonth() + 1, 0); // last day of month
+    const [y, m] = getLocalYYYYMMDD(targetDate).split('-').map(Number);
+    const end = new Date(y, m, 0); // last day of month
     
     let days = end.getDate();
     const startDateForCalculation = calendarStartDate;
 
-    if (startDateForCalculation >= start && startDateForCalculation <= end) {
-      const diffTime = Math.abs(end.getTime() - startDateForCalculation.getTime());
-      days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    } else if (startDateForCalculation > end) {
+    if (startDateForCalculation <= end) {
+      const startDay = startDateForCalculation.getDate();
+      days = end.getDate() - startDay + 1;
+    } else {
       days = 0;
     }
     
@@ -268,6 +274,28 @@ function RenewContent() {
           },
           theme: {
             color: "#059669" // Emerald 600
+          },
+          config: {
+            display: {
+              blocks: {
+                upi: {
+                  name: "Pay via UPI (GPay / PhonePe / Paytm)",
+                  instruments: [{ method: "upi" }]
+                },
+                other: {
+                  name: "Other Payment Modes",
+                  instruments: [
+                    { method: "card" },
+                    { method: "netbanking" },
+                    { method: "wallet" }
+                  ]
+                }
+              },
+              sequence: ["block.upi", "block.other"],
+              preferences: {
+                show_default_blocks: true
+              }
+            }
           },
           modal: {
             ondismiss: function() {

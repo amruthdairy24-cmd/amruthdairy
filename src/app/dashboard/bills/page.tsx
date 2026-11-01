@@ -749,11 +749,19 @@ export default function BillsPage() {
           <div className="p-6 bg-slate-50/60 dark:bg-slate-950/40 border-t border-border/50 dark:border-slate-800 flex flex-col sm:flex-row gap-3">
             {hasPendingBill && (
               <button
-                onClick={() => { setShowPayModal(true); setPaymentStep('details'); }}
+                onClick={() => {
+                  // No real bill generated yet for this month → send to Renew page,
+                  // which deducts skip credits / carry-forward and counts real delivery days.
+                  if (!(activeBill as any).id) {
+                    window.location.href = `/dashboard/renew?month=${getTodayIST().slice(0, 7)}-01`;
+                    return;
+                  }
+                  setShowPayModal(true); setPaymentStep('details');
+                }}
                 className="flex-1 h-12 rounded-xl bg-[#014DA4] hover:bg-[#014DA4]/90 active:scale-[0.98] text-white font-extrabold text-xs shadow-md shadow-[#014DA4]/10 transition-all border-none flex items-center justify-center gap-2 cursor-pointer group"
               >
                 <CreditCard size={15} className="group-hover:scale-110 transition-transform" />
-                <span>Pay Balance Due (₹{activeBill.net_due.toFixed(2)})</span>
+                <span>{(activeBill as any).id ? `Pay Balance Due (₹${activeBill.net_due.toFixed(2)})` : 'Renew & Pay (credits applied)'}</span>
               </button>
             )}
             <button
