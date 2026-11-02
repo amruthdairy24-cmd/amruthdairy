@@ -42,6 +42,33 @@ export function AdminCustomerHistoryModal({
   const [selectedDeliveryMonth, setSelectedDeliveryMonth] = useState<string>('')
   const [showMarkPaid, setShowMarkPaid] = useState(false)
   const [markPaidTargetMonth, setMarkPaidTargetMonth] = useState<string | undefined>(undefined)
+  const [reconciling, setReconciling] = useState(false)
+
+  const handleReconcile = async () => {
+    try {
+      setReconciling(true)
+      const res = await fetch('/api/payments/reconcile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customer_id: customerId })
+      })
+      const data = await res.json()
+      if (data?.success) {
+        if (data.fixed > 0) {
+          alert(`Success! Found ${data.fixed} paid order(s) in Razorpay. Marked bill as paid.`)
+          await fetchHistory()
+        } else {
+          alert('Checked Razorpay: No unrecorded successful payment found for this customer.')
+        }
+      } else {
+        alert(data?.message || 'Failed to check Razorpay')
+      }
+    } catch {
+      alert('Error connecting to reconciliation service')
+    } finally {
+      setReconciling(false)
+    }
+  }
 
   useEffect(() => {
     if (initialTab) {
@@ -333,20 +360,32 @@ export function AdminCustomerHistoryModal({
               {isCurrentPaid ? "All bills cleared" : `Last paid: ${latestPaidMonthName}`}
             </p>
             {!isCurrentPaid && (
-              <button
-                type="button"
-                onClick={() => {
-                  const oldestPending = billingMonths
-                    .filter((bm: any) => bm.payment_status === 'pending' || (bm.net_due > 0 && (bm.amount_paid || 0) < bm.net_due))
-                    .sort((a: any, b: any) => a.billing_month.localeCompare(b.billing_month))[0]
-                  setMarkPaidTargetMonth(oldestPending ? oldestPending.billing_month : undefined)
-                  setShowMarkPaid(true)
-                }}
-                className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer shadow-xs border-none"
-              >
-                <CheckCircle2 size={12} />
-                Mark as Paid
-              </button>
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const oldestPending = billingMonths
+                      .filter((bm: any) => bm.payment_status === 'pending' || (bm.net_due > 0 && (bm.amount_paid || 0) < bm.net_due))
+                      .sort((a: any, b: any) => a.billing_month.localeCompare(b.billing_month))[0]
+                    setMarkPaidTargetMonth(oldestPending ? oldestPending.billing_month : undefined)
+                    setShowMarkPaid(true)
+                  }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer shadow-xs border-none"
+                >
+                  <CheckCircle2 size={12} />
+                  Mark as Paid
+                </button>
+                <button
+                  type="button"
+                  disabled={reconciling}
+                  onClick={handleReconcile}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer shadow-xs border-none disabled:opacity-50"
+                  title="Check Razorpay to see if customer completed payment via UPI/GPay"
+                >
+                  <RefreshCw size={12} className={cn(reconciling && "animate-spin")} />
+                  {reconciling ? "Checking..." : "Check Razorpay"}
+                </button>
+              </div>
             )}
           </div>
 

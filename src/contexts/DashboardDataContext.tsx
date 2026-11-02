@@ -102,6 +102,20 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     fetchDashboardData()
+
+    // Safety net: if a payment succeeded in Razorpay but the app missed it (GPay app switch
+    // killed the page / webhook missed), ask the server to reconcile — at most once per 10 min.
+    try {
+      const key = 'amruth_payment_reconciled_at'
+      const last = Number(sessionStorage.getItem(key) || 0)
+      if (Date.now() - last > 10 * 60 * 1000) {
+        sessionStorage.setItem(key, String(Date.now()))
+        fetch('/api/payments/reconcile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+          .then(r => r.json())
+          .then(res => { if (res?.success && res.fixed > 0) fetchDashboardData(true) })
+          .catch(() => { /* non-blocking */ })
+      }
+    } catch { /* sessionStorage unavailable — skip */ }
   }, [fetchDashboardData])
 
   return (

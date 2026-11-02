@@ -30,6 +30,18 @@ export async function GET(
 
     const adminClient = createAdminClient();
 
+    // Auto-reconciliation safety net: if customer paid via GPay/UPI but webhook/callback was missed,
+    // verify with Razorpay and mark paid before fetching records.
+    try {
+      const { getRazorpayClient, reconcilePendingBills } = await import('@/lib/payment-reconcile');
+      const rzp = getRazorpayClient();
+      if (rzp) {
+        await reconcilePendingBills(adminClient, rzp, { customerId });
+      }
+    } catch (recErr) {
+      console.warn('[customer/history] Auto-reconcile error:', recErr);
+    }
+
     // Fetch Profile
     const { data: profile, error: profileErr } = await adminClient
       .from('profiles')

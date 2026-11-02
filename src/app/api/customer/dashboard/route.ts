@@ -17,6 +17,18 @@ export async function GET(request: Request) {
 
     const adminSupabase = createAdminClient();
 
+    // Auto-reconciliation: if customer completed payment via UPI/GPay but browser callback was interrupted,
+    // settle it before rendering dashboard.
+    try {
+      const { getRazorpayClient, reconcilePendingBills } = await import('@/lib/payment-reconcile');
+      const rzp = getRazorpayClient();
+      if (rzp) {
+        await reconcilePendingBills(adminSupabase, rzp, { customerId: user.id });
+      }
+    } catch (recErr) {
+      console.warn('[customer/dashboard] Auto-reconcile error:', recErr);
+    }
+
     // 1 & 2. Get Profile and Subscription in parallel
     const [profileRes, subscriptionRes] = await Promise.all([
       supabase
