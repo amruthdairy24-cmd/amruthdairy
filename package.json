@@ -39,7 +39,9 @@
     "ws": "^8.21.1",
     "xlsx": "^0.18.5",
     "zod": "^4.4.3",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.14",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

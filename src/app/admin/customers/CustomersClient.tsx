@@ -13,6 +13,9 @@ import { AdminExtraMilkModal } from '@/components/admin/AdminExtraMilkModal'
 import { AdminSubscriptionModal } from '@/components/admin/AdminSubscriptionModal'
 import { AdminCustomerHistoryModal } from '@/components/admin/AdminCustomerHistoryModal'
 import { AdminMarkPaidModal } from '@/components/admin/AdminMarkPaidModal'
+import { Download, FileSpreadsheet, FileText } from 'lucide-react'
+import { ExportCustomerModal } from '@/components/admin/ExportCustomerModal'
+import { exportCustomersToExcel, exportCustomersToPdf } from '@/lib/customers/export-customers'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -52,6 +55,7 @@ export function CustomersClient({ data }: { data: Customer[] }) {
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [showExportModal, setShowExportModal] = useState(false)
   const [filterStatus, setFilterStatus] = useState<'all' | 'subscribed' | 'pending' | 'paid' | 'unrenewed' | 'not_subscribed'>('all')
 
   const confirmDelete = async () => {
@@ -283,6 +287,35 @@ export function CustomersClient({ data }: { data: Customer[] }) {
     return true
   })
 
+  const filterTabs = [
+    { id: 'all', label: 'All' },
+    { id: 'subscribed', label: 'Active Plan' },
+    { id: 'pending', label: 'Pending Dues' },
+    { id: 'paid', label: 'Paid in Full' },
+    { id: 'unrenewed', label: 'Renewal Due' },
+    { id: 'not_subscribed', label: 'Not Subscribed' }
+  ] as const;
+  const currentFilterLabel = filterTabs.find(t => t.id === filterStatus)?.label || 'All';
+
+  const handleQuickExport = (format: 'excel' | 'pdf') => {
+    if (filteredData.length === 0) {
+      toast.error('No customer records match this filter to export');
+      return;
+    }
+    const filterTitle = searchQuery
+      ? `${currentFilterLabel} (Search: ${searchQuery})`
+      : currentFilterLabel;
+
+    if (format === 'excel') {
+      exportCustomersToExcel(filteredData, filterTitle);
+      toast.success(`Exported ${filteredData.length} records to Excel (.xlsx)!`);
+    } else {
+      exportCustomersToPdf(filteredData, filterTitle);
+      toast.success(`Exported ${filteredData.length} records to PDF (.pdf)!`);
+    }
+  };
+
+
   return (
     <div className="space-y-6">
       <AdminHeader 
@@ -293,41 +326,71 @@ export function CustomersClient({ data }: { data: Customer[] }) {
         onAction={() => setShowAddCustomer(true)}
       />
 
-      {/* SEARCH AND FILTER BAR */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
-          <input 
-            type="text"
-            placeholder="Search by name, phone, area, ID..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/20 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 transition-colors"
-          />
+      {/* SEARCH, FILTER AND EXPORT BAR */}
+      <div className="flex flex-col xl:flex-row gap-4 items-stretch xl:items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+        <div className="flex flex-col sm:flex-row gap-3 items-center flex-1">
+          <div className="relative w-full sm:w-72 flex-shrink-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
+            <input 
+              type="text"
+              placeholder="Search by name, phone, area, ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#014DA4]/20 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 transition-colors"
+            />
+          </div>
+          
+          <div className="flex w-full sm:w-auto bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-1 shadow-2xs transition-colors overflow-x-auto">
+            {filterTabs.map(status => (
+              <button
+                key={status.id}
+                onClick={() => setFilterStatus(status.id as any)}
+                className={cn(
+                  "flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap",
+                  filterStatus === status.id 
+                    ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" 
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                )}
+              >
+                {status.label}
+              </button>
+            ))}
+          </div>
         </div>
-        
-        <div className="flex w-full sm:w-auto bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-1 shadow-2xs transition-colors overflow-x-auto">
-          {[
-            { id: 'all', label: 'All' },
-            { id: 'subscribed', label: 'Active Plan' },
-            { id: 'pending', label: 'Pending Dues' },
-            { id: 'paid', label: 'Paid in Full' },
-            { id: 'unrenewed', label: 'Renewal Due' },
-            { id: 'not_subscribed', label: 'Not Subscribed' }
-          ].map(status => (
+
+        {/* Quick Export & Full Export Options */}
+        <div className="flex items-center gap-2 justify-end flex-shrink-0">
+          <div className="flex items-center bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 p-1 shadow-2xs">
             <button
-              key={status.id}
-              onClick={() => setFilterStatus(status.id as any)}
-              className={cn(
-                "flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap",
-                filterStatus === status.id 
-                  ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" 
-                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-              )}
+              type="button"
+              onClick={() => handleQuickExport('excel')}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer"
+              title={`Quick export ${filteredData.length} records (${currentFilterLabel}) to Excel`}
             >
-              {status.label}
+              <FileSpreadsheet size={15} />
+              <span>Excel</span>
             </button>
-          ))}
+            <div className="h-4 w-px bg-slate-200 dark:border-slate-800 my-auto" />
+            <button
+              type="button"
+              onClick={() => handleQuickExport('pdf')}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer"
+              title={`Quick export ${filteredData.length} records (${currentFilterLabel}) to PDF`}
+            >
+              <FileText size={15} />
+              <span>PDF</span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowExportModal(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-[#014DA4] to-blue-600 hover:from-[#013d82] hover:to-blue-700 rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap active:scale-95"
+            title="Open Export Options (Filter by Subscribed, Not Subscribed, All)"
+          >
+            <Download size={14} />
+            <span>Export Options</span>
+          </button>
         </div>
       </div>
 
@@ -492,6 +555,16 @@ export function CustomersClient({ data }: { data: Customer[] }) {
           </div>
         )}
       </AnimatePresence>
+
+      <ExportCustomerModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        allCustomers={data}
+        filteredCustomers={filteredData}
+        activeFilterId={filterStatus}
+        activeFilterLabel={currentFilterLabel}
+        searchQuery={searchQuery}
+      />
     </div>
   )
 }
