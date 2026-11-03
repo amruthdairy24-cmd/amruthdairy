@@ -324,7 +324,37 @@ export function CustomersClient({ data }: { data: Customer[] }) {
         icon={Users} 
         actionLabel="Add Customer"
         onAction={() => setShowAddCustomer(true)}
-      />
+      >
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleQuickExport('excel')}
+            className="flex items-center gap-1.5 px-3.5 h-10 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 shadow-2xs hover:-translate-y-0.5 transition-all cursor-pointer"
+            title="Download Excel for current filter"
+          >
+            <FileSpreadsheet size={15} />
+            <span>Excel</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleQuickExport('pdf')}
+            className="flex items-center gap-1.5 px-3.5 h-10 rounded-xl text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800 shadow-2xs hover:-translate-y-0.5 transition-all cursor-pointer"
+            title="Download PDF for current filter"
+          >
+            <FileText size={15} />
+            <span>PDF</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowExportModal(true)}
+            className="flex items-center gap-1.5 px-3.5 h-10 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 shadow-2xs hover:-translate-y-0.5 transition-all cursor-pointer"
+            title="Open Export Options"
+          >
+            <Download size={15} />
+            <span>Export Options</span>
+          </button>
+        </div>
+      </AdminHeader>
 
       {/* SEARCH, FILTER AND EXPORT BAR */}
       <div className="flex flex-col xl:flex-row gap-4 items-stretch xl:items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">

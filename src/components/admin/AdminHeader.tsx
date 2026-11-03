@@ -11,6 +11,7 @@ interface AdminHeaderProps {
   onAction?: () => void;
   onSearch?: (term: string) => void;
   hideSearchRow?: boolean;
+  children?: React.ReactNode;
 }
 
 export function AdminHeader({ 
@@ -20,7 +21,8 @@ export function AdminHeader({
   actionLabel, 
   onAction, 
   onSearch,
-  hideSearchRow = false
+  hideSearchRow = false,
+  children
 }: AdminHeaderProps) {
   return (
     <div className="flex flex-col gap-6 mb-6">
@@ -42,6 +44,7 @@ export function AdminHeader({
           </div>
         </div>
         
+        <div className="flex items-center flex-wrap gap-2.5">{children}</div>
         {actionLabel && (
           <button 
             onClick={onAction}
