@@ -5,8 +5,10 @@ import {
   Truck, CheckCircle2, SkipForward, PlusCircle,
   Calendar, RefreshCw, ChevronLeft, ChevronRight, Package,
   MapPin, Phone, Droplets, AlertTriangle, Clock, Eye, Search,
-  Printer, Download, Share2
+  Printer, Download, Share2, FileSpreadsheet
 } from 'lucide-react'
+import * as XLSX from 'xlsx'
+import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 import { AdminCustomerHistoryModal } from '@/components/admin/AdminCustomerHistoryModal'
 
@@ -190,33 +192,100 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
     return true
   })
 
-  // Export CSV Function
-  function exportToCSV() {
-    if (deliveries.length === 0) return
+  // Export Excel Function (.xlsx)
+  function exportToExcel() {
+    const listToExport = filteredDeliveries.length > 0 ? filteredDeliveries : deliveries
+    if (listToExport.length === 0) {
+      toast.error('No deliveries found to export')
+      return
+    }
 
-    const headers = ['Customer Name', 'Phone', 'Area', 'Address', 'Landmark', 'Floor Notes', 'Regular Litres', 'Extra Litres', 'Total Litres', 'Status', 'Notes']
-    const rows = filteredDeliveries.map(d => [
-      `"${d.customer_name || ''}"`,
-      `"${d.phone || ''}"`,
-      `"${d.area || ''}"`,
+    const dataRows = listToExport.map((d, index) => ({
+      'S.No': index + 1,
+      'Customer Name': d.customer_name || 'N/A',
+      'Phone Number': d.phone ? String(d.phone) : 'N/A',
+      'Area / Route': d.area || 'N/A',
+      'Full Address': d.address || 'N/A',
+      'Landmark': d.landmark || '',
+      'Floor / Notes': d.floor_notes || '',
+      'Regular Litres': Number(d.regular_litres || 0),
+      'Extra Litres': Number(d.extra_litres || 0),
+      'Total Litres': Number(d.total_litres || 0),
+      'Status': d.is_skip ? 'SKIPPED' : d.delivery_status ? d.delivery_status.toUpperCase() : 'PENDING',
+      'Delivery Notes': d.notes || ''
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(dataRows)
+
+    // Ensure phone numbers are stored as text in Excel so they don't turn into scientific notation (9.95E+09)
+    dataRows.forEach((row, rIdx) => {
+      const cellRef = XLSX.utils.encode_cell({ r: rIdx + 1, c: 2 }) // Column index 2 is 'Phone Number'
+      if (worksheet[cellRef]) {
+        worksheet[cellRef].t = 's'
+        worksheet[cellRef].z = '@'
+      }
+    })
+
+    // Set auto-sized column widths
+    worksheet['!cols'] = [
+      { wch: 6 },  // S.No
+      { wch: 24 }, // Customer Name
+      { wch: 16 }, // Phone
+      { wch: 20 }, // Area
+      { wch: 40 }, // Address
+      { wch: 24 }, // Landmark
+      { wch: 24 }, // Floor Notes
+      { wch: 14 }, // Regular
+      { wch: 12 }, // Extra
+      { wch: 12 }, // Total
+      { wch: 14 }, // Status
+      { wch: 22 }, // Delivery Notes
+    ]
+
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Deliveries')
+
+    const filename = `Amruth_Delivery_Sheet_${selectedDate}.xlsx`
+    XLSX.writeFile(workbook, filename)
+    toast.success(`Exported ${dataRows.length} deliveries to Excel (.xlsx)!`)
+  }
+
+  // Export CSV Function (Using Blob & UTF-8 BOM to prevent # cut-off and Mojibake)
+  function exportToCSV() {
+    const listToExport = filteredDeliveries.length > 0 ? filteredDeliveries : deliveries
+    if (listToExport.length === 0) {
+      toast.error('No deliveries found to export')
+      return
+    }
+
+    const headers = ['S.No', 'Customer Name', 'Phone', 'Area', 'Address', 'Landmark', 'Floor Notes', 'Regular Litres', 'Extra Litres', 'Total Litres', 'Status', 'Notes']
+    const rows = listToExport.map((d, idx) => [
+      idx + 1,
+      `"${(d.customer_name || '').replace(/"/g, '""')}"`,
+      `"\t${d.phone || ''}"`, // Tab prefix forces Excel to treat phone as plain string
+      `"${(d.area || '').replace(/"/g, '""')}"`,
       `"${(d.address || '').replace(/"/g, '""')}"`,
       `"${(d.landmark || '').replace(/"/g, '""')}"`,
       `"${(d.floor_notes || '').replace(/"/g, '""')}"`,
       d.regular_litres || 0,
       d.extra_litres || 0,
       d.total_litres || 0,
-      d.delivery_status || 'pending',
+      d.is_skip ? 'skipped' : (d.delivery_status || 'pending'),
       `"${(d.notes || '').replace(/"/g, '""')}"`
     ])
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n')
-    const encodedUri = encodeURI(csvContent)
+    // Prepend UTF-8 BOM (\uFEFF) to fix Excel Mojibake (e.g. â€™)
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\r\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
+    link.href = url
     link.setAttribute('download', `Amruth_Delivery_Sheet_${selectedDate}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    toast.success(`Exported ${listToExport.length} deliveries to CSV!`)
   }
 
   // Print Driver Manifest Function
@@ -392,13 +461,23 @@ export function DeliveriesClient({ initialDate }: { initialDate: string }) {
             </button>
 
             <button
-              onClick={exportToCSV}
+              onClick={exportToExcel}
               disabled={deliveries.length === 0}
               className="flex items-center gap-1.5 px-3.5 h-9 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-50"
-              title="Download CSV / Excel Sheet"
+              title="Download Full Excel Sheet (.xlsx)"
+            >
+              <FileSpreadsheet size={15} />
+              <span>Export Excel</span>
+            </button>
+
+            <button
+              onClick={exportToCSV}
+              disabled={deliveries.length === 0}
+              className="flex items-center gap-1.5 px-3 h-9 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm border border-slate-200 dark:border-slate-700 disabled:opacity-50"
+              title="Download CSV File"
             >
               <Download size={15} />
-              <span>Export CSV</span>
+              <span>CSV</span>
             </button>
 
             <button
