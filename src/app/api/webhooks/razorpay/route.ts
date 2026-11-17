@@ -125,19 +125,28 @@ export async function POST(request: Request) {
             })
             .eq('id', productOrder.id);
 
-          // 2. Insert payment record
+          // 2. Insert payment record (Idempotent check by paymentId and orderId)
           if (productOrder.customer_id) {
-            await adminClient.from('payments').insert({
-              customer_id: productOrder.customer_id,
-              amount: productOrder.total_amount,
-              payment_type: 'product',
-              method: method,
-              status: 'success',
-              razorpay_order_id: orderId,
-              razorpay_payment_id: paymentId,
-              paid_at: new Date().toISOString(),
-              is_manual: false
-            });
+            const { data: existingProdPayment } = await adminClient
+              .from('payments')
+              .select('id')
+              .or(`razorpay_payment_id.eq.${paymentId},razorpay_order_id.eq.${orderId}`)
+              .eq('status', 'success')
+              .limit(1);
+
+            if (!existingProdPayment || existingProdPayment.length === 0) {
+              await adminClient.from('payments').insert({
+                customer_id: productOrder.customer_id,
+                amount: productOrder.total_amount,
+                payment_type: 'product',
+                method: method,
+                status: 'success',
+                razorpay_order_id: orderId,
+                razorpay_payment_id: paymentId,
+                paid_at: new Date().toISOString(),
+                is_manual: false
+              });
+            }
           }
 
           // 3. Decrement product stock
@@ -212,16 +221,16 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, message: 'Unhandled order ID' });
       }
 
-      // Idempotency: Check if payment is already recorded
-      const { data: existingPayment } = await adminClient
+      // Idempotency: Check if payment is already recorded (check both orderId & paymentId, use limit(1) to avoid multi-row error)
+      const { data: existingPayments } = await adminClient
         .from('payments')
-        .select('id, status')
-        .eq('razorpay_order_id', orderId)
+        .select('id')
+        .or(`razorpay_payment_id.eq.${paymentId},razorpay_order_id.eq.${orderId}`)
         .eq('status', 'success')
-        .maybeSingle();
+        .limit(1);
 
-      if (existingPayment) {
-        console.log(`[Razorpay Webhook] Payment already successfully recorded for order ${orderId}`);
+      if (existingPayments && existingPayments.length > 0) {
+        console.log(`[Razorpay Webhook] Payment already recorded for order ${orderId} / payment ${paymentId}`);
         return NextResponse.json({ success: true, message: 'Payment already processed' });
       }
 

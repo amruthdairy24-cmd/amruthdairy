@@ -121,7 +121,16 @@ export async function GET(
       .filter(d => d.delivery_status === 'delivered')
       .reduce((sum, d) => sum + (Number(d.total_litres) || 0), 0);
 
-    const payments = paymentsRes.data || [];
+    const rawPayments = paymentsRes.data || [];
+    // Deduplicate by razorpay_payment_id or id to guarantee 100% accurate totals in UI
+    const seenPaymentKeys = new Set<string>();
+    const payments = rawPayments.filter(p => {
+      const key = p.razorpay_payment_id || p.id;
+      if (seenPaymentKeys.has(key)) return false;
+      seenPaymentKeys.add(key);
+      return true;
+    });
+
     const totalAmountPaid = payments
       .filter(p => p.status === 'success')
       .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);

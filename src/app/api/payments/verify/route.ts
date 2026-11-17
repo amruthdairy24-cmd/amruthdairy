@@ -78,8 +78,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Billing month not found' }, { status: 400 });
     }
 
-    // Idempotency check — if already paid, return success immediately (prevents double-processing)
+    // Idempotency check — check billing month status AND payments table
     if (bMonth.payment_status === 'paid') {
+      return NextResponse.json({ success: true, message: 'Payment already recorded.' });
+    }
+
+    const { data: existingPayment } = await adminSupabase
+      .from('payments')
+      .select('id')
+      .or(`razorpay_payment_id.eq.${razorpay_payment_id},razorpay_order_id.eq.${razorpay_order_id}`)
+      .eq('status', 'success')
+      .limit(1);
+
+    if (existingPayment && existingPayment.length > 0) {
+      console.log(`[payments/verify] Payment already recorded for order ${razorpay_order_id} / payment ${razorpay_payment_id}`);
       return NextResponse.json({ success: true, message: 'Payment already recorded.' });
     }
 
