@@ -8,6 +8,18 @@ import { isAdminEmail } from '@/lib/utils';
 
 const adminClient = createAdminClient();
 
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, '\\$&');
+}
+
+interface LoginCandidate {
+  id: string;
+  email: string | null;
+  username?: string | null;
+  email_verified: boolean | null;
+  role: string | null;
+}
+
 export async function POST(request: Request) {
   try {
     // ── Auth check: public endpoint (no session required) ─────────────────────
@@ -22,62 +34,67 @@ export async function POST(request: Request) {
       );
     }
 
-    const identifierTrimmed = identifier.trim().toLowerCase();
+    const identifierRaw = identifier.trim();
+    const identifierLower = identifierRaw.toLowerCase();
 
-    // ── Resolve email from identifier (username OR email) ─────────────────────
-    let resolvedEmail: string | null = null;
+    // ── Resolve candidate account(s) from identifier (username OR email) ──────
+    let candidates: LoginCandidate[] = [];
 
-    const isEmail = identifierTrimmed.includes('@');
+    const isEmail = identifierLower.includes('@');
 
     if (isEmail) {
-      // Identifier looks like an email — look up directly
-      const { data: profileByEmail } = await adminClient
+      // Identifier looks like an email — look up case-insensitively
+      const { data: profilesByEmail } = await adminClient
         .from('profiles')
-        .select('id, email, email_verified, role')
-        .eq('email', identifierTrimmed)
-        .maybeSingle();
+        .select('id, email, username, email_verified, role')
+        .ilike('email', escapeLikePattern(identifierLower));
 
-      if (!profileByEmail) {
+      candidates = (profilesByEmail ?? []).filter(
+        (p) => p.email?.trim().toLowerCase() === identifierLower
+      );
+
+      if (candidates.length === 0) {
         return NextResponse.json(
           { success: false, message: 'No account found with this email address.' },
           { status: 401 }
         );
       }
-
-      if (!profileByEmail.email_verified) {
-        return NextResponse.json(
-          { success: false, message: 'Your email is not verified. Please complete registration first.' },
-          { status: 403 }
-        );
-      }
-
-      resolvedEmail = profileByEmail.email;
     } else {
-      // Identifier is a username
-      const { data: profileByUsername } = await adminClient
+      // Identifier is a username — look up case-insensitively (handles capitalized usernames)
+      const { data: profilesByUsername } = await adminClient
         .from('profiles')
-        .select('id, email, email_verified, role')
-        .eq('username', identifierTrimmed)
-        .maybeSingle();
+        .select('id, email, username, email_verified, role')
+        .ilike('username', escapeLikePattern(identifierRaw));
 
-      if (!profileByUsername) {
+      candidates = (profilesByUsername ?? []).filter(
+        (p) => p.username?.trim().toLowerCase() === identifierLower
+      );
+
+      if (candidates.length === 0) {
         return NextResponse.json(
           { success: false, message: 'No account found with this username.' },
           { status: 401 }
         );
       }
 
-      if (!profileByUsername.email_verified) {
+      // Prioritize exact-case match first if multiple legacy accounts share a case-insensitive username
+      candidates.sort((a, b) => {
+        const aExact = a.username?.trim() === identifierRaw ? 0 : 1;
+        const bExact = b.username?.trim() === identifierRaw ? 0 : 1;
+        return aExact - bExact;
+      });
+    }
+
+    const verifiedCandidates = candidates.filter((c) => c.email_verified && c.email);
+
+    if (verifiedCandidates.length === 0) {
+      const hasUnverified = candidates.some((c) => !c.email_verified);
+      if (hasUnverified) {
         return NextResponse.json(
           { success: false, message: 'Your email is not verified. Please complete registration first.' },
           { status: 403 }
         );
       }
-
-      resolvedEmail = profileByUsername.email;
-    }
-
-    if (!resolvedEmail) {
       return NextResponse.json(
         { success: false, message: 'Account not found. Please register first.' },
         { status: 401 }
@@ -86,16 +103,29 @@ export async function POST(request: Request) {
 
     // ── Sign in with Supabase (sets session cookie) ───────────────────────────
     const supabase = await createClient();
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: resolvedEmail,
-      password,
-    });
+    let signedInUser: { id: string } | null = null;
+    let lastAuthError: { message?: string } | null = null;
 
-    if (authError || !authData?.user) {
-      console.error('[login] Auth error:', authError?.message);
+    for (const candidate of verifiedCandidates) {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: candidate.email!,
+        password,
+      });
+
+      if (!authError && authData?.user) {
+        signedInUser = authData.user;
+        lastAuthError = null;
+        break;
+      }
+
+      lastAuthError = authError;
+    }
+
+    if (!signedInUser) {
+      console.error('[login] Auth error:', lastAuthError?.message);
 
       // Provide a user-friendly message for common errors
-      const msg = authError?.message?.toLowerCase() ?? '';
+      const msg = lastAuthError?.message?.toLowerCase() ?? '';
       if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('password')) {
         return NextResponse.json(
           { success: false, message: 'Incorrect password. Please try again.' },
@@ -103,12 +133,12 @@ export async function POST(request: Request) {
         );
       }
       return NextResponse.json(
-        { success: false, message: authError?.message ?? 'Login failed. Please try again.' },
+        { success: false, message: lastAuthError?.message ?? 'Login failed. Please try again.' },
         { status: 401 }
       );
     }
 
-    const userId = authData.user.id;
+    const userId = signedInUser.id;
 
     // ── Load profile ──────────────────────────────────────────────────────────
     const { data: profile } = await adminClient
@@ -146,6 +176,7 @@ export async function POST(request: Request) {
       .select('id')
       .eq('customer_id', userId)
       .in('status', ['waiting', 'notified'])
+      .limit(1)
       .maybeSingle();
 
     const isNewUser = !hasActiveSubscription && !waitlist;
@@ -185,6 +216,7 @@ async function checkActiveSubscription(userId: string, role: string): Promise<bo
     .select('id')
     .eq('customer_id', userId)
     .in('status', ['active', 'paused', 'pending_payment'])
+    .limit(1)
     .maybeSingle();
 
   return !!subscription;

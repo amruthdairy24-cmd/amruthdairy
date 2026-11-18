@@ -78,12 +78,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check username uniqueness in profiles
-    const { data: existingUsername } = await adminClient
+    // Check username uniqueness in profiles (case-insensitive)
+    const escapedUsername = usernameTrimmed.replace(/[\\%_]/g, '\\$&');
+    const { data: existingUsernames } = await adminClient
       .from('profiles')
-      .select('id')
-      .eq('username', usernameTrimmed)
-      .maybeSingle();
+      .select('id, username')
+      .ilike('username', escapedUsername);
+
+    const existingUsername = (existingUsernames ?? []).find(
+      (p) => p.username?.trim().toLowerCase() === usernameTrimmed.toLowerCase()
+    );
 
     if (existingUsername) {
       return NextResponse.json(
