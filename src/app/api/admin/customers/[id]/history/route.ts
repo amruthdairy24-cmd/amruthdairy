@@ -136,13 +136,36 @@ export async function GET(
       .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
     const billingMonths = billingMonthsRes.data || [];
-    const now = new Date();
-    const currentBillingMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-    const currentMonthRecord = billingMonths.find(m => m.billing_month === currentBillingMonthStr);
+
+    // IST "today" — server runs in UTC, customers live in IST
+    const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // yyyy-mm-dd
+    const currentBillingMonthStr = `${todayIST.slice(0, 7)}-01`;
+
+    // Bills can start on the 1st (calendar month) OR on a renewal date (e.g. 2026-11-07 → covers till 2026-12-06).
+    // OLD BUG: only an exact "YYYY-MM-01" match was treated as the current bill, so every customer who paid a
+    // renewal-date bill showed "UNPAID / NO DUES" here and admins re-marked them paid (double payments).
+    const addOneMonth = (dateStr: string) => {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const next = new Date(Date.UTC(y, m, d)); // month index m = next month
+      return next.toISOString().slice(0, 10);
+    };
+    const coversToday = (billingMonth: string) =>
+      billingMonth.endsWith('-01')
+        ? billingMonth === currentBillingMonthStr
+        : billingMonth <= todayIST && todayIST < addOneMonth(billingMonth);
+
+    // billingMonths is sorted newest first
+    const currentMonthRecord =
+      billingMonths.find(m => m.billing_month === currentBillingMonthStr) ||
+      billingMonths.find(m => coversToday(m.billing_month)) ||
+      null;
 
     const paidMonths = billingMonths.filter(m => m.payment_status === 'paid');
     const latestPaidMonth = paidMonths.length > 0 ? paidMonths[0].billing_month : null;
-    const isCurrentPaid = currentMonthRecord ? currentMonthRecord.payment_status === 'paid' : false;
+    const isCurrentPaid =
+      (currentMonthRecord ? currentMonthRecord.payment_status === 'paid' : false) ||
+      // Already prepaid for this month or a later cycle (same rule as the Customers list page)
+      paidMonths.some(m => m.billing_month >= currentBillingMonthStr || coversToday(m.billing_month));
     const totalDueAcrossAllMonths = billingMonths
       .filter(m => m.payment_status !== 'paid')
       .reduce((sum, m) => sum + Math.max(0, Number(m.net_due) || 0), 0);

@@ -95,9 +95,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: 'Payment already recorded.' });
     }
 
-    // Update billing month record
+    // RACE-SAFE CLAIM: the Razorpay webhook (payment.captured + order.paid) hits the server at the
+    // same moment as this call. The conditional UPDATE (… WHERE payment_status <> 'paid') is atomic,
+    // so only ONE caller can flip the bill to paid — and only that caller records the payment row.
     const amountPaid = Number(bMonth.net_due);
-    const { error: updateBMonthError } = await adminSupabase
+    const { data: claimed, error: updateBMonthError } = await adminSupabase
       .from('billing_months')
       .update({
         amount_paid: Number(bMonth.amount_paid) + amountPaid,
@@ -105,11 +107,19 @@ export async function POST(request: Request) {
         payment_status: 'paid',
         updated_at: new Date().toISOString()
       })
-      .eq('id', billing_month_id);
+      .eq('id', billing_month_id)
+      .neq('payment_status', 'paid')
+      .select('id');
 
     if (updateBMonthError) {
       console.error('Update billing month error:', updateBMonthError.message);
       return NextResponse.json({ success: false, message: 'Failed to update billing statement' }, { status: 500 });
+    }
+
+    if (!claimed || claimed.length === 0) {
+      // Webhook / reconcile already settled this bill a few milliseconds earlier
+      console.log(`[payments/verify] Bill ${billing_month_id} already settled concurrently for payment ${razorpay_payment_id}`);
+      return NextResponse.json({ success: true, message: 'Payment verified successfully! Your subscription is now active.' });
     }
 
     // Insert payment log
@@ -129,7 +139,7 @@ export async function POST(request: Request) {
         is_manual: false
       });
 
-    if (paymentError) {
+    if (paymentError && (paymentError as any).code !== '23505') {
       console.error('Insert payment log error:', paymentError.message);
     }
 

@@ -87,6 +87,20 @@ export async function POST(request: Request) {
       }
     }
 
+    // GUARD: Never record a second payment on a bill that is already fully paid
+    // (e.g. customer paid online via Razorpay and admin clicks "Mark as Paid" again).
+    // Admin can still override intentionally by sending { force: true }.
+    if (invoice && invoice.payment_status === 'paid' && body.force !== true) {
+      return NextResponse.json(
+        {
+          success: false,
+          already_paid: true,
+          message: `This bill (${invoice.billing_month}) is already PAID — ₹${Number(invoice.amount_paid || 0)} received. No duplicate payment was recorded.`
+        },
+        { status: 409 }
+      );
+    }
+
     // Also get active or pending subscription if available
     let targetSubId = invoice?.subscription_id || null;
     if (!targetSubId) {

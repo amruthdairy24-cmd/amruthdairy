@@ -234,7 +234,68 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, message: 'Payment already processed' });
       }
 
-      // 1. Insert / Record payment
+      // 1. RACE-SAFE CLAIM: Razorpay fires payment.captured + order.paid while the browser calls
+      //    /api/payments/verify at the same moment. A conditional UPDATE (… WHERE payment_status <> 'paid')
+      //    is atomic in Postgres — only ONE of the concurrent callers can flip the bill to paid.
+      //    Only that winner records the payment row, so duplicates are impossible.
+      let billAlreadyPaid = false;
+      if (targetBillingMonthId) {
+        const { data: claimed, error: claimError } = await adminClient
+          .from('billing_months')
+          .update({
+            amount_paid: amount,
+            payment_status: 'paid',
+            net_due: 0,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', targetBillingMonthId)
+          .neq('payment_status', 'paid')
+          .select('id');
+
+        if (claimError) {
+          console.error('[Razorpay Webhook] Failed to update billing month:', claimError.message);
+          // Return 500 so Razorpay retries this webhook later
+          return NextResponse.json({ success: false, message: 'Billing update failed' }, { status: 500 });
+        }
+        billAlreadyPaid = !claimed || claimed.length === 0;
+      }
+
+      if (billAlreadyPaid) {
+        // Another process (browser verify / reconcile) settled this bill. Give it a moment to write its
+        // payment row, then confirm THIS Razorpay payment is on record. If it still isn't, the bill was
+        // paid by a different payment (customer paid twice) → record it flagged for refund review.
+        await new Promise((r) => setTimeout(r, 1500));
+        const { data: recorded } = await adminClient
+          .from('payments')
+          .select('id')
+          .or(`razorpay_payment_id.eq.${paymentId},razorpay_order_id.eq.${orderId}`)
+          .eq('status', 'success')
+          .limit(1);
+
+        if (recorded && recorded.length > 0) {
+          console.log(`[Razorpay Webhook] Bill ${targetBillingMonthId} already settled for payment ${paymentId}`);
+          return NextResponse.json({ success: true, message: 'Payment already processed' });
+        }
+
+        await adminClient.from('payments').insert({
+          customer_id: targetCustomerId,
+          subscription_id: targetSubscriptionId,
+          billing_month_id: targetBillingMonthId,
+          amount: amount,
+          payment_type: 'subscription',
+          method: method,
+          status: 'success',
+          razorpay_order_id: orderId,
+          razorpay_payment_id: paymentId,
+          paid_at: new Date().toISOString(),
+          is_manual: false,
+          manual_note: 'DUPLICATE: bill was already paid by another payment — review for refund'
+        });
+        console.warn(`[Razorpay Webhook] Duplicate payment ${paymentId} for already-paid bill ${targetBillingMonthId}`);
+        return NextResponse.json({ success: true, message: 'Duplicate payment recorded for review' });
+      }
+
+      // 2. Record payment (this caller won the claim, or there is no bill to claim)
       const { error: paymentInsertError } = await adminClient
         .from('payments')
         .insert({
@@ -252,28 +313,18 @@ export async function POST(request: Request) {
         });
 
       if (paymentInsertError) {
-        console.error('[Razorpay Webhook] Error inserting payment log:', paymentInsertError.message);
+        // 23505 = unique violation → another process already recorded this exact payment (safe to ignore)
+        if ((paymentInsertError as any).code !== '23505') {
+          console.error('[Razorpay Webhook] Error inserting payment log:', paymentInsertError.message);
+        }
       }
 
-      // 2. Update subscription status to 'active'
+      // 3. Update subscription status to 'active'
       if (targetSubscriptionId) {
         await adminClient
           .from('subscriptions')
           .update({ status: 'active' })
           .eq('id', targetSubscriptionId);
-      }
-
-      // 3. Update billing_months record
-      if (targetBillingMonthId) {
-        await adminClient
-          .from('billing_months')
-          .update({
-            amount_paid: amount,
-            payment_status: 'paid',
-            net_due: 0,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', targetBillingMonthId);
       }
 
       // 4. Mark billing adjustments as applied for this specific billing month

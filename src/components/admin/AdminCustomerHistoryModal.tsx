@@ -290,7 +290,7 @@ export function AdminCustomerHistoryModal({
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                      UNPAID / NO DUES
+                      NO PENDING DUES
                     </span>
                   )}
 
@@ -359,7 +359,8 @@ export function AdminCustomerHistoryModal({
             <p className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 truncate">
               {isCurrentPaid ? "All bills cleared" : `Last paid: ${latestPaidMonthName}`}
             </p>
-            {!isCurrentPaid && (
+            {/* Only offer "Mark as Paid" when something is actually pending (prevents double-recording a paid bill) */}
+            {!isCurrentPaid && (totalDue > 0 || billingMonths.length === 0) && (
               <div className="mt-2.5 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
@@ -581,7 +582,8 @@ export function AdminCustomerHistoryModal({
                               <Droplets size={13} className="text-cyan-500" />
                               Add Extra
                             </button>
-                            {!isCurrentPaid && (
+                            {/* Only offer "Mark as Paid" when something is actually pending (prevents double-recording a paid bill) */}
+            {!isCurrentPaid && (totalDue > 0 || billingMonths.length === 0) && (
                               <button
                                 type="button"
                                 onClick={() => {
