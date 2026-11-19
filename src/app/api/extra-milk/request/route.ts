@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { fetchMilkPrices, calculateExtraMilkCharge, isCreditAdjustmentType, resolveSubscriptionStateForDate } from '@/lib/billing';
+import { fetchMilkPrices, calculateExtraMilkCharge, isCreditAdjustmentType, resolveSubscriptionStateForDate, findBillingMonthForDate } from '@/lib/billing';
 import { getDeadlineForDate } from '@/lib/utils';
 
 const adminSupabase = createAdminClient();
@@ -53,17 +53,20 @@ export async function POST(request: Request) {
     const orderDateObj = new Date(order_date);
     const chargeMonthStr = `${orderDateObj.getFullYear()}-${String(orderDateObj.getMonth() + 1).padStart(2, '0')}-01`;
 
-    const { data: targetMonthBilling } = await adminSupabase
+    // Fetch billing months for this subscription to handle both standard (-01) and renewal-date cycles (e.g. 2026-11-07)
+    const { data: bMonths } = await adminSupabase
       .from('billing_months')
-      .select('id, payment_status')
+      .select('id, billing_month, days_in_month, payment_status')
       .eq('subscription_id', subscription.id)
-      .eq('billing_month', chargeMonthStr)
-      .maybeSingle();
+      .order('billing_month', { ascending: false });
+
+    const targetMonthBilling = findBillingMonthForDate(bMonths || [], order_date);
 
     const coverage = resolveSubscriptionStateForDate({
       subscription,
       targetMonthBilling,
-      targetBillingMonthStr: chargeMonthStr,
+      allBillingMonths: bMonths || [],
+      targetBillingMonthStr: targetMonthBilling?.billing_month || chargeMonthStr,
       targetDateStr: order_date
     });
 

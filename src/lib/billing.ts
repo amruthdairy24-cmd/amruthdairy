@@ -656,6 +656,97 @@ export function resolveSubscriptionState(input: ResolveSubscriptionInput): Subsc
   };
 }
 
+export interface BillingMonthCoverageItem {
+  id?: string;
+  billing_month: string;
+  days_in_month?: number | null;
+  payment_status?: string | null;
+  net_due?: number | null;
+  amount_paid?: number | null;
+  monthly_amount?: number | null;
+}
+
+/**
+ * Checks if a billing_month record covers a given target date (YYYY-MM-DD).
+ * - If billing_month ends in '-01' (standard calendar month), it covers all dates in that YYYY-MM.
+ * - If billing_month does not end in '-01' (renewal-date cycle, e.g. 2026-11-07):
+ *   it covers from billing_month for days_in_month days (or 1 calendar month).
+ */
+export function billingMonthCoversDate(
+  billingMonthRecord: BillingMonthCoverageItem,
+  targetDateStr: string
+): boolean {
+  if (!billingMonthRecord || !billingMonthRecord.billing_month || !targetDateStr) {
+    return false;
+  }
+
+  const bmStr = billingMonthRecord.billing_month;
+
+  // Case 1: Standard calendar month bill (YYYY-MM-01)
+  if (bmStr.endsWith('-01')) {
+    return targetDateStr.slice(0, 7) === bmStr.slice(0, 7);
+  }
+
+  // Case 2: Renewal-cycle bill starting on custom date (e.g. 2026-11-07)
+  if (targetDateStr < bmStr) {
+    return false;
+  }
+
+  const [y, m, d] = bmStr.split('-').map(Number);
+  const days = Number(billingMonthRecord.days_in_month) || 0;
+
+  let endStr: string;
+  if (days > 0) {
+    const endDt = new Date(Date.UTC(y, m - 1, d + days));
+    endStr = endDt.toISOString().slice(0, 10);
+  } else {
+    const endDt = new Date(Date.UTC(y, m, d)); // 1 calendar month later
+    endStr = endDt.toISOString().slice(0, 10);
+  }
+
+  return targetDateStr >= bmStr && targetDateStr < endStr;
+}
+
+/**
+ * Finds the billing month that covers a target date from an array of billing month records.
+ * Prioritizes:
+ * 1. An exact calendar month match (YYYY-MM-01)
+ * 2. A renewal cycle match where the date falls within [start, start + days_in_month)
+ * 3. Any paid billing month covering or exceeding the target month
+ */
+export function findBillingMonthForDate<T extends BillingMonthCoverageItem>(
+  billingMonths: T[],
+  targetDateStr: string
+): T | null {
+  if (!billingMonths || billingMonths.length === 0 || !targetDateStr) {
+    return null;
+  }
+
+  const targetMonthStr = `${targetDateStr.slice(0, 7)}-01`;
+
+  // 1. Exact calendar month match
+  const exactMonth = billingMonths.find(b => b.billing_month === targetMonthStr);
+  if (exactMonth) {
+    return exactMonth;
+  }
+
+  // 2. Renewal cycle match
+  const renewalCycle = billingMonths.find(b => billingMonthCoversDate(b, targetDateStr));
+  if (renewalCycle) {
+    return renewalCycle;
+  }
+
+  // 3. Fallback: if user already paid for this or a future month
+  const paidFutureOrCurrent = billingMonths.find(
+    b => b.payment_status === 'paid' && (b.billing_month >= targetMonthStr || billingMonthCoversDate(b, targetDateStr))
+  );
+  if (paidFutureOrCurrent) {
+    return paidFutureOrCurrent;
+  }
+
+  return null;
+}
+
 export interface ResolveSubscriptionForDateInput {
   subscription: {
     id: string;
@@ -664,11 +755,13 @@ export interface ResolveSubscriptionForDateInput {
     end_date?: string | null;
     start_date?: string | null;
   } | null;
-  targetMonthBilling: {
+  targetMonthBilling?: {
     id?: string;
     billing_month?: string;
     payment_status?: string | null;
+    days_in_month?: number | null;
   } | null;
+  allBillingMonths?: BillingMonthCoverageItem[] | null;
   targetBillingMonthStr: string; // YYYY-MM-01
   targetDateStr: string; // YYYY-MM-DD
 }
@@ -677,7 +770,7 @@ export interface ResolveSubscriptionForDateInput {
  * Resolves subscription state and delivery coverage for a specific target date (e.g. skip date or extra milk date).
  */
 export function resolveSubscriptionStateForDate(input: ResolveSubscriptionForDateInput): SubscriptionStateDetails {
-  const { subscription, targetMonthBilling, targetBillingMonthStr, targetDateStr } = input;
+  const { subscription, targetMonthBilling, allBillingMonths, targetBillingMonthStr, targetDateStr } = input;
 
   if (!subscription) {
     return {
@@ -724,20 +817,33 @@ export function resolveSubscriptionStateForDate(input: ResolveSubscriptionForDat
     }
   }
 
+  // Resolve target billing month from allBillingMonths if not provided or un-matched
+  let resolvedTargetBilling = targetMonthBilling;
+  if (
+    (!resolvedTargetBilling || resolvedTargetBilling.payment_status !== 'paid') &&
+    allBillingMonths &&
+    allBillingMonths.length > 0
+  ) {
+    const matched = findBillingMonthForDate(allBillingMonths, targetDateStr);
+    if (matched) {
+      resolvedTargetBilling = matched;
+    }
+  }
+
   // Check if target month is specifically paid
-  const isTargetPaid = targetMonthBilling?.payment_status === 'paid';
+  const isTargetPaid = resolvedTargetBilling?.payment_status === 'paid';
 
   if (isTargetPaid) {
     return {
       state: 'SUBSCRIBED_ACTIVE',
       canRenew: false,
-      targetMonth: targetBillingMonthStr,
+      targetMonth: resolvedTargetBilling?.billing_month || targetBillingMonthStr,
       currentMonthPaid: true,
       isCovered: true
     };
   }
 
-  if (subStatus === 'pending_payment' || targetMonthBilling?.payment_status === 'pending') {
+  if (subStatus === 'pending_payment' || resolvedTargetBilling?.payment_status === 'pending') {
     return {
       state: 'PAYMENT_PENDING',
       canRenew: true,

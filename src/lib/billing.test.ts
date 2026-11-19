@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { resolveSubscriptionState } from './billing';
+import { resolveSubscriptionState, resolveSubscriptionStateForDate, findBillingMonthForDate, billingMonthCoversDate } from './billing';
 
 function runTests() {
   console.log('Running resolveSubscriptionState tests...');
@@ -230,7 +230,66 @@ function runTests() {
     console.log('✔ TEST 12 PASSED: Future starting subscription paid (targetMonth = 2026-10-01, isCovered = true)');
   }
 
-  console.log('\n🎉 ALL 12 SUBSCRIPTION STATE TEST CASES PASSED SUCCESSFULLY!');
+  // TEST 13: Renewal-cycle customer (Nasir case: bill 2026-11-07 paid, skipping 2026-11-19 and 2026-11-20)
+  {
+    const bMonths = [
+      {
+        id: 'bm_nasir_nov',
+        billing_month: '2026-11-07',
+        days_in_month: 30,
+        payment_status: 'paid',
+        net_due: 0,
+        amount_paid: 1200
+      },
+      {
+        id: 'bm_nasir_oct',
+        billing_month: '2026-10-01',
+        days_in_month: 31,
+        payment_status: 'paid',
+        net_due: 0,
+        amount_paid: 240
+      }
+    ];
+
+    // Check coverage function directly
+    assert.strictEqual(billingMonthCoversDate(bMonths[0], '2026-11-19'), true);
+    assert.strictEqual(billingMonthCoversDate(bMonths[0], '2026-11-20'), true);
+    assert.strictEqual(billingMonthCoversDate(bMonths[0], '2026-12-06'), true);
+    assert.strictEqual(billingMonthCoversDate(bMonths[0], '2026-12-07'), false);
+    assert.strictEqual(billingMonthCoversDate(bMonths[0], '2026-11-06'), false);
+
+    // Check findBillingMonthForDate
+    const matched19 = findBillingMonthForDate(bMonths, '2026-11-19');
+    assert.strictEqual(matched19?.id, 'bm_nasir_nov');
+
+    const matched20 = findBillingMonthForDate(bMonths, '2026-11-20');
+    assert.strictEqual(matched20?.id, 'bm_nasir_nov');
+
+    // Check resolveSubscriptionStateForDate for skip dates
+    const res19 = resolveSubscriptionStateForDate({
+      subscription: { id: 'sub_nasir', status: 'active', quantity_litres: 0.5, daily_rate: 40 } as any,
+      targetMonthBilling: matched19,
+      allBillingMonths: bMonths,
+      targetBillingMonthStr: '2026-11-01',
+      targetDateStr: '2026-11-19'
+    });
+    assert.strictEqual(res19.isCovered, true);
+    assert.strictEqual(res19.state, 'SUBSCRIBED_ACTIVE');
+
+    const res20 = resolveSubscriptionStateForDate({
+      subscription: { id: 'sub_nasir', status: 'active', quantity_litres: 0.5, daily_rate: 40 } as any,
+      targetMonthBilling: matched20,
+      allBillingMonths: bMonths,
+      targetBillingMonthStr: '2026-11-01',
+      targetDateStr: '2026-11-20'
+    });
+    assert.strictEqual(res20.isCovered, true);
+    assert.strictEqual(res20.state, 'SUBSCRIBED_ACTIVE');
+
+    console.log('✔ TEST 13 PASSED: Renewal-cycle customer (2026-11-07 paid) successfully skips 2026-11-19 and 2026-11-20');
+  }
+
+  console.log('\n🎉 ALL 13 SUBSCRIPTION STATE TEST CASES PASSED SUCCESSFULLY!');
 }
 
 runTests();

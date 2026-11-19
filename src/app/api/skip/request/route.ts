@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { getDeadlineForDate } from '@/lib/utils';
-import { resolveSubscriptionStateForDate } from '@/lib/billing';
+import { resolveSubscriptionStateForDate, findBillingMonthForDate } from '@/lib/billing';
 
 const adminSupabase = createAdminClient();
 
@@ -41,18 +41,21 @@ export async function POST(request: Request) {
     // CHECK PAID MONTH COVERAGE USING CANONICAL RESOLVER FOR TARGET DATE
     const skipMonthDate = new Date(skip_date);
     const skipBillingMonth = `${skipMonthDate.getFullYear()}-${String(skipMonthDate.getMonth() + 1).padStart(2, '0')}-01`;
-    
-    const { data: targetMonthBilling } = await adminSupabase
+
+    // Fetch billing months for this subscription to handle both standard (-01) and renewal-date cycles (e.g. 2026-11-07)
+    const { data: bMonths } = await adminSupabase
       .from('billing_months')
-      .select('id, payment_status')
+      .select('id, billing_month, days_in_month, payment_status')
       .eq('subscription_id', subscription.id)
-      .eq('billing_month', skipBillingMonth)
-      .maybeSingle();
+      .order('billing_month', { ascending: false });
+
+    const targetMonthBilling = findBillingMonthForDate(bMonths || [], skip_date);
 
     const coverage = resolveSubscriptionStateForDate({
       subscription,
       targetMonthBilling,
-      targetBillingMonthStr: skipBillingMonth,
+      allBillingMonths: bMonths || [],
+      targetBillingMonthStr: targetMonthBilling?.billing_month || skipBillingMonth,
       targetDateStr: skip_date
     });
 

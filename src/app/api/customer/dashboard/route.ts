@@ -3,7 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { getTodayIST } from '@/lib/utils';
 import { formatInTimeZone } from 'date-fns-tz';
-import { calculateCarryForwardCreditBalance, calculateNetDueFromCredits, sumCreditAdjustments, sumChargeAdjustments, sumExtraMilkCreditUsage, sumExtraMilkNetCharges, resolveSubscriptionState } from '@/lib/billing';
+import { calculateCarryForwardCreditBalance, calculateNetDueFromCredits, sumCreditAdjustments, sumChargeAdjustments, sumExtraMilkCreditUsage, sumExtraMilkNetCharges, resolveSubscriptionState, findBillingMonthForDate } from '@/lib/billing';
 import { processPendingReferralReward } from '@/lib/referral';
 
 export async function GET(request: Request) {
@@ -300,6 +300,27 @@ export async function GET(request: Request) {
       .eq('subscription_id', subId)
       .order('billing_month', { ascending: false });
 
+    // If currentMonthRes.data was null (e.g. renewal-date cycle like 2026-11-07 instead of 2026-11-01),
+    // resolve the actual covering month from allBillingMonthsData so customer isn't marked unrenewed/unpaid
+    let activeCoveringMonth = currentMonthRes.data;
+    if (!activeCoveringMonth && allBillingMonthsData && allBillingMonthsData.length > 0) {
+      const matched = findBillingMonthForDate(allBillingMonthsData, todayStr);
+      if (matched) {
+        activeCoveringMonth = matched;
+        current_month = {
+          ...matched,
+          days_delivered: live_days_delivered,
+          days_skipped: live_days_skipped,
+          skip_credit: live_skip_credit,
+          extra_litres_ordered: live_extra_litres,
+          extra_charges: live_extra_charges,
+        };
+        const monthlyAmt = Number(matched.monthly_amount) || 0;
+        const amountPaid = Number(matched.amount_paid) || 0;
+        live_net_due = Math.max(0, monthlyAmt + live_extra_charges - live_skip_credit - amountPaid);
+      }
+    }
+
     const paidMonthsSet = new Set<string>(
       allBillingMonthsData
         ? allBillingMonthsData.filter(m => m.payment_status === 'paid').map(m => m.billing_month)
@@ -348,7 +369,7 @@ export async function GET(request: Request) {
 
     const subscription_state = resolveSubscriptionState({
       subscription,
-      currentMonthBilling: currentMonthRes.data,
+      currentMonthBilling: activeCoveringMonth || currentMonthRes.data,
       latestPaidMonth: latest_paid_month?.billing_month || null,
       currentBillingMonthStr: formattedBillingMonth,
       currentDateStr: todayStr
